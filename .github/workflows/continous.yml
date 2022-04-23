@@ -1,0 +1,28 @@
+
+name: Continous Release Action
+on: 
+  push:
+    branches: [ master ]
+
+jobs:
+  ContinousRelease:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Install GLFW3
+      run: |
+        sudo apt-get install libglfw3
+        sudo apt-get install libglfw3-dev
+    - name: Build
+      run: make
+    - name: Release
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "continuous"
+        prerelease: true
+        title: "Continuous Build"
+        files: |
+          ./sixel
