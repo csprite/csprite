@@ -1,7 +1,7 @@
 CC := clang
 STD := c99
-CFLAGS := -lglfw -lm -ldl -I. -std=${STD} -Wall
-LFLAGS := -Wall
+LFLAGS := -lglfw -lm -ldl -I. -std=${STD} -Wall
+CFLAGS := -Wall
 
 SRC=src
 LIB=lib
@@ -11,10 +11,15 @@ SRCS=$(SRC)/main.c $(LIB)/glad.c
 OBJS=$(OBJ)/main.o $(OBJ)/glad.o
 BIN=csprite
 
-all: CFLAGS += -g -O0
+COMMIT_HASH=$(shell git rev-parse --short HEAD)
+VERSION=0.5.0
+
+CFLAGS += -DCOMMIT_HASH="\"$(COMMIT_HASH)\"" -DPROGRAM_VERSION="\"$(VERSION)\""
+
+all: LFLAGS += -g -O0
 all: $(BIN)
 
-release: CFLAGS += -O2 -DNDEBUG
+release: LFLAGS += -O2 -DNDEBUG
 release: $(BIN)
 
 .PHONY: clean
@@ -23,12 +28,12 @@ clean:
 
 # For Compiling OBJ/* To Binary
 $(BIN): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $@
+	$(CC) $(LFLAGS) $(OBJS) -o $@
 
 # For Compiling Src/*
 $(OBJ)/%.o: $(SRC)/%.c
-	$(CC) $(LFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # For Compiling Lib/*
 $(OBJ)/%.o: $(LIB)/%.c
-	$(CC) $(LFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
