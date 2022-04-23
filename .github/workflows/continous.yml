@@ -15,14 +15,15 @@ jobs:
       run: |
         sudo apt-get install libglfw3
         sudo apt-get install libglfw3-dev
-    - name: Build
+
+    - name: Make Development Build
       run: make
-    - name: Release
+
+    - name: Update/Create Continous Release
       uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "continuous"
         prerelease: true
-        title: "Continuous Build"
-        files: |
-          ./sixel
+        title: "CSprite Continuous Release"
+        files: ./csprite
