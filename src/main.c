@@ -204,7 +204,7 @@ int main(int argc, char **argv) {
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
 
-	window = glfwCreateWindow(WINDOW_DIMS[0], WINDOW_DIMS[1], "Pixel Art Tool", NULL, NULL);
+	window = glfwCreateWindow(WINDOW_DIMS[0], WINDOW_DIMS[1], "CSprite", NULL, NULL);
 
 	if (!window)
 		puts("Failed to create GLFW window");
