@@ -1,12 +1,16 @@
 CC := clang
 STD := c99
-CFLAGS := -lglfw -lm -ldl -I. -std=${STD} -g
+CFLAGS := -lglfw -lm -ldl -I. -std=${STD}
 
 SOURCES=src/main.c lib/glad.c
 OBJECTS=$(SOURCES:.cpp=.o)
-OUTPUT_BINARY=sixel
+OUTPUT_BINARY=csprite
 
+all: CFLAGS += -g -O0
 all: $(SOURCES) $(OUTPUT_BINARY)
+
+release: CFLAGS += -O2
+release: $(SOURCES) $(OUTPUT_BINARY)
 
 $(OUTPUT_BINARY): $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) -o $@
