@@ -16,7 +16,7 @@ jobs:
         sudo apt-get install libglfw3 libglfw3-dev git
 
     - name: Build CSprite
-      run: make release
+      run: make release -j2
 
     - name: Update/Create Continous Release
       uses: "marvinpinto/action-automatic-releases@latest"
