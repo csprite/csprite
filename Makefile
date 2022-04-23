@@ -1,19 +1,34 @@
 CC := clang
 STD := c99
 CFLAGS := -lglfw -lm -ldl -I. -std=${STD} -Wall
+LFLAGS := -Wall
 
-SOURCES=src/main.c lib/glad.c
-OBJECTS=$(SOURCES:.cpp=.o)
-OUTPUT_BINARY=csprite
+SRC=src
+LIB=lib
+OBJ=obj
+
+SRCS=$(SRC)/main.c $(LIB)/glad.c
+OBJS=$(OBJ)/main.o $(OBJ)/glad.o
+BIN=csprite
 
 all: CFLAGS += -g -O0
-all: $(SOURCES) $(OUTPUT_BINARY)
+all: $(BIN)
 
 release: CFLAGS += -O2 -DNDEBUG
-release: $(SOURCES) $(OUTPUT_BINARY)
+release: $(BIN)
 
-$(OUTPUT_BINARY): $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) -o $@
+.PHONY: clean
+clean:
+	rm obj/*.o $(BIN)
 
-.cpp.o:
-	$(CC) -c $(CFLAGS) $< -o $@
+# For Compiling OBJ/* To Binary
+$(BIN): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $@
+
+# For Compiling Src/*
+$(OBJ)/%.o: $(SRC)/%.c
+	$(CC) $(LFLAGS) -c $< -o $@
+
+# For Compiling Lib/*
+$(OBJ)/%.o: $(LIB)/%.c
+	$(CC) $(LFLAGS) -c $< -o $@
