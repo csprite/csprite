@@ -16,6 +16,14 @@
 #include "shader.h"
 #include "math_linear.h"
 
+#ifndef COMMIT_HASH
+#define COMMIT_HASH "unknown"
+#endif
+
+#ifndef PROGRAM_VERSION
+#define PROGRAM_VERSION "unknown"
+#endif
+
 char *FILE_NAME = "test.png"; // Default Output Filename
 int WINDOW_DIMS[2] = {512, 512}; // Default Window Dimensions
 int DIMS[2] = {16, 16}; // Default Canvas Size
@@ -95,6 +103,15 @@ unsigned char * get_char_data(unsigned char *data, int x, int y) {
 
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-v") == 0) {
+			if (strcmp(COMMIT_HASH, "unknown") == 0) {
+				puts("CSprite UnVerfied Build.");
+			} else {
+				printf("CSprite Version: %s\nVerified Build - Commit: %s\n", PROGRAM_VERSION, COMMIT_HASH);
+			}
+			return 0;
+		}
+
 		if (strcmp(argv[i], "-f") == 0) {
 			FILE_NAME = argv[i+1];
 			int x, y, c;
@@ -150,9 +167,7 @@ int main(int argc, char **argv) {
 			palette_count = 0;
 			i++;
 
-			int d;
 			while (i < argc && (strlen(argv[i]) == 6 || strlen(argv[i]) == 8)) {
-				puts("yey");
 				long number = (long)strtol(argv[i], NULL, 16);
 				int start;
 				unsigned char r, g, b, a;
@@ -170,6 +185,7 @@ int main(int argc, char **argv) {
 						 " line endings if this file "
 						 "came from the web or a "
 						 "Windows PC");
+					break;
 				}
 
 				r = number >> start & 0xff;
@@ -181,7 +197,7 @@ int main(int argc, char **argv) {
 				palette[palette_count + 1][2] = b;
 				palette[palette_count + 1][3] = a;
 
-				printf("Adding colour %d %d %d\n", r, g, b);
+				printf("Adding colour: #%s - rgb(%d, %d, %d)\n", argv[i], r, g, b);
 
 				palette_count++;
 				i++;
