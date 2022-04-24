@@ -25,7 +25,7 @@
 #endif
 
 char *FILE_NAME = "test.png"; // Default Output Filename
-int WINDOW_DIMS[2] = {512, 512}; // Default Window Dimensions
+int WINDOW_DIMS[2] = {600, 400}; // Default Window Dimensions
 int DIMS[2] = {16, 16}; // Default Canvas Size
 
 unsigned char *canvas_data; // Canvas Data Containg Pixel Values.
@@ -56,7 +56,7 @@ unsigned char palette[128][4] = {
 // Enum Containing Current Mode, Draw - Drawing & Erasing, Pan For Moving The Canvas & Fill For Filling/Erasing The Canvas
 enum mode { DRAW, PAN, FILL };
 
-unsigned char zoom_level = 0;
+unsigned char zoom_level = 4;
 unsigned char zoom[8] = {1, 2, 4, 8, 16, 32, 64, 128}; // Zoom Levels
 
 // Holds if a ctrl/shift is pressed or not
@@ -77,7 +77,7 @@ GLfloat vertices[] = {
 	-1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 0.0f
 };
 
-GLuint indices[] = {0, 1, 3, 1, 2, 3};
+unsigned int indices[] = {0, 1, 3, 1, 2, 3};
 
 double cursor_pos[2];
 double cursor_pos_last[2];
@@ -246,9 +246,9 @@ int main(int argc, char **argv) {
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 
-	GLuint shader_program = create_shader_program(NULL, NULL, NULL);
+	unsigned int shader_program = create_shader_program(NULL, NULL, NULL);
 
-	GLuint vbo, vao, ebo;
+	unsigned int vbo, vao, ebo;
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 	glGenBuffers(1, &ebo);
@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	GLuint texture;
+	unsigned int texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -294,7 +294,7 @@ int main(int argc, char **argv) {
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		GLuint alpha_loc = glGetUniformLocation(shader_program, "alpha");
+		unsigned int alpha_loc = glGetUniformLocation(shader_program, "alpha");
 		glUniform1f(alpha_loc, 0.2f);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
