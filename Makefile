@@ -1,20 +1,17 @@
-CC := clang
-STD := c99
+CC := g++
+STD := c++17
 LFLAGS := -lglfw -lm -ldl -I. -std=${STD} -Wall
 CFLAGS := -Wall
+
+#IMGUI v1.87
 
 SRC=src
 LIB=lib
 OBJ=obj
 
-SRCS=$(SRC)/main.c $(LIB)/glad.c
-OBJS=$(OBJ)/main.o $(OBJ)/glad.o
+SRCS=$(SRC)/main.cpp $(LIB)/glad.c $(SRC)/imgui/imgui.cpp $(SRC)/imgui/imgui_impl_opengl3.cpp $(SRC)/imgui/imgui_impl_glfw.cpp $(SRC)/imgui/imgui_draw.cpp $(SRC)/imgui/imgui_tables.cpp $(SRC)/imgui/imgui_widgets.cpp
+OBJS=$(OBJ)/main.o $(OBJ)/glad.o $(OBJ)/imgui.o $(OBJ)/imgui_impl_opengl3.o $(OBJ)/imgui_impl_glfw.o $(OBJ)/imgui_draw.o $(OBJ)/imgui_tables.o $(OBJ)/imgui_widgets.o
 BIN=csprite
-
-COMMIT_HASH=$(shell git rev-parse --short HEAD)
-VERSION=0.5.0
-
-CFLAGS += -DCOMMIT_HASH="\"$(COMMIT_HASH)\"" -DPROGRAM_VERSION="\"$(VERSION)\""
 
 all: LFLAGS += -g -O0
 all: $(BIN)
@@ -31,7 +28,11 @@ $(BIN): $(OBJS)
 	$(CC) $(LFLAGS) $(OBJS) -o $@
 
 # For Compiling Src/*
-$(OBJ)/%.o: $(SRC)/%.c
+$(OBJ)/%.o: $(SRC)/%.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# For Compiling Src/imgui/*
+$(OBJ)/%.o: $(SRC)/imgui/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # For Compiling Lib/*
