@@ -1,4 +1,5 @@
-CC := g++
+CXX := clang++
+CC := clang
 STD := c++17
 LFLAGS := -lglfw -lm -ldl -I. -std=${STD} -Wall
 CFLAGS := -Wall
@@ -31,15 +32,15 @@ clean:
 
 # For Compiling OBJ/* To Binary
 $(BIN): $(OBJS)
-	$(CC) $(LFLAGS) $(OBJS) -o $@
+	$(CXX) $(LFLAGS) $(OBJS) -o $@
 
 # For Compiling Src/*
 $(OBJ)/%.o: $(SRC)/%.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 # For Compiling Src/imgui/*
 $(OBJ)/%.o: $(SRC)/imgui/%.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 # For Compiling Lib/*
 $(OBJ)/%.o: $(LIB)/%.c
