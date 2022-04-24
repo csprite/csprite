@@ -234,8 +234,8 @@ int main(int argc, char **argv) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	viewport[0] = WINDOW_DIMS[0] / 2 - DIMS[0] * zoom[zoom_level] / 2;
-	viewport[1] = WINDOW_DIMS[1] / 2 - DIMS[1] * zoom[zoom_level] / 2;
+	viewport[0] = (int)(WINDOW_DIMS[0] / 2 - DIMS[0] * zoom[zoom_level] / 2);
+	viewport[1] = (int)(WINDOW_DIMS[1] / 2 - DIMS[1] * zoom[zoom_level] / 2);
 	viewport[2] = DIMS[0] * zoom[zoom_level];
 	viewport[3] = DIMS[1] * zoom[zoom_level];
 
@@ -513,8 +513,8 @@ void adjust_zoom(int increase) {
 			zoom_level--;
 	}
 
-	viewport[0] = WINDOW_DIMS[0] / 2 - DIMS[0] * zoom[zoom_level] / 2;
-	viewport[1] = WINDOW_DIMS[1] / 2 - DIMS[1] * zoom[zoom_level] / 2;
+	viewport[0] = (int)(WINDOW_DIMS[0] / 2 - DIMS[0] * zoom[zoom_level] / 2);
+	viewport[1] = (int)(WINDOW_DIMS[1] / 2 - DIMS[1] * zoom[zoom_level] / 2);
 	viewport[2] = DIMS[0] * zoom[zoom_level];
 	viewport[3] = DIMS[1] * zoom[zoom_level];
 
