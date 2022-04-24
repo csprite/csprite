@@ -1,2 +1,2 @@
 # CSprite
-A Pixel Art Tool -- Fork Of [@Falconerd's Sixel](https://github.com/Falconerd/sixel)
+A Pixel Art Tool - Powered By OpenGL & ImGui
