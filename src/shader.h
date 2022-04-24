@@ -23,12 +23,12 @@ int read_file_into_buffer(char **buffer, const char *path) {
 	return 0;
 }
 
-// Create a shader program with given shaders, if null uses the shader.vs & shader.fs file's content hard coded in the source code
-GLuint create_shader_program(const char *vert_path, const char *frag_path, const char *geom_path) {
-	GLuint shader_program;
-	GLuint vert_shader;
-	GLuint frag_shader;
-	GLuint geom_shader;
+// Create a shader program with given shaders and return a ID, if null, uses the shader.vs & shader.fs file's content hard coded in the source code
+unsigned int create_shader_program(const char *vert_path, const char *frag_path, const char *geom_path) {
+	unsigned int shader_program;
+	unsigned int vert_shader;
+	unsigned int frag_shader;
+	unsigned int geom_shader;
 	char *vert_shader_source;
 	char *frag_shader_source;
 	char *geom_shader_source;
