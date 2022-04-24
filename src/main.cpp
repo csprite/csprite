@@ -274,6 +274,15 @@ int main(int argc, char **argv) {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
+	ImGuiWindowFlags window_flags = 0;
+	window_flags |= ImGuiWindowFlags_NoBackground;
+	window_flags |= ImGuiWindowFlags_NoTitleBar;
+	window_flags |= ImGuiWindowFlags_NoResize;
+	window_flags |= ImGuiWindowFlags_NoMove;
+	ImVec2 windowPos = {
+		0, 0
+	};
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		process_input(window);
@@ -313,8 +322,18 @@ int main(int argc, char **argv) {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("Test Window");
-		ImGui::Text("Hello There, This is Text!");
+		ImGui::Begin("SelectedToolWindow", NULL, window_flags);
+		ImGui::SetWindowPos(windowPos);
+
+		if (palette_index == 0)
+			ImGui::Text("Eraser...");
+		else if (mode == DRAW)
+			ImGui::Text("Brush...");
+		else if (mode == FILL)
+			ImGui::Text("Fill...");
+		else if (mode == PAN)
+			ImGui::Text("Panning...");
+
 		ImGui::End();
 
 		ImGui::Render();
