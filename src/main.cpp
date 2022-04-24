@@ -1,11 +1,13 @@
-#include <limits.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <iostream>
+#include <string>
+
+#include "../include/imgui/imgui.h"
+#include "../include/imgui/imgui_impl_glfw.h"
+#include "../include/imgui/imgui_impl_opengl3.h"
 
 #include "../include/glad/glad.h"
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../lib/stb/stb_image_write.h"
@@ -16,15 +18,7 @@
 #include "shader.h"
 #include "math_linear.h"
 
-#ifndef COMMIT_HASH
-#define COMMIT_HASH "unknown"
-#endif
-
-#ifndef PROGRAM_VERSION
-#define PROGRAM_VERSION "unknown"
-#endif
-
-char *FILE_NAME = "test.png"; // Default Output Filename
+std::string FILE_NAME = "test.png"; // Default Output Filename
 int WINDOW_DIMS[2] = {600, 400}; // Default Window Dimensions
 int DIMS[2] = {16, 16}; // Default Canvas Size
 
@@ -103,21 +97,12 @@ unsigned char * get_char_data(unsigned char *data, int x, int y) {
 
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
-		if (strcmp(argv[i], "-v") == 0) {
-			if (strcmp(COMMIT_HASH, "unknown") == 0) {
-				puts("CSprite UnVerfied Build.");
-			} else {
-				printf("CSprite Version: %s\nVerified Build - Commit: %s\n", PROGRAM_VERSION, COMMIT_HASH);
-			}
-			return 0;
-		}
-
 		if (strcmp(argv[i], "-f") == 0) {
 			FILE_NAME = argv[i+1];
 			int x, y, c;
-			unsigned char *image_data = stbi_load(FILE_NAME, &x, &y, &c, 0);
+			unsigned char *image_data = stbi_load(FILE_NAME.c_str(), &x, &y, &c, 0);
 			if (image_data == NULL) {
-				printf("Unable to load image %s\n", FILE_NAME);
+				printf("Unable to load image %s\n", FILE_NAME.c_str());
 			} else {
 				DIMS[0] = x;
 				DIMS[1] = y;
@@ -282,6 +267,13 @@ int main(int argc, char **argv) {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		process_input(window);
@@ -306,22 +298,37 @@ int main(int argc, char **argv) {
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		if (should_save > 0) {
-			unsigned char *data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+			// Using Malloc Because Can't Use "new";
+			unsigned char *data = (unsigned char *) malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
 
 			// glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-			stbi_write_png(FILE_NAME, DIMS[0], DIMS[1], 4, data, 0);
+			stbi_write_png(FILE_NAME.c_str(), DIMS[0], DIMS[1], 4, data, 0);
 
 			free(data);
 			should_save = 0;
 		}
 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::Begin("Test Window");
+		ImGui::Text("Hello There, This is Text!");
+		ImGui::End();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		glfwSwapBuffers(window);
 	}
 
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
 	glfwDestroyWindow(window);
 	glfwTerminate();
-
 	return 0;
 }
 
