@@ -17,9 +17,10 @@
 
 #include "shader.h"
 #include "math_linear.h"
+#include "main.h"
 
 std::string FILE_NAME = "test.png"; // Default Output Filename
-int WINDOW_DIMS[2] = {600, 400}; // Default Window Dimensions
+int WINDOW_DIMS[2] = {700, 500}; // Default Window Dimensions
 int DIMS[2] = {16, 16}; // Default Canvas Size
 
 unsigned char *canvas_data; // Canvas Data Containg Pixel Values.
@@ -52,6 +53,7 @@ enum mode { DRAW, PAN, FILL };
 
 unsigned char zoom_level = 4;
 unsigned char zoom[8] = {1, 2, 4, 8, 16, 32, 64, 128}; // Zoom Levels
+unsigned char brush_size = 1;
 
 // Holds if a ctrl/shift is pressed or not
 unsigned char ctrl = 0;
@@ -76,24 +78,6 @@ unsigned int indices[] = {0, 1, 3, 1, 2, 3};
 double cursor_pos[2];
 double cursor_pos_last[2];
 double cursor_pos_relative[2];
-
-// Function Implementations in The Current File/Translation-Unit
-void framebuffer_size_callback(GLFWwindow *, int, int);
-void process_input(GLFWwindow *);
-void mouse_callback(GLFWwindow *, double, double);
-void mouse_button_callback(GLFWwindow *, int, int, int);
-void scroll_callback(GLFWwindow *, double, double);
-void key_callback(GLFWwindow *, int, int, int, int);
-void viewport_set();
-void adjust_zoom(int);
-int string_to_int(int *out, char *s);
-int color_equal(unsigned char *, unsigned char *);
-unsigned char * get_pixel(int x, int y);
-void fill(int x, int y, unsigned char *old_colour);
-
-unsigned char * get_char_data(unsigned char *data, int x, int y) {
-	return data + ((y * DIMS[0] + x) * 4);
-}
 
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
@@ -329,13 +313,13 @@ int main(int argc, char **argv) {
 		ImGui::SetWindowPos(windowPos);
 
 		if (palette_index == 0)
-			ImGui::Text("Eraser...");
+			ImGui::Text("Eraser - (Size: %d)", brush_size);
 		else if (mode == DRAW)
-			ImGui::Text("Brush...");
+			ImGui::Text("Brush - (Size: %d)", brush_size);
 		else if (mode == FILL)
-			ImGui::Text("Fill...");
+			ImGui::Text("Fill");
 		else if (mode == PAN)
-			ImGui::Text("Panning...");
+			ImGui::Text("Panning");
 
 		ImGui::End();
 
@@ -354,6 +338,10 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
+unsigned char * get_char_data(unsigned char *data, int x, int y) {
+	return data + ((y * DIMS[0] + x) * 4);
+}
+
 void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 	glViewport(0, 0, w, h);
 }
@@ -365,19 +353,15 @@ void process_input(GLFWwindow *window) {
 		y = (int)(cursor_pos_relative[1] / zoom[zoom_level]);
 
 		if (x >= 0 && x < DIMS[0] && y >= 0 && y < DIMS[1]) {
-			unsigned char *ptr = canvas_data;
-			ptr += (y * DIMS[0] + x) * 4;
-
 			switch (mode) {
 				case DRAW:
-					*ptr = draw_colour[0];
-					*(ptr + 1) = draw_colour[1];
-					*(ptr + 2) = draw_colour[2];
-					*(ptr + 3) = draw_colour[3];
+					draw(x, y);
 					break;
 				case PAN:
 					break;
 				case FILL: {
+					unsigned char *ptr = get_pixel(y, y);
+					// Color Clicked On.
 					unsigned char colour[4] = {
 						*(ptr + 0),
 						*(ptr + 1),
@@ -424,7 +408,7 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-	if (mods == GLFW_MOD_CONTROL && action == GLFW_PRESS) {
+	if (action == GLFW_PRESS) {
 		if (mods == GLFW_MOD_CONTROL) {
 			ctrl = 1;
 
@@ -435,7 +419,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				adjust_zoom(0);
 			}
 		}
-		
+
 		if (mods == GLFW_MOD_SHIFT) {
 			shift = 1;
 		}
@@ -445,6 +429,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		
 		if (mods == GLFW_MOD_SHIFT)
 			shift = 0;
+
+		if (key == GLFW_KEY_I) {
+			if (brush_size < 3)
+				brush_size++;
+		} else if (key == GLFW_KEY_O) {
+			if (brush_size != 1)
+				brush_size--;
+		}
 	}
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -467,35 +459,35 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 		if (key == GLFW_KEY_1) {
 			if (palette_count >= 1) {
-				palette_index = ctrl ? 9 : 1;
+				palette_index = shift ? 9 : 1;
 			}
 		} else if (key == GLFW_KEY_2) {
 			if (palette_count >= 2) {
-				palette_index = ctrl ? 10 : 2;
+				palette_index = shift ? 10 : 2;
 			}
 		} else if (key == GLFW_KEY_3) {
 			if (palette_count >= 3) {
-				palette_index = ctrl ? 11 : 2;
+				palette_index = shift ? 11 : 2;
 			}
 		} else if (key == GLFW_KEY_4) {
 			if (palette_count >= 4) {
-				palette_index = ctrl ? 12 : 4;
+				palette_index = shift ? 12 : 4;
 			}
 		} else if (key == GLFW_KEY_5) {
 			if (palette_count >= 5) {
-				palette_index = ctrl ? 13 : 5;
+				palette_index = shift ? 13 : 5;
 			}
 		} else if (key == GLFW_KEY_6) {
 			if (palette_count >= 6) {
-				palette_index = ctrl ? 14 : 6;
+				palette_index = shift ? 14 : 6;
 			}
 		} else if (key == GLFW_KEY_7) {
 			if (palette_count >= 7) {
-				palette_index = ctrl ? 15 : 7;
+				palette_index = shift ? 15 : 7;
 			}
 		} else if (key == GLFW_KEY_8) {
 			if (palette_count >= 8) {
-				if (ctrl)
+				if (shift)
 					palette_index = 16;
 				else
 					palette_index = 8;
@@ -577,6 +569,92 @@ unsigned char * get_pixel(int x, int y) {
 	return canvas_data + ((y * DIMS[0] + x) * 4);
 }
 
+void draw_size3(int x, int y) {
+	unsigned char *ptr = get_pixel(x, --y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+
+	ptr = get_pixel(--x, y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+
+	ptr = get_pixel(x, ++y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+
+	ptr = get_pixel(--x, y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+
+	ptr = get_pixel(x, --y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+
+	ptr = get_pixel(x, --y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+
+	ptr = get_pixel(++x, y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+
+	ptr = get_pixel(++x, y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+}
+
+void draw_size2(int x, int y) {
+	unsigned char *ptr = get_pixel(x, --y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+
+	ptr = get_pixel(--x, y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+
+	ptr = get_pixel(x, ++y);
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+}
+
+void draw(int x, int y) {
+	unsigned char *ptr = get_pixel(x, y);
+
+	// Set Pixel Color
+	*ptr = draw_colour[0]; // Red
+	*(ptr + 1) = draw_colour[1]; // Green
+	*(ptr + 2) = draw_colour[2]; // Blue
+	*(ptr + 3) = draw_colour[3]; // Alpha
+	if (brush_size == 2) {
+		draw_size2(x, y);
+	} else if (brush_size == 3) {
+		draw_size3(x, y);
+	}
+}
+
+// Fill Tool, Fills The Whole Canvas Using Recursion
 void fill(int x, int y, unsigned char *old_colour) {
 	unsigned char *ptr = get_pixel(x, y);
 	if (color_equal(ptr, old_colour)) {
