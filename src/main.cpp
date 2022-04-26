@@ -295,6 +295,7 @@ int main(int argc, char **argv) {
 
 		if (ImGui::Button("Open File")) {
 			CANVAS_FREEZE = true;
+			ImGui::SetNextWindowSize({580,380});
 			ImGuiFileDialog::Instance()->OpenDialog("OpenFileDialogKey0", "Choose File", ".png,.PNG", ".");
 		}
 
