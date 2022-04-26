@@ -14,6 +14,5 @@ int color_equal(unsigned char *, unsigned char *);
 unsigned char * get_pixel(int x, int y);
 void fill(int x, int y, unsigned char *old_colour);
 void draw(int x, int y);
-void draw_size2(int x, int y);
-void draw_size3(int x, int y);
+void load_image_to_canvas();
 unsigned char * get_char_data(unsigned char *data, int x, int y);
