@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <iostream>
+#include <set>
 #include <string>
 
 #include "../include/imgui/imgui.h"
@@ -28,8 +29,8 @@ unsigned char *canvas_data; // Canvas Data Containg Pixel Values.
 
 unsigned char last_palette_index = 1;
 unsigned char palette_index = 1;
-unsigned char palette_count = 16;
-unsigned char palette[128][4] = {
+unsigned char palette_count = 17;
+unsigned char palette[17][4] = {
 	{ 0,   0,   0,   0   }, // Black Transparent/None
 	// Pico 8 Color Palette - https://lospec.com/palette-list/pico-8
 	{ 0,   0,   0,   255 }, // Black Color
@@ -53,8 +54,9 @@ unsigned char palette[128][4] = {
 // NO_MODE defines that there shouldn't be anything drawn
 enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL };
 
-unsigned char zoom_level = 4; // Default Zoom Level
-unsigned char zoom[8] = {1, 2, 4, 8, 16, 32, 64, 128}; // Zoom Levels
+unsigned char zoom_index = 4; // Default Zoom Level - 16
+unsigned char zoom[8] = { 1, 2, 4, 8, 16, 32, 64, 128 }; // Zoom Levels
+std::string zoomText = "Zoom: " + std::to_string(zoom[zoom_index]) + "x"; // Human Readable string decribing zoom level for UI
 unsigned char brush_size = 1; // Default Brush Size
 
 // Holds if a ctrl/shift is pressed or not
@@ -65,7 +67,7 @@ enum mode mode = SQUARE_BRUSH;
 enum mode last_mode = SQUARE_BRUSH;
 bool CANVAS_FREEZE = false;
 unsigned char *draw_colour; // Holds Pointer To Currently Selected Color
-unsigned char erase[4] = {0, 0, 0, 0}; // Erase Color, Transparent Black.
+unsigned char erase[4] = { 0, 0, 0, 0 }; // Erase Color, Transparent Black.
 unsigned char should_save = 0;
 
 GLfloat viewport[4];
@@ -167,7 +169,7 @@ int main(int argc, char **argv) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
 
 	window = glfwCreateWindow(WINDOW_DIMS[0], WINDOW_DIMS[1], "CSprite", NULL, NULL);
@@ -184,12 +186,13 @@ int main(int argc, char **argv) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	viewport[0] = (int)(WINDOW_DIMS[0] / 2 - DIMS[0] * zoom[zoom_level] / 2);
-	viewport[1] = (int)(WINDOW_DIMS[1] / 2 - DIMS[1] * zoom[zoom_level] / 2);
-	viewport[2] = DIMS[0] * zoom[zoom_level];
-	viewport[3] = DIMS[1] * zoom[zoom_level];
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
+	viewport[2] = DIMS[0] * zoom[zoom_index];
+	viewport[3] = DIMS[1] * zoom[zoom_index];
 
 	viewport_set();
+	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
@@ -247,10 +250,8 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoTitleBar;
 	window_flags |= ImGuiWindowFlags_NoResize;
 	window_flags |= ImGuiWindowFlags_NoMove;
-	ImVec2 windowPos = {
-		0, 0
-	};
 
+	// unsigned char palette_size = ++palette_count; // Palette Size Without The First Transparent Black Color
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		process_input(window);
@@ -290,8 +291,20 @@ int main(int argc, char **argv) {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		ImGui::Begin("ColorPaletteWindow", NULL, window_flags);
+		ImGui::SetWindowPos({0, (float)WINDOW_DIMS[1] - 35});
+
+		for (int i = 1; i < palette_count; i++) {
+			if (i != 1) ImGui::SameLine();
+			if (ImGui::ColorButton(palette_index == i ? "Selected Color" : "Color", {(float)palette[i][0]/255, (float)palette[i][1]/255, (float)palette[i][2]/255, (float)palette[i][3]/255})) {
+				palette_index = i;
+			}
+		};
+
+		ImGui::End();
+
 		ImGui::Begin("SelectedToolWindow", NULL, window_flags);
-		ImGui::SetWindowPos(windowPos);
+		ImGui::SetWindowPos({0, 0});
 
 		if (ImGui::Button("Open File")) {
 			CANVAS_FREEZE = true;
@@ -329,6 +342,13 @@ int main(int argc, char **argv) {
 
 		ImGui::End();
 
+		ImGui::Begin("ZoomLevel", NULL, window_flags);
+
+		ImGui::SetWindowPos({(float)WINDOW_DIMS[0] - ImGui::CalcTextSize(zoomText.c_str()).x - 15, 0});
+		ImGui::Text("%s", zoomText.c_str());
+
+		ImGui::End();
+
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -352,14 +372,26 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 	glViewport(0, 0, w, h);
 }
 
+void window_size_callback(GLFWwindow* window, int width, int height) {
+	WINDOW_DIMS[0] = width;
+	WINDOW_DIMS[1] = height;
+
+	// Center The Canvas
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
+	viewport[2] = DIMS[0] * zoom[zoom_index];
+	viewport[3] = DIMS[1] * zoom[zoom_index];
+	viewport_set();
+}
+
 void process_input(GLFWwindow *window) {
 	if (CANVAS_FREEZE == true)
 		return;
 
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		x = (int)(cursor_pos_relative[0] / zoom[zoom_level]);
-		y = (int)(cursor_pos_relative[1] / zoom[zoom_level]);
+		x = (int)(cursor_pos_relative[0] / zoom[zoom_index]);
+		y = (int)(cursor_pos_relative[1] / zoom[zoom_index]);
 
 		if (x >= 0 && x < DIMS[0] && y >= 0 && y < DIMS[1]) {
 			switch (mode) {
@@ -411,9 +443,9 @@ void mouse_button_callback(GLFWwindow *window, int button, int down, int c) {
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 	if (yoffset > 0)
-		adjust_zoom(1);
+		adjust_zoom(true);
 	else
-		adjust_zoom(0);
+		adjust_zoom(false);
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
@@ -423,9 +455,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 			// if ctrl key is pressed and + or - is pressed, adjust the zoom size
 			if (key == GLFW_KEY_EQUAL) {
-				adjust_zoom(1);
+				adjust_zoom(true);
 			} else if (key == GLFW_KEY_MINUS) {
-				adjust_zoom(0);
+				adjust_zoom(false);
 			}
 		}
 
@@ -453,17 +485,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 	// Color Changing
 	if (action == GLFW_PRESS) {
-		if (key == GLFW_KEY_H) {
+		if (key == GLFW_KEY_K) {
 			if (palette_index > 1)
 				palette_index--;
-		} else if (key == GLFW_KEY_J) {
-			if (palette_index > palette_count + 8)
-				palette_index += 8;
-		} else if (key == GLFW_KEY_K) {
-			if (palette_index < palette_count - 8)
-				palette_index -= 8;
 		} else if (key == GLFW_KEY_L)
-			if (palette_index < palette_count)
+			if (palette_index < palette_count-1)
 				palette_index++;
 
 		if (key == GLFW_KEY_1) {
@@ -476,7 +502,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			}
 		} else if (key == GLFW_KEY_3) {
 			if (palette_count >= 3) {
-				palette_index = shift ? 11 : 2;
+				palette_index = shift ? 11 : 3;
 			}
 		} else if (key == GLFW_KEY_4) {
 			if (palette_count >= 4) {
@@ -496,10 +522,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			}
 		} else if (key == GLFW_KEY_8) {
 			if (palette_count >= 8) {
-				if (shift)
-					palette_index = 16;
-				else
-					palette_index = 8;
+				palette_index = shift ? 16 : 8;
 			}
 		}
 
@@ -518,8 +541,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			else
 				mode = SQUARE_BRUSH;
 
-			last_palette_index = palette_index;
-			palette_index = 0;
+			if (palette_index != 0) {
+				last_palette_index = palette_index;
+				palette_index = 0;
+			}
 		}
 	}
 
@@ -543,21 +568,22 @@ void viewport_set() {
 	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
 
-void adjust_zoom(int increase) {
-	if (increase > 0) {
-		if (zoom_level < 5)
-			zoom_level++;
+void adjust_zoom(bool increase) {
+	if (increase == true) {
+		if (zoom_index < sizeof(zoom)-1)
+			zoom_index++;
 	} else {
-		if (zoom_level > 0)
-			zoom_level--;
+		if (zoom_index > 0)
+			zoom_index--;
 	}
 
-	viewport[0] = (int)(WINDOW_DIMS[0] / 2 - DIMS[0] * zoom[zoom_level] / 2);
-	viewport[1] = (int)(WINDOW_DIMS[1] / 2 - DIMS[1] * zoom[zoom_level] / 2);
-	viewport[2] = DIMS[0] * zoom[zoom_level];
-	viewport[3] = DIMS[1] * zoom[zoom_level];
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
+	viewport[2] = DIMS[0] * zoom[zoom_index];
+	viewport[3] = DIMS[1] * zoom[zoom_index];
 
 	viewport_set();
+	zoomText = "Zoom: " + std::to_string(zoom[zoom_index]) + "x";
 }
 
 int string_to_int(int *out, char *s) {
