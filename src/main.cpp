@@ -5,6 +5,7 @@
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/imgui_impl_glfw.h"
 #include "../include/imgui/imgui_impl_opengl3.h"
+#include "../lib/ImGuiFileDialog.h"
 
 #include "../include/glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -21,10 +22,11 @@
 
 std::string FILE_NAME = "test.png"; // Default Output Filename
 int WINDOW_DIMS[2] = {700, 500}; // Default Window Dimensions
-int DIMS[2] = {16, 16}; // Default Canvas Size
+int DIMS[2] = {20, 16}; // Width, Height Default Canvas Size
 
 unsigned char *canvas_data; // Canvas Data Containg Pixel Values.
 
+unsigned char last_palette_index = 1;
 unsigned char palette_index = 1;
 unsigned char palette_count = 16;
 unsigned char palette[128][4] = {
@@ -48,20 +50,21 @@ unsigned char palette[128][4] = {
 	{ 255, 204, 170, 255 }  // Pale Orange
 };
 
-// Enum Containing Current Mode, Draw - Drawing & Erasing, Pan For Moving The Canvas & Fill For Filling/Erasing The Canvas
-enum mode { DRAW, PAN, FILL };
+// NO_MODE defines that there shouldn't be anything drawn
+enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL };
 
-unsigned char zoom_level = 4;
+unsigned char zoom_level = 4; // Default Zoom Level
 unsigned char zoom[8] = {1, 2, 4, 8, 16, 32, 64, 128}; // Zoom Levels
-unsigned char brush_size = 1;
+unsigned char brush_size = 1; // Default Brush Size
 
 // Holds if a ctrl/shift is pressed or not
 unsigned char ctrl = 0;
 unsigned char shift = 0;
 
-enum mode mode = DRAW;
-enum mode last_mode = DRAW;
-unsigned char *draw_colour;
+enum mode mode = SQUARE_BRUSH;
+enum mode last_mode = SQUARE_BRUSH;
+bool CANVAS_FREEZE = false;
+unsigned char *draw_colour; // Holds Pointer To Currently Selected Color
 unsigned char erase[4] = {0, 0, 0, 0}; // Erase Color, Transparent Black.
 unsigned char should_save = 0;
 
@@ -83,29 +86,7 @@ int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
 			FILE_NAME = argv[i+1];
-			int x, y, c;
-			unsigned char *image_data = stbi_load(FILE_NAME.c_str(), &x, &y, &c, 0);
-			if (image_data == NULL) {
-				printf("Unable to load image %s\n", FILE_NAME.c_str());
-			} else {
-				DIMS[0] = x;
-				DIMS[1] = y;
-				canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
-				int j, k;
-				unsigned char *ptr;
-				unsigned char *iptr;
-				for (j = 0; j < y; j++) {
-					for (k = 0; k < x; k++) {
-						ptr = get_pixel(k, j);
-						iptr = get_char_data(image_data, k, j);
-						*(ptr+0) = *(iptr+0);
-						*(ptr+1) = *(iptr+1);
-						*(ptr+2) = *(iptr+2);
-						*(ptr+3) = *(iptr+3);
-					}
-				}
-				stbi_image_free(image_data);
-			}
+			load_image_to_canvas();
 			i++;
 		}
 
@@ -312,10 +293,34 @@ int main(int argc, char **argv) {
 		ImGui::Begin("SelectedToolWindow", NULL, window_flags);
 		ImGui::SetWindowPos(windowPos);
 
-		if (palette_index == 0)
-			ImGui::Text("Eraser - (Size: %d)", brush_size);
-		else if (mode == DRAW)
-			ImGui::Text("Brush - (Size: %d)", brush_size);
+		if (ImGui::Button("Open File")) {
+			CANVAS_FREEZE = true;
+			ImGuiFileDialog::Instance()->OpenDialog("OpenFileDialogKey0", "Choose File", ".png,.PNG", ".");
+		}
+
+		if (ImGuiFileDialog::Instance()->Display("OpenFileDialogKey0")) {
+			CANVAS_FREEZE = true;
+			if (ImGuiFileDialog::Instance()->IsOk()) {
+				FILE_NAME = ImGuiFileDialog::Instance()->GetFilePathName();
+				load_image_to_canvas();
+			}
+
+			CANVAS_FREEZE = false;
+			ImGuiFileDialog::Instance()->Close();
+		}
+
+		if (mode == SQUARE_BRUSH)
+			if (palette_index == 0) {
+				ImGui::Text("Square Eraser - (Size: %d)", brush_size);
+			} else {
+				ImGui::Text("Square Brush - (Size: %d)", brush_size);
+			}
+		else if (mode == CIRCLE_BRUSH)
+			if (palette_index == 0) {
+				ImGui::Text("Circle Eraser - (Size: %d)", brush_size);
+			} else {
+				ImGui::Text("Circle Brush - (Size: %d)", brush_size);
+			}
 		else if (mode == FILL)
 			ImGui::Text("Fill");
 		else if (mode == PAN)
@@ -347,6 +352,9 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 }
 
 void process_input(GLFWwindow *window) {
+	if (CANVAS_FREEZE == true)
+		return;
+
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		x = (int)(cursor_pos_relative[0] / zoom[zoom_level]);
@@ -354,7 +362,7 @@ void process_input(GLFWwindow *window) {
 
 		if (x >= 0 && x < DIMS[0] && y >= 0 && y < DIMS[1]) {
 			switch (mode) {
-				case DRAW:
+				case SQUARE_BRUSH: case CIRCLE_BRUSH:
 					draw(x, y);
 					break;
 				case PAN:
@@ -431,7 +439,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			shift = 0;
 
 		if (key == GLFW_KEY_I) {
-			if (brush_size < 3)
+			if (brush_size < 255)
 				brush_size++;
 		} else if (key == GLFW_KEY_O) {
 			if (brush_size != 1)
@@ -497,7 +505,20 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		if (key == GLFW_KEY_F) {
 			mode = FILL;
 		} else if (key == GLFW_KEY_B) {
-			mode = DRAW;
+			if (shift)
+				mode = CIRCLE_BRUSH;
+			else
+				mode = SQUARE_BRUSH;
+
+			palette_index = last_palette_index;
+		} else if (key == GLFW_KEY_E) {
+			if (shift)
+				mode = CIRCLE_BRUSH;
+			else
+				mode = SQUARE_BRUSH;
+
+			last_palette_index = palette_index;
+			palette_index = 0;
 		}
 	}
 
@@ -508,10 +529,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		} else if (action == GLFW_RELEASE) {
 			mode = last_mode;
 		}
-	}
-
-	if ((key == GLFW_KEY_0 || key == GLFW_KEY_E) && action == GLFW_PRESS) {
-		palette_index = 0;
 	}
 
 	draw_colour = palette[palette_index];
@@ -569,88 +586,23 @@ unsigned char * get_pixel(int x, int y) {
 	return canvas_data + ((y * DIMS[0] + x) * 4);
 }
 
-void draw_size3(int x, int y) {
-	unsigned char *ptr = get_pixel(x, --y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-
-	ptr = get_pixel(--x, y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-
-	ptr = get_pixel(x, ++y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-
-	ptr = get_pixel(--x, y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-
-	ptr = get_pixel(x, --y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-
-	ptr = get_pixel(x, --y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-
-	ptr = get_pixel(++x, y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-
-	ptr = get_pixel(++x, y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-}
-
-void draw_size2(int x, int y) {
-	unsigned char *ptr = get_pixel(x, --y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-
-	ptr = get_pixel(--x, y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-
-	ptr = get_pixel(x, ++y);
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-}
-
 void draw(int x, int y) {
-	unsigned char *ptr = get_pixel(x, y);
+	for (int yr = -brush_size/2; yr < brush_size/2+1; yr++) {
+		for (int xr = -brush_size/2; xr < brush_size/2+1; xr++) {
+			if (x+xr < 0 || x+xr >= DIMS[0] || y+yr < 0 || y+yr > DIMS[1])
+				continue;
 
-	// Set Pixel Color
-	*ptr = draw_colour[0]; // Red
-	*(ptr + 1) = draw_colour[1]; // Green
-	*(ptr + 2) = draw_colour[2]; // Blue
-	*(ptr + 3) = draw_colour[3]; // Alpha
-	if (brush_size == 2) {
-		draw_size2(x, y);
-	} else if (brush_size == 3) {
-		draw_size3(x, y);
+			if (mode == CIRCLE_BRUSH && xr*xr + yr*yr > brush_size / 2 * brush_size / 2)
+				continue;
+
+			unsigned char *ptr = get_pixel(x+xr, y+yr);
+
+			// Set Pixel Color
+			*ptr = draw_colour[0]; // Red
+			*(ptr + 1) = draw_colour[1]; // Green
+			*(ptr + 2) = draw_colour[2]; // Blue
+			*(ptr + 3) = draw_colour[3]; // Alpha
+		}
 	}
 }
 
@@ -672,4 +624,32 @@ void fill(int x, int y, unsigned char *old_colour) {
 		if (y != 0 && !color_equal(get_pixel(x, y - 1), draw_colour))
 			fill(x, y - 1, old_colour);
 	}
+}
+
+void load_image_to_canvas() {
+	CANVAS_FREEZE = true;
+	int x, y, c;
+	unsigned char *image_data = stbi_load(FILE_NAME.c_str(), &x, &y, &c, 0);
+	if (image_data == NULL) {
+		printf("Unable to load image %s\n", FILE_NAME.c_str());
+	} else {
+		DIMS[0] = x;
+		DIMS[1] = y;
+		canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+		int j, k;
+		unsigned char *ptr;
+		unsigned char *iptr;
+		for (j = 0; j < y; j++) {
+			for (k = 0; k < x; k++) {
+				ptr = get_pixel(k, j);
+				iptr = get_char_data(image_data, k, j);
+				*(ptr+0) = *(iptr+0);
+				*(ptr+1) = *(iptr+1);
+				*(ptr+2) = *(iptr+2);
+				*(ptr+3) = *(iptr+3);
+			}
+		}
+		stbi_image_free(image_data);
+	}
+	CANVAS_FREEZE = false;
 }
