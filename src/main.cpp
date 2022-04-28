@@ -62,6 +62,7 @@ unsigned char brush_size = 1; // Default Brush Size
 // Holds if a ctrl/shift is pressed or not
 unsigned char ctrl = 0;
 unsigned char shift = 0;
+unsigned char textShouldReRender = 1;
 
 enum mode mode = SQUARE_BRUSH;
 enum mode last_mode = SQUARE_BRUSH;
@@ -236,14 +237,23 @@ int main(int argc, char **argv) {
 	glBindVertexArray(0);
 
 	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
+	ImGuiContext* mainCtx = ImGui::CreateContext();
+	ImGuiContext* secondaryCtx = ImGui::CreateContext();
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = NULL; // Disable Generation of .ini file
 
 	ImGui::StyleColorsDark();
+
+	ImGui::SetCurrentContext(mainCtx);
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
+
+	ImGui::SetCurrentContext(secondaryCtx);
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
+	ImGui::SetCurrentContext(mainCtx);
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
@@ -251,8 +261,18 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoResize;
 	window_flags |= ImGuiWindowFlags_NoMove;
 
-	// unsigned char palette_size = ++palette_count; // Palette Size Without The First Transparent Black Color
+	double lastTime = glfwGetTime();
+	int nbFrames = 0; // Number Of Frames Rendered
+
 	while (!glfwWindowShouldClose(window)) {
+		double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
+		nbFrames++;
+		if ( currentTime - lastTime >= 1.0 ){
+			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+			nbFrames = 0;
+			lastTime += 1.0;
+		}
+
 		glfwPollEvents();
 		process_input(window);
 
@@ -261,7 +281,6 @@ int main(int argc, char **argv) {
 
 		glUseProgram(shader_program);
 		glBindVertexArray(vao);
-
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		unsigned int alpha_loc = glGetUniformLocation(shader_program, "alpha");
@@ -272,7 +291,6 @@ int main(int argc, char **argv) {
 		glBindTexture(GL_TEXTURE_2D, texture);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, DIMS[0], DIMS[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas_data);
-
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		if (should_save > 0) {
@@ -293,22 +311,21 @@ int main(int argc, char **argv) {
 
 		ImGui::Begin("ColorPaletteWindow", NULL, window_flags);
 		ImGui::SetWindowPos({0, (float)WINDOW_DIMS[1] - 35});
-
 		for (int i = 1; i < palette_count; i++) {
 			if (i != 1) ImGui::SameLine();
 			if (ImGui::ColorButton(palette_index == i ? "Selected Color" : "Color", {(float)palette[i][0]/255, (float)palette[i][1]/255, (float)palette[i][2]/255, (float)palette[i][3]/255})) {
 				palette_index = i;
 			}
 		};
-
 		ImGui::End();
 
-		ImGui::Begin("SelectedToolWindow", NULL, window_flags);
-		ImGui::SetWindowPos({0, 0});
+		ImGui::Begin("OpenFileWindow", NULL, window_flags);
+		ImGui::SetWindowPos({(float)WINDOW_DIMS[0] - 85, (float)WINDOW_DIMS[1] - 40});
 
 		if (ImGui::Button("Open File")) {
 			CANVAS_FREEZE = true;
 			ImGui::SetNextWindowSize({580,380});
+			ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));
 			ImGuiFileDialog::Instance()->OpenDialog("OpenFileDialogKey0", "Choose File", ".png,.PNG", ".");
 		}
 
@@ -322,34 +339,51 @@ int main(int argc, char **argv) {
 			CANVAS_FREEZE = false;
 			ImGuiFileDialog::Instance()->Close();
 		}
-
-		if (mode == SQUARE_BRUSH)
-			if (palette_index == 0) {
-				ImGui::Text("Square Eraser - (Size: %d)", brush_size);
-			} else {
-				ImGui::Text("Square Brush - (Size: %d)", brush_size);
-			}
-		else if (mode == CIRCLE_BRUSH)
-			if (palette_index == 0) {
-				ImGui::Text("Circle Eraser - (Size: %d)", brush_size);
-			} else {
-				ImGui::Text("Circle Brush - (Size: %d)", brush_size);
-			}
-		else if (mode == FILL)
-			ImGui::Text("Fill");
-		else if (mode == PAN)
-			ImGui::Text("Panning");
-
-		ImGui::End();
-
-		ImGui::Begin("ZoomLevel", NULL, window_flags);
-
-		ImGui::SetWindowPos({(float)WINDOW_DIMS[0] - ImGui::CalcTextSize(zoomText.c_str()).x - 15, 0});
-		ImGui::Text("%s", zoomText.c_str());
-
 		ImGui::End();
 
 		ImGui::Render();
+
+		if (textShouldReRender == 1) {
+			ImGui::SetCurrentContext(secondaryCtx);
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+
+			ImGui::Begin("SelectedToolWindow", NULL, window_flags);
+			ImGui::SetWindowPos({0, 0});
+
+			if (mode == SQUARE_BRUSH)
+				if (palette_index == 0) {
+					ImGui::Text("Square Eraser - (Size: %d)", brush_size);
+				} else {
+					ImGui::Text("Square Brush - (Size: %d)", brush_size);
+				}
+			else if (mode == CIRCLE_BRUSH)
+				if (palette_index == 0) {
+					ImGui::Text("Circle Eraser - (Size: %d)", brush_size);
+				} else {
+					ImGui::Text("Circle Brush - (Size: %d)", brush_size);
+				}
+			else if (mode == FILL)
+				ImGui::Text("Fill");
+			else if (mode == PAN)
+				ImGui::Text("Panning");
+
+			ImGui::End();
+
+			ImGui::Begin("ZoomLevel", NULL, window_flags);
+			ImGui::SetWindowPos({(float)WINDOW_DIMS[0] - ImGui::CalcTextSize(zoomText.c_str()).x - 15, 0});
+			ImGui::Text("%s", zoomText.c_str());
+			ImGui::End();
+
+			ImGui::Render();
+			textShouldReRender = 0;
+		}
+
+		ImGui::SetCurrentContext(secondaryCtx);
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		ImGui::SetCurrentContext(mainCtx);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(window);
@@ -382,6 +416,7 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 	viewport[2] = DIMS[0] * zoom[zoom_index];
 	viewport[3] = DIMS[1] * zoom[zoom_index];
 	viewport_set();
+	textShouldReRender = 1;
 }
 
 void process_input(GLFWwindow *window) {
@@ -395,10 +430,9 @@ void process_input(GLFWwindow *window) {
 
 		if (x >= 0 && x < DIMS[0] && y >= 0 && y < DIMS[1]) {
 			switch (mode) {
-				case SQUARE_BRUSH: case CIRCLE_BRUSH:
+				case SQUARE_BRUSH:
+				case CIRCLE_BRUSH:
 					draw(x, y);
-					break;
-				case PAN:
 					break;
 				case FILL: {
 					unsigned char *ptr = get_pixel(y, y);
@@ -412,6 +446,8 @@ void process_input(GLFWwindow *window) {
 					fill(x, y, colour);
 					break;
 				}
+				default:
+					break;
 			}
 		}
 	}
@@ -426,9 +462,9 @@ void mouse_callback(GLFWwindow *window, double x, double y) {
 			viewport[0] -= xmov;
 			viewport[1] += ymov;
 			viewport_set();
+			textShouldReRender = 1;
 		}
 	}
-
 	cursor_pos_last[0] = cursor_pos[0];
 	cursor_pos_last[1] = cursor_pos[1];
 	cursor_pos[0] = x;
@@ -449,6 +485,34 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+	if (action == GLFW_RELEASE) {
+		if (mods == GLFW_MOD_CONTROL)
+			ctrl = 0;
+		
+		if (mods == GLFW_MOD_SHIFT)
+			shift = 0;
+
+		if (key == GLFW_KEY_I) {
+			if (brush_size < 255) {
+				brush_size++;
+				textShouldReRender = 1;
+			}
+		} else if (key == GLFW_KEY_O) {
+			if (brush_size != 1) {
+				brush_size--;
+				textShouldReRender = 1;
+			}
+		}
+		if (key == GLFW_KEY_SPACE) {
+			mode = last_mode;
+			textShouldReRender = 1;
+		}
+	}
+
+	// if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	// 	glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+	// Color Changing
 	if (action == GLFW_PRESS) {
 		if (mods == GLFW_MOD_CONTROL) {
 			ctrl = 1;
@@ -464,70 +528,63 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		if (mods == GLFW_MOD_SHIFT) {
 			shift = 1;
 		}
-	} else if (action == GLFW_RELEASE) {
-		if (mods == GLFW_MOD_CONTROL)
-			ctrl = 0;
-		
-		if (mods == GLFW_MOD_SHIFT)
-			shift = 0;
 
-		if (key == GLFW_KEY_I) {
-			if (brush_size < 255)
-				brush_size++;
-		} else if (key == GLFW_KEY_O) {
-			if (brush_size != 1)
-				brush_size--;
-		}
-	}
-
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
-
-	// Color Changing
-	if (action == GLFW_PRESS) {
-		if (key == GLFW_KEY_K) {
-			if (palette_index > 1)
-				palette_index--;
-		} else if (key == GLFW_KEY_L)
-			if (palette_index < palette_count-1)
-				palette_index++;
-
-		if (key == GLFW_KEY_1) {
-			if (palette_count >= 1) {
-				palette_index = shift ? 9 : 1;
-			}
-		} else if (key == GLFW_KEY_2) {
-			if (palette_count >= 2) {
-				palette_index = shift ? 10 : 2;
-			}
-		} else if (key == GLFW_KEY_3) {
-			if (palette_count >= 3) {
-				palette_index = shift ? 11 : 3;
-			}
-		} else if (key == GLFW_KEY_4) {
-			if (palette_count >= 4) {
-				palette_index = shift ? 12 : 4;
-			}
-		} else if (key == GLFW_KEY_5) {
-			if (palette_count >= 5) {
-				palette_index = shift ? 13 : 5;
-			}
-		} else if (key == GLFW_KEY_6) {
-			if (palette_count >= 6) {
-				palette_index = shift ? 14 : 6;
-			}
-		} else if (key == GLFW_KEY_7) {
-			if (palette_count >= 7) {
-				palette_index = shift ? 15 : 7;
-			}
-		} else if (key == GLFW_KEY_8) {
-			if (palette_count >= 8) {
-				palette_index = shift ? 16 : 8;
-			}
+		switch (key) {
+			case GLFW_KEY_K:
+				if (palette_index > 1) {
+					palette_index--;
+					textShouldReRender = 1;
+				}
+			case GLFW_KEY_L:
+				if (palette_index < palette_count-1) {
+					palette_index++;
+					textShouldReRender = 1;
+				}
+			case GLFW_KEY_1:
+				if (palette_count >= 1) {
+					palette_index = shift ? 9 : 1;
+					textShouldReRender = 1;
+				}
+			case GLFW_KEY_2:
+				if (palette_count >= 2) {
+					palette_index = shift ? 10 : 2;
+					textShouldReRender = 1;
+				}
+			case GLFW_KEY_3:
+				if (palette_count >= 3) {
+					palette_index = shift ? 11 : 3;
+					textShouldReRender = 1;
+				}
+			case GLFW_KEY_4:
+				if (palette_count >= 4) {
+					palette_index = shift ? 12 : 4;
+					textShouldReRender = 1;
+				}
+			case GLFW_KEY_5:
+				if (palette_count >= 5) {
+					palette_index = shift ? 13 : 5;
+					textShouldReRender = 1;
+				}
+			case GLFW_KEY_6:
+				if (palette_count >= 6) {
+					palette_index = shift ? 14 : 6;
+					textShouldReRender = 1;
+				}
+			case GLFW_KEY_7:
+				if (palette_count >= 7) {
+					palette_index = shift ? 14 : 7;
+					textShouldReRender = 1;
+				}
+			case GLFW_KEY_8:
+				if (palette_count >= 8) {
+					palette_index = shift ? 16 : 8;
+					textShouldReRender = 1;
+				}
 		}
 
 		if (key == GLFW_KEY_F) {
 			mode = FILL;
+			textShouldReRender = 1;
 		} else if (key == GLFW_KEY_B) {
 			if (shift)
 				mode = CIRCLE_BRUSH;
@@ -535,6 +592,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				mode = SQUARE_BRUSH;
 
 			palette_index = last_palette_index;
+			textShouldReRender = 1;
 		} else if (key == GLFW_KEY_E) {
 			if (shift)
 				mode = CIRCLE_BRUSH;
@@ -545,15 +603,12 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				last_palette_index = palette_index;
 				palette_index = 0;
 			}
+			textShouldReRender = 1;
 		}
-	}
-
-	if (key == GLFW_KEY_SPACE) {
-		if (action == GLFW_PRESS) {
+		if (key == GLFW_KEY_SPACE) {
 			last_mode = mode;
 			mode = PAN;
-		} else if (action == GLFW_RELEASE) {
-			mode = last_mode;
+			textShouldReRender = 1;
 		}
 	}
 
@@ -570,11 +625,15 @@ void viewport_set() {
 
 void adjust_zoom(bool increase) {
 	if (increase == true) {
-		if (zoom_index < sizeof(zoom)-1)
+		if (zoom_index < sizeof(zoom)-1) {
 			zoom_index++;
+			textShouldReRender = 1;
+		}
 	} else {
-		if (zoom_index > 0)
+		if (zoom_index > 0) {
 			zoom_index--;
+			textShouldReRender = 1;
+		}
 	}
 
 	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
