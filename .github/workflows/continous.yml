@@ -11,12 +11,18 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Install GLFW3
+    - name: Install GLFW3 And UPX
       run: |
-        sudo apt-get install libglfw3 libglfw3-dev git
+        sudo apt-get install libglfw3
+        sudo apt-get install libglfw3-dev
+        sudo apt-get install git
+        sudo apt-get install upx
 
     - name: Build CSprite
-      run: make release -j4
+      run: make release -j4 && mv csprite csprite-uncompressed
+
+    - name: Compress Binary
+      run: upx -9 -o csprite ./csprite-uncompressed
 
     - name: Update/Create Continous Release
       uses: "marvinpinto/action-automatic-releases@latest"
