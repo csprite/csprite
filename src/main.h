@@ -1,13 +1,13 @@
 #include "GLFW/glfw3.h"
 #include <string>
 
-void framebuffer_size_callback(GLFWwindow *, int, int);
-void process_input(GLFWwindow *);
+void framebuffer_size_callback(GLFWwindow* window, int, int);
+void process_input(GLFWwindow* window);
 void window_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow *, double, double);
-void mouse_button_callback(GLFWwindow *, int, int, int);
-void scroll_callback(GLFWwindow *, double, double);
-void key_callback(GLFWwindow *, int, int, int, int);
+void mouse_callback(GLFWwindow* window, double, double);
+void mouse_button_callback(GLFWwindow* window, int, int, int);
+void scroll_callback(GLFWwindow* window, double, double);
+void key_callback(GLFWwindow* window, int, int, int, int);
 void viewport_set();
 void adjust_zoom(bool increase);
 int string_to_int(int *out, char *s);
