@@ -11,9 +11,9 @@ LIB=lib
 OBJ=obj
 
 SRCS=$(SRC)/main.cpp $(LIB)/glad.c $(LIB)/ImGuiFileDialog.cpp
-SRCS += $(SRC)/imgui/imgui.cpp $(SRC)/imgui/imgui_impl_opengl3.cpp
-SRCS += $(SRC)/imgui/imgui_impl_glfw.cpp $(SRC)/imgui/imgui_draw.cpp
-SRCS += $(SRC)/imgui/imgui_tables.cpp $(SRC)/imgui/imgui_widgets.cpp
+SRCS += $(LIB)/imgui/imgui.cpp $(LIB)/imgui/imgui_impl_opengl3.cpp
+SRCS += $(LIB)/imgui/imgui_impl_glfw.cpp $(LIB)/imgui/imgui_draw.cpp
+SRCS += $(LIB)/imgui/imgui_tables.cpp $(LIB)/imgui/imgui_widgets.cpp
 
 OBJS=$(OBJ)/main.o $(OBJ)/glad.o $(OBJ)/imgui.o $(OBJ)/ImGuiFileDialog.o
 OBJS += $(OBJ)/imgui_impl_opengl3.o $(OBJ)/imgui_impl_glfw.o
@@ -34,18 +34,18 @@ clean:
 $(BIN): $(OBJS)
 	$(CXX) $(LFLAGS) $(OBJS) -o $@
 
-# For Compiling Src/*.cpp
+# For Compiling src/*.cpp
 $(OBJ)/%.o: $(SRC)/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-# For Compiling Src/imgui/*.cpp
-$(OBJ)/%.o: $(SRC)/imgui/%.cpp
+# For Compiling lib/imgui/*.cpp
+$(OBJ)/%.o: $(LIB)/imgui/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-# For Compiling Lib/*.c
+# For Compiling lib/*.c
 $(OBJ)/%.o: $(LIB)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# For Compiling Lib/*.cpp
+# For Compiling lib/*.cpp
 $(OBJ)/%.o: $(LIB)/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
