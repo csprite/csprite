@@ -179,6 +179,7 @@ int main(int argc, char **argv) {
 		puts("Failed to create GLFW window");
 
 	glfwMakeContextCurrent(window);
+	glfwSwapInterval(0);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 		puts("Failed to init GLAD");
@@ -391,7 +392,8 @@ int main(int argc, char **argv) {
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
+	ImGui::DestroyContext(mainCtx);
+	ImGui::DestroyContext(secondaryCtx);
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
@@ -535,88 +537,91 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 					palette_index--;
 					textShouldReRender = 1;
 				}
+				break;
 			case GLFW_KEY_L:
 				if (palette_index < palette_count-1) {
 					palette_index++;
 					textShouldReRender = 1;
 				}
+				break;
 			case GLFW_KEY_1:
 				if (palette_count >= 1) {
 					palette_index = shift ? 9 : 1;
 					textShouldReRender = 1;
 				}
+				break;
 			case GLFW_KEY_2:
 				if (palette_count >= 2) {
 					palette_index = shift ? 10 : 2;
 					textShouldReRender = 1;
 				}
+				break;
 			case GLFW_KEY_3:
 				if (palette_count >= 3) {
 					palette_index = shift ? 11 : 3;
 					textShouldReRender = 1;
 				}
+				break;
 			case GLFW_KEY_4:
 				if (palette_count >= 4) {
 					palette_index = shift ? 12 : 4;
 					textShouldReRender = 1;
 				}
+				break;
 			case GLFW_KEY_5:
 				if (palette_count >= 5) {
 					palette_index = shift ? 13 : 5;
 					textShouldReRender = 1;
 				}
+				break;
 			case GLFW_KEY_6:
 				if (palette_count >= 6) {
 					palette_index = shift ? 14 : 6;
 					textShouldReRender = 1;
 				}
+				break;
 			case GLFW_KEY_7:
 				if (palette_count >= 7) {
-					palette_index = shift ? 14 : 7;
+					palette_index = shift ? 15 : 7;
 					textShouldReRender = 1;
 				}
+				break;
 			case GLFW_KEY_8:
 				if (palette_count >= 8) {
 					palette_index = shift ? 16 : 8;
 					textShouldReRender = 1;
 				}
-		}
-
-		if (key == GLFW_KEY_F) {
-			mode = FILL;
-			textShouldReRender = 1;
-		} else if (key == GLFW_KEY_B) {
-			if (shift)
-				mode = CIRCLE_BRUSH;
-			else
-				mode = SQUARE_BRUSH;
-
-			palette_index = last_palette_index;
-			textShouldReRender = 1;
-		} else if (key == GLFW_KEY_E) {
-			if (shift)
-				mode = CIRCLE_BRUSH;
-			else
-				mode = SQUARE_BRUSH;
-
-			if (palette_index != 0) {
-				last_palette_index = palette_index;
-				palette_index = 0;
-			}
-			textShouldReRender = 1;
-		}
-		if (key == GLFW_KEY_SPACE) {
-			last_mode = mode;
-			mode = PAN;
-			textShouldReRender = 1;
+				break;
+			case GLFW_KEY_F:
+				mode = FILL;
+				textShouldReRender = 1;
+				break;
+			case GLFW_KEY_B:
+				mode = shift ? CIRCLE_BRUSH : SQUARE_BRUSH;
+				palette_index = last_palette_index;
+				textShouldReRender = 1;
+				break;
+			case GLFW_KEY_E:
+				mode = shift ? CIRCLE_BRUSH : SQUARE_BRUSH;
+				if (palette_index != 0) {
+					last_palette_index = palette_index;
+					palette_index = 0;
+				}
+				textShouldReRender = 1;
+				break;
+			case GLFW_KEY_SPACE:
+				last_mode = mode;
+				mode = PAN;
+				textShouldReRender = 1;
+			case GLFW_KEY_S:
+				should_save = ctrl ? 1 : 0;
+				break;
+			default:
+				break;
 		}
 	}
 
 	draw_colour = palette[palette_index];
-
-	if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-		should_save = 1;
-	}
 }
 
 void viewport_set() {
