@@ -23,7 +23,7 @@
 
 std::string FILE_NAME = "test.png"; // Default Output Filename
 int WINDOW_DIMS[2] = {700, 500}; // Default Window Dimensions
-int DIMS[2] = {20, 16}; // Width, Height Default Canvas Size
+int DIMS[2] = {60, 40}; // Width, Height Default Canvas Size
 
 unsigned char *canvas_data; // Canvas Data Containg Pixel Values.
 
@@ -54,17 +54,17 @@ unsigned char palette[17][4] = {
 // NO_MODE defines that there shouldn't be anything drawn
 enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL };
 
-unsigned char zoom_index = 4; // Default Zoom Level - 16
+unsigned char zoom_index = 3; // Default Zoom Level - 16
 unsigned char zoom[8] = { 1, 2, 4, 8, 16, 32, 64, 128 }; // Zoom Levels
 std::string zoomText = "Zoom: " + std::to_string(zoom[zoom_index]) + "x"; // Human Readable string decribing zoom level for UI
-unsigned char brush_size = 1; // Default Brush Size
+unsigned char brush_size = 5; // Default Brush Size
 
 // Holds if a ctrl/shift is pressed or not
 unsigned char ctrl = 0;
 unsigned char shift = 0;
 
-enum mode mode = SQUARE_BRUSH;
-enum mode last_mode = SQUARE_BRUSH;
+enum mode mode = CIRCLE_BRUSH;
+enum mode last_mode = CIRCLE_BRUSH;
 bool CANVAS_FREEZE = false;
 unsigned char *draw_colour; // Holds Pointer To Currently Selected Color
 unsigned char erase[4] = { 0, 0, 0, 0 }; // Erase Color, Transparent Black.
