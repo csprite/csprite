@@ -2,7 +2,7 @@
 name: Continous Release Action
 on: 
   push:
-    branches: [ build-for-windows ]
+    branches: [ master ]
 
 jobs:
   Build-For-Linux:
