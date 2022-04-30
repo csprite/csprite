@@ -1,12 +1,11 @@
 #include <cstdio>
 #include <iostream>
-#include <set>
 #include <string>
 
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/imgui_impl_glfw.h"
 #include "../include/imgui/imgui_impl_opengl3.h"
-#include "../lib/ImGuiFileDialog.h"
+#include "../include/tinyfiledialogs.h"
 
 #include "../include/glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -21,7 +20,10 @@
 #include "math_linear.h"
 #include "main.h"
 
-std::string FILE_NAME = "test.png"; // Default Output Filename
+std::string FILE_NAME = "untitled.png"; // Default Output Filename
+char const * fileFilterPatterns[1] = { "*.png" };
+unsigned char NumOfFilterPatterns = 1;
+
 int WINDOW_DIMS[2] = {700, 500}; // Default Window Dimensions
 int DIMS[2] = {60, 40}; // Width, Height Default Canvas Size
 
@@ -65,7 +67,6 @@ unsigned char shift = 0;
 
 enum mode mode = CIRCLE_BRUSH;
 enum mode last_mode = CIRCLE_BRUSH;
-bool CANVAS_FREEZE = false;
 unsigned char *draw_colour; // Holds Pointer To Currently Selected Color
 unsigned char erase[4] = { 0, 0, 0, 0 }; // Erase Color, Transparent Black.
 unsigned char should_save = 0;
@@ -259,17 +260,17 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoResize;
 	window_flags |= ImGuiWindowFlags_NoMove;
 
-	double lastTime = glfwGetTime();
-	int nbFrames = 0; // Number Of Frames Rendered
+	// double lastTime = glfwGetTime();
+	// int nbFrames = 0; // Number Of Frames Rendered
 
 	while (!glfwWindowShouldClose(window)) {
-		double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
-		nbFrames++;
-		if ( currentTime - lastTime >= 1.0 ){
-			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-			nbFrames = 0;
-			lastTime += 1.0;
-		}
+		// double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
+		// nbFrames++;
+		// if ( currentTime - lastTime >= 1.0 ){
+		// 	printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+		// 	nbFrames = 0;
+		// 	lastTime += 1.0;
+		// }
 
 		glfwPollEvents();
 		process_input(window);
@@ -291,56 +292,14 @@ int main(int argc, char **argv) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, DIMS[0], DIMS[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas_data);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-		if (should_save > 0) {
-			// Using Malloc Because Can't Use "new";
-			unsigned char *data = (unsigned char *) malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
-
-			// glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-			stbi_write_png(FILE_NAME.c_str(), DIMS[0], DIMS[1], 4, data, 0);
-
-			free(data);
-			should_save = 0;
-		}
-
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("ColorPaletteWindow", NULL, window_flags);
-		ImGui::SetWindowPos({0, (float)WINDOW_DIMS[1] - 35});
-		for (int i = 1; i < palette_count; i++) {
-			if (i != 1) ImGui::SameLine();
-			if (ImGui::ColorButton(palette_index == i ? "Selected Color" : "Color", {(float)palette[i][0]/255, (float)palette[i][1]/255, (float)palette[i][2]/255, (float)palette[i][3]/255})) {
-				palette_index = i;
-			}
-		};
-		ImGui::End();
-
-		ImGui::Begin("OpenFileWindow", NULL, window_flags);
-		ImGui::SetWindowPos({(float)WINDOW_DIMS[0] - 85, (float)WINDOW_DIMS[1] - 40});
-
-		if (ImGui::Button("Open File")) {
-			CANVAS_FREEZE = true;
-			ImGui::SetNextWindowSize({580,380});
-			ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));
-			ImGuiFileDialog::Instance()->OpenDialog("OpenFileDialogKey0", "Choose File", ".png,.PNG", ".");
-		}
-
-		if (ImGuiFileDialog::Instance()->Display("OpenFileDialogKey0")) {
-			CANVAS_FREEZE = true;
-			if (ImGuiFileDialog::Instance()->IsOk()) {
-				FILE_NAME = ImGuiFileDialog::Instance()->GetFilePathName();
-				load_image_to_canvas();
-			}
-
-			CANVAS_FREEZE = false;
-			ImGuiFileDialog::Instance()->Close();
-		}
-		ImGui::End();
-
-		ImGui::Begin("SelectedToolWindow", NULL, window_flags);
+		ImGui::Begin("ToolAndZoomWindow", NULL, window_flags);
 		ImGui::SetWindowPos({0, 0});
+		ImGui::SetWindowSize({(float)WINDOW_DIMS[0]/2, (float)WINDOW_DIMS[1]}); // Make Sure Text is visible everytime.
+
 		if (mode == SQUARE_BRUSH)
 			if (palette_index == 0) {
 				ImGui::Text("Square Eraser - (Size: %d)", brush_size);
@@ -358,11 +317,17 @@ int main(int argc, char **argv) {
 		else if (mode == PAN)
 			ImGui::Text("Panning");
 
+		ImGui::Text("%s", zoomText.c_str());
 		ImGui::End();
 
-		ImGui::Begin("ZoomLevel", NULL, window_flags);
-		ImGui::SetWindowPos({(float)WINDOW_DIMS[0] - ImGui::CalcTextSize(zoomText.c_str()).x - 15, 0});
-		ImGui::Text("%s", zoomText.c_str());
+		ImGui::Begin("ColorPaletteWindow", NULL, window_flags);
+		ImGui::SetWindowPos({0, (float)WINDOW_DIMS[1] - 35});
+		for (int i = 1; i < palette_count; i++) {
+			if (i != 1) ImGui::SameLine();
+			if (ImGui::ColorButton(palette_index == i ? "Selected Color" : "Color", {(float)palette[i][0]/255, (float)palette[i][1]/255, (float)palette[i][2]/255, (float)palette[i][3]/255})) {
+				palette_index = i;
+			}
+		};
 		ImGui::End();
 
 		ImGui::Render();
@@ -401,9 +366,6 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void process_input(GLFWwindow *window) {
-	if (CANVAS_FREEZE == true)
-		return;
-
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		x = (int)(cursor_pos_relative[0] / zoom[zoom_index]);
@@ -468,7 +430,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 	if (action == GLFW_RELEASE) {
 		if (mods == GLFW_MOD_CONTROL)
 			ctrl = 0;
-		
+
 		if (mods == GLFW_MOD_SHIFT)
 			shift = 0;
 
@@ -575,8 +537,25 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				last_mode = mode;
 				mode = PAN;
 			case GLFW_KEY_S:
-				should_save = ctrl ? 1 : 0;
+				if (ctrl == 1) {
+					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
+					if (filePath != NULL) {
+						FILE_NAME = std::string(filePath);
+						save_image_from_canvas();
+						glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+					}
+				}
 				break;
+			case GLFW_KEY_O: {
+				if (ctrl == 1) {
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)", 0);
+					if (filePath != NULL) {
+						FILE_NAME = std::string(filePath);
+						load_image_to_canvas();
+						glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+					}
+				}
+			}
 			default:
 				break;
 		}
@@ -677,7 +656,6 @@ void fill(int x, int y, unsigned char *old_colour) {
 }
 
 void load_image_to_canvas() {
-	CANVAS_FREEZE = true;
 	int x, y, c;
 	unsigned char *image_data = stbi_load(FILE_NAME.c_str(), &x, &y, &c, 0);
 	if (image_data == NULL) {
@@ -701,5 +679,14 @@ void load_image_to_canvas() {
 		}
 		stbi_image_free(image_data);
 	}
-	CANVAS_FREEZE = false;
+}
+
+void save_image_from_canvas() {
+	unsigned char *data = (unsigned char *) malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	stbi_write_png(FILE_NAME.c_str(), DIMS[0], DIMS[1], 4, data, 0);
+
+	free(data);
+	should_save = 0;
 }
