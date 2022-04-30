@@ -16,4 +16,5 @@ unsigned char * get_pixel(int x, int y);
 void fill(int x, int y, unsigned char *old_colour);
 void draw(int x, int y);
 void load_image_to_canvas();
+void save_image_from_canvas();
 unsigned char * get_char_data(unsigned char *data, int x, int y);
