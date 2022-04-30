@@ -8,7 +8,7 @@
 #include "../include/tinyfiledialogs.h"
 
 #include "../include/glad/glad.h"
-#include "GLFW/glfw3.h"
+#include "../include/GLFW/glfw3.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../lib/stb/stb_image_write.h"
