@@ -52,15 +52,6 @@ jobs:
     - name: Checkout 
       uses: actions/checkout@v2
 
-    - name: Update/Create Continous Release
-      uses: "marvinpinto/action-automatic-releases@latest"
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "continuous"
-        prerelease: true
-        title: "CSprite Continuous Release"
-        files: ./csprite.exe
-
     - name: Clean previous binaries
       run: rm -f csprite csprite.exe
 
@@ -68,13 +59,11 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: linux_binary
-        path: ./csprite
         
     - name: Download Windows build artifacts 
       uses: actions/download-artifact@v2
       with:
         name: win_binary
-        path: ./csprite.exe
 
     - name: Update/Create Continous Release
       uses: "marvinpinto/action-automatic-releases@latest"
@@ -83,4 +72,6 @@ jobs:
         automatic_release_tag: "continuous"
         prerelease: true
         title: "CSprite Continuous Release"
-        files: ./csprite ./csprite.exe
+        files: |
+          csprite
+          csprite.exe
