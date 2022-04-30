@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <string>
 
@@ -155,6 +156,7 @@ int main(int argc, char **argv) {
 
 	if (canvas_data == NULL) {
 		canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+		memset(canvas_data, 0, DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
 		if (canvas_data == NULL) {
 			printf("Unable To allocate memory for canvas.\n");
 			return 1;
@@ -664,6 +666,7 @@ void load_image_to_canvas() {
 		DIMS[0] = x;
 		DIMS[1] = y;
 		canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+		memset(canvas_data, 0, DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
 		int j, k;
 		unsigned char *ptr;
 		unsigned char *iptr;
