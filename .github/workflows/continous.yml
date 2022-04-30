@@ -2,10 +2,10 @@
 name: Continous Release Action
 on: 
   push:
-    branches: [ master ]
+    branches: [ build-for-windows ]
 
 jobs:
-  ContinousRelease:
+  Build-For-Linux:
     runs-on: ubuntu-latest
     steps:
     - name: Check out
@@ -24,6 +24,47 @@ jobs:
     - name: Compress Binary
       run: upx -9 -o csprite ./csprite-uncompressed
 
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux_binary
+        path: csprite
+
+  Build-For-Windows:
+    runs-on: windows-2019
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Build CSprite
+      run: make release -j4
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: win_binary
+        path: csprite.exe
+
+  Create-Release:
+    needs: [Build-For-Linux, Build-For-Windows]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout 
+      uses: actions/checkout@v2
+
+    - name: Clean previous binaries
+      run: rm -f csprite csprite.exe
+
+    - name: Download Linux build artifacts 
+      uses: actions/download-artifact@v2
+      with:
+        name: linux_binary
+        
+    - name: Download Windows build artifacts 
+      uses: actions/download-artifact@v2
+      with:
+        name: win_binary
+
     - name: Update/Create Continous Release
       uses: "marvinpinto/action-automatic-releases@latest"
       with:
@@ -31,4 +72,6 @@ jobs:
         automatic_release_tag: "continuous"
         prerelease: true
         title: "CSprite Continuous Release"
-        files: ./csprite
+        files: |
+          csprite
+          csprite.exe
