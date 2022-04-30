@@ -18,15 +18,16 @@ SRCS += $(LIB)/imgui/imgui_tables.cpp $(LIB)/imgui/imgui_widgets.cpp
 OBJS=$(OBJ)/main.o $(OBJ)/glad.o $(OBJ)/imgui.o $(OBJ)/tinyfiledialogs.o
 OBJS += $(OBJ)/imgui_impl_opengl3.o $(OBJ)/imgui_impl_glfw.o
 OBJS += $(OBJ)/imgui_draw.o $(OBJ)/imgui_tables.o $(OBJ)/imgui_widgets.o
-BIN=csprite.exe
 
 ifeq ($(OS),Windows_NT)
 	LFLAGS += -lopengl32 -lgdi32 -lcomdlg32 -lole32 -lshell32
 	OBJS += glfw3_mt.lib
+	BIN = csprite.exe
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		LFLAGS += -lglfw -lm -ldl
+		BIN = csprite
 	endif
 endif
 
