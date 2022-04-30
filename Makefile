@@ -10,12 +10,12 @@ SRC=src
 LIB=lib
 OBJ=obj
 
-SRCS=$(SRC)/main.cpp $(LIB)/glad.c $(LIB)/ImGuiFileDialog.cpp
+SRCS=$(SRC)/main.cpp $(LIB)/glad.c $(LIB)/tinyfiledialogs.c
 SRCS += $(LIB)/imgui/imgui.cpp $(LIB)/imgui/imgui_impl_opengl3.cpp
 SRCS += $(LIB)/imgui/imgui_impl_glfw.cpp $(LIB)/imgui/imgui_draw.cpp
 SRCS += $(LIB)/imgui/imgui_tables.cpp $(LIB)/imgui/imgui_widgets.cpp
 
-OBJS=$(OBJ)/main.o $(OBJ)/glad.o $(OBJ)/imgui.o $(OBJ)/ImGuiFileDialog.o
+OBJS=$(OBJ)/main.o $(OBJ)/glad.o $(OBJ)/imgui.o $(OBJ)/tinyfiledialogs.o
 OBJS += $(OBJ)/imgui_impl_opengl3.o $(OBJ)/imgui_impl_glfw.o
 OBJS += $(OBJ)/imgui_draw.o $(OBJ)/imgui_tables.o $(OBJ)/imgui_widgets.o
 BIN=csprite
