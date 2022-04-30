@@ -2,10 +2,10 @@
 name: Continous Release Action
 on: 
   push:
-    branches: [ master ]
+    branches: [ build-for-windows ]
 
 jobs:
-  ContinousRelease:
+  Build-For-Linux:
     runs-on: ubuntu-latest
     steps:
     - name: Check out
@@ -32,3 +32,21 @@ jobs:
         prerelease: true
         title: "CSprite Continuous Release"
         files: ./csprite
+
+  Build-For-Windows:
+    runs-on: windows-2019
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Build CSprite
+      run: make release -j4
+
+    - name: Update/Create Continous Release
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "continuous"
+        prerelease: true
+        title: "CSprite Continuous Release"
+        files: ./csprite.exe
