@@ -131,12 +131,7 @@ int main(int argc, char **argv) {
 					start = 24;
 					a = number >> (start - 24) & 0xff;
 				} else {
-					puts("Invalid colour in palette, "
-						 "check the length is 6 or 8."
-						 " Make sure to convert to LF"
-						 " line endings if this file "
-						 "came from the web or a "
-						 "Windows PC");
+					printf("Invalid colour in palette, check the length is 6 or 8.\n");
 					break;
 				}
 
@@ -157,8 +152,13 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	if (canvas_data == NULL)
+	if (canvas_data == NULL) {
 		canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+		if (canvas_data == NULL) {
+			printf("Unable To allocate memory for canvas.\n");
+			return 1;
+		}
+	}
 
 	GLFWwindow *window;
 	GLFWcursor *cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
@@ -174,14 +174,20 @@ int main(int argc, char **argv) {
 
 	window = glfwCreateWindow(WINDOW_DIMS[0], WINDOW_DIMS[1], "CSprite", NULL, NULL);
 
-	if (!window)
-		puts("Failed to create GLFW window");
+	if (!window) {
+		printf("Failed to create GLFW window\n");
+		free(canvas_data);
+		return 1;
+	}
 
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(0);
 
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-		puts("Failed to init GLAD");
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		printf("Failed to init GLAD\n");
+		free(canvas_data);
+		return 1;
+	}
 
 	glfwSetCursor(window, cursor);
 	glEnable(GL_BLEND);
