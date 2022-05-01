@@ -3,6 +3,9 @@
 #include <iostream>
 #include <string>
 
+#include <chrono>
+#include <thread>
+
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/imgui_impl_glfw.h"
 #include "../include/imgui/imgui_impl_opengl3.h"
@@ -169,6 +172,7 @@ int main(int argc, char **argv) {
 	draw_colour = palette[palette_index];
 
 	glfwInit();
+	glfwSetErrorCallback(logGLFWErrors);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -265,6 +269,10 @@ int main(int argc, char **argv) {
 	// double lastTime = glfwGetTime();
 	// int nbFrames = 0; // Number Of Frames Rendered
 
+	auto const wait_time = std::chrono::milliseconds{ 17 };
+	auto const start_time = std::chrono::steady_clock::now();
+	auto next_time = start_time + wait_time;
+
 	while (!glfwWindowShouldClose(window)) {
 		// double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
 		// nbFrames++;
@@ -273,6 +281,8 @@ int main(int argc, char **argv) {
 		// 	nbFrames = 0;
 		// 	lastTime += 1.0;
 		// }
+
+		std::this_thread::sleep_until(next_time);
 
 		glfwPollEvents();
 		process_input(window);
@@ -302,22 +312,27 @@ int main(int argc, char **argv) {
 		ImGui::SetWindowPos({0, 0});
 		ImGui::SetWindowSize({(float)WINDOW_DIMS[0]/2, (float)WINDOW_DIMS[1]}); // Make Sure Text is visible everytime.
 
-		if (mode == SQUARE_BRUSH)
-			if (palette_index == 0) {
-				ImGui::Text("Square Eraser - (Size: %d)", brush_size);
-			} else {
-				ImGui::Text("Square Brush - (Size: %d)", brush_size);
-			}
-		else if (mode == CIRCLE_BRUSH)
-			if (palette_index == 0) {
-				ImGui::Text("Circle Eraser - (Size: %d)", brush_size);
-			} else {
-				ImGui::Text("Circle Brush - (Size: %d)", brush_size);
-			}
-		else if (mode == FILL)
-			ImGui::Text("Fill");
-		else if (mode == PAN)
-			ImGui::Text("Panning");
+		switch (mode) {
+			case SQUARE_BRUSH:
+				if (palette_index == 0)
+					ImGui::Text("Square Eraser - (Size: %d)", brush_size);
+				else
+					ImGui::Text("Square Brush - (Size: %d)", brush_size);
+				break;
+			case CIRCLE_BRUSH:
+				if (palette_index == 0) {
+					ImGui::Text("Circle Eraser - (Size: %d)", brush_size);
+				} else {
+					ImGui::Text("Circle Brush - (Size: %d)", brush_size);
+				}
+				break;
+			case FILL:
+				ImGui::Text("Fill");
+				break;
+			case PAN:
+				ImGui::Text("Panning");
+				break;
+		}
 
 		ImGui::Text("%s", zoomText.c_str());
 		ImGui::End();
@@ -336,6 +351,7 @@ int main(int argc, char **argv) {
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(window);
+		next_time += wait_time;
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();
@@ -349,6 +365,10 @@ int main(int argc, char **argv) {
 
 unsigned char * get_char_data(unsigned char *data, int x, int y) {
 	return data + ((y * DIMS[0] + x) * 4);
+}
+
+void logGLFWErrors(int error, const char *description) {
+	std::cout << description << std::endl;
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
