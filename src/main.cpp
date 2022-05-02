@@ -215,7 +215,12 @@ int main(int argc, char **argv) {
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 
+	// If not a release build use the local shader files to edit shaders without problem
+#ifndef NDEBUG
+	unsigned int shader_program = create_shader_program("shader.vs", "shader.fs", NULL);
+#else
 	unsigned int shader_program = create_shader_program(NULL, NULL, NULL);
+#endif
 
 	unsigned int vbo, vao, ebo;
 	glGenVertexArrays(1, &vao);
@@ -268,21 +273,25 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoResize;
 	window_flags |= ImGuiWindowFlags_NoMove;
 
-	// double lastTime = glfwGetTime();
-	// int nbFrames = 0; // Number Of Frames Rendered
+#ifndef NDEBUG
+	double lastTime = glfwGetTime();
+	int nbFrames = 0; // Number Of Frames Rendered
+#endif
 
 	auto const wait_time = std::chrono::milliseconds{ 17 };
 	auto const start_time = std::chrono::steady_clock::now();
 	auto next_time = start_time + wait_time;
 
 	while (!glfwWindowShouldClose(window)) {
-		// double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
-		// nbFrames++;
-		// if ( currentTime - lastTime >= 1.0 ){
-		// 	printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-		// 	nbFrames = 0;
-		// 	lastTime += 1.0;
-		// }
+#ifndef NDEBUG
+		double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
+		nbFrames++;
+		if ( currentTime - lastTime >= 1.0 ){
+			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+			nbFrames = 0;
+			lastTime += 1.0;
+		}
+#endif
 
 		std::this_thread::sleep_until(next_time);
 
