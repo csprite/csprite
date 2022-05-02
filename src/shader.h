@@ -4,7 +4,6 @@
 #include "../include/glad/glad.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
 
 // Read files into buffer
 int read_file_into_buffer(char **buffer, const char *path) {
