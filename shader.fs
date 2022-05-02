@@ -9,5 +9,6 @@ uniform vec2 offset;
 uniform float alpha;
 
 void main() {
+	// Final Col = RGBA Output Col, Alpha * RGBA Color Of Texture At This Coordinate
 	frag_color = vec4(out_color, alpha) * texture(a_texture, out_tex_coords + offset);
 }
