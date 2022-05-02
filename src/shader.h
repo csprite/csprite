@@ -4,6 +4,7 @@
 #include "../include/glad/glad.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 
 // Read files into buffer
 int read_file_into_buffer(char **buffer, const char *path) {
@@ -29,22 +30,24 @@ unsigned int create_shader_program(const char *vert_path, const char *frag_path,
 	unsigned int vert_shader;
 	unsigned int frag_shader;
 	unsigned int geom_shader;
-	char *vert_shader_source;
-	char *frag_shader_source;
-	char *geom_shader_source;
+	const char *vert_shader_source;
+	const char *frag_shader_source;
+	const char *geom_shader_source;
 	int success;
 	char info_log[512];
 
 	// This is shader.vs file.
-	const char *VertexShaderSourceCode = "#version 330 core\nlayout (location = 0) in vec3 position;\nlayout (location = 1) in vec3 color;\nlayout (location = 2) in vec2 tex_coords;\n\nout vec3 out_color;\nout vec2 out_tex_coords;\n\nvoid main() {\n    gl_Position = vec4(position, 1.0);\n    out_color = color;\n    out_tex_coords = tex_coords;\n}";
-	// This is shader.fs file
-	const char *FragmentShaderSourceCode = "#version 330 core\nout vec4 frag_color;\n\nin vec3 out_color;\nin vec2 out_tex_coords;\n\nuniform sampler2D a_texture;\nuniform vec2 offset;\nuniform float alpha;\n\nvoid main() {\n    frag_color = vec4(out_color, alpha) * texture(a_texture, out_tex_coords + offset);\n}";
+//	const char *VertexShaderSourceCode =
 
-	if (vert_path != NULL)
-		read_file_into_buffer(&vert_shader_source, vert_path);
+	if (vert_path == NULL) {
+		vert_shader_source = "#version 330 core\nlayout (location = 0) in vec3 position;\nlayout (location = 1) in vec3 color;\nlayout (location = 2) in vec2 tex_coords;\n\nout vec3 out_color;\nout vec2 out_tex_coords;\nvoid main() {\n    gl_Position = vec4(position, 1.0);\n    out_color = color;\n    out_tex_coords = tex_coords;\n}";
+	} else {
+		read_file_into_buffer((char **)&vert_shader_source, vert_path);
+	}
+
 	vert_shader = glCreateShader(GL_VERTEX_SHADER);
 
-	glShaderSource(vert_shader, 1, (const char * const*)&VertexShaderSourceCode, NULL);
+	glShaderSource(vert_shader, 1, (const char * const*)&vert_shader_source, NULL);
 	glCompileShader(vert_shader);
 
 	glGetShaderiv(vert_shader, GL_COMPILE_STATUS, &success);
@@ -55,10 +58,13 @@ unsigned int create_shader_program(const char *vert_path, const char *frag_path,
 		return -1;
 	}
 
-	if (frag_path != NULL)
-		read_file_into_buffer(&frag_shader_source, frag_path);
+	if (frag_path == NULL) {
+		frag_shader_source = "#version 330 core\nout vec4 frag_color;\n\nin vec3 out_color;\nin vec2 out_tex_coords;\nuniform sampler2D a_texture;\nuniform vec2 offset;\nuniform float alpha;\n\nvoid main() {\n    frag_color = vec4(out_color, alpha) * texture(a_texture, out_tex_coords + offset);\n}";
+	} else {
+		read_file_into_buffer((char **)&frag_shader_source, frag_path);
+	}
 	frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(frag_shader, 1, (const char*const*)&FragmentShaderSourceCode, NULL);
+	glShaderSource(frag_shader, 1, (const char*const*)&frag_shader_source, NULL);
 	glCompileShader(frag_shader);
 
 	glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &success);
@@ -72,9 +78,9 @@ unsigned int create_shader_program(const char *vert_path, const char *frag_path,
 	}
 
 	if (geom_path != NULL) {
-		read_file_into_buffer(&geom_shader_source, geom_path);
+		read_file_into_buffer((char **)&geom_shader_source, geom_path);
 		geom_shader = glCreateShader(GL_GEOMETRY_SHADER);
-		glShaderSource(geom_shader, 1, (const char*const*)&geom_shader_source, NULL);
+		glShaderSource(geom_shader, 1, (const char *const *)&geom_shader_source, NULL);
 		glCompileShader(geom_shader);
 
 		glGetShaderiv(geom_shader, GL_COMPILE_STATUS, &success);
