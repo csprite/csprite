@@ -78,13 +78,19 @@ unsigned char erase[4] = { 0, 0, 0, 0 }; // Erase Color, Transparent Black.
 unsigned char should_save = 0;
 
 GLfloat viewport[4];
-GLfloat vertices[] = {
-	 1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 0.0f,
-	 1.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 1.0f,
-	-1.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 1.0f,
-	-1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 0.0f
+GLfloat canvasVertices[] = {
+	//       Canvas              Color To       Texture
+	//     Coordinates          Blend With     Coordinates
+	//  X      Y      Z      R     G     B      X     Y
+	   1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 0.0f, // Top Right
+	   1.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // Bottom Right
+	  -1.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 1.0f, // Bottom Left
+	  -1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 0.0f  // Top Left
+	// Z Coordinates Are 0 Because We Are Working With 2D Stuff
+	// Color To Blend With Are The Colors Which Will Be multiplied by the selected color to get the final output on the canvas
 };
 
+// Index Buffer
 unsigned int indices[] = {0, 1, 3, 1, 2, 3};
 
 double cursor_pos[2];
@@ -202,10 +208,13 @@ int main(int argc, char **argv) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
-	viewport[2] = DIMS[0] * zoom[zoom_index];
-	viewport[3] = DIMS[1] * zoom[zoom_index];
+	// Initial Canvas Position
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2; // X Position
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2; // Y Position
+
+	// Output Width And Height Of The Canvas
+	viewport[2] = DIMS[0] * zoom[zoom_index]; // Width
+	viewport[3] = DIMS[1] * zoom[zoom_index]; // Height
 
 	viewport_set();
 	glfwSetWindowSizeCallback(window, window_size_callback);
@@ -222,14 +231,14 @@ int main(int argc, char **argv) {
 	unsigned int shader_program = create_shader_program(NULL, NULL, NULL);
 #endif
 
-	unsigned int vbo, vao, ebo;
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
+	unsigned int vertexBuffObj, vertexArrObj, ebo;
+	glGenVertexArrays(1, &vertexArrObj);
+	glGenBuffers(1, &vertexBuffObj);
 	glGenBuffers(1, &ebo);
-	glBindVertexArray(vao);
+	glBindVertexArray(vertexArrObj);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffObj);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(canvasVertices), canvasVertices, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
@@ -302,7 +311,7 @@ int main(int argc, char **argv) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(shader_program);
-		glBindVertexArray(vao);
+		glBindVertexArray(vertexArrObj);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		unsigned int alpha_loc = glGetUniformLocation(shader_program, "alpha");
@@ -390,9 +399,11 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 	WINDOW_DIMS[0] = width;
 	WINDOW_DIMS[1] = height;
 
-	// Center The Canvas
+	// Center The Canvas On X, Y
 	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
 	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
+
+	// Set The Canvas Size (Not Neccessary Here Tho)
 	viewport[2] = DIMS[0] * zoom[zoom_index];
 	viewport[3] = DIMS[1] * zoom[zoom_index];
 	viewport_set();
