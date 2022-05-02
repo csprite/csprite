@@ -11,18 +11,14 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Install GLFW3 And UPX
+    - name: Install GLFW3 And Git
       run: |
         sudo apt-get install libglfw3
         sudo apt-get install libglfw3-dev
         sudo apt-get install git
-        sudo apt-get install upx
 
     - name: Build CSprite
-      run: make release -j4 && mv csprite csprite-uncompressed
-
-    - name: Compress Binary
-      run: upx -9 -o csprite ./csprite-uncompressed
+      run: make release -j4
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
