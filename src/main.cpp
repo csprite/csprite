@@ -346,6 +346,12 @@ int main(int argc, char **argv) {
 					FILE_NAME = std::string(filePath);
 					load_image_to_canvas();
 					glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+
+					viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
+					viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
+					viewport[2] = DIMS[0] * zoom[zoom_index];
+					viewport[3] = DIMS[1] * zoom[zoom_index];
+					viewport_set();
 				}
 			}
 			if (ImGui::MenuItem("Save")) {
@@ -777,30 +783,34 @@ void fill(int x, int y, unsigned char *old_colour) {
 }
 
 void load_image_to_canvas() {
-	int x, y, c;
-	unsigned char *image_data = stbi_load(FILE_NAME.c_str(), &x, &y, &c, 0);
+	int imgWidth, imgHeight, c;
+	unsigned char *image_data = stbi_load(FILE_NAME.c_str(), &imgWidth, &imgHeight, &c, 0);
 	if (image_data == NULL) {
 		printf("Unable to load image %s\n", FILE_NAME.c_str());
-	} else {
-		DIMS[0] = x;
-		DIMS[1] = y;
-		canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
-		memset(canvas_data, 0, DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
-		int j, k;
-		unsigned char *ptr;
-		unsigned char *iptr;
-		for (j = 0; j < y; j++) {
-			for (k = 0; k < x; k++) {
-				ptr = get_pixel(k, j);
-				iptr = get_char_data(image_data, k, j);
-				*(ptr+0) = *(iptr+0);
-				*(ptr+1) = *(iptr+1);
-				*(ptr+2) = *(iptr+2);
-				*(ptr+3) = *(iptr+3);
-			}
-		}
-		stbi_image_free(image_data);
+		return;
 	}
+
+	DIMS[0] = imgWidth;
+	DIMS[1] = imgHeight;
+
+	if (canvas_data != NULL) free(canvas_data);
+
+	canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+	memset(canvas_data, 0, DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+	int j, k;
+	unsigned char *ptr;
+	unsigned char *iptr;
+	for (j = 0; j < imgHeight; j++) {
+		for (k = 0; k < imgWidth; k++) {
+			ptr = get_pixel(k, j);
+			iptr = get_char_data(image_data, k, j);
+			*(ptr+0) = *(iptr+0);
+			*(ptr+1) = *(iptr+1);
+			*(ptr+2) = *(iptr+2);
+			*(ptr+3) = *(iptr+3);
+		}
+	}
+	stbi_image_free(image_data);
 }
 
 void save_image_from_canvas() {
