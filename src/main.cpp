@@ -198,6 +198,7 @@ int main(int argc, char **argv) {
 	}
 
 	glfwMakeContextCurrent(window);
+	glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str());
 	glfwSwapInterval(0);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
