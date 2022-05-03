@@ -340,6 +340,25 @@ int main(int argc, char **argv) {
 			if (ImGui::MenuItem("New")) {
 				showNewCanvasWindow = 1;
 			}
+			if (ImGui::MenuItem("Open")) {
+				char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)", 0);
+				if (filePath != NULL) {
+					FILE_NAME = std::string(filePath);
+					load_image_to_canvas();
+					glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+				}
+			}
+			if (ImGui::MenuItem("Save")) {
+				save_image_from_canvas();
+			}
+			if (ImGui::MenuItem("Save As")) {
+				char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
+				if (filePath != NULL) {
+					FILE_NAME = std::string(filePath);
+					save_image_from_canvas();
+					glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+				}
+			}
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
@@ -637,13 +656,15 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				last_mode = mode;
 				mode = PAN;
 			case GLFW_KEY_S:
-				if (ctrl == 1) {
+				if (mods == GLFW_MOD_ALT) { // Show Prompt To Save if Alt + S pressed
 					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
 					if (filePath != NULL) {
 						FILE_NAME = std::string(filePath);
 						save_image_from_canvas();
 						glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
+				} else if (ctrl == 1) { // Directly Save Don't Prompt
+					save_image_from_canvas();
 				}
 				break;
 			case GLFW_KEY_O: {
