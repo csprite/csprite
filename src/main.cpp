@@ -63,6 +63,7 @@ unsigned char palette[17][4] = {
 
 // NO_MODE defines that there shouldn't be anything drawn
 enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL };
+unsigned char Canvas_Freeze = 0;
 
 unsigned char zoom_index = 3; // Default Zoom Level - 16
 unsigned char zoom[8] = { 1, 2, 4, 8, 16, 32, 64, 128 }; // Zoom Levels
@@ -294,6 +295,9 @@ int main(int argc, char **argv) {
 	auto const start_time = std::chrono::steady_clock::now();
 	auto next_time = start_time + wait_time;
 
+	unsigned char showNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
+	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
+
 	while (!glfwWindowShouldClose(window)) {
 #ifndef NDEBUG
 		double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
@@ -331,8 +335,74 @@ int main(int argc, char **argv) {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		ImGui::BeginMainMenuBar();
+		if (ImGui::BeginMenu("File")) {
+			if (ImGui::MenuItem("New")) {
+				showNewCanvasWindow = 1;
+			}
+			if (ImGui::MenuItem("Open")) {
+				char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)", 0);
+				if (filePath != NULL) {
+					FILE_NAME = std::string(filePath);
+					load_image_to_canvas();
+					glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+				}
+			}
+			if (ImGui::MenuItem("Save")) {
+				save_image_from_canvas();
+			}
+			if (ImGui::MenuItem("Save As")) {
+				char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
+				if (filePath != NULL) {
+					FILE_NAME = std::string(filePath);
+					save_image_from_canvas();
+					glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+				}
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+
+		if (showNewCanvasWindow == 1) {
+			Canvas_Freeze = 1;
+			ImGui::SetNextWindowSize({280, 100}, 0);
+			ImGui::Begin("NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+
+			ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
+			ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
+
+			if (ImGui::Button("Ok")) {
+				free(canvas_data);
+				DIMS[0] = NEW_DIMS[0];
+				DIMS[1] = NEW_DIMS[1];
+				canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+				memset(canvas_data, 0, DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+				if (canvas_data == NULL) {
+					printf("Unable To allocate memory for canvas.\n");
+					return 1;
+				}
+
+				// Update Viewport
+				viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
+				viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
+				viewport[2] = DIMS[0] * zoom[zoom_index];
+				viewport[3] = DIMS[1] * zoom[zoom_index];
+				viewport_set();
+
+				Canvas_Freeze = 0;
+				showNewCanvasWindow = 0;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel")) {
+				Canvas_Freeze = 0;
+				showNewCanvasWindow = 0;
+			}
+
+			ImGui::End();
+		}
+
 		ImGui::Begin("ToolAndZoomWindow", NULL, window_flags);
-		ImGui::SetWindowPos({0, 0});
+		ImGui::SetWindowPos({0, 20});
 		ImGui::SetWindowSize({(float)WINDOW_DIMS[0]/2, (float)WINDOW_DIMS[1]}); // Make Sure Text is visible everytime.
 
 		switch (mode) {
@@ -413,6 +483,8 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void process_input(GLFWwindow *window) {
+	if (Canvas_Freeze == 1) return;
+
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		x = (int)(cursor_pos_relative[0] / zoom[zoom_index]);
@@ -584,13 +656,15 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				last_mode = mode;
 				mode = PAN;
 			case GLFW_KEY_S:
-				if (ctrl == 1) {
+				if (mods == GLFW_MOD_ALT) { // Show Prompt To Save if Alt + S pressed
 					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
 					if (filePath != NULL) {
 						FILE_NAME = std::string(filePath);
 						save_image_from_canvas();
 						glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
+				} else if (ctrl == 1) { // Directly Save Don't Prompt
+					save_image_from_canvas();
 				}
 				break;
 			case GLFW_KEY_O: {
