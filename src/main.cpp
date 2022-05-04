@@ -61,10 +61,6 @@ unsigned char palette[17][4] = {
 	{ 255, 204, 170, 255 }  // Pale Orange
 };
 
-// NO_MODE defines that there shouldn't be anything drawn
-enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER };
-unsigned char Canvas_Freeze = 0;
-
 unsigned int zoomLevel = 8; // Default Zoom Level
 std::string zoomText = "Zoom: " + std::to_string(zoomLevel) + "x"; // Human Readable string decribing zoom level for UI
 unsigned char brush_size = 5; // Default Brush Size
@@ -73,8 +69,12 @@ unsigned char brush_size = 5; // Default Brush Size
 unsigned char ctrl = 0;
 unsigned char shift = 0;
 
+enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER };
+unsigned char Canvas_Freeze = 0;
+
 enum mode mode = CIRCLE_BRUSH;
 enum mode last_mode = CIRCLE_BRUSH;
+
 unsigned char *draw_color; // Holds Pointer To Currently Selected Color
 unsigned char erase[4] = { 0, 0, 0, 0 }; // Erase Color, Transparent Black.
 unsigned char should_save = 0;
@@ -668,11 +668,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				mode = FILL;
 				break;
 			case GLFW_KEY_B:
-				mode = shift ? CIRCLE_BRUSH : SQUARE_BRUSH;
+				mode = shift ? SQUARE_BRUSH : CIRCLE_BRUSH;
 				palette_index = last_palette_index;
 				break;
 			case GLFW_KEY_E:
-				mode = shift ? CIRCLE_BRUSH : SQUARE_BRUSH;
+				mode = shift ? SQUARE_BRUSH : CIRCLE_BRUSH;
 				if (palette_index != 0) {
 					last_palette_index = palette_index;
 					palette_index = 0;
