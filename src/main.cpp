@@ -442,7 +442,7 @@ int main(int argc, char **argv) {
 		ImGui::SetWindowPos({0, (float)WINDOW_DIMS[1] - 35});
 		for (int i = 1; i < palette_count; i++) {
 			if (i != 1) ImGui::SameLine();
-			if (ImGui::ColorButton(palette_index == i ? "Selected Color" : "Color", {(float)palette[i][0]/255, (float)palette[i][1]/255, (float)palette[i][2]/255, (float)palette[i][3]/255})) {
+			if (ImGui::ColorButton(palette_index == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)palette[i][0]/255, (float)palette[i][1]/255, (float)palette[i][2]/255, (float)palette[i][3]/255})) {
 				palette_index = i;
 			}
 		};
