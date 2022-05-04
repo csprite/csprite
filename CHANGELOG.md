@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/DEVLOPRR/CSprite/releases/tag/continuous)
 - May 3, 2022
+	- Add Simple Menu
+	- Add `New`, `Open`, `Save` & `Save As` in Menu
+	- Fix Memory Leaks
+
+- May 2, 2022
 	- Remove UPX Compression From Linux Binary
 	- Add Comments
 	- Fix Flags
@@ -16,12 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 	- Remove Unused Headers
 
 - May 1, 2022
-	- Fix high CPU & GPU Usage ( May 1, 2022 )
-	- Add Error Callback Function To Log GLFW Errors With Clear Description ( May 1, 2022 )
-	- Fix Console Popping Up When Launching CSprite On Windows ( May 1, 2022 )
+	- Fix high CPU & GPU Usage
+	- Add Error Callback Function To Log GLFW Errors With Clear Description
+	- Fix Console Popping Up When Launching CSprite On Windows
 
 - April 30, 2022
-	- Add Building For Windows ( April 30, 2022 )
+	- Add Building For Windows
 	- Update Open/Save File Dialogs
 		- Remove [ImGui File Dialogs](https://github.com/aiekick/ImGuiFileDialog) Because Of Compiling Errors on Windows.
 		- Add [Tiny File Dialogs](https://sourceforge.net/projects/tinyfiledialogs/) Because Of Being Native And Less Code Required To Implement.
