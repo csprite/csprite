@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/DEVLOPRR/CSprite/releases/tag/continuous)
+
+- May 5, 2022
+	- Fix Color not being selected when clicking on a color in Color Palette
+	- Change Circle Brush To Default
+
+- May 4, 2022
+
+	- Add Ink Dropper Tool
+	- Add Menu Bar & New Button To Create A new empty canvas [#4](https://github.com/DEVLOPRR/CSprite/pull/4)
+	- Add New, Open, Save & Save As in Menu Bar [#4](https://github.com/DEVLOPRR/CSprite/pull/4)
+	- Fix Memory Leaks
+	- Remove Zoom Limit (Max Zoom Limit Now is `4294967295`)
+
 - May 3, 2022
 	- Add Simple Menu
 	- Add `New`, `Open`, `Save` & `Save As` in Menu
