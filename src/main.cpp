@@ -62,7 +62,7 @@ unsigned char palette[17][4] = {
 };
 
 // NO_MODE defines that there shouldn't be anything drawn
-enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL };
+enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER };
 unsigned char Canvas_Freeze = 0;
 
 unsigned int zoomLevel = 8; // Default Zoom Level
@@ -75,7 +75,7 @@ unsigned char shift = 0;
 
 enum mode mode = CIRCLE_BRUSH;
 enum mode last_mode = CIRCLE_BRUSH;
-unsigned char *draw_colour; // Holds Pointer To Currently Selected Color
+unsigned char *draw_color; // Holds Pointer To Currently Selected Color
 unsigned char erase[4] = { 0, 0, 0, 0 }; // Erase Color, Transparent Black.
 unsigned char should_save = 0;
 
@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
 					start = 24;
 					a = number >> (start - 24) & 0xff;
 				} else {
-					printf("Invalid colour in palette, check the length is 6 or 8.\n");
+					printf("Invalid color in palette, check the length is 6 or 8.\n");
 					break;
 				}
 
@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
 				palette[palette_count + 1][2] = b;
 				palette[palette_count + 1][3] = a;
 
-				printf("Adding colour: #%s - rgb(%d, %d, %d)\n", argv[i], r, g, b);
+				printf("Adding color: #%s - rgb(%d, %d, %d)\n", argv[i], r, g, b);
 
 				palette_count++;
 				i++;
@@ -179,7 +179,7 @@ int main(int argc, char **argv) {
 	GLFWwindow *window;
 	GLFWcursor *cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
 
-	draw_colour = palette[palette_index];
+	draw_color = palette[palette_index];
 
 	glfwInit();
 	glfwSetErrorCallback(logGLFWErrors);
@@ -427,6 +427,9 @@ int main(int argc, char **argv) {
 			case FILL:
 				ImGui::Text("Fill");
 				break;
+			case INK_DROPPER:
+				ImGui::Text("Ink Dropper");
+				break;
 			case PAN:
 				ImGui::Text("Panning");
 				break;
@@ -498,23 +501,48 @@ void process_input(GLFWwindow *window) {
 		if (x >= 0 && x < DIMS[0] && y >= 0 && y < DIMS[1]) {
 			switch (mode) {
 				case SQUARE_BRUSH:
-				case CIRCLE_BRUSH:
+				case CIRCLE_BRUSH: {
 					draw(x, y);
 					break;
+				}
 				case FILL: {
-					unsigned char *ptr = get_pixel(y, y);
+					unsigned char *ptr = get_pixel(x, y);
 					// Color Clicked On.
-					unsigned char colour[4] = {
+					unsigned char color[4] = {
 						*(ptr + 0),
 						*(ptr + 1),
 						*(ptr + 2),
 						*(ptr + 3)
 					};
-					fill(x, y, colour);
+					fill(x, y, color);
 					break;
 				}
-				default:
+				case INK_DROPPER: {
+					unsigned char *ptr = get_pixel(x, y);
+					// Color Clicked On.
+					unsigned char color[4] = {
+						*(ptr + 0),
+						*(ptr + 1),
+						*(ptr + 2),
+						*(ptr + 3)
+					};
+
+					for (int i = 0; i < palette_count; i++) {
+						if (
+							palette[i][0] == color[0] &&
+							palette[i][1] == color[1] &&
+							palette[i][2] == color[2] &&
+							palette[i][3] == color[3]) {
+								last_palette_index = palette_index;
+								palette_index = i;
+								break;
+						}
+					}
 					break;
+				}
+				default: {
+					break;
+				}
 			}
 		}
 	}
@@ -524,10 +552,8 @@ void mouse_callback(GLFWwindow *window, double x, double y) {
 	/* infitesimally small chance aside from startup */
 	if (cursor_pos_last[0] != 0 && cursor_pos_last[1] != 0) {
 		if (mode == PAN) {
-			float xmov = (cursor_pos_last[0] - cursor_pos[0]);
-			float ymov = (cursor_pos_last[1] - cursor_pos[1]);
-			viewport[0] -= xmov;
-			viewport[1] += ymov;
+			viewport[0] -= cursor_pos_last[0] - cursor_pos[0];
+			viewport[1] += cursor_pos_last[1] - cursor_pos[1];
 			viewport_set();
 		}
 	}
@@ -558,24 +584,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		if (mods == GLFW_MOD_SHIFT)
 			shift = 0;
 
-		if (key == GLFW_KEY_I) {
-			if (brush_size < 255) {
-				brush_size++;
-			}
-		} else if (key == GLFW_KEY_O) {
-			if (brush_size != 1) {
-				brush_size--;
-			}
-		}
 		if (key == GLFW_KEY_SPACE) {
 			mode = last_mode;
 		}
 	}
 
-	// if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-	// 	glfwSetWindowShouldClose(window, GLFW_TRUE);
-
-	// Color Changing
 	if (action == GLFW_PRESS) {
 		if (mods == GLFW_MOD_CONTROL) {
 			ctrl = 1;
@@ -586,10 +599,18 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			} else if (key == GLFW_KEY_MINUS) {
 				adjust_zoom(false);
 			}
-		}
-
-		if (mods == GLFW_MOD_SHIFT) {
+		} else if (mods == GLFW_MOD_SHIFT) {
 			shift = 1;
+		} else {
+			if (key == GLFW_KEY_EQUAL) {
+				if (brush_size < 255) {
+					brush_size++;
+				}
+			} else if (key == GLFW_KEY_MINUS) {
+				if (brush_size != 1) {
+					brush_size--;
+				}
+			}
 		}
 
 		switch (key) {
@@ -657,6 +678,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 					palette_index = 0;
 				}
 				break;
+			case GLFW_KEY_I:
+				last_mode = mode;
+				mode = INK_DROPPER;
+				break;
 			case GLFW_KEY_SPACE:
 				last_mode = mode;
 				mode = PAN;
@@ -687,7 +712,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		}
 	}
 
-	draw_colour = palette[palette_index];
+	draw_color = palette[palette_index];
 }
 
 void viewport_set() {
@@ -755,31 +780,31 @@ void draw(int x, int y) {
 			unsigned char *ptr = get_pixel(x+xr, y+yr);
 
 			// Set Pixel Color
-			*ptr = draw_colour[0]; // Red
-			*(ptr + 1) = draw_colour[1]; // Green
-			*(ptr + 2) = draw_colour[2]; // Blue
-			*(ptr + 3) = draw_colour[3]; // Alpha
+			*ptr = draw_color[0]; // Red
+			*(ptr + 1) = draw_color[1]; // Green
+			*(ptr + 2) = draw_color[2]; // Blue
+			*(ptr + 3) = draw_color[3]; // Alpha
 		}
 	}
 }
 
 // Fill Tool, Fills The Whole Canvas Using Recursion
-void fill(int x, int y, unsigned char *old_colour) {
+void fill(int x, int y, unsigned char *old_color) {
 	unsigned char *ptr = get_pixel(x, y);
-	if (color_equal(ptr, old_colour)) {
-		*ptr = draw_colour[0];
-		*(ptr + 1) = draw_colour[1];
-		*(ptr + 2) = draw_colour[2];
-		*(ptr + 3) = draw_colour[3];
+	if (color_equal(ptr, old_color)) {
+		*ptr = draw_color[0];
+		*(ptr + 1) = draw_color[1];
+		*(ptr + 2) = draw_color[2];
+		*(ptr + 3) = draw_color[3];
 
-		if (x != 0 && !color_equal(get_pixel(x - 1, y), draw_colour))
-			fill(x - 1, y, old_colour);
-		if (x != DIMS[0] - 1 && !color_equal(get_pixel(x + 1, y), draw_colour))
-			fill(x + 1, y, old_colour);
-		if (y != DIMS[1] - 1 && !color_equal(get_pixel(x, y + 1), draw_colour))
-			fill(x, y + 1, old_colour);
-		if (y != 0 && !color_equal(get_pixel(x, y - 1), draw_colour))
-			fill(x, y - 1, old_colour);
+		if (x != 0 && !color_equal(get_pixel(x - 1, y), draw_color))
+			fill(x - 1, y, old_color);
+		if (x != DIMS[0] - 1 && !color_equal(get_pixel(x + 1, y), draw_color))
+			fill(x + 1, y, old_color);
+		if (y != DIMS[1] - 1 && !color_equal(get_pixel(x, y + 1), draw_color))
+			fill(x, y + 1, old_color);
+		if (y != 0 && !color_equal(get_pixel(x, y - 1), draw_color))
+			fill(x, y - 1, old_color);
 	}
 }
 
