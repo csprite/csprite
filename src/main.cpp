@@ -65,9 +65,8 @@ unsigned char palette[17][4] = {
 enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL };
 unsigned char Canvas_Freeze = 0;
 
-unsigned char zoom_index = 3; // Default Zoom Level - 16
-unsigned char zoom[8] = { 1, 2, 4, 8, 16, 32, 64, 128 }; // Zoom Levels
-std::string zoomText = "Zoom: " + std::to_string(zoom[zoom_index]) + "x"; // Human Readable string decribing zoom level for UI
+unsigned int zoomLevel = 8; // Default Zoom Level
+std::string zoomText = "Zoom: " + std::to_string(zoomLevel) + "x"; // Human Readable string decribing zoom level for UI
 unsigned char brush_size = 5; // Default Brush Size
 
 // Holds if a ctrl/shift is pressed or not
@@ -213,12 +212,12 @@ int main(int argc, char **argv) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Initial Canvas Position
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2; // X Position
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2; // Y Position
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2; // X Position
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2; // Y Position
 
 	// Output Width And Height Of The Canvas
-	viewport[2] = DIMS[0] * zoom[zoom_index]; // Width
-	viewport[3] = DIMS[1] * zoom[zoom_index]; // Height
+	viewport[2] = DIMS[0] * zoomLevel; // Width
+	viewport[3] = DIMS[1] * zoomLevel; // Height
 
 	viewport_set();
 	glfwSetWindowSizeCallback(window, window_size_callback);
@@ -347,10 +346,10 @@ int main(int argc, char **argv) {
 					load_image_to_canvas();
 					glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 
-					viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
-					viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
-					viewport[2] = DIMS[0] * zoom[zoom_index];
-					viewport[3] = DIMS[1] * zoom[zoom_index];
+					viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2;
+					viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2;
+					viewport[2] = DIMS[0] * zoomLevel;
+					viewport[3] = DIMS[1] * zoomLevel;
 					viewport_set();
 				}
 			}
@@ -389,10 +388,10 @@ int main(int argc, char **argv) {
 				}
 
 				// Update Viewport
-				viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
-				viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
-				viewport[2] = DIMS[0] * zoom[zoom_index];
-				viewport[3] = DIMS[1] * zoom[zoom_index];
+				viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2;
+				viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2;
+				viewport[2] = DIMS[0] * zoomLevel;
+				viewport[3] = DIMS[1] * zoomLevel;
 				viewport_set();
 
 				Canvas_Freeze = 0;
@@ -479,12 +478,12 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 	WINDOW_DIMS[1] = height;
 
 	// Center The Canvas On X, Y
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2;
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2;
 
 	// Set The Canvas Size (Not Neccessary Here Tho)
-	viewport[2] = DIMS[0] * zoom[zoom_index];
-	viewport[3] = DIMS[1] * zoom[zoom_index];
+	viewport[2] = DIMS[0] * zoomLevel;
+	viewport[3] = DIMS[1] * zoomLevel;
 	viewport_set();
 }
 
@@ -493,8 +492,8 @@ void process_input(GLFWwindow *window) {
 
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		x = (int)(cursor_pos_relative[0] / zoom[zoom_index]);
-		y = (int)(cursor_pos_relative[1] / zoom[zoom_index]);
+		x = (int)(cursor_pos_relative[0] / zoomLevel);
+		y = (int)(cursor_pos_relative[1] / zoomLevel);
 
 		if (x >= 0 && x < DIMS[0] && y >= 0 && y < DIMS[1]) {
 			switch (mode) {
@@ -697,22 +696,24 @@ void viewport_set() {
 
 void adjust_zoom(bool increase) {
 	if (increase == true) {
-		if (zoom_index < sizeof(zoom)-1) {
-			zoom_index++;
+		if (zoomLevel < UINT_MAX) { // Max Value Of Unsigned int
+			zoomLevel++;
 		}
 	} else {
-		if (zoom_index > 0) {
-			zoom_index--;
+		if (zoomLevel != 1) { // if zoom is 1 then don't decrease it further
+			zoomLevel--;
 		}
 	}
 
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoom[zoom_index] / 2;
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoom[zoom_index] / 2;
-	viewport[2] = DIMS[0] * zoom[zoom_index];
-	viewport[3] = DIMS[1] * zoom[zoom_index];
+	// Comment Out To Not Center When Zooming
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2;
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2;
+
+	viewport[2] = DIMS[0] * zoomLevel;
+	viewport[3] = DIMS[1] * zoomLevel;
 
 	viewport_set();
-	zoomText = "Zoom: " + std::to_string(zoom[zoom_index]) + "x";
+	zoomText = "Zoom: " + std::to_string(zoomLevel) + "x";
 }
 
 int string_to_int(int *out, char *s) {
