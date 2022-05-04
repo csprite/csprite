@@ -16,7 +16,7 @@ A Minimalistic Pixel Art Tool For Beginners - Powered By OpenGL & ImGui
 2. [Building From Source](https://github.com/DEVLOPRR/CSprite/wiki/Building-From-Source)
 
 ### How To Use CSprite
-Using CSprite isn't rocket science and infact you can learn how to use it in 5 minutes, [Read More...](https://github.com/DEVLOPRR/CSprite/wiki/How-To-Use-CSprite)
+Using CSprite isn't rocket science and infact you can learn how to use it in 5 minutes, [Read More...](https://github.com/DEVLOPRR/CSprite/wiki)
 
 ---
 
