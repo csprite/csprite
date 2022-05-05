@@ -33,7 +33,7 @@ char const * fileFilterPatterns[1] = { "*.png" };
 unsigned char NumOfFilterPatterns = 1;
 
 int WINDOW_DIMS[2] = {700, 500}; // Default Window Dimensions
-int DIMS[2] = {60, 40}; // Width, Height Default Canvas Size
+int CANVAS_DIMS[2] = {60, 40}; // Width, Height Default Canvas Size
 
 unsigned char *canvas_data; // Canvas Data Containg Pixel Values.
 
@@ -111,8 +111,8 @@ int main(int argc, char **argv) {
 			int w, h;
 			string_to_int(&w, argv[i + 1]);
 			string_to_int(&h, argv[i + 2]);
-			DIMS[0] = w;
-			DIMS[1] = h;
+			CANVAS_DIMS[0] = w;
+			CANVAS_DIMS[1] = h;
 			i += 2;
 		}
 
@@ -168,8 +168,8 @@ int main(int argc, char **argv) {
 	}
 
 	if (canvas_data == NULL) {
-		canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
-		memset(canvas_data, 0, DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+		canvas_data = (unsigned char *)malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
+		memset(canvas_data, 0, CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
 		if (canvas_data == NULL) {
 			printf("Unable To allocate memory for canvas.\n");
 			return 1;
@@ -212,14 +212,14 @@ int main(int argc, char **argv) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Initial Canvas Position
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2; // X Position
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2; // Y Position
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)CANVAS_DIMS[0] * zoomLevel / 2; // X Position
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)CANVAS_DIMS[1] * zoomLevel / 2; // Y Position
 
 	// Output Width And Height Of The Canvas
-	viewport[2] = DIMS[0] * zoomLevel; // Width
-	viewport[3] = DIMS[1] * zoomLevel; // Height
+	viewport[2] = CANVAS_DIMS[0] * zoomLevel; // Width
+	viewport[3] = CANVAS_DIMS[1] * zoomLevel; // Height
 
-	viewport_set();
+	zoomAndLevelViewport();
 	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, DIMS[0], DIMS[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas_data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CANVAS_DIMS[0], CANVAS_DIMS[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas_data);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -327,7 +327,7 @@ int main(int argc, char **argv) {
 		glUniform1f(alpha_loc, 1.0f);
 		glBindTexture(GL_TEXTURE_2D, texture);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, DIMS[0], DIMS[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas_data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CANVAS_DIMS[0], CANVAS_DIMS[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas_data);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		ImGui_ImplOpenGL3_NewFrame();
@@ -345,12 +345,7 @@ int main(int argc, char **argv) {
 					FILE_NAME = std::string(filePath);
 					load_image_to_canvas();
 					glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
-
-					viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2;
-					viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2;
-					viewport[2] = DIMS[0] * zoomLevel;
-					viewport[3] = DIMS[1] * zoomLevel;
-					viewport_set();
+					zoomAndLevelViewport();
 				}
 			}
 			if (ImGui::MenuItem("Save")) {
@@ -378,22 +373,16 @@ int main(int argc, char **argv) {
 
 			if (ImGui::Button("Ok")) {
 				free(canvas_data);
-				DIMS[0] = NEW_DIMS[0];
-				DIMS[1] = NEW_DIMS[1];
-				canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
-				memset(canvas_data, 0, DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+				CANVAS_DIMS[0] = NEW_DIMS[0];
+				CANVAS_DIMS[1] = NEW_DIMS[1];
+				canvas_data = (unsigned char *)malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
+				memset(canvas_data, 0, CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
 				if (canvas_data == NULL) {
 					printf("Unable To allocate memory for canvas.\n");
 					return 1;
 				}
 
-				// Update Viewport
-				viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2;
-				viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2;
-				viewport[2] = DIMS[0] * zoomLevel;
-				viewport[3] = DIMS[1] * zoomLevel;
-				viewport_set();
-
+				zoomAndLevelViewport();
 				Canvas_Freeze = 0;
 				showNewCanvasWindow = 0;
 			}
@@ -465,7 +454,7 @@ int main(int argc, char **argv) {
 }
 
 unsigned char * get_char_data(unsigned char *data, int x, int y) {
-	return data + ((y * DIMS[0] + x) * 4);
+	return data + ((y * CANVAS_DIMS[0] + x) * 4);
 }
 
 void logGLFWErrors(int error, const char *description) {
@@ -476,17 +465,37 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 	glViewport(0, 0, w, h);
 }
 
+void zoomAndLevelViewport() {
+	// Simple hacky way to adjust canvas zoom level till it fits the window
+	while (true) {
+		if (viewport[2] >= WINDOW_DIMS[1] || viewport[3] >= WINDOW_DIMS[1]) {
+			adjust_zoom(false);
+			adjust_zoom(false);
+			adjust_zoom(false);
+			break;
+		}
+		adjust_zoom(true);
+		viewport[2] = CANVAS_DIMS[0] * zoomLevel;
+		viewport[3] = CANVAS_DIMS[1] * zoomLevel;
+	}
+
+	// Center On Screen
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)CANVAS_DIMS[0] * zoomLevel / 2;
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)CANVAS_DIMS[1] * zoomLevel / 2;
+	viewport_set();
+}
+
 void window_size_callback(GLFWwindow* window, int width, int height) {
 	WINDOW_DIMS[0] = width;
 	WINDOW_DIMS[1] = height;
 
 	// Center The Canvas On X, Y
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2;
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2;
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)CANVAS_DIMS[0] * zoomLevel / 2;
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)CANVAS_DIMS[1] * zoomLevel / 2;
 
 	// Set The Canvas Size (Not Neccessary Here Tho)
-	viewport[2] = DIMS[0] * zoomLevel;
-	viewport[3] = DIMS[1] * zoomLevel;
+	viewport[2] = CANVAS_DIMS[0] * zoomLevel;
+	viewport[3] = CANVAS_DIMS[1] * zoomLevel;
 	viewport_set();
 }
 
@@ -498,7 +507,7 @@ void process_input(GLFWwindow *window) {
 		x = (int)(cursor_pos_relative[0] / zoomLevel);
 		y = (int)(cursor_pos_relative[1] / zoomLevel);
 
-		if (x >= 0 && x < DIMS[0] && y >= 0 && y < DIMS[1]) {
+		if (x >= 0 && x < CANVAS_DIMS[0] && y >= 0 && y < CANVAS_DIMS[1]) {
 			switch (mode) {
 				case SQUARE_BRUSH:
 				case CIRCLE_BRUSH: {
@@ -731,11 +740,11 @@ void adjust_zoom(bool increase) {
 	}
 
 	// Comment Out To Not Center When Zooming
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)DIMS[0] * zoomLevel / 2;
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)DIMS[1] * zoomLevel / 2;
+	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)CANVAS_DIMS[0] * zoomLevel / 2;
+	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)CANVAS_DIMS[1] * zoomLevel / 2;
 
-	viewport[2] = DIMS[0] * zoomLevel;
-	viewport[3] = DIMS[1] * zoomLevel;
+	viewport[2] = CANVAS_DIMS[0] * zoomLevel;
+	viewport[3] = CANVAS_DIMS[1] * zoomLevel;
 
 	viewport_set();
 	zoomText = "Zoom: " + std::to_string(zoomLevel) + "x";
@@ -765,13 +774,13 @@ int color_equal(unsigned char *a, unsigned char *b) {
 }
 
 unsigned char * get_pixel(int x, int y) {
-	return canvas_data + ((y * DIMS[0] + x) * 4);
+	return canvas_data + ((y * CANVAS_DIMS[0] + x) * 4);
 }
 
 void draw(int x, int y) {
 	for (int yr = -brush_size/2; yr < brush_size/2+1; yr++) {
 		for (int xr = -brush_size/2; xr < brush_size/2+1; xr++) {
-			if (x+xr < 0 || x+xr >= DIMS[0] || y+yr < 0 || y+yr > DIMS[1])
+			if (x+xr < 0 || x+xr >= CANVAS_DIMS[0] || y+yr < 0 || y+yr > CANVAS_DIMS[1])
 				continue;
 
 			if (mode == CIRCLE_BRUSH && xr*xr + yr*yr > brush_size / 2 * brush_size / 2)
@@ -799,9 +808,9 @@ void fill(int x, int y, unsigned char *old_color) {
 
 		if (x != 0 && !color_equal(get_pixel(x - 1, y), draw_color))
 			fill(x - 1, y, old_color);
-		if (x != DIMS[0] - 1 && !color_equal(get_pixel(x + 1, y), draw_color))
+		if (x != CANVAS_DIMS[0] - 1 && !color_equal(get_pixel(x + 1, y), draw_color))
 			fill(x + 1, y, old_color);
-		if (y != DIMS[1] - 1 && !color_equal(get_pixel(x, y + 1), draw_color))
+		if (y != CANVAS_DIMS[1] - 1 && !color_equal(get_pixel(x, y + 1), draw_color))
 			fill(x, y + 1, old_color);
 		if (y != 0 && !color_equal(get_pixel(x, y - 1), draw_color))
 			fill(x, y - 1, old_color);
@@ -816,13 +825,13 @@ void load_image_to_canvas() {
 		return;
 	}
 
-	DIMS[0] = imgWidth;
-	DIMS[1] = imgHeight;
+	CANVAS_DIMS[0] = imgWidth;
+	CANVAS_DIMS[1] = imgHeight;
 
 	if (canvas_data != NULL) free(canvas_data);
 
-	canvas_data = (unsigned char *)malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
-	memset(canvas_data, 0, DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+	canvas_data = (unsigned char *)malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
+	memset(canvas_data, 0, CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
 	int j, k;
 	unsigned char *ptr;
 	unsigned char *iptr;
@@ -840,10 +849,10 @@ void load_image_to_canvas() {
 }
 
 void save_image_from_canvas() {
-	unsigned char *data = (unsigned char *) malloc(DIMS[0] * DIMS[1] * 4 * sizeof(unsigned char));
+	unsigned char *data = (unsigned char *) malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
 
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	stbi_write_png(FILE_NAME.c_str(), DIMS[0], DIMS[1], 4, data, 0);
+	stbi_write_png(FILE_NAME.c_str(), CANVAS_DIMS[0], CANVAS_DIMS[1], 4, data, 0);
 
 	free(data);
 	should_save = 0;
