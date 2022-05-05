@@ -537,14 +537,10 @@ void process_input(GLFWwindow *window) {
 					};
 
 					for (int i = 0; i < palette_count; i++) {
-						if (
-							palette[i][0] == color[0] &&
-							palette[i][1] == color[1] &&
-							palette[i][2] == color[2] &&
-							palette[i][3] == color[3]) {
-								last_palette_index = palette_index;
-								palette_index = i;
-								break;
+						if (color_equal(palette[i], color) == 1) {
+							last_palette_index = palette_index;
+							palette_index = i;
+							break;
 						}
 					}
 					break;
@@ -778,15 +774,17 @@ unsigned char * get_pixel(int x, int y) {
 }
 
 void draw(int x, int y) {
-	for (int yr = -brush_size/2; yr < brush_size/2+1; yr++) {
-		for (int xr = -brush_size/2; xr < brush_size/2+1; xr++) {
-			if (x+xr < 0 || x+xr >= CANVAS_DIMS[0] || y+yr < 0 || y+yr > CANVAS_DIMS[1])
+	// dirY = direction Y
+	// dirX = direction X
+	for (int dirY = -brush_size / 2; dirY < brush_size / 2 + 1; dirY++) {
+		for (int dirX = -brush_size / 2; dirX < brush_size / 2 + 1; dirX++) {
+			if (x + dirX < 0 || x + dirX >= CANVAS_DIMS[0] || y + dirY < 0 || y + dirY > CANVAS_DIMS[1])
 				continue;
 
-			if (mode == CIRCLE_BRUSH && xr*xr + yr*yr > brush_size / 2 * brush_size / 2)
+			if (mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > brush_size / 2 * brush_size / 2)
 				continue;
 
-			unsigned char *ptr = get_pixel(x+xr, y+yr);
+			unsigned char *ptr = get_pixel(x + dirX, y + dirY);
 
 			// Set Pixel Color
 			*ptr = draw_color[0]; // Red
