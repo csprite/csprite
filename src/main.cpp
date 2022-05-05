@@ -10,6 +10,12 @@
 #include <chrono>
 #include <thread>
 
+/*
+  Montserrat Bold Font Converted To Base85 Using "lib/binary_2_compressed_c.cpp"
+  And Stored In A Char Array
+*/
+#include "../include/FontMontserrat_Bold.h"
+
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/imgui_impl_glfw.h"
 #include "../include/imgui/imgui_impl_opengl3.h"
@@ -77,7 +83,9 @@ enum mode last_mode = CIRCLE_BRUSH;
 
 unsigned char *draw_color; // Holds Pointer To Currently Selected Color
 unsigned char erase[4] = { 0, 0, 0, 0 }; // Erase Color, Transparent Black.
+
 unsigned char should_save = 0;
+unsigned char showNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
 
 GLfloat viewport[4];
 GLfloat canvasVertices[] = {
@@ -274,6 +282,9 @@ int main(int argc, char **argv) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = NULL; // Disable Generation of .ini file
 
+	// Use Font From The "FontMontserrat_Bold.h"
+	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold_compressed_data, Montserrat_Bold_compressed_size, 16.0f);
+
 	ImGui::StyleColorsDark();
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -294,7 +305,6 @@ int main(int argc, char **argv) {
 	auto const start_time = std::chrono::steady_clock::now();
 	auto next_time = start_time + wait_time;
 
-	unsigned char showNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
 	while (!glfwWindowShouldClose(window)) {
@@ -334,108 +344,114 @@ int main(int argc, char **argv) {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::BeginMainMenuBar();
-		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("New")) {
-				showNewCanvasWindow = 1;
-			}
-			if (ImGui::MenuItem("Open")) {
-				char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)", 0);
-				if (filePath != NULL) {
-					FILE_NAME = std::string(filePath);
-					load_image_to_canvas();
-					glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
-					zoomAndLevelViewport();
+		if (ImGui::BeginMainMenuBar()) {
+			if (ImGui::BeginMenu("File")) {
+				if (ImGui::MenuItem("New", "Ctrl+N")) {
+					showNewCanvasWindow = 1;
 				}
-			}
-			if (ImGui::MenuItem("Save")) {
-				save_image_from_canvas();
-			}
-			if (ImGui::MenuItem("Save As")) {
-				char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
-				if (filePath != NULL) {
-					FILE_NAME = std::string(filePath);
-					save_image_from_canvas();
-					glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+				if (ImGui::MenuItem("Open", "Ctrl+O")) {
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)", 0);
+					if (filePath != NULL) {
+						FILE_NAME = std::string(filePath);
+						load_image_to_canvas();
+						glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						zoomAndLevelViewport();
+					}
 				}
+				if (ImGui::BeginMenu("Save")) {
+					if (ImGui::MenuItem("Save", "Ctrl+S")) {
+						save_image_from_canvas();
+					}
+					if (ImGui::MenuItem("Save As", "Alt+S")) {
+						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
+						if (filePath != NULL) {
+							FILE_NAME = std::string(filePath);
+							save_image_from_canvas();
+							glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						}
+					}
+					ImGui::EndMenu();
+				}
+				ImGui::EndMenu();
 			}
-			ImGui::EndMenu();
+			ImGui::EndMainMenuBar();
 		}
-		ImGui::EndMainMenuBar();
 
 		if (showNewCanvasWindow == 1) {
 			Canvas_Freeze = 1;
 			ImGui::SetNextWindowSize({280, 100}, 0);
-			ImGui::Begin("NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+			if (ImGui::Begin("NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
+				ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
+				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
-			ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
-			ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
+				if (ImGui::Button("Ok")) {
+					free(canvas_data);
+					CANVAS_DIMS[0] = NEW_DIMS[0];
+					CANVAS_DIMS[1] = NEW_DIMS[1];
+					canvas_data = (unsigned char *)malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
+					memset(canvas_data, 0, CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
+					if (canvas_data == NULL) {
+						printf("Unable To allocate memory for canvas.\n");
+						return 1;
+					}
 
-			if (ImGui::Button("Ok")) {
-				free(canvas_data);
-				CANVAS_DIMS[0] = NEW_DIMS[0];
-				CANVAS_DIMS[1] = NEW_DIMS[1];
-				canvas_data = (unsigned char *)malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
-				memset(canvas_data, 0, CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
-				if (canvas_data == NULL) {
-					printf("Unable To allocate memory for canvas.\n");
-					return 1;
+					zoomAndLevelViewport();
+					Canvas_Freeze = 0;
+					showNewCanvasWindow = 0;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel")) {
+					Canvas_Freeze = 0;
+					showNewCanvasWindow = 0;
 				}
 
-				zoomAndLevelViewport();
-				Canvas_Freeze = 0;
-				showNewCanvasWindow = 0;
+				ImGui::End();
 			}
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel")) {
-				Canvas_Freeze = 0;
-				showNewCanvasWindow = 0;
+		}
+
+		if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags)) {
+			ImGui::SetWindowPos({0, 20});
+			ImGui::SetWindowSize({(float)WINDOW_DIMS[0]/2, (float)WINDOW_DIMS[1]}); // Make Sure Text is visible everytime.
+
+			switch (mode) {
+				case SQUARE_BRUSH:
+					if (palette_index == 0)
+						ImGui::Text("Square Eraser - (Size: %d)", brush_size);
+					else
+						ImGui::Text("Square Brush - (Size: %d)", brush_size);
+					break;
+				case CIRCLE_BRUSH:
+					if (palette_index == 0) {
+						ImGui::Text("Circle Eraser - (Size: %d)", brush_size);
+					} else {
+						ImGui::Text("Circle Brush - (Size: %d)", brush_size);
+					}
+					break;
+				case FILL:
+					ImGui::Text("Fill");
+					break;
+				case INK_DROPPER:
+					ImGui::Text("Ink Dropper");
+					break;
+				case PAN:
+					ImGui::Text("Panning");
+					break;
 			}
 
+			ImGui::Text("%s", zoomText.c_str());
 			ImGui::End();
 		}
 
-		ImGui::Begin("ToolAndZoomWindow", NULL, window_flags);
-		ImGui::SetWindowPos({0, 20});
-		ImGui::SetWindowSize({(float)WINDOW_DIMS[0]/2, (float)WINDOW_DIMS[1]}); // Make Sure Text is visible everytime.
-
-		switch (mode) {
-			case SQUARE_BRUSH:
-				if (palette_index == 0)
-					ImGui::Text("Square Eraser - (Size: %d)", brush_size);
-				else
-					ImGui::Text("Square Brush - (Size: %d)", brush_size);
-				break;
-			case CIRCLE_BRUSH:
-				if (palette_index == 0) {
-					ImGui::Text("Circle Eraser - (Size: %d)", brush_size);
-				} else {
-					ImGui::Text("Circle Brush - (Size: %d)", brush_size);
+		if (ImGui::Begin("ColorPaletteWindow", NULL, window_flags)) {
+			ImGui::SetWindowPos({0, (float)WINDOW_DIMS[1] - 35});
+			for (int i = 1; i < palette_count; i++) {
+				if (i != 1) ImGui::SameLine();
+				if (ImGui::ColorButton(palette_index == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)palette[i][0]/255, (float)palette[i][1]/255, (float)palette[i][2]/255, (float)palette[i][3]/255})) {
+					palette_index = i;
 				}
-				break;
-			case FILL:
-				ImGui::Text("Fill");
-				break;
-			case INK_DROPPER:
-				ImGui::Text("Ink Dropper");
-				break;
-			case PAN:
-				ImGui::Text("Panning");
-				break;
+			};
+			ImGui::End();
 		}
-
-		ImGui::Text("%s", zoomText.c_str());
-		ImGui::End();
-
-		ImGui::Begin("ColorPaletteWindow", NULL, window_flags);
-		ImGui::SetWindowPos({0, (float)WINDOW_DIMS[1] - 35});
-		for (int i = 1; i < palette_count; i++) {
-			if (i != 1) ImGui::SameLine();
-			if (ImGui::ColorButton(palette_index == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)palette[i][0]/255, (float)palette[i][1]/255, (float)palette[i][2]/255, (float)palette[i][3]/255})) {
-				palette_index = i;
-			}
-		};
-		ImGui::End();
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -690,6 +706,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			case GLFW_KEY_SPACE:
 				last_mode = mode;
 				mode = PAN;
+			case GLFW_KEY_N:
+				if (ctrl == 1) showNewCanvasWindow = 1;
+				break;
 			case GLFW_KEY_S:
 				if (mods == GLFW_MOD_ALT) { // Show Prompt To Save if Alt + S pressed
 					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
