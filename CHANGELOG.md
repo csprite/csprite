@@ -7,15 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/DEVLOPRR/CSprite/releases/tag/continuous)
 
 - May 6, 2022
+	- Change Global Variable Naming Style
+
+- May 5, 2022
 	- Add [Montserrat Bold](https://fonts.google.com/specimen/Montserrat) Font For UI
 	- Add Canvas Zoom to auto adjust when creating a canvas or opening a image to fit the screen
 	- Change Circle brush to be the default brush
 	- Fix Color not being selected from palette using mouse click
-	- Change Global Variable Naming Style
-
-- May 5, 2022
-	- Fix Color not being selected when clicking on a color in Color Palette
-	- Change Circle Brush To Default
 
 - May 4, 2022
 
