@@ -1,7 +1,3 @@
-#ifdef _WIN32
-	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
-#endif
-
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -9,6 +5,10 @@
 
 #include <chrono>
 #include <thread>
+
+#if defined(_WIN32)
+	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#endif
 
 /*
   Montserrat Bold Font Converted To Base85 Using "lib/binary_2_compressed_c.cpp"
@@ -408,35 +408,40 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags)) {
+		if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
 			ImGui::SetWindowPos({0, 20});
-			ImGui::SetWindowSize({(float)WindowDims[0]/2, (float)WindowDims[1]}); // Make Sure Text is visible everytime.
+			std::string selectedToolText;
 
 			switch (Mode) {
 				case SQUARE_BRUSH:
 					if (PaletteIndex == 0)
-						ImGui::Text("Square Eraser - (Size: %d)", BrushSize);
+						selectedToolText = "Square Eraser - (Size: " + std::to_string(BrushSize) + ")";
 					else
-						ImGui::Text("Square Brush - (Size: %d)", BrushSize);
+						selectedToolText = "Square Brush - (Size: " + std::to_string(BrushSize) + ")";
 					break;
 				case CIRCLE_BRUSH:
 					if (PaletteIndex == 0) {
-						ImGui::Text("Circle Eraser - (Size: %d)", BrushSize);
+						selectedToolText = "Circle Eraser - (Size: " + std::to_string(BrushSize) + ")";
 					} else {
-						ImGui::Text("Circle Brush - (Size: %d)", BrushSize);
+						selectedToolText = "Circle Brush - (Size: " + std::to_string(BrushSize) + ")";
 					}
 					break;
 				case FILL:
-					ImGui::Text("Fill");
+					selectedToolText = "Fill";
 					break;
 				case INK_DROPPER:
-					ImGui::Text("Ink Dropper");
+					selectedToolText = "Ink Dropper";
 					break;
 				case PAN:
-					ImGui::Text("Panning");
+					selectedToolText = "Panning";
 					break;
 			}
 
+			ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
+			ImVec2 textSize2 = ImGui::CalcTextSize(ZoomText.c_str(), NULL, false, -2.0f);
+			ImGui::SetWindowSize({(float)(textSize1.x + textSize2.x), (float)(textSize1.y + textSize2.y) * 2}); // Make Sure Text is visible everytime.
+
+			ImGui::Text("%s", selectedToolText.c_str());
 			ImGui::Text("%s", ZoomText.c_str());
 			ImGui::End();
 		}
@@ -447,6 +452,7 @@ int main(int argc, char **argv) {
 				if (i != 1) ImGui::SameLine();
 				if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)ColorPalette[i][0]/255, (float)ColorPalette[i][1]/255, (float)ColorPalette[i][2]/255, (float)ColorPalette[i][3]/255})) {
 					PaletteIndex = i;
+					SelectedColor = ColorPalette[PaletteIndex];
 				}
 			};
 			ImGui::End();
