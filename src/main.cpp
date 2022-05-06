@@ -6,8 +6,12 @@
 #include <chrono>
 #include <thread>
 
-#if defined(_WIN32)
+#if defined(__linux__) || defined(__FreeBSD__)
+	#include <stdlib.h>
+#elif defined(__APPLE__)
+#elif defined(_WIN32)
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+	#include <shellapi.h>
 #endif
 
 /*
@@ -373,6 +377,15 @@ int main(int argc, char **argv) {
 				}
 				ImGui::EndMenu();
 			}
+
+			if (ImGui::BeginMenu("Help")) {
+				if (ImGui::MenuItem("About")) {
+				}
+				if (ImGui::MenuItem("GitHub")) {
+					openUrl("https://github.com/DEVLOPRR/CSprite");
+				}
+				ImGui::EndMenu();
+			}
 			ImGui::EndMainMenuBar();
 		}
 
@@ -472,6 +485,16 @@ int main(int argc, char **argv) {
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
+}
+
+void openUrl(std::string url) {
+#if defined(__linux__) || defined(__FreeBSD__)
+	system(("xdg-open \"" + url + "\"").c_str());
+#elif defined(__APPLE__)
+	system(("open \"" + url + "\"").c_str());
+#elif defined(_WIN32)
+	ShellExecute(0, 0, url.c_str(), 0, 0, SW_SHOW);
+#endif
 }
 
 unsigned char * get_char_data(unsigned char *data, int x, int y) {
