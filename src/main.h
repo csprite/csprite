@@ -1,6 +1,7 @@
 #include "../include/GLFW/glfw3.h"
 #include <string>
 
+void openUrl(std::string url);
 void logGLFWErrors(int error, const char *description); // GLFW Error Callback
 void zoomAndLevelViewport(); // Zooms And Levels The Canvas.
 void framebuffer_size_callback(GLFWwindow* window, int, int);
