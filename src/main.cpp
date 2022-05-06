@@ -34,21 +34,21 @@
 #include "math_linear.h"
 #include "main.h"
 
-std::string FILE_NAME = "untitled.png"; // Default Output Filename
-char const * fileFilterPatterns[1] = { "*.png" };
+std::string FilePath = "untitled.png"; // Default Output Filename
+char const * FileFilterPatterns[1] = { "*.png" };
 unsigned char NumOfFilterPatterns = 1;
 
-int WINDOW_DIMS[2] = {700, 500}; // Default Window Dimensions
-int CANVAS_DIMS[2] = {60, 40}; // Width, Height Default Canvas Size
+int WindowDims[2] = {700, 500}; // Default Window Dimensions
+int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
 
-unsigned char *canvas_data; // Canvas Data Containg Pixel Values.
+unsigned char *CanvasData; // Canvas Data Containg Pixel Values.
 
-unsigned char last_palette_index = 1;
-unsigned char palette_index = 1;
-unsigned char palette_count = 17;
-unsigned char palette[17][4] = {
+unsigned char LastPaletteIndex = 1;
+unsigned char PaletteIndex = 1;
+unsigned char PaletteCount = 17;
+unsigned char ColorPalette[17][4] = {
 	{ 0,   0,   0,   0   }, // Black Transparent/None
-	// Pico 8 Color Palette - https://lospec.com/palette-list/pico-8
+	// Pico 8 Color Palette - https://lospec.com/ColorPalette-list/pico-8
 	{ 0,   0,   0,   255 }, // Black Color
 	{ 29,  43,  83,  255 }, // Dark Violet
 	{ 126, 37,  83,  255 }, // Dark Pink
@@ -67,28 +67,27 @@ unsigned char palette[17][4] = {
 	{ 255, 204, 170, 255 }  // Pale Orange
 };
 
-unsigned int zoomLevel = 8; // Default Zoom Level
-std::string zoomText = "Zoom: " + std::to_string(zoomLevel) + "x"; // Human Readable string decribing zoom level for UI
-unsigned char brush_size = 5; // Default Brush Size
+unsigned int ZoomLevel = 8; // Default Zoom Level
+std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
+unsigned char BrushSize = 5; // Default Brush Size
 
 // Holds if a ctrl/shift is pressed or not
-unsigned char ctrl = 0;
-unsigned char shift = 0;
+unsigned char IsCtrlDown = 0;
+unsigned char IsShiftDown = 0;
 
-enum mode { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER };
-unsigned char Canvas_Freeze = 0;
+enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER };
+unsigned char CanvasFreeze = 0;
 
-enum mode mode = CIRCLE_BRUSH;
-enum mode last_mode = CIRCLE_BRUSH;
+// Currently & last selected tool
+enum mode_e Mode = CIRCLE_BRUSH;
+enum mode_e LastMode = CIRCLE_BRUSH;
 
-unsigned char *draw_color; // Holds Pointer To Currently Selected Color
-unsigned char erase[4] = { 0, 0, 0, 0 }; // Erase Color, Transparent Black.
+unsigned char *SelectedColor; // Holds Pointer To Currently Selected Color
+unsigned char ShouldSave = 0;
+unsigned char ShowNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
 
-unsigned char should_save = 0;
-unsigned char showNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
-
-GLfloat viewport[4];
-GLfloat canvasVertices[] = {
+GLfloat ViewPort[4];
+GLfloat CanvasVertices[] = {
 	//       Canvas              Color To       Texture
 	//     Coordinates          Blend With     Coordinates
 	//  X      Y      Z      R     G     B      X     Y
@@ -101,16 +100,16 @@ GLfloat canvasVertices[] = {
 };
 
 // Index Buffer
-unsigned int indices[] = {0, 1, 3, 1, 2, 3};
+unsigned int Indices[] = {0, 1, 3, 1, 2, 3};
 
-double cursor_pos[2];
-double cursor_pos_last[2];
-double cursor_pos_relative[2];
+double MousePos[2];
+double MousePosLast[2];
+double MousePosRelative[2];
 
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
-			FILE_NAME = argv[i+1];
+			FilePath = argv[i+1];
 			load_image_to_canvas();
 			i++;
 		}
@@ -119,13 +118,13 @@ int main(int argc, char **argv) {
 			int w, h;
 			string_to_int(&w, argv[i + 1]);
 			string_to_int(&h, argv[i + 2]);
-			CANVAS_DIMS[0] = w;
-			CANVAS_DIMS[1] = h;
+			CanvasDims[0] = w;
+			CanvasDims[1] = h;
 			i += 2;
 		}
 
 		if (strcmp(argv[i], "-o") == 0) {
-			FILE_NAME = argv[i + 1];
+			FilePath = argv[i + 1];
 			i++;
 		}
 
@@ -133,13 +132,13 @@ int main(int argc, char **argv) {
 			int w, h;
 			string_to_int(&w, argv[i + 1]);
 			string_to_int(&h, argv[i + 2]);
-			WINDOW_DIMS[0] = w;
-			WINDOW_DIMS[1] = h;
+			WindowDims[0] = w;
+			WindowDims[1] = h;
 			i += 2;
 		}
 
 		if (strcmp(argv[i], "-p") == 0) {
-			palette_count = 0;
+			PaletteCount = 0;
 			i++;
 
 			while (i < argc && (strlen(argv[i]) == 6 || strlen(argv[i]) == 8)) {
@@ -154,7 +153,7 @@ int main(int argc, char **argv) {
 					start = 24;
 					a = number >> (start - 24) & 0xff;
 				} else {
-					printf("Invalid color in palette, check the length is 6 or 8.\n");
+					printf("Invalid color in ColorPalette, check the length is 6 or 8.\n");
 					break;
 				}
 
@@ -162,23 +161,23 @@ int main(int argc, char **argv) {
 				g = number >> (start - 8) & 0xff;
 				b = number >> (start - 16) & 0xff;
 
-				palette[palette_count + 1][0] = r;
-				palette[palette_count + 1][1] = g;
-				palette[palette_count + 1][2] = b;
-				palette[palette_count + 1][3] = a;
+				ColorPalette[PaletteCount + 1][0] = r;
+				ColorPalette[PaletteCount + 1][1] = g;
+				ColorPalette[PaletteCount + 1][2] = b;
+				ColorPalette[PaletteCount + 1][3] = a;
 
 				printf("Adding color: #%s - rgb(%d, %d, %d)\n", argv[i], r, g, b);
 
-				palette_count++;
+				PaletteCount++;
 				i++;
 			}
 		}
 	}
 
-	if (canvas_data == NULL) {
-		canvas_data = (unsigned char *)malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
-		memset(canvas_data, 0, CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
-		if (canvas_data == NULL) {
+	if (CanvasData == NULL) {
+		CanvasData = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+		memset(CanvasData, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+		if (CanvasData == NULL) {
 			printf("Unable To allocate memory for canvas.\n");
 			return 1;
 		}
@@ -187,7 +186,7 @@ int main(int argc, char **argv) {
 	GLFWwindow *window;
 	GLFWcursor *cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
 
-	draw_color = palette[palette_index];
+	SelectedColor = ColorPalette[PaletteIndex];
 
 	glfwInit();
 	glfwSetErrorCallback(logGLFWErrors);
@@ -197,21 +196,21 @@ int main(int argc, char **argv) {
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
 
-	window = glfwCreateWindow(WINDOW_DIMS[0], WINDOW_DIMS[1], "CSprite", NULL, NULL);
+	window = glfwCreateWindow(WindowDims[0], WindowDims[1], "CSprite", NULL, NULL);
 
 	if (!window) {
 		printf("Failed to create GLFW window\n");
-		free(canvas_data);
+		free(CanvasData);
 		return 1;
 	}
 
 	glfwMakeContextCurrent(window);
-	glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str());
+	glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
 	glfwSwapInterval(0);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to init GLAD\n");
-		free(canvas_data);
+		free(CanvasData);
 		return 1;
 	}
 
@@ -220,12 +219,12 @@ int main(int argc, char **argv) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Initial Canvas Position
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)CANVAS_DIMS[0] * zoomLevel / 2; // X Position
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)CANVAS_DIMS[1] * zoomLevel / 2; // Y Position
+	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2; // X Position
+	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2; // Y Position
 
 	// Output Width And Height Of The Canvas
-	viewport[2] = CANVAS_DIMS[0] * zoomLevel; // Width
-	viewport[3] = CANVAS_DIMS[1] * zoomLevel; // Height
+	ViewPort[2] = CanvasDims[0] * ZoomLevel; // Width
+	ViewPort[3] = CanvasDims[1] * ZoomLevel; // Height
 
 	zoomAndLevelViewport();
 	glfwSetWindowSizeCallback(window, window_size_callback);
@@ -249,10 +248,10 @@ int main(int argc, char **argv) {
 	glBindVertexArray(vertexArrObj);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffObj);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(canvasVertices), canvasVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(CanvasVertices), CanvasVertices, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
@@ -271,7 +270,7 @@ int main(int argc, char **argv) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CANVAS_DIMS[0], CANVAS_DIMS[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas_data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CanvasDims[0], CanvasDims[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, CanvasData);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -337,7 +336,7 @@ int main(int argc, char **argv) {
 		glUniform1f(alpha_loc, 1.0f);
 		glBindTexture(GL_TEXTURE_2D, texture);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CANVAS_DIMS[0], CANVAS_DIMS[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas_data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CanvasDims[0], CanvasDims[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, CanvasData);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		ImGui_ImplOpenGL3_NewFrame();
@@ -347,14 +346,14 @@ int main(int argc, char **argv) {
 		if (ImGui::BeginMainMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
 				if (ImGui::MenuItem("New", "Ctrl+N")) {
-					showNewCanvasWindow = 1;
+					ShowNewCanvasWindow = 1;
 				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)", 0);
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png)", 0);
 					if (filePath != NULL) {
-						FILE_NAME = std::string(filePath);
+						FilePath = std::string(filePath);
 						load_image_to_canvas();
-						glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						zoomAndLevelViewport();
 					}
 				}
@@ -363,11 +362,11 @@ int main(int argc, char **argv) {
 						save_image_from_canvas();
 					}
 					if (ImGui::MenuItem("Save As", "Alt+S")) {
-						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
+						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png)");
 						if (filePath != NULL) {
-							FILE_NAME = std::string(filePath);
+							FilePath = std::string(filePath);
 							save_image_from_canvas();
-							glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						}
 					}
 					ImGui::EndMenu();
@@ -377,32 +376,32 @@ int main(int argc, char **argv) {
 			ImGui::EndMainMenuBar();
 		}
 
-		if (showNewCanvasWindow == 1) {
-			Canvas_Freeze = 1;
+		if (ShowNewCanvasWindow == 1) {
+			CanvasFreeze = 1;
 			ImGui::SetNextWindowSize({280, 100}, 0);
 			if (ImGui::Begin("NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
 				ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
 				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
 				if (ImGui::Button("Ok")) {
-					free(canvas_data);
-					CANVAS_DIMS[0] = NEW_DIMS[0];
-					CANVAS_DIMS[1] = NEW_DIMS[1];
-					canvas_data = (unsigned char *)malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
-					memset(canvas_data, 0, CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
-					if (canvas_data == NULL) {
+					free(CanvasData);
+					CanvasDims[0] = NEW_DIMS[0];
+					CanvasDims[1] = NEW_DIMS[1];
+					CanvasData = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+					memset(CanvasData, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+					if (CanvasData == NULL) {
 						printf("Unable To allocate memory for canvas.\n");
 						return 1;
 					}
 
 					zoomAndLevelViewport();
-					Canvas_Freeze = 0;
-					showNewCanvasWindow = 0;
+					CanvasFreeze = 0;
+					ShowNewCanvasWindow = 0;
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
-					Canvas_Freeze = 0;
-					showNewCanvasWindow = 0;
+					CanvasFreeze = 0;
+					ShowNewCanvasWindow = 0;
 				}
 
 				ImGui::End();
@@ -411,20 +410,20 @@ int main(int argc, char **argv) {
 
 		if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags)) {
 			ImGui::SetWindowPos({0, 20});
-			ImGui::SetWindowSize({(float)WINDOW_DIMS[0]/2, (float)WINDOW_DIMS[1]}); // Make Sure Text is visible everytime.
+			ImGui::SetWindowSize({(float)WindowDims[0]/2, (float)WindowDims[1]}); // Make Sure Text is visible everytime.
 
-			switch (mode) {
+			switch (Mode) {
 				case SQUARE_BRUSH:
-					if (palette_index == 0)
-						ImGui::Text("Square Eraser - (Size: %d)", brush_size);
+					if (PaletteIndex == 0)
+						ImGui::Text("Square Eraser - (Size: %d)", BrushSize);
 					else
-						ImGui::Text("Square Brush - (Size: %d)", brush_size);
+						ImGui::Text("Square Brush - (Size: %d)", BrushSize);
 					break;
 				case CIRCLE_BRUSH:
-					if (palette_index == 0) {
-						ImGui::Text("Circle Eraser - (Size: %d)", brush_size);
+					if (PaletteIndex == 0) {
+						ImGui::Text("Circle Eraser - (Size: %d)", BrushSize);
 					} else {
-						ImGui::Text("Circle Brush - (Size: %d)", brush_size);
+						ImGui::Text("Circle Brush - (Size: %d)", BrushSize);
 					}
 					break;
 				case FILL:
@@ -438,16 +437,16 @@ int main(int argc, char **argv) {
 					break;
 			}
 
-			ImGui::Text("%s", zoomText.c_str());
+			ImGui::Text("%s", ZoomText.c_str());
 			ImGui::End();
 		}
 
 		if (ImGui::Begin("ColorPaletteWindow", NULL, window_flags)) {
-			ImGui::SetWindowPos({0, (float)WINDOW_DIMS[1] - 35});
-			for (int i = 1; i < palette_count; i++) {
+			ImGui::SetWindowPos({0, (float)WindowDims[1] - 35});
+			for (int i = 1; i < PaletteCount; i++) {
 				if (i != 1) ImGui::SameLine();
-				if (ImGui::ColorButton(palette_index == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)palette[i][0]/255, (float)palette[i][1]/255, (float)palette[i][2]/255, (float)palette[i][3]/255})) {
-					palette_index = i;
+				if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)ColorPalette[i][0]/255, (float)ColorPalette[i][1]/255, (float)ColorPalette[i][2]/255, (float)ColorPalette[i][3]/255})) {
+					PaletteIndex = i;
 				}
 			};
 			ImGui::End();
@@ -470,7 +469,7 @@ int main(int argc, char **argv) {
 }
 
 unsigned char * get_char_data(unsigned char *data, int x, int y) {
-	return data + ((y * CANVAS_DIMS[0] + x) * 4);
+	return data + ((y * CanvasDims[0] + x) * 4);
 }
 
 void logGLFWErrors(int error, const char *description) {
@@ -484,47 +483,47 @@ void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
 void zoomAndLevelViewport() {
 	// Simple hacky way to adjust canvas zoom level till it fits the window
 	while (true) {
-		if (viewport[2] >= WINDOW_DIMS[1] || viewport[3] >= WINDOW_DIMS[1]) {
+		if (ViewPort[2] >= WindowDims[1] || ViewPort[3] >= WindowDims[1]) {
 			adjust_zoom(false);
 			adjust_zoom(false);
 			adjust_zoom(false);
 			break;
 		}
 		adjust_zoom(true);
-		viewport[2] = CANVAS_DIMS[0] * zoomLevel;
-		viewport[3] = CANVAS_DIMS[1] * zoomLevel;
+		ViewPort[2] = CanvasDims[0] * ZoomLevel;
+		ViewPort[3] = CanvasDims[1] * ZoomLevel;
 	}
 
 	// Center On Screen
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)CANVAS_DIMS[0] * zoomLevel / 2;
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)CANVAS_DIMS[1] * zoomLevel / 2;
+	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
 	viewport_set();
 }
 
 void window_size_callback(GLFWwindow* window, int width, int height) {
-	WINDOW_DIMS[0] = width;
-	WINDOW_DIMS[1] = height;
+	WindowDims[0] = width;
+	WindowDims[1] = height;
 
 	// Center The Canvas On X, Y
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)CANVAS_DIMS[0] * zoomLevel / 2;
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)CANVAS_DIMS[1] * zoomLevel / 2;
+	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
 
 	// Set The Canvas Size (Not Neccessary Here Tho)
-	viewport[2] = CANVAS_DIMS[0] * zoomLevel;
-	viewport[3] = CANVAS_DIMS[1] * zoomLevel;
+	ViewPort[2] = CanvasDims[0] * ZoomLevel;
+	ViewPort[3] = CanvasDims[1] * ZoomLevel;
 	viewport_set();
 }
 
 void process_input(GLFWwindow *window) {
-	if (Canvas_Freeze == 1) return;
+	if (CanvasFreeze == 1) return;
 
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		x = (int)(cursor_pos_relative[0] / zoomLevel);
-		y = (int)(cursor_pos_relative[1] / zoomLevel);
+		x = (int)(MousePosRelative[0] / ZoomLevel);
+		y = (int)(MousePosRelative[1] / ZoomLevel);
 
-		if (x >= 0 && x < CANVAS_DIMS[0] && y >= 0 && y < CANVAS_DIMS[1]) {
-			switch (mode) {
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
+			switch (Mode) {
 				case SQUARE_BRUSH:
 				case CIRCLE_BRUSH: {
 					draw(x, y);
@@ -552,10 +551,10 @@ void process_input(GLFWwindow *window) {
 						*(ptr + 3)
 					};
 
-					for (int i = 0; i < palette_count; i++) {
-						if (color_equal(palette[i], color) == 1) {
-							last_palette_index = palette_index;
-							palette_index = i;
+					for (int i = 0; i < PaletteCount; i++) {
+						if (color_equal(ColorPalette[i], color) == 1) {
+							LastPaletteIndex = PaletteIndex;
+							PaletteIndex = i;
 							break;
 						}
 					}
@@ -571,19 +570,19 @@ void process_input(GLFWwindow *window) {
 
 void mouse_callback(GLFWwindow *window, double x, double y) {
 	/* infitesimally small chance aside from startup */
-	if (cursor_pos_last[0] != 0 && cursor_pos_last[1] != 0) {
-		if (mode == PAN) {
-			viewport[0] -= cursor_pos_last[0] - cursor_pos[0];
-			viewport[1] += cursor_pos_last[1] - cursor_pos[1];
+	if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
+		if (Mode == PAN) {
+			ViewPort[0] -= MousePosLast[0] - MousePos[0];
+			ViewPort[1] += MousePosLast[1] - MousePos[1];
 			viewport_set();
 		}
 	}
-	cursor_pos_last[0] = cursor_pos[0];
-	cursor_pos_last[1] = cursor_pos[1];
-	cursor_pos[0] = x;
-	cursor_pos[1] = y;
-	cursor_pos_relative[0] = x - viewport[0];
-	cursor_pos_relative[1] = (y + viewport[1]) - (WINDOW_DIMS[1] - viewport[3]);
+	MousePosLast[0] = MousePos[0];
+	MousePosLast[1] = MousePos[1];
+	MousePos[0] = x;
+	MousePos[1] = y;
+	MousePosRelative[0] = x - ViewPort[0];
+	MousePosRelative[1] = (y + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
 }
 
 void mouse_button_callback(GLFWwindow *window, int button, int down, int c) {
@@ -600,134 +599,134 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
 	if (action == GLFW_RELEASE) {
 		if (mods == GLFW_MOD_CONTROL)
-			ctrl = 0;
+			IsCtrlDown = 0;
 
 		if (mods == GLFW_MOD_SHIFT)
-			shift = 0;
+			IsShiftDown = 0;
 
 		if (key == GLFW_KEY_SPACE) {
-			mode = last_mode;
+			Mode = LastMode;
 		}
 	}
 
 	if (action == GLFW_PRESS) {
 		if (mods == GLFW_MOD_CONTROL) {
-			ctrl = 1;
+			IsCtrlDown = 1;
 
-			// if ctrl key is pressed and + or - is pressed, adjust the zoom size
+			// if IsCtrlDown key is pressed and + or - is pressed, adjust the zoom size
 			if (key == GLFW_KEY_EQUAL) {
 				adjust_zoom(true);
 			} else if (key == GLFW_KEY_MINUS) {
 				adjust_zoom(false);
 			}
 		} else if (mods == GLFW_MOD_SHIFT) {
-			shift = 1;
+			IsShiftDown = 1;
 		} else {
 			if (key == GLFW_KEY_EQUAL) {
-				if (brush_size < 255) {
-					brush_size++;
+				if (BrushSize < 255) {
+					BrushSize++;
 				}
 			} else if (key == GLFW_KEY_MINUS) {
-				if (brush_size != 1) {
-					brush_size--;
+				if (BrushSize != 1) {
+					BrushSize--;
 				}
 			}
 		}
 
 		switch (key) {
 			case GLFW_KEY_K:
-				if (palette_index > 1) {
-					palette_index--;
+				if (PaletteIndex > 1) {
+					PaletteIndex--;
 				}
 				break;
 			case GLFW_KEY_L:
-				if (palette_index < palette_count-1) {
-					palette_index++;
+				if (PaletteIndex < PaletteCount-1) {
+					PaletteIndex++;
 				}
 				break;
 			case GLFW_KEY_1:
-				if (palette_count >= 1) {
-					palette_index = shift ? 9 : 1;
+				if (PaletteCount >= 1) {
+					PaletteIndex = IsShiftDown ? 9 : 1;
 				}
 				break;
 			case GLFW_KEY_2:
-				if (palette_count >= 2) {
-					palette_index = shift ? 10 : 2;
+				if (PaletteCount >= 2) {
+					PaletteIndex = IsShiftDown ? 10 : 2;
 				}
 				break;
 			case GLFW_KEY_3:
-				if (palette_count >= 3) {
-					palette_index = shift ? 11 : 3;
+				if (PaletteCount >= 3) {
+					PaletteIndex = IsShiftDown ? 11 : 3;
 				}
 				break;
 			case GLFW_KEY_4:
-				if (palette_count >= 4) {
-					palette_index = shift ? 12 : 4;
+				if (PaletteCount >= 4) {
+					PaletteIndex = IsShiftDown ? 12 : 4;
 				}
 				break;
 			case GLFW_KEY_5:
-				if (palette_count >= 5) {
-					palette_index = shift ? 13 : 5;
+				if (PaletteCount >= 5) {
+					PaletteIndex = IsShiftDown ? 13 : 5;
 				}
 				break;
 			case GLFW_KEY_6:
-				if (palette_count >= 6) {
-					palette_index = shift ? 14 : 6;
+				if (PaletteCount >= 6) {
+					PaletteIndex = IsShiftDown ? 14 : 6;
 				}
 				break;
 			case GLFW_KEY_7:
-				if (palette_count >= 7) {
-					palette_index = shift ? 15 : 7;
+				if (PaletteCount >= 7) {
+					PaletteIndex = IsShiftDown ? 15 : 7;
 				}
 				break;
 			case GLFW_KEY_8:
-				if (palette_count >= 8) {
-					palette_index = shift ? 16 : 8;
+				if (PaletteCount >= 8) {
+					PaletteIndex = IsShiftDown ? 16 : 8;
 				}
 				break;
 			case GLFW_KEY_F:
-				mode = FILL;
+				Mode = FILL;
 				break;
 			case GLFW_KEY_B:
-				mode = shift ? SQUARE_BRUSH : CIRCLE_BRUSH;
-				palette_index = last_palette_index;
+				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
+				PaletteIndex = LastPaletteIndex;
 				break;
 			case GLFW_KEY_E:
-				mode = shift ? SQUARE_BRUSH : CIRCLE_BRUSH;
-				if (palette_index != 0) {
-					last_palette_index = palette_index;
-					palette_index = 0;
+				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
+				if (PaletteIndex != 0) {
+					LastPaletteIndex = PaletteIndex;
+					PaletteIndex = 0;
 				}
 				break;
 			case GLFW_KEY_I:
-				last_mode = mode;
-				mode = INK_DROPPER;
+				LastMode = Mode;
+				Mode = INK_DROPPER;
 				break;
 			case GLFW_KEY_SPACE:
-				last_mode = mode;
-				mode = PAN;
+				LastMode = Mode;
+				Mode = PAN;
 			case GLFW_KEY_N:
-				if (ctrl == 1) showNewCanvasWindow = 1;
+				if (IsCtrlDown == 1) ShowNewCanvasWindow = 1;
 				break;
 			case GLFW_KEY_S:
 				if (mods == GLFW_MOD_ALT) { // Show Prompt To Save if Alt + S pressed
-					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)");
+					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png)");
 					if (filePath != NULL) {
-						FILE_NAME = std::string(filePath);
+						FilePath = std::string(filePath);
 						save_image_from_canvas();
-						glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
-				} else if (ctrl == 1) { // Directly Save Don't Prompt
+				} else if (IsCtrlDown == 1) { // Directly Save Don't Prompt
 					save_image_from_canvas();
 				}
 				break;
 			case GLFW_KEY_O: {
-				if (ctrl == 1) {
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, fileFilterPatterns, "Image File (.png)", 0);
+				if (IsCtrlDown == 1) {
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png)", 0);
 					if (filePath != NULL) {
-						FILE_NAME = std::string(filePath);
+						FilePath = std::string(filePath);
 						load_image_to_canvas();
-						glfwSetWindowTitle(window, ("CSprite - " + FILE_NAME.substr(FILE_NAME.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
 				}
 			}
@@ -736,33 +735,33 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		}
 	}
 
-	draw_color = palette[palette_index];
+	SelectedColor = ColorPalette[PaletteIndex];
 }
 
 void viewport_set() {
-	glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+	glViewport(ViewPort[0], ViewPort[1], ViewPort[2], ViewPort[3]);
 }
 
 void adjust_zoom(bool increase) {
 	if (increase == true) {
-		if (zoomLevel < UINT_MAX) { // Max Value Of Unsigned int
-			zoomLevel++;
+		if (ZoomLevel < UINT_MAX) { // Max Value Of Unsigned int
+			ZoomLevel++;
 		}
 	} else {
-		if (zoomLevel != 1) { // if zoom is 1 then don't decrease it further
-			zoomLevel--;
+		if (ZoomLevel != 1) { // if zoom is 1 then don't decrease it further
+			ZoomLevel--;
 		}
 	}
 
 	// Comment Out To Not Center When Zooming
-	viewport[0] = (float)WINDOW_DIMS[0] / 2 - (float)CANVAS_DIMS[0] * zoomLevel / 2;
-	viewport[1] = (float)WINDOW_DIMS[1] / 2 - (float)CANVAS_DIMS[1] * zoomLevel / 2;
+	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
 
-	viewport[2] = CANVAS_DIMS[0] * zoomLevel;
-	viewport[3] = CANVAS_DIMS[1] * zoomLevel;
+	ViewPort[2] = CanvasDims[0] * ZoomLevel;
+	ViewPort[3] = CanvasDims[1] * ZoomLevel;
 
 	viewport_set();
-	zoomText = "Zoom: " + std::to_string(zoomLevel) + "x";
+	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 }
 
 int string_to_int(int *out, char *s) {
@@ -789,27 +788,27 @@ int color_equal(unsigned char *a, unsigned char *b) {
 }
 
 unsigned char * get_pixel(int x, int y) {
-	return canvas_data + ((y * CANVAS_DIMS[0] + x) * 4);
+	return CanvasData + ((y * CanvasDims[0] + x) * 4);
 }
 
 void draw(int x, int y) {
 	// dirY = direction Y
 	// dirX = direction X
-	for (int dirY = -brush_size / 2; dirY < brush_size / 2 + 1; dirY++) {
-		for (int dirX = -brush_size / 2; dirX < brush_size / 2 + 1; dirX++) {
-			if (x + dirX < 0 || x + dirX >= CANVAS_DIMS[0] || y + dirY < 0 || y + dirY > CANVAS_DIMS[1])
+	for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
+		for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
+			if (x + dirX < 0 || x + dirX >= CanvasDims[0] || y + dirY < 0 || y + dirY > CanvasDims[1])
 				continue;
 
-			if (mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > brush_size / 2 * brush_size / 2)
+			if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
 			unsigned char *ptr = get_pixel(x + dirX, y + dirY);
 
 			// Set Pixel Color
-			*ptr = draw_color[0]; // Red
-			*(ptr + 1) = draw_color[1]; // Green
-			*(ptr + 2) = draw_color[2]; // Blue
-			*(ptr + 3) = draw_color[3]; // Alpha
+			*ptr = SelectedColor[0]; // Red
+			*(ptr + 1) = SelectedColor[1]; // Green
+			*(ptr + 2) = SelectedColor[2]; // Blue
+			*(ptr + 3) = SelectedColor[3]; // Alpha
 		}
 	}
 }
@@ -818,37 +817,37 @@ void draw(int x, int y) {
 void fill(int x, int y, unsigned char *old_color) {
 	unsigned char *ptr = get_pixel(x, y);
 	if (color_equal(ptr, old_color)) {
-		*ptr = draw_color[0];
-		*(ptr + 1) = draw_color[1];
-		*(ptr + 2) = draw_color[2];
-		*(ptr + 3) = draw_color[3];
+		*ptr = SelectedColor[0];
+		*(ptr + 1) = SelectedColor[1];
+		*(ptr + 2) = SelectedColor[2];
+		*(ptr + 3) = SelectedColor[3];
 
-		if (x != 0 && !color_equal(get_pixel(x - 1, y), draw_color))
+		if (x != 0 && !color_equal(get_pixel(x - 1, y), SelectedColor))
 			fill(x - 1, y, old_color);
-		if (x != CANVAS_DIMS[0] - 1 && !color_equal(get_pixel(x + 1, y), draw_color))
+		if (x != CanvasDims[0] - 1 && !color_equal(get_pixel(x + 1, y), SelectedColor))
 			fill(x + 1, y, old_color);
-		if (y != CANVAS_DIMS[1] - 1 && !color_equal(get_pixel(x, y + 1), draw_color))
+		if (y != CanvasDims[1] - 1 && !color_equal(get_pixel(x, y + 1), SelectedColor))
 			fill(x, y + 1, old_color);
-		if (y != 0 && !color_equal(get_pixel(x, y - 1), draw_color))
+		if (y != 0 && !color_equal(get_pixel(x, y - 1), SelectedColor))
 			fill(x, y - 1, old_color);
 	}
 }
 
 void load_image_to_canvas() {
 	int imgWidth, imgHeight, c;
-	unsigned char *image_data = stbi_load(FILE_NAME.c_str(), &imgWidth, &imgHeight, &c, 0);
+	unsigned char *image_data = stbi_load(FilePath.c_str(), &imgWidth, &imgHeight, &c, 0);
 	if (image_data == NULL) {
-		printf("Unable to load image %s\n", FILE_NAME.c_str());
+		printf("Unable to load image %s\n", FilePath.c_str());
 		return;
 	}
 
-	CANVAS_DIMS[0] = imgWidth;
-	CANVAS_DIMS[1] = imgHeight;
+	CanvasDims[0] = imgWidth;
+	CanvasDims[1] = imgHeight;
 
-	if (canvas_data != NULL) free(canvas_data);
+	if (CanvasData != NULL) free(CanvasData);
 
-	canvas_data = (unsigned char *)malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
-	memset(canvas_data, 0, CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
+	CanvasData = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+	memset(CanvasData, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
 	int j, k;
 	unsigned char *ptr;
 	unsigned char *iptr;
@@ -866,11 +865,11 @@ void load_image_to_canvas() {
 }
 
 void save_image_from_canvas() {
-	unsigned char *data = (unsigned char *) malloc(CANVAS_DIMS[0] * CANVAS_DIMS[1] * 4 * sizeof(unsigned char));
+	unsigned char *data = (unsigned char *) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
 
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	stbi_write_png(FILE_NAME.c_str(), CANVAS_DIMS[0], CANVAS_DIMS[1], 4, data, 0);
+	stbi_write_png(FilePath.c_str(), CanvasDims[0], CanvasDims[1], 4, data, 0);
 
 	free(data);
-	should_save = 0;
+	ShouldSave = 0;
 }
