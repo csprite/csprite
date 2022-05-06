@@ -25,6 +25,7 @@ jobs:
       with:
         name: linux_binary
         path: csprite
+        if-no-files-found: error
 
   Build-For-Windows:
     runs-on: windows-2019
@@ -40,6 +41,7 @@ jobs:
       with:
         name: win_binary
         path: csprite.exe
+        if-no-files-found: error
 
   Create-Release:
     needs: [Build-For-Linux, Build-For-Windows]
