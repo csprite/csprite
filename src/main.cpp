@@ -107,9 +107,13 @@ GLfloat CanvasVertices[] = {
 // Index Buffer
 unsigned int Indices[] = {0, 1, 3, 1, 2, 3};
 
+// Mouse Position On Window
 double MousePos[2];
 double MousePosLast[2];
+
+// Mouse Position On Canvas
 double MousePosRelative[2];
+double MousePosRelativeLast[2];
 
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
@@ -557,6 +561,7 @@ void process_input(GLFWwindow *window) {
 				case SQUARE_BRUSH:
 				case CIRCLE_BRUSH: {
 					draw(x, y);
+					drawInBetween(x, y, (int)(MousePosRelativeLast[0] / ZoomLevel), (int)(MousePosRelativeLast[1] / ZoomLevel));
 					break;
 				}
 				case FILL: {
@@ -611,6 +616,9 @@ void mouse_callback(GLFWwindow *window, double x, double y) {
 	MousePosLast[1] = MousePos[1];
 	MousePos[0] = x;
 	MousePos[1] = y;
+
+	MousePosRelativeLast[0] = MousePosRelative[0];
+	MousePosRelativeLast[1] = MousePosRelative[1];
 	MousePosRelative[0] = x - ViewPort[0];
 	MousePosRelative[1] = (y + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
 }
@@ -821,18 +829,54 @@ unsigned char * get_pixel(int x, int y) {
 	return CanvasData + ((y * CanvasDims[0] + x) * 4);
 }
 
-void draw(int x, int y) {
+void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
+	while (st_x != end_x || st_y != end_y) {
+		if (st_x < end_x) {
+			st_x++;
+		}
+		if (st_x > end_x) {
+			st_x--;
+		}
+		if (st_y < end_y) {
+			st_y++;
+		}
+		if (st_y > end_y) {
+			st_y--;
+		}
+
+		for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
+			for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
+				if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
+					continue;
+
+				if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
+					continue;
+
+				unsigned char *ptr = get_pixel(st_x + dirX, st_y + dirY);
+
+				// Set Pixel Color
+				*ptr = SelectedColor[0]; // Red
+				*(ptr + 1) = SelectedColor[1]; // Green
+				*(ptr + 2) = SelectedColor[2]; // Blue
+				*(ptr + 3) = SelectedColor[3]; // Alpha
+			}
+		}
+	}
+}
+
+void draw(int st_x, int st_y) {
 	// dirY = direction Y
 	// dirX = direction X
+
 	for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
 		for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
-			if (x + dirX < 0 || x + dirX >= CanvasDims[0] || y + dirY < 0 || y + dirY > CanvasDims[1])
+			if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
 				continue;
 
 			if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
-			unsigned char *ptr = get_pixel(x + dirX, y + dirY);
+			unsigned char *ptr = get_pixel(st_x + dirX, st_y + dirY);
 
 			// Set Pixel Color
 			*ptr = SelectedColor[0]; // Red
