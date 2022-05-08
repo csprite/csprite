@@ -6,8 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/DEVLOPRR/CSprite/releases/tag/continuous)
 
+- May 8, 2022
+	- Optimize Code
+
+- May 7, 2022
+	- Fix Gaps When Drawing With Fast Moving Mouse
+
 - May 6, 2022
 	- Change Global Variable Naming Style
+	- Fix mouse click not working when clicking on a color on the color palette
+	- Add Help Menu
+	- Change Variable Naming Convention
 
 - May 5, 2022
 	- Add [Montserrat Bold](https://fonts.google.com/specimen/Montserrat) Font For UI
