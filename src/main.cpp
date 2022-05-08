@@ -315,10 +315,10 @@ int main(int argc, char **argv) {
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
-	// Current Mouse Positions - Which will be updated even before polling the events
-	double curMPosX = 0, curMPosY = 0;
 	while (!glfwWindowShouldClose(window)) {
-		glfwGetCursorPos(window, &curMPosX, &curMPosY);
+		// --------------------------------------------------------------------------------------
+		// Updating Cursor Position Here because function callback was causing performance issues.
+		glfwGetCursorPos(window, &MousePos[0], &MousePos[1]);
 		/* infitesimally small chance aside from startup */
 		if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
 			if (Mode == PAN) {
@@ -329,13 +329,12 @@ int main(int argc, char **argv) {
 		}
 		MousePosLast[0] = MousePos[0];
 		MousePosLast[1] = MousePos[1];
-		MousePos[0] = curMPosX;
-		MousePos[1] = curMPosY;
 
 		MousePosRelativeLast[0] = MousePosRelative[0];
 		MousePosRelativeLast[1] = MousePosRelative[1];
-		MousePosRelative[0] = curMPosX - ViewPort[0];
-		MousePosRelative[1] = (curMPosY + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
+		MousePosRelative[0] = MousePos[0] - ViewPort[0];
+		MousePosRelative[1] = (MousePos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
+		// --------------------------------------------------------------------------------------
 
 #ifndef NDEBUG
 		double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
@@ -406,6 +405,7 @@ int main(int argc, char **argv) {
 
 			if (ImGui::BeginMenu("Help")) {
 				if (ImGui::MenuItem("About")) {
+					openUrl("https://github.com/DEVLOPRR/CSprite/wiki/About-CSprite");
 				}
 				if (ImGui::MenuItem("GitHub")) {
 					openUrl("https://github.com/DEVLOPRR/CSprite");
