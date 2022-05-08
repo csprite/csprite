@@ -40,8 +40,8 @@
 #include "main.h"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
-char const * FileFilterPatterns[1] = { "*.png" };
-unsigned char NumOfFilterPatterns = 1;
+char const * FileFilterPatterns[4] = { "*.png", "*.jpg", "*.bmp", "*.tga" };
+unsigned char NumOfFilterPatterns = 4;
 
 int WindowDims[2] = {700, 500}; // Default Window Dimensions
 int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
@@ -378,23 +378,35 @@ int main(int argc, char **argv) {
 					ShowNewCanvasWindow = 1;
 				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png)", 0);
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .bmp, .tga)", 0);
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
-						load_image_to_canvas();
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
-						zoomAndLevelViewport();
+						if (isValidFileFormat(FilePath) != true) {
+							tinyfd_messageBox("Error", "Invalid file format selected", "ok", "error", 1);
+						} else {
+							load_image_to_canvas();
+							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+							zoomAndLevelViewport();
+						}
 					}
 				}
 				if (ImGui::BeginMenu("Save")) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						save_image_from_canvas();
+						if (isValidFileFormat(std::string(FilePath)) == false) {
+							FilePath = FilePath + ".png";
+						}
+						save_image_from_canvas(getExportFormat(FilePath));
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
 					if (ImGui::MenuItem("Save As", "Alt+S")) {
-						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png)");
+						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .bmp, .tga)");
 						if (filePath != NULL) {
-							FilePath = std::string(filePath);
-							save_image_from_canvas();
+							if (isValidFileFormat(std::string(filePath)) == true) {
+								FilePath = std::string(filePath);
+							} else {
+								FilePath = std::string(filePath) + ".png";
+							}
+							save_image_from_canvas(getExportFormat(FilePath));
 							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						}
 					}
@@ -521,6 +533,30 @@ void openUrl(std::string url) {
 #elif defined(_WIN32)
 	ShellExecute(0, 0, url.c_str(), 0, 0, SW_SHOW);
 #endif
+}
+
+export_format_e getExportFormat(std::string filePath) {
+	std::string fileExt = filePath.substr(filePath.find_last_of(".") + 1);
+	if (fileExt == "png" || fileExt == "PNG") {
+		return PNG;
+	} else if (fileExt == "jpg" || fileExt == "JPG") {
+		return JPG;
+	} else if (fileExt == "tga" || fileExt == "TGA") {
+		return TGA;
+	} else if (fileExt == "bmp" || fileExt == "BMP") {
+		return BMP;
+	} else {
+		return PNG;
+	}
+}
+
+// if the Filename is has .png, .jpg, .tga or .bmp then return 1 else 0
+bool isValidFileFormat(std::string filePath) {
+	std::string fileExt = filePath.substr(filePath.find_last_of(".") + 1);
+	if (fileExt != "png" || fileExt != "PNG" || fileExt != "jpg" || fileExt != "JPG" || fileExt != "tga" || fileExt != "TGA" || fileExt != "bmp" || fileExt != "BMP") {
+		return false;
+	}
+	return true;
 }
 
 unsigned char * get_char_data(unsigned char *data, int x, int y) {
@@ -771,23 +807,33 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				break;
 			case GLFW_KEY_S:
 				if (mods == GLFW_MOD_ALT) { // Show Prompt To Save if Alt + S pressed
-					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png)");
+					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .bmp, .tga)");
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
-						save_image_from_canvas();
+						if (isValidFileFormat(FilePath) != true) {
+							FilePath = FilePath + ".png";
+						}
+						save_image_from_canvas(getExportFormat(FilePath));
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
 				} else if (IsCtrlDown == 1) { // Directly Save Don't Prompt
-					save_image_from_canvas();
+					if (isValidFileFormat(FilePath) != true) {
+						FilePath = FilePath + ".png";
+					}
+					save_image_from_canvas(getExportFormat(FilePath));
 				}
 				break;
 			case GLFW_KEY_O: {
 				if (IsCtrlDown == 1) {
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png)", 0);
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .bmp, .tga)", 0);
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
-						load_image_to_canvas();
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						if (isValidFileFormat(FilePath) != true) {
+							tinyfd_messageBox("Error", "Invalid file format selected", "ok", "error", 1);
+						} else {
+							load_image_to_canvas();
+							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						}
 					}
 				}
 			}
@@ -961,11 +1007,24 @@ void load_image_to_canvas() {
 	stbi_image_free(image_data);
 }
 
-void save_image_from_canvas() {
+void save_image_from_canvas(export_format_e exportFormat) {
 	unsigned char *data = (unsigned char *) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
 
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	stbi_write_png(FilePath.c_str(), CanvasDims[0], CanvasDims[1], 4, data, 0);
+	switch (exportFormat) {
+		case PNG:
+			stbi_write_png(FilePath.c_str(), CanvasDims[0], CanvasDims[1], 4, data, 0);
+			break;
+		case JPG:
+			stbi_write_jpg(FilePath.c_str(), CanvasDims[0], CanvasDims[1], 4, data, 100);
+			break;
+		case BMP:
+			stbi_write_bmp(FilePath.c_str(), CanvasDims[0], CanvasDims[1], 4, data);
+			break;
+		case TGA:
+			stbi_write_tga(FilePath.c_str(), CanvasDims[0], CanvasDims[1], 4, data);
+			break;
+	}
 
 	free(data);
 	ShouldSave = 0;
