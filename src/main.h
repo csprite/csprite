@@ -1,6 +1,8 @@
 #include "../include/GLFW/glfw3.h"
 #include <string>
 
+enum export_format_e { PNG, JPG, BMP, TGA };
+
 void openUrl(std::string url);
 void logGLFWErrors(int error, const char *description); // GLFW Error Callback
 void zoomAndLevelViewport(); // Zooms And Levels The Canvas.
@@ -20,5 +22,7 @@ void fill(int x, int y, unsigned char *old_colour);
 void draw(int x, int y); // Draws on 1 x, y coordinate
 void drawInBetween(int st_x, int st_y, int end_x, int end_y); // Draws In between 2 given x, y coordinates
 void load_image_to_canvas();
-void save_image_from_canvas();
+void save_image_from_canvas(export_format_e exportFormat);
 unsigned char * get_char_data(unsigned char *data, int x, int y);
+bool isValidFileFormat(std::string filePath);
+export_format_e getExportFormat(std::string filePath);
