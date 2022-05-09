@@ -1,7 +1,7 @@
 #include "../include/GLFW/glfw3.h"
 #include <string>
 
-enum export_format_e { PNG, JPG, BMP, TGA };
+enum export_format_e { PNG, JPG };
 
 void openUrl(std::string url);
 void logGLFWErrors(int error, const char *description); // GLFW Error Callback
@@ -17,12 +17,14 @@ void viewport_set();
 void adjust_zoom(bool increase);
 int string_to_int(int *out, char *s);
 int color_equal(unsigned char *, unsigned char *);
+unsigned char * get_char_data(unsigned char *data, int x, int y);
 unsigned char * get_pixel(int x, int y);
 void fill(int x, int y, unsigned char *old_colour);
 void draw(int x, int y); // Draws on 1 x, y coordinate
-void drawInBetween(int st_x, int st_y, int end_x, int end_y); // Draws In between 2 given x, y coordinates
+void drawInBetween(int st_x, int st_y, int end_x, int end_y);
+
 void load_image_to_canvas();
-void save_image_from_canvas(export_format_e exportFormat);
-unsigned char * get_char_data(unsigned char *data, int x, int y);
-bool isValidFileFormat(std::string filePath);
-export_format_e getExportFormat(std::string filePath);
+void SaveImageFromCanvas(std::string filepath);
+void WritePngFromCanvas(const char *filepath);
+void WriteJpgFromCanvas(const char *filepath);
+std::string FixFileExtension(std::string filepath);
