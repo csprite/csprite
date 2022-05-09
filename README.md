@@ -1,6 +1,8 @@
 # CSprite
 A Minimalistic Pixel Art Tool For Beginners - Powered By OpenGL & ImGui
 
+![Screenshot_2022-05-09_10-26-40](https://user-images.githubusercontent.com/75035219/167343487-2cea921f-e13b-4e99-bbb6-de7a29cdc994.png)
+
 ---
 ### Features
 - :beginner: Beginner Friendly
