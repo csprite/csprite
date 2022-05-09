@@ -229,8 +229,6 @@ int main(int argc, char **argv) {
 	zoomAndLevelViewport();
 	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	// glfwSetCursorPosCallback(window, mouse_callback); // Testing Out If I can Do Mouse callbacks in the while loop or not, this line might be removed in future
-	// glfwSetMouseButtonCallback(window, mouse_button_callback); // Commented out because currently i am not doing any mouse button stuff.
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 
@@ -586,7 +584,8 @@ void process_input(GLFWwindow *window) {
 						*(ptr + 3)
 					};
 
-					for (int i = 0; i < PaletteCount; i++) {
+					// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
+					for (int i = 1; i < PaletteCount; i++) {
 						if (color_equal(ColorPalette[i], color) == 1) {
 							LastPaletteIndex = PaletteIndex;
 							PaletteIndex = i;
@@ -601,32 +600,6 @@ void process_input(GLFWwindow *window) {
 			}
 		}
 	}
-}
-
-// Testing Out because callback had some performance problems causing issues while drawing.
-// Like Gaps when moving brush too fast
-// void mouse_callback(GLFWwindow *window, double x, double y) {
-// 	/* infitesimally small chance aside from startup */
-// 	if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
-// 		if (Mode == PAN) {
-// 			ViewPort[0] -= MousePosLast[0] - MousePos[0];
-// 			ViewPort[1] += MousePosLast[1] - MousePos[1];
-// 			viewport_set();
-// 		}
-// 	}
-// 	MousePosLast[0] = MousePos[0];
-// 	MousePosLast[1] = MousePos[1];
-// 	MousePos[0] = x;
-// 	MousePos[1] = y;
-//
-// 	MousePosRelativeLast[0] = MousePosRelative[0];
-// 	MousePosRelativeLast[1] = MousePosRelative[1];
-// 	MousePosRelative[0] = x - ViewPort[0];
-// 	MousePosRelative[1] = (y + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
-// }
-
-void mouse_button_callback(GLFWwindow *window, int button, int down, int c) {
-	// Will Use For SOMETHING in future.
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
