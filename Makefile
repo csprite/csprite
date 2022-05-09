@@ -53,10 +53,14 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 $(OBJ)/%.o: $(LIB)/imgui/%.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
+# For Compiling lib/*.cpp
+$(OBJ)/%.o: $(LIB)/%.cpp
+	$(CXX) $(CFLAGS) -c $< -o $@
+
 # For Compiling lib/*.c
 $(OBJ)/%.o: $(LIB)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# For Compiling lib/*.cpp
-$(OBJ)/%.o: $(LIB)/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+# For Compiling src/*.c
+$(OBJ)/%.o: $(SRC)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
