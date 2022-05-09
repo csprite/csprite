@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
 			FilePath = argv[i+1];
-			load_image_to_canvas();
+			LoadImageToCanvas();
 			i++;
 		}
 
@@ -385,7 +385,7 @@ int main(int argc, char **argv) {
 					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
-						load_image_to_canvas();
+						LoadImageToCanvas();
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						zoomAndLevelViewport();
 					}
@@ -793,7 +793,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
-						load_image_to_canvas();
+						LoadImageToCanvas();
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
 				}
@@ -943,7 +943,7 @@ void fill(int x, int y, unsigned char *old_color) {
 	}
 }
 
-void load_image_to_canvas() {
+void LoadImageToCanvas() {
 	int imgWidth, imgHeight, c;
 	unsigned char *image_data = stbi_load(FilePath.c_str(), &imgWidth, &imgHeight, &c, 0);
 	if (image_data == NULL) {

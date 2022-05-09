@@ -23,7 +23,7 @@ void fill(int x, int y, unsigned char *old_colour);
 void draw(int x, int y); // Draws on 1 x, y coordinate
 void drawInBetween(int st_x, int st_y, int end_x, int end_y);
 
-void load_image_to_canvas();
+void LoadImageToCanvas();
 void SaveImageFromCanvas(std::string filepath);
 void WritePngFromCanvas(const char *filepath);
 void WriteJpgFromCanvas(const char *filepath);
