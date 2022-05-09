@@ -10,15 +10,6 @@
 #include <chrono>
 #include <thread>
 
-#if defined(__linux__) || defined(__FreeBSD__)
-	#include <stdlib.h>
-#elif defined(__APPLE__)
-#elif defined(_WIN32)
-	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
-	#include <windows.h>
-	#include <shellapi.h>
-#endif
-
 /*
   Montserrat Bold Font Converted To Base85 Using "lib/binary_2_compressed_c.cpp"
   And Stored In A Char Array
@@ -33,15 +24,11 @@
 #include "../include/glad/glad.h"
 #include "../include/GLFW/glfw3.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../lib/stb/stb_image_write.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "../lib/stb/stb_image.h"
-
 #include "shader.h"
 #include "math_linear.h"
 #include "main.h"
+#include "save.h"
+#include "helpers.h"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
@@ -123,7 +110,7 @@ int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
 			FilePath = argv[i+1];
-			LoadImageToCanvas();
+			LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
 			i++;
 		}
 
@@ -385,7 +372,7 @@ int main(int argc, char **argv) {
 					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
-						LoadImageToCanvas();
+						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						zoomAndLevelViewport();
 					}
@@ -519,22 +506,8 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void openUrl(std::string url) {
-#if defined(__linux__) || defined(__FreeBSD__)
-	system(("xdg-open \"" + url + "\"").c_str());
-#elif defined(__APPLE__)
-	system(("open \"" + url + "\"").c_str());
-#elif defined(_WIN32)
-	ShellExecute(0, 0, url.c_str(), 0, 0, SW_SHOW);
-#endif
-}
-
 unsigned char * get_char_data(unsigned char *data, int x, int y) {
 	return data + ((y * CanvasDims[0] + x) * 4);
-}
-
-void logGLFWErrors(int error, const char *description) {
-	std::cout << description << std::endl;
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
@@ -793,7 +766,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
-						LoadImageToCanvas();
+						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
 				}
@@ -830,29 +803,6 @@ void adjust_zoom(bool increase) {
 
 	viewport_set();
 	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
-}
-
-int string_to_int(int *out, char *s) {
-	char *end;
-	if (s[0] == '\0')
-		return -1;
-	long l = strtol(s, &end, 10);
-	if (l > INT_MAX)
-		return -2;
-	if (l < INT_MIN)
-		return -3;
-	if (*end != '\0')
-		return -1;
-	*out = l;
-	return 0;
-}
-
-int color_equal(unsigned char *a, unsigned char *b) {
-	if (*(a + 0) == *(b + 0) && *(a + 1) == *(b + 1) && *(a + 2) == *(b + 2) &&
-		*(a + 3) == *(b + 3)) {
-		return 1;
-	}
-	return 0;
 }
 
 unsigned char * get_pixel(int x, int y) {
@@ -943,37 +893,6 @@ void fill(int x, int y, unsigned char *old_color) {
 	}
 }
 
-void LoadImageToCanvas() {
-	int imgWidth, imgHeight, c;
-	unsigned char *image_data = stbi_load(FilePath.c_str(), &imgWidth, &imgHeight, &c, 0);
-	if (image_data == NULL) {
-		printf("Unable to load image %s\n", FilePath.c_str());
-		return;
-	}
-
-	CanvasDims[0] = imgWidth;
-	CanvasDims[1] = imgHeight;
-
-	if (CanvasData != NULL) free(CanvasData);
-
-	CanvasData = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-	memset(CanvasData, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-	int j, k;
-	unsigned char *ptr;
-	unsigned char *iptr;
-	for (j = 0; j < imgHeight; j++) {
-		for (k = 0; k < imgWidth; k++) {
-			ptr = get_pixel(k, j);
-			iptr = get_char_data(image_data, k, j);
-			*(ptr+0) = *(iptr+0);
-			*(ptr+1) = *(iptr+1);
-			*(ptr+2) = *(iptr+2);
-			*(ptr+3) = *(iptr+3);
-		}
-	}
-	stbi_image_free(image_data);
-}
-
 // Makes sure that the file extension is .png or .jpg/.jpeg
 std::string FixFileExtension(std::string filepath) {
 	std::string fileExt = filepath.substr(filepath.find_last_of(".") + 1);
@@ -992,27 +911,12 @@ void SaveImageFromCanvas(std::string filepath) {
 	std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), [](unsigned char c){ return std::tolower(c); });
 
 	if (fileExt == "png") {
-		WritePngFromCanvas(filepath.c_str());
+		WritePngFromCanvas(filepath.c_str(), CanvasDims);
 	} else if (fileExt == "jpg" || fileExt == "jpeg") {
-		WriteJpgFromCanvas(filepath.c_str());
+		WriteJpgFromCanvas(filepath.c_str(), CanvasDims);
 	} else {
 		filepath = filepath + ".png";
-		WritePngFromCanvas(filepath.c_str());
+		WritePngFromCanvas(filepath.c_str(), CanvasDims);
 	}
-}
-
-void WritePngFromCanvas(const char *filepath) {
-	unsigned char *data = (unsigned char *) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	stbi_write_png(filepath, CanvasDims[0], CanvasDims[1], 4, data, 0);
-	free(data);
-	ShouldSave = 0;
-}
-
-void WriteJpgFromCanvas(const char *filepath) {
-	unsigned char *data = (unsigned char *) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	stbi_write_jpg(filepath, CanvasDims[0], CanvasDims[1], 4, data, 100);
-	free(data);
 	ShouldSave = 0;
 }
