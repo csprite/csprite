@@ -7,8 +7,6 @@ void zoomAndLevelViewport(); // Zooms And Levels The Canvas.
 void framebuffer_size_callback(GLFWwindow* window, int, int);
 void process_input(GLFWwindow* window);
 void window_size_callback(GLFWwindow* window, int width, int height);
-// void mouse_callback(GLFWwindow* window, double, double);
-// void mouse_button_callback(GLFWwindow* window, int, int, int);
 void scroll_callback(GLFWwindow* window, double, double);
 void key_callback(GLFWwindow* window, int, int, int, int);
 void viewport_set();
