@@ -384,7 +384,7 @@ int main(int argc, char **argv) {
 					if (ImGui::MenuItem("Save As", "Alt+S")) {
 						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
 						if (filePath != NULL) {
-							FilePath = FixFileExtension(FilePath);
+							FilePath = FixFileExtension(std::string(filePath));
 							SaveImageFromCanvas(FilePath);
 							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						}
