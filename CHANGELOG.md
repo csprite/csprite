@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/DEVLOPRR/CSprite/releases/tag/continuous)
 
+- May 10, 2022
+	- Fix filepath issue in save as in menu
+
+- May 9, 2022
+	- Remove The Temporary Code
+	- Fix Selection Of Transparent Part Of Canvas Using Ink Dropper Tool
+	- Splitted The Code
+	- Add JPG, BMP & TGA Export Formats (PNG Was Already there)
+	- Remove BMP & TGA Export Formats
+
 - May 8, 2022
 	- Optimize Code
 
