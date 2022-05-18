@@ -171,9 +171,14 @@ int deinitalizedCanvasState() {
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		printf("Writing At State Index: %d\n", CurrentStateIndex);
-		memcpy(CanvasState[CurrentStateIndex], CanvasData, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-		CurrentStateIndex++;
+		int x = (int)(MousePosRelative[0] / ZoomLevel);
+		int y = (int)(MousePosRelative[1] / ZoomLevel);
+
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
+			printf("Writing At State Index: %d\n", CurrentStateIndex);
+			memcpy(CanvasState[CurrentStateIndex], CanvasData, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+			CurrentStateIndex++;
+		}
 	}
 }
 
@@ -515,14 +520,12 @@ int main(int argc, char **argv) {
 
 			switch (Mode) {
 				case SQUARE_BRUSH:
-					CanvasChanged = 1;
 					if (PaletteIndex == 0)
 						selectedToolText = "Square Eraser - (Size: " + std::to_string(BrushSize) + ")";
 					else
 						selectedToolText = "Square Brush - (Size: " + std::to_string(BrushSize) + ")";
 					break;
 				case CIRCLE_BRUSH:
-					CanvasChanged = 1;
 					if (PaletteIndex == 0) {
 						selectedToolText = "Circle Eraser - (Size: " + std::to_string(BrushSize) + ")";
 					} else {
@@ -530,7 +533,6 @@ int main(int argc, char **argv) {
 					}
 					break;
 				case FILL:
-					CanvasChanged = 1;
 					selectedToolText = "Fill";
 					break;
 				case INK_DROPPER:
@@ -632,11 +634,13 @@ void process_input(GLFWwindow *window) {
 			switch (Mode) {
 				case SQUARE_BRUSH:
 				case CIRCLE_BRUSH: {
+					CanvasChanged = 1;
 					draw(x, y);
 					drawInBetween(x, y, (int)(MousePosRelativeLast[0] / ZoomLevel), (int)(MousePosRelativeLast[1] / ZoomLevel));
 					break;
 				}
 				case FILL: {
+					CanvasChanged = 1;
 					unsigned char *ptr = get_pixel(x, y);
 					// Color Clicked On.
 					unsigned char color[4] = {
