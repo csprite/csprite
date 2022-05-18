@@ -108,6 +108,75 @@ double MousePosLast[2];
 double MousePosRelative[2];
 double MousePosRelativeLast[2];
 
+const unsigned int MAX_HISTORY = 10;
+unsigned char *CanvasState[MAX_HISTORY];
+int CurrentStateIndex = 0;
+unsigned char CanvasChanged = 0;
+
+void saveCanvasState() {
+	// Reset From Current Index To Max
+	for (int i = CurrentStateIndex; i < MAX_HISTORY; i++) {
+		if (CanvasState[i] == NULL) {
+			CanvasState[i] = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+		} else {
+			memset(CanvasState[i], 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+		}
+	}
+
+	printf("Saving Canvas At State Index: %d\n", CurrentStateIndex);
+	memcpy(CanvasState[CurrentStateIndex], CanvasData, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+	CurrentStateIndex++;
+}
+
+void undo() {
+	CurrentStateIndex--;
+	CurrentStateIndex = CurrentStateIndex <= 0 ? 0 : CurrentStateIndex; // if smaller than or equal to zero make it 0 else let it be what it was.
+
+	printf("Undoing from State Index: %d\n", CurrentStateIndex);
+	memcpy(CanvasData, CanvasState[CurrentStateIndex], CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+}
+
+void redo() {
+	CurrentStateIndex++;
+	CurrentStateIndex = CanvasState[CurrentStateIndex] == NULL ? MAX_HISTORY - 1 : CurrentStateIndex;
+
+	printf("Redoing from State Index: %d\n", CurrentStateIndex);
+	memcpy(CanvasData, CanvasState[CurrentStateIndex], CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+}
+
+int initalizedCanvasState() {
+	int flag = 0;
+	for (int i = 0; i < MAX_HISTORY; i++) {
+		CanvasState[i] = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+		if (CanvasState[i] == NULL) {
+			flag = -1;
+		} else {
+			memset(CanvasState[i], 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+		}
+	}
+	return flag;
+}
+
+int deinitalizedCanvasState() {
+	int flag = 0;
+	for (int i = 0; i < MAX_HISTORY; i++) {
+		if (CanvasState[i] != NULL) {
+			free(CanvasState[i]);
+		} else {
+			flag = -1;
+		}
+	}
+	return flag;
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		printf("Writing At State Index: %d\n", CurrentStateIndex);
+		memcpy(CanvasState[CurrentStateIndex], CanvasData, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+		CurrentStateIndex++;
+	}
+}
+
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
@@ -182,6 +251,9 @@ int main(int argc, char **argv) {
 		if (CanvasData == NULL) {
 			printf("Unable To allocate memory for canvas.\n");
 			return 1;
+		} else if (initalizedCanvasState() != 0) {
+			printf("Unable To allocate memory for canvas state.\n");
+			return 1;
 		}
 	}
 
@@ -231,6 +303,7 @@ int main(int argc, char **argv) {
 	zoomAndLevelViewport();
 	glfwSetWindowSizeCallback(window, window_size_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
 
@@ -295,10 +368,8 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoResize;
 	window_flags |= ImGuiWindowFlags_NoMove;
 
-#ifndef NDEBUG
-	double lastTime = glfwGetTime();
-	int nbFrames = 0; // Number Of Frames Rendered
-#endif
+	// double lastTime = glfwGetTime();
+	// int nbFrames = 0; // Number Of Frames Rendered
 
 	auto const wait_time = std::chrono::milliseconds{ 17 };
 	auto const start_time = std::chrono::steady_clock::now();
@@ -327,15 +398,13 @@ int main(int argc, char **argv) {
 		MousePosRelative[1] = (MousePos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
 		// --------------------------------------------------------------------------------------
 
-#ifndef NDEBUG
-		double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
-		nbFrames++;
-		if ( currentTime - lastTime >= 1.0 ){
-			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-			nbFrames = 0;
-			lastTime += 1.0;
-		}
-#endif
+		// double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
+		// nbFrames++;
+		// if ( currentTime - lastTime >= 1.0 ){
+		// 	printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+		// 	nbFrames = 0;
+		// 	lastTime += 1.0;
+		// }
 
 		std::this_thread::sleep_until(next_time);
 
@@ -446,12 +515,14 @@ int main(int argc, char **argv) {
 
 			switch (Mode) {
 				case SQUARE_BRUSH:
+					CanvasChanged = 1;
 					if (PaletteIndex == 0)
 						selectedToolText = "Square Eraser - (Size: " + std::to_string(BrushSize) + ")";
 					else
 						selectedToolText = "Square Brush - (Size: " + std::to_string(BrushSize) + ")";
 					break;
 				case CIRCLE_BRUSH:
+					CanvasChanged = 1;
 					if (PaletteIndex == 0) {
 						selectedToolText = "Circle Eraser - (Size: " + std::to_string(BrushSize) + ")";
 					} else {
@@ -459,6 +530,7 @@ int main(int argc, char **argv) {
 					}
 					break;
 				case FILL:
+					CanvasChanged = 1;
 					selectedToolText = "Fill";
 					break;
 				case INK_DROPPER:
@@ -720,6 +792,19 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			case GLFW_KEY_SPACE:
 				LastMode = Mode;
 				Mode = PAN;
+				break;
+			case GLFW_KEY_Z:
+				if (IsCtrlDown == 1) {
+					if (CanvasChanged == 1) {
+						saveCanvasState();
+						CanvasChanged = 0;
+						undo();
+					}
+					undo();
+				}
+				break;
+			case GLFW_KEY_Y:
+				if (IsCtrlDown == 1) redo();
 				break;
 			case GLFW_KEY_N:
 				if (IsCtrlDown == 1) ShowNewCanvasWindow = 1;
