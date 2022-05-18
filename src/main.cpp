@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -718,6 +720,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			case GLFW_KEY_SPACE:
 				LastMode = Mode;
 				Mode = PAN;
+				break;
 			case GLFW_KEY_N:
 				if (IsCtrlDown == 1) ShowNewCanvasWindow = 1;
 				break;
