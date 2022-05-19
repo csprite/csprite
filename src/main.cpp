@@ -111,6 +111,8 @@ double MousePosRelativeLast[2];
 
 Stack CanvasState;
 int StackIndex = 0;
+bool DidUndo = false;
+bool IsDirty = false;
 
 // void saveCanvasState() {
 // 	for (int i = StackIndex; i < CanvasState.count(); i++) {
@@ -130,13 +132,33 @@ void SaveState() {
 
 	unsigned char *newCanvasState = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
 	memset(newCanvasState, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-	CanvasState.push(newCanvasState);
+	if (CanvasState.push(newCanvasState) == false) {
+		free(CanvasState.pop());
+		CanvasState.push(newCanvasState);
+	}
 
 	memcpy(newCanvasState, CanvasData, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
 	StackIndex++;
 }
+
 void redo() {}
+
 void undo() {
+	if (IsDirty == true && DidUndo == true) {
+		// Remove All The Elements from Current Index To Maximum
+		for (int i = StackIndex; i < CanvasState.count(); i++) {
+			free(CanvasState.peek(i));
+			CanvasState.change(i, NULL);
+		}
+		printf("Removed Elements From Stack @ %d To %d\n", StackIndex, CanvasState.count());
+		// Save State
+		SaveState();
+
+		// Reset Variables
+		IsDirty = false;
+		DidUndo = false;
+	}
+
 	StackIndex--;
 	StackIndex = StackIndex <= 0 ? 0 : StackIndex;
 	StackIndex = StackIndex >= CanvasState.size() ? CanvasState.size() - 1 : StackIndex;
@@ -157,7 +179,12 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		int y = (int)(MousePosRelative[1] / ZoomLevel);
 
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
-			SaveState();
+			if (action == GLFW_PRESS) {
+				SaveState();
+			}
+			if (action == GLFW_RELEASE) {
+				IsDirty = true;
+			}
 		}
 	}
 }
@@ -779,6 +806,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			case GLFW_KEY_Z:
 				if (IsCtrlDown == 1) {
 					undo();
+					DidUndo = true;
 				}
 				break;
 			case GLFW_KEY_Y:
