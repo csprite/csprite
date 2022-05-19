@@ -20,6 +20,20 @@ A Minimalistic Pixel Art Tool For Beginners - Powered By OpenGL & ImGui
 ### How To Use CSprite
 Using CSprite isn't rocket science and infact you can learn how to use it in 5 minutes, [Read More...](https://github.com/DEVLOPRR/CSprite/wiki)
 
+### Controls
+| Key                          | Description                  |
+|------------------------------|------------------------------|
+| B                            | Circle Brush                 |
+| Shift + B                    | Square Brush                 |
+| E                            | Circle Eraser                |
+| Shift + E                    | Square Eraser                |
+| F                            | Fill                         |
+| I                            | Ink Dropper                  |
+| Space + Mouse Move           | Pan                          |
+| Left Mouse                   | Draw/Erase/Fill/Ink Dropper  |
+| Ctrl + Plus / Scroll Up      | Zoom In                      |
+| Ctrl + Minus / Scroll Down   | Zoom Out                     |
+
 ---
 
 ### Thanks
