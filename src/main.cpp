@@ -31,6 +31,7 @@
 #include "main.h"
 #include "save.h"
 #include "helpers.h"
+#include "stack.cpp"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
@@ -108,65 +109,35 @@ double MousePosLast[2];
 double MousePosRelative[2];
 double MousePosRelativeLast[2];
 
-const unsigned int MAX_HISTORY = 10;
-unsigned char *CanvasState[MAX_HISTORY];
-int CurrentStateIndex = 0;
-unsigned char CanvasChanged = 0;
-
-void saveCanvasState() {
-	// Reset From Current Index To Max
-	for (int i = CurrentStateIndex; i < MAX_HISTORY; i++) {
-		if (CanvasState[i] == NULL) {
-			CanvasState[i] = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-		} else {
-			memset(CanvasState[i], 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-		}
-	}
-
-	printf("Saving Canvas At State Index: %d\n", CurrentStateIndex);
-	memcpy(CanvasState[CurrentStateIndex], CanvasData, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-	CurrentStateIndex++;
-}
+Stack CanvasState;
+unsigned int StackIndex = 0;
 
 void undo() {
-	CurrentStateIndex--;
-	CurrentStateIndex = CurrentStateIndex <= 0 ? 0 : CurrentStateIndex; // if smaller than or equal to zero make it 0 else let it be what it was.
+	StackIndex--;
+	StackIndex = StackIndex <= 0 ? 0 : StackIndex;
 
-	printf("Undoing from State Index: %d\n", CurrentStateIndex);
-	memcpy(CanvasData, CanvasState[CurrentStateIndex], CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+	unsigned char *canvasDataInStack = CanvasState.peek(StackIndex);
+	if (canvasDataInStack == NULL) {
+		printf("Cannot Get Canvas Data from Stack at %d\n", StackIndex);
+		return;
+	}
+	printf("Undoing from State Index: %d\n", StackIndex);
+	memcpy(CanvasData, canvasDataInStack, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
 }
 
 void redo() {
-	CurrentStateIndex++;
-	CurrentStateIndex = CanvasState[CurrentStateIndex] == NULL ? MAX_HISTORY - 1 : CurrentStateIndex;
+	// Clamp Stack Index.
+	StackIndex++;
+	StackIndex = CanvasState.peek(StackIndex) == NULL ? CanvasState.count() - 1 : StackIndex;
 
-	printf("Redoing from State Index: %d\n", CurrentStateIndex);
-	memcpy(CanvasData, CanvasState[CurrentStateIndex], CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-}
-
-int initalizedCanvasState() {
-	int flag = 0;
-	for (int i = 0; i < MAX_HISTORY; i++) {
-		CanvasState[i] = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-		if (CanvasState[i] == NULL) {
-			flag = -1;
-		} else {
-			memset(CanvasState[i], 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-		}
+	unsigned char *canvasDataInStack = CanvasState.peek(StackIndex);
+	if (canvasDataInStack == NULL) {
+		printf("Cannot Get Canvas Data from Stack at %d\n", StackIndex);
+		CanvasState.display();
+		return;
 	}
-	return flag;
-}
-
-int deinitalizedCanvasState() {
-	int flag = 0;
-	for (int i = 0; i < MAX_HISTORY; i++) {
-		if (CanvasState[i] != NULL) {
-			free(CanvasState[i]);
-		} else {
-			flag = -1;
-		}
-	}
-	return flag;
+	printf("Redoing from State Index: %d\n", StackIndex);
+	memcpy(CanvasData, canvasDataInStack, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -175,9 +146,14 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		int y = (int)(MousePosRelative[1] / ZoomLevel);
 
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
-			printf("Writing At State Index: %d\n", CurrentStateIndex);
-			memcpy(CanvasState[CurrentStateIndex], CanvasData, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-			CurrentStateIndex++;
+			printf("Writing At State Index: %d\n", StackIndex);
+
+			unsigned char *newCanvasState = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+			memset(newCanvasState, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+			CanvasState.push(newCanvasState);
+
+			memcpy(newCanvasState, CanvasData, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+			StackIndex++;
 		}
 	}
 }
@@ -256,10 +232,11 @@ int main(int argc, char **argv) {
 		if (CanvasData == NULL) {
 			printf("Unable To allocate memory for canvas.\n");
 			return 1;
-		} else if (initalizedCanvasState() != 0) {
-			printf("Unable To allocate memory for canvas state.\n");
-			return 1;
 		}
+		// else if (initalizedCanvasState() != 0) {
+		// 	printf("Unable To allocate memory for canvas state.\n");
+		// 	return 1;
+		// }
 	}
 
 	GLFWwindow *window;
@@ -634,13 +611,11 @@ void process_input(GLFWwindow *window) {
 			switch (Mode) {
 				case SQUARE_BRUSH:
 				case CIRCLE_BRUSH: {
-					CanvasChanged = 1;
 					draw(x, y);
 					drawInBetween(x, y, (int)(MousePosRelativeLast[0] / ZoomLevel), (int)(MousePosRelativeLast[1] / ZoomLevel));
 					break;
 				}
 				case FILL: {
-					CanvasChanged = 1;
 					unsigned char *ptr = get_pixel(x, y);
 					// Color Clicked On.
 					unsigned char color[4] = {
@@ -799,16 +774,13 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				break;
 			case GLFW_KEY_Z:
 				if (IsCtrlDown == 1) {
-					if (CanvasChanged == 1) {
-						saveCanvasState();
-						CanvasChanged = 0;
-						undo();
-					}
 					undo();
 				}
 				break;
 			case GLFW_KEY_Y:
-				if (IsCtrlDown == 1) redo();
+				if (IsCtrlDown == 1) {
+					redo();
+				}
 				break;
 			case GLFW_KEY_N:
 				if (IsCtrlDown == 1) ShowNewCanvasWindow = 1;
