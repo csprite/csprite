@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/DEVLOPRR/CSprite/releases/tag/continuous)
 
+- May 18, 2022
+	- Reduce Compiler Warnings
+
 - May 10, 2022
 	- Fix filepath issue in save as in menu
 
