@@ -67,6 +67,10 @@ public:
 	}
 
 	void change(int position, unsigned char *CanvasData) {
+		if (position > MAX_STATES - 1) {
+			printf("Cannot access the element at index %d\n", position);
+			return;
+		}
 		canvasStates[position] = CanvasData;
 	}
 
