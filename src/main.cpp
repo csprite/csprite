@@ -110,7 +110,23 @@ double MousePosRelative[2];
 double MousePosRelativeLast[2];
 
 Stack CanvasState;
-unsigned int StackIndex = 0;
+int StackIndex = 0;
+bool DidUndo = false;
+bool DidRedo = false;
+bool DidCanvasChange = false;
+
+void saveCanvasState() {
+	for (int i = StackIndex; i < CanvasState.count(); i++) {
+		free(CanvasState.peek(i));
+		CanvasState.change(i, NULL);
+	}
+
+	unsigned char *newCanvasState = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+	memset(newCanvasState, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+	CanvasState.push(newCanvasState);
+	memcpy(newCanvasState, CanvasData, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+	StackIndex++;
+}
 
 void undo() {
 	StackIndex--;
@@ -119,16 +135,22 @@ void undo() {
 	unsigned char *canvasDataInStack = CanvasState.peek(StackIndex);
 	if (canvasDataInStack == NULL) {
 		printf("Cannot Get Canvas Data from Stack at %d\n", StackIndex);
+		CanvasState.display();
 		return;
 	}
 	printf("Undoing from State Index: %d\n", StackIndex);
 	memcpy(CanvasData, canvasDataInStack, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+	DidUndo = true;
 }
 
 void redo() {
 	// Clamp Stack Index.
-	StackIndex++;
-	StackIndex = CanvasState.peek(StackIndex) == NULL ? CanvasState.count() - 1 : StackIndex;
+	if (CanvasState.isFull() == false) {
+		StackIndex++;
+		StackIndex = CanvasState.peek(StackIndex) == NULL ? CanvasState.count() - 1 : StackIndex;
+	} else {
+		StackIndex = 0;
+	}
 
 	unsigned char *canvasDataInStack = CanvasState.peek(StackIndex);
 	if (canvasDataInStack == NULL) {
@@ -138,6 +160,7 @@ void redo() {
 	}
 	printf("Redoing from State Index: %d\n", StackIndex);
 	memcpy(CanvasData, canvasDataInStack, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+	DidRedo = true;
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -611,11 +634,13 @@ void process_input(GLFWwindow *window) {
 			switch (Mode) {
 				case SQUARE_BRUSH:
 				case CIRCLE_BRUSH: {
+					DidCanvasChange = true;
 					draw(x, y);
 					drawInBetween(x, y, (int)(MousePosRelativeLast[0] / ZoomLevel), (int)(MousePosRelativeLast[1] / ZoomLevel));
 					break;
 				}
 				case FILL: {
+					DidCanvasChange = true;
 					unsigned char *ptr = get_pixel(x, y);
 					// Color Clicked On.
 					unsigned char color[4] = {
@@ -774,6 +799,12 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				break;
 			case GLFW_KEY_Z:
 				if (IsCtrlDown == 1) {
+					if (DidCanvasChange == true && DidUndo == true) {
+						saveCanvasState();
+						undo();
+						DidUndo = false;
+						DidCanvasChange = false;
+					}
 					undo();
 				}
 				break;
