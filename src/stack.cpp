@@ -27,13 +27,14 @@ public:
 		return top == (MAX_STATES - 1);
 	}
 
-	void push(unsigned char *CanvasData) {
+	bool push(unsigned char *CanvasData) {
 		if (isFull()) {
 			printf("Cannot Push Onto Stack, Stack is Full!\n");
-			return;
+			return false;
 		} else {
 			top++;
 			canvasStates[top] = CanvasData;
+			return true;
 		}
 	}
 
