@@ -109,6 +109,12 @@ double MousePosLast[2];
 double MousePosRelative[2];
 double MousePosRelativeLast[2];
 
+#define HISTORY_SIZE 30
+unsigned char *History[HISTORY_SIZE];
+int HistoryIndex = 0;
+bool DidUndo = false;
+bool IsDirty = false;
+
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
@@ -234,6 +240,7 @@ int main(int argc, char **argv) {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	// If not a release build use the local shader files to edit shaders without problem
 #ifndef NDEBUG
@@ -297,8 +304,8 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoMove;
 
 #ifndef NDEBUG
-	double lastTime = glfwGetTime();
-	int nbFrames = 0; // Number Of Frames Rendered
+	// double lastTime = glfwGetTime();
+	// int nbFrames = 0; // Number Of Frames Rendered
 #endif
 
 	auto const wait_time = std::chrono::milliseconds{ 17 };
@@ -329,13 +336,13 @@ int main(int argc, char **argv) {
 		// --------------------------------------------------------------------------------------
 
 #ifndef NDEBUG
-		double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
-		nbFrames++;
-		if ( currentTime - lastTime >= 1.0 ){
-			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-			nbFrames = 0;
-			lastTime += 1.0;
-		}
+		// double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
+		// nbFrames++;
+		// if ( currentTime - lastTime >= 1.0 ){
+		// 	printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+		// 	nbFrames = 0;
+		// 	lastTime += 1.0;
+		// }
 #endif
 
 		std::this_thread::sleep_until(next_time);
@@ -504,6 +511,7 @@ int main(int argc, char **argv) {
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
+	FreeHistory();
 	return 0;
 }
 
@@ -547,6 +555,29 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 	ViewPort[2] = CanvasDims[0] * ZoomLevel;
 	ViewPort[3] = CanvasDims[1] * ZoomLevel;
 	viewport_set();
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		int x = (int)(MousePosRelative[0] / ZoomLevel);
+		int y = (int)(MousePosRelative[1] / ZoomLevel);
+
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
+			if (action == GLFW_PRESS) {
+				SaveState();
+			}
+			if (action == GLFW_RELEASE) {
+				if (DidUndo == true) {
+					IsDirty = true;
+					DidUndo = false;
+				} else {
+					IsDirty = false;
+				}
+				SaveState();
+				HistoryIndex--;
+			}
+		}
+	}
 }
 
 void process_input(GLFWwindow *window) {
@@ -722,6 +753,17 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				LastMode = Mode;
 				Mode = PAN;
 				break;
+			case GLFW_KEY_Z:
+				if (IsCtrlDown == 1) {
+					DidUndo = true;
+					Undo();
+				}
+				break;
+			case GLFW_KEY_Y:
+				if (IsCtrlDown == 1) {
+					Redo();
+				}
+				break;
 			case GLFW_KEY_N:
 				if (IsCtrlDown == 1) ShowNewCanvasWindow = 1;
 				break;
@@ -896,4 +938,88 @@ void SaveImageFromCanvas(std::string filepath) {
 		WritePngFromCanvas(filepath.c_str(), CanvasDims);
 	}
 	ShouldSave = 0;
+}
+
+/*
+	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
+	Removes The Elements in a range from "History" if "IsDirty" is true
+*/
+void SaveState() {
+	if (IsDirty == true) {
+		int max = -1;
+		for (int i = 0; i < HISTORY_SIZE; i++) {
+			if (History[i] == NULL) {
+				max = i;
+				break;
+			}
+		}
+		max = max == -1 ? HISTORY_SIZE - 1 : max;
+		printf("Clearing History from %d to %d\n", HistoryIndex, max);
+		for (int i = HistoryIndex; i < max; i++) {
+			free(History[i]);
+			History[i] = NULL;
+		}
+		clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
+	}
+	printf("Pushing To Undo Stack @ Index: %d\n", HistoryIndex);
+
+	if (History[HistoryIndex] == NULL) {
+		History[HistoryIndex] = (unsigned char *)malloc(CANVAS_SIZE_B);
+	}
+
+	memset(History[HistoryIndex], 0, CANVAS_SIZE_B);
+	memcpy(History[HistoryIndex], CanvasData, CANVAS_SIZE_B);
+	HistoryIndex++;
+}
+
+// Undo - Puts The Pixels from "History" at "HistoryIndex"
+int Undo() {
+	HistoryIndex--;
+	clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
+
+	if (History[HistoryIndex] == NULL) {
+		printf("Cannot Undo @ index: %d\n", HistoryIndex);
+		return -1;
+	}
+	printf("Undo @ index: %d\n", HistoryIndex);
+	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
+	return 0;
+}
+
+// Redo - Puts The Pixels from "History" at "HistoryIndex"
+int Redo() {
+	HistoryIndex++;
+	int max = -1;
+	for (int i = 0; i < HISTORY_SIZE; i++) {
+		if (History[i] == NULL) {
+			max = i - 1;
+			break;
+		}
+	}
+	max = max == -1 ? HISTORY_SIZE - 1 : max;
+	clampInteger(&HistoryIndex, 0, max);
+
+	if (History[HistoryIndex] == NULL) {
+		printf("Cannot Redo @ index: %d\n", HistoryIndex);
+		return -1;
+	}
+	printf("Redo @ index: %d\n", HistoryIndex);
+	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
+	return 0;
+}
+
+// Frees the memory in "History"
+int FreeHistory() {
+	int flag = 0;
+	for (int i = 0; i < HISTORY_SIZE; i++) {
+		History[i] = (unsigned char *)malloc(CANVAS_SIZE_B);
+		if (History[i] != NULL) {
+			free(History[i]);
+			History[i] = NULL;
+		} else {
+			printf("Unable To De-Allocate Memory for History @ Index %d\n", i);
+			flag = -1;
+		}
+	}
+	return flag;
 }

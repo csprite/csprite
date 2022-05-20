@@ -1,3 +1,6 @@
+#ifndef SAVE_H
+#define SAVE_H
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../lib/stb/stb_image_write.h"
 
@@ -48,3 +51,5 @@ void WriteJpgFromCanvas(const char *filepath, int *canvas_dims) {
 	stbi_write_jpg(filepath, canvas_dims[0], canvas_dims[1], 4, data, 100);
 	free(data);
 }
+
+#endif // end SAVE_H
