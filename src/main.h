@@ -37,5 +37,6 @@ int Undo();
 int Redo();
 void SaveState();
 int FreeHistory();
+void ResetHistory();
 
 #endif // end MAIN_H
