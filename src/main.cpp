@@ -153,19 +153,7 @@ int Redo() {
 	return 0;
 }
 
-int InitHistory() {
-	int flag = 0;
-	for (int i = 0; i < HISTORY_SIZE; i++) {
-		History[i] = (unsigned char *)malloc(CANVAS_SIZE_B);
-		if (History[i] == NULL) {
-			printf("Unable To Allocate Memory for History @ Index %d\n", i);
-			flag = -1;
-		}
-	}
-	return flag;
-}
-
-int DeInitHistory() {
+int FreeHistory() {
 	int flag = 0;
 	for (int i = 0; i < HISTORY_SIZE; i++) {
 		History[i] = (unsigned char *)malloc(CANVAS_SIZE_B);
@@ -266,10 +254,6 @@ int main(int argc, char **argv) {
 		memset(CanvasData, 0, CANVAS_SIZE_B);
 		if (CanvasData == NULL) {
 			printf("Unable To allocate memory for canvas.\n");
-			return 1;
-		}
-		if (InitHistory() != 0) {
-			printf("Unable To allocate memory for canvas history.\n");
 			return 1;
 		}
 	}
@@ -593,7 +577,7 @@ int main(int argc, char **argv) {
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
-	DeInitHistory();
+	FreeHistory();
 	return 0;
 }
 
