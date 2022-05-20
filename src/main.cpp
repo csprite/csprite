@@ -40,6 +40,7 @@ int WindowDims[2] = {700, 500}; // Default Window Dimensions
 int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
 
 unsigned char *CanvasData; // Canvas Data Containg Pixel Values.
+#define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char)
 
 unsigned char LastPaletteIndex = 1;
 unsigned char PaletteIndex = 1;
@@ -177,8 +178,8 @@ int main(int argc, char **argv) {
 	}
 
 	if (CanvasData == NULL) {
-		CanvasData = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-		memset(CanvasData, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+		CanvasData = (unsigned char *)malloc(CANVAS_SIZE_B);
+		memset(CanvasData, 0, CANVAS_SIZE_B);
 		if (CanvasData == NULL) {
 			printf("Unable To allocate memory for canvas.\n");
 			return 1;
@@ -419,8 +420,8 @@ int main(int argc, char **argv) {
 					free(CanvasData);
 					CanvasDims[0] = NEW_DIMS[0];
 					CanvasDims[1] = NEW_DIMS[1];
-					CanvasData = (unsigned char *)malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-					memset(CanvasData, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+					CanvasData = (unsigned char *)malloc(CANVAS_SIZE_B);
+					memset(CanvasData, 0, CANVAS_SIZE_B);
 					if (CanvasData == NULL) {
 						printf("Unable To allocate memory for canvas.\n");
 						return 1;
