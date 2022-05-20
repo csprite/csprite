@@ -115,68 +115,6 @@ int HistoryIndex = 0;
 bool DidUndo = false;
 bool IsDirty = false;
 
-void SaveState() {
-	if (IsDirty == true) {
-		int max = -1;
-		for (int i = 0; i < HISTORY_SIZE; i++) {
-			if (History[i] == NULL) {
-				max = i;
-				break;
-			}
-		}
-		max = max == -1 ? HISTORY_SIZE - 1 : max;
-		printf("Clearing History from %d to %d\n", HistoryIndex, max);
-		for (int i = HistoryIndex; i < max; i++) {
-			free(History[i]);
-			History[i] = NULL;
-		}
-		clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
-	}
-	printf("Pushing To Undo Stack @ Index: %d\n", HistoryIndex);
-
-	if (History[HistoryIndex] == NULL) {
-		History[HistoryIndex] = (unsigned char *)malloc(CANVAS_SIZE_B);
-	}
-
-	memset(History[HistoryIndex], 0, CANVAS_SIZE_B);
-	memcpy(History[HistoryIndex], CanvasData, CANVAS_SIZE_B);
-	HistoryIndex++;
-}
-
-int Undo() {
-	HistoryIndex--;
-	clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
-
-	if (History[HistoryIndex] == NULL) {
-		printf("Cannot Undo @ index: %d\n", HistoryIndex);
-		return -1;
-	}
-	printf("Undo @ index: %d\n", HistoryIndex);
-	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
-	return 0;
-}
-
-int Redo() {
-	HistoryIndex++;
-	int max = -1;
-	for (int i = 0; i < HISTORY_SIZE; i++) {
-		if (History[i] == NULL) {
-			max = i - 1;
-			break;
-		}
-	}
-	max = max == -1 ? HISTORY_SIZE - 1 : max;
-	clampInteger(&HistoryIndex, 0, max);
-
-	if (History[HistoryIndex] == NULL) {
-		printf("Cannot Redo @ index: %d\n", HistoryIndex);
-		return -1;
-	}
-	printf("Redo @ index: %d\n", HistoryIndex);
-	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
-	return 0;
-}
-
 int FreeHistory() {
 	int flag = 0;
 	for (int i = 0; i < HISTORY_SIZE; i++) {
@@ -1015,4 +953,72 @@ void SaveImageFromCanvas(std::string filepath) {
 		WritePngFromCanvas(filepath.c_str(), CanvasDims);
 	}
 	ShouldSave = 0;
+}
+
+/*
+	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
+	Removes The Elements in a range from "History" if "IsDirty" is true
+*/
+void SaveState() {
+	if (IsDirty == true) {
+		int max = -1;
+		for (int i = 0; i < HISTORY_SIZE; i++) {
+			if (History[i] == NULL) {
+				max = i;
+				break;
+			}
+		}
+		max = max == -1 ? HISTORY_SIZE - 1 : max;
+		printf("Clearing History from %d to %d\n", HistoryIndex, max);
+		for (int i = HistoryIndex; i < max; i++) {
+			free(History[i]);
+			History[i] = NULL;
+		}
+		clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
+	}
+	printf("Pushing To Undo Stack @ Index: %d\n", HistoryIndex);
+
+	if (History[HistoryIndex] == NULL) {
+		History[HistoryIndex] = (unsigned char *)malloc(CANVAS_SIZE_B);
+	}
+
+	memset(History[HistoryIndex], 0, CANVAS_SIZE_B);
+	memcpy(History[HistoryIndex], CanvasData, CANVAS_SIZE_B);
+	HistoryIndex++;
+}
+
+// Undo - Puts The Pixels from "History" at "HistoryIndex"
+int Undo() {
+	HistoryIndex--;
+	clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
+
+	if (History[HistoryIndex] == NULL) {
+		printf("Cannot Undo @ index: %d\n", HistoryIndex);
+		return -1;
+	}
+	printf("Undo @ index: %d\n", HistoryIndex);
+	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
+	return 0;
+}
+
+// Redo - Puts The Pixels from "History" at "HistoryIndex"
+int Redo() {
+	HistoryIndex++;
+	int max = -1;
+	for (int i = 0; i < HISTORY_SIZE; i++) {
+		if (History[i] == NULL) {
+			max = i - 1;
+			break;
+		}
+	}
+	max = max == -1 ? HISTORY_SIZE - 1 : max;
+	clampInteger(&HistoryIndex, 0, max);
+
+	if (History[HistoryIndex] == NULL) {
+		printf("Cannot Redo @ index: %d\n", HistoryIndex);
+		return -1;
+	}
+	printf("Redo @ index: %d\n", HistoryIndex);
+	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
+	return 0;
 }
