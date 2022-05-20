@@ -3,6 +3,8 @@ CC := clang
 STD := c++17
 LFLAGS := -I. -std=${STD} -Wall
 CFLAGS := -Wall
+opts:=# Possible Values = SHOW_FRAME_TIME SHOW_HISTORY_LOGS
+DEFINATIONS := $(addprefix -D,$(opts))
 
 #IMGUI v1.87
 
@@ -34,7 +36,7 @@ endif
 all: CFLAGS += -g -O0
 all: $(BIN)
 
-release: CFLAGS += -O2 -DNDEBUG
+release: CFLAGS += -O2
 release: $(BIN)
 
 .PHONY: clean
@@ -47,7 +49,7 @@ $(BIN): $(OBJS)
 
 # For Compiling src/*.cpp
 $(OBJ)/%.o: $(SRC)/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS) $(DEFINATIONS) -c $< -o $@
 
 # For Compiling lib/imgui/*.cpp
 $(OBJ)/%.o: $(LIB)/imgui/%.cpp
