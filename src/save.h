@@ -7,6 +7,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../lib/stb/stb_image.h"
 
+// Declaration here, implementation in main.cpp
+void ResetHistory();
+
+// Loads a image to canvas and automatically calls ResetHistory to reset undo/redo
 void LoadImageToCanvas(const char *filepath, int *canvas_dims, unsigned char **canvas_data) {
 	int imgWidth, imgHeight, c;
 	unsigned char *image_data = stbi_load(filepath, &imgWidth, &imgHeight, &c, 0);
@@ -36,6 +40,7 @@ void LoadImageToCanvas(const char *filepath, int *canvas_dims, unsigned char **c
 		}
 	}
 	stbi_image_free(image_data);
+	ResetHistory();
 }
 
 void WritePngFromCanvas(const char *filepath, int *canvas_dims) {
