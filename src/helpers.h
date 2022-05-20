@@ -1,3 +1,6 @@
+#ifndef HELPERS_H
+#define HELPERS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,6 +11,11 @@
 	#include <windows.h>
 	#include <shellapi.h>
 #endif
+
+void clampInteger(int *input, int min, int max) {
+	*input = *input <= min ? min : *input;
+	*input = *input >= max ? max : *input;
+}
 
 // Convert String To Integer
 int string_to_int(int *out, char *s) {
@@ -47,3 +55,5 @@ void openUrl(std::string url) {
 	ShellExecute(0, 0, url.c_str(), 0, 0, SW_SHOW);
 #endif
 }
+
+#endif // End HELPERS_H
