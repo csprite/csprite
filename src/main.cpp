@@ -109,11 +109,29 @@ double MousePosLast[2];
 double MousePosRelative[2];
 double MousePosRelativeLast[2];
 
-#define HISTORY_SIZE 5
+#define HISTORY_SIZE 30
 unsigned char *History[HISTORY_SIZE];
 int HistoryIndex = 0;
+bool DidUndo = false;
+bool IsDirty = false;
 
 void SaveState() {
+	if (IsDirty == true) {
+		int max = -1;
+		for (int i = 0; i < HISTORY_SIZE; i++) {
+			if (History[i] == NULL) {
+				max = i;
+				break;
+			}
+		}
+		max = max == -1 ? HISTORY_SIZE - 1 : max;
+		printf("Clearing History from %d to %d\n", HistoryIndex, max);
+		for (int i = HistoryIndex; i < max; i++) {
+			free(History[i]);
+			History[i] = NULL;
+		}
+		clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
+	}
 	printf("Pushing To Undo Stack @ Index: %d\n", HistoryIndex);
 
 	if (History[HistoryIndex] == NULL) {
@@ -182,6 +200,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
 			if (action == GLFW_PRESS) {
 				SaveState();
+			}
+			if (action == GLFW_RELEASE) {
+				if (DidUndo == true) {
+					IsDirty = true;
+					DidUndo = false;
+				} else {
+					IsDirty = false;
+				}
+				SaveState();
+				HistoryIndex--;
 			}
 		}
 	}
@@ -376,8 +404,8 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoMove;
 
 #ifndef NDEBUG
-	double lastTime = glfwGetTime();
-	int nbFrames = 0; // Number Of Frames Rendered
+	// double lastTime = glfwGetTime();
+	// int nbFrames = 0; // Number Of Frames Rendered
 #endif
 
 	auto const wait_time = std::chrono::milliseconds{ 17 };
@@ -408,13 +436,13 @@ int main(int argc, char **argv) {
 		// --------------------------------------------------------------------------------------
 
 #ifndef NDEBUG
-		double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
-		nbFrames++;
-		if ( currentTime - lastTime >= 1.0 ){
-			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-			nbFrames = 0;
-			lastTime += 1.0;
-		}
+		// double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
+		// nbFrames++;
+		// if ( currentTime - lastTime >= 1.0 ){
+		// 	printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+		// 	nbFrames = 0;
+		// 	lastTime += 1.0;
+		// }
 #endif
 
 		std::this_thread::sleep_until(next_time);
@@ -804,6 +832,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				break;
 			case GLFW_KEY_Z:
 				if (IsCtrlDown == 1) {
+					DidUndo = true;
 					Undo();
 				}
 				break;
