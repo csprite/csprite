@@ -140,7 +140,15 @@ int Undo() {
 
 int Redo() {
 	HistoryIndex++;
-	clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
+	int max = -1;
+	for (int i = 0; i < HISTORY_SIZE; i++) {
+		if (History[i] == NULL) {
+			max = i - 1;
+			break;
+		}
+	}
+	max = max == -1 ? HISTORY_SIZE - 1 : max;
+	clampInteger(&HistoryIndex, 0, max);
 
 	if (History[HistoryIndex] == NULL) {
 		printf("Cannot Redo @ index: %d\n", HistoryIndex);
