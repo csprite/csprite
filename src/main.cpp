@@ -109,6 +109,90 @@ double MousePosLast[2];
 double MousePosRelative[2];
 double MousePosRelativeLast[2];
 
+#define HISTORY_SIZE 5
+unsigned char *History[HISTORY_SIZE];
+int HistoryIndex = 0;
+
+void SaveState() {
+	printf("Pushing To Undo Stack @ Index: %d\n", HistoryIndex);
+
+	if (History[HistoryIndex] == NULL) {
+		History[HistoryIndex] = (unsigned char *)malloc(CANVAS_SIZE_B);
+	}
+
+	memset(History[HistoryIndex], 0, CANVAS_SIZE_B);
+	memcpy(History[HistoryIndex], CanvasData, CANVAS_SIZE_B);
+	HistoryIndex++;
+}
+
+int Undo() {
+	HistoryIndex--;
+	HistoryIndex = HistoryIndex <= 0 ? 0 : HistoryIndex;
+	HistoryIndex = HistoryIndex >= HISTORY_SIZE - 1 ? HISTORY_SIZE - 1 : HistoryIndex;
+
+	if (History[HistoryIndex] == NULL) {
+		printf("Cannot Undo @ index: %d\n", HistoryIndex);
+		return -1;
+	}
+	printf("Undo @ index: %d\n", HistoryIndex);
+	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
+	return 0;
+}
+
+int Redo() {
+	HistoryIndex++;
+	HistoryIndex = HistoryIndex <= 0 ? 0 : HistoryIndex;
+	HistoryIndex = HistoryIndex >= HISTORY_SIZE - 1 ? HISTORY_SIZE - 1 : HistoryIndex;
+
+	if (History[HistoryIndex] == NULL) {
+		printf("Cannot Redo @ index: %d\n", HistoryIndex);
+		return -1;
+	}
+	printf("Redo @ index: %d\n", HistoryIndex);
+	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
+	return 0;
+}
+
+int InitHistory() {
+	int flag = 0;
+	for (int i = 0; i < HISTORY_SIZE; i++) {
+		History[i] = (unsigned char *)malloc(CANVAS_SIZE_B);
+		if (History[i] == NULL) {
+			printf("Unable To Allocate Memory for History @ Index %d\n", i);
+			flag = -1;
+		}
+	}
+	return flag;
+}
+
+int DeInitHistory() {
+	int flag = 0;
+	for (int i = 0; i < HISTORY_SIZE; i++) {
+		History[i] = (unsigned char *)malloc(CANVAS_SIZE_B);
+		if (History[i] != NULL) {
+			free(History[i]);
+			History[i] = NULL;
+		} else {
+			printf("Unable To De-Allocate Memory for History @ Index %d\n", i);
+			flag = -1;
+		}
+	}
+	return flag;
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		int x = (int)(MousePosRelative[0] / ZoomLevel);
+		int y = (int)(MousePosRelative[1] / ZoomLevel);
+
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
+			if (action == GLFW_PRESS) {
+				SaveState();
+			}
+		}
+	}
+}
+
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
@@ -184,6 +268,10 @@ int main(int argc, char **argv) {
 			printf("Unable To allocate memory for canvas.\n");
 			return 1;
 		}
+		if (InitHistory() != 0) {
+			printf("Unable To allocate memory for canvas history.\n");
+			return 1;
+		}
 	}
 
 	GLFWwindow *window;
@@ -234,6 +322,7 @@ int main(int argc, char **argv) {
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	// If not a release build use the local shader files to edit shaders without problem
 #ifndef NDEBUG
@@ -504,6 +593,7 @@ int main(int argc, char **argv) {
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
+	DeInitHistory();
 	return 0;
 }
 
@@ -721,6 +811,16 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			case GLFW_KEY_SPACE:
 				LastMode = Mode;
 				Mode = PAN;
+				break;
+			case GLFW_KEY_Z:
+				if (IsCtrlDown == 1) {
+					Undo();
+				}
+				break;
+			case GLFW_KEY_Y:
+				if (IsCtrlDown == 1) {
+					Redo();
+				}
 				break;
 			case GLFW_KEY_N:
 				if (IsCtrlDown == 1) ShowNewCanvasWindow = 1;
