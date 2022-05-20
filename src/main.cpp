@@ -115,44 +115,6 @@ int HistoryIndex = 0;
 bool DidUndo = false;
 bool IsDirty = false;
 
-int FreeHistory() {
-	int flag = 0;
-	for (int i = 0; i < HISTORY_SIZE; i++) {
-		History[i] = (unsigned char *)malloc(CANVAS_SIZE_B);
-		if (History[i] != NULL) {
-			free(History[i]);
-			History[i] = NULL;
-		} else {
-			printf("Unable To De-Allocate Memory for History @ Index %d\n", i);
-			flag = -1;
-		}
-	}
-	return flag;
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-	if (button == GLFW_MOUSE_BUTTON_LEFT) {
-		int x = (int)(MousePosRelative[0] / ZoomLevel);
-		int y = (int)(MousePosRelative[1] / ZoomLevel);
-
-		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
-			if (action == GLFW_PRESS) {
-				SaveState();
-			}
-			if (action == GLFW_RELEASE) {
-				if (DidUndo == true) {
-					IsDirty = true;
-					DidUndo = false;
-				} else {
-					IsDirty = false;
-				}
-				SaveState();
-				HistoryIndex--;
-			}
-		}
-	}
-}
-
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
@@ -595,6 +557,29 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 	viewport_set();
 }
 
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		int x = (int)(MousePosRelative[0] / ZoomLevel);
+		int y = (int)(MousePosRelative[1] / ZoomLevel);
+
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
+			if (action == GLFW_PRESS) {
+				SaveState();
+			}
+			if (action == GLFW_RELEASE) {
+				if (DidUndo == true) {
+					IsDirty = true;
+					DidUndo = false;
+				} else {
+					IsDirty = false;
+				}
+				SaveState();
+				HistoryIndex--;
+			}
+		}
+	}
+}
+
 void process_input(GLFWwindow *window) {
 	if (CanvasFreeze == 1) return;
 
@@ -1021,4 +1006,20 @@ int Redo() {
 	printf("Redo @ index: %d\n", HistoryIndex);
 	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
 	return 0;
+}
+
+// Frees the memory in "History"
+int FreeHistory() {
+	int flag = 0;
+	for (int i = 0; i < HISTORY_SIZE; i++) {
+		History[i] = (unsigned char *)malloc(CANVAS_SIZE_B);
+		if (History[i] != NULL) {
+			free(History[i]);
+			History[i] = NULL;
+		} else {
+			printf("Unable To De-Allocate Memory for History @ Index %d\n", i);
+			flag = -1;
+		}
+	}
+	return flag;
 }

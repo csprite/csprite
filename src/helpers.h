@@ -1,3 +1,6 @@
+#ifndef HELPERS_H
+#define HELPERS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -52,3 +55,5 @@ void openUrl(std::string url) {
 	ShellExecute(0, 0, url.c_str(), 0, 0, SW_SHOW);
 #endif
 }
+
+#endif // End HELPERS_H
