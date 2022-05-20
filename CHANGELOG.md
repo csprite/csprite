@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/DEVLOPRR/CSprite/releases/tag/continuous)
 
+- May 20-21, 2022
+	- Add Undo/Redo Functionality
+	- Add Include/Header Guards in `.h` files
+
 - May 18, 2022
 	- Reduce Compiler Warnings
 
