@@ -127,8 +127,7 @@ void SaveState() {
 
 int Undo() {
 	HistoryIndex--;
-	HistoryIndex = HistoryIndex <= 0 ? 0 : HistoryIndex;
-	HistoryIndex = HistoryIndex >= HISTORY_SIZE - 1 ? HISTORY_SIZE - 1 : HistoryIndex;
+	clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
 
 	if (History[HistoryIndex] == NULL) {
 		printf("Cannot Undo @ index: %d\n", HistoryIndex);
@@ -141,8 +140,7 @@ int Undo() {
 
 int Redo() {
 	HistoryIndex++;
-	HistoryIndex = HistoryIndex <= 0 ? 0 : HistoryIndex;
-	HistoryIndex = HistoryIndex >= HISTORY_SIZE - 1 ? HISTORY_SIZE - 1 : HistoryIndex;
+	clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
 
 	if (History[HistoryIndex] == NULL) {
 		printf("Cannot Redo @ index: %d\n", HistoryIndex);
