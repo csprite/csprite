@@ -303,9 +303,9 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoResize;
 	window_flags |= ImGuiWindowFlags_NoMove;
 
-#ifndef NDEBUG
-	// double lastTime = glfwGetTime();
-	// int nbFrames = 0; // Number Of Frames Rendered
+#ifdef SHOW_FRAME_TIME
+	double lastTime = glfwGetTime();
+	int nbFrames = 0; // Number Of Frames Rendered
 #endif
 
 	auto const wait_time = std::chrono::milliseconds{ 17 };
@@ -335,14 +335,14 @@ int main(int argc, char **argv) {
 		MousePosRelative[1] = (MousePos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
 		// --------------------------------------------------------------------------------------
 
-#ifndef NDEBUG
-		// double currentTime = glfwGetTime(); // Uncomment This Block And Above 2 Commented Lines To Get Frame Time (Updated Every 1 Second)
-		// nbFrames++;
-		// if ( currentTime - lastTime >= 1.0 ){
-		// 	printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-		// 	nbFrames = 0;
-		// 	lastTime += 1.0;
-		// }
+#ifdef SHOW_FRAME_TIME
+		double currentTime = glfwGetTime();
+		nbFrames++;
+		if (currentTime - lastTime >= 1.0) {
+			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+			nbFrames = 0;
+			lastTime += 1.0;
+		}
 #endif
 
 		std::this_thread::sleep_until(next_time);
@@ -403,6 +403,15 @@ int main(int argc, char **argv) {
 				}
 				ImGui::EndMenu();
 			}
+			if (ImGui::BeginMenu("Edit")) {
+				if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
+					Undo();
+				}
+				if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
+					Redo();
+				}
+				ImGui::EndMenu();
+			}
 
 			if (ImGui::BeginMenu("Help")) {
 				if (ImGui::MenuItem("About")) {
@@ -435,6 +444,7 @@ int main(int argc, char **argv) {
 					}
 
 					zoomAndLevelViewport();
+					ResetHistory();
 					CanvasFreeze = 0;
 					ShowNewCanvasWindow = 0;
 				}
@@ -755,7 +765,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				break;
 			case GLFW_KEY_Z:
 				if (IsCtrlDown == 1) {
-					DidUndo = true;
 					Undo();
 				}
 				break;
@@ -940,6 +949,11 @@ void SaveImageFromCanvas(std::string filepath) {
 	ShouldSave = 0;
 }
 
+void ResetHistory() {
+	FreeHistory();
+	HistoryIndex = 0;
+}
+
 /*
 	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
 	Removes The Elements in a range from "History" if "IsDirty" is true
@@ -954,14 +968,18 @@ void SaveState() {
 			}
 		}
 		max = max == -1 ? HISTORY_SIZE - 1 : max;
+#ifdef SHOW_HISTORY_LOGS
 		printf("Clearing History from %d to %d\n", HistoryIndex, max);
+#endif
 		for (int i = HistoryIndex; i < max; i++) {
 			free(History[i]);
 			History[i] = NULL;
 		}
 		clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
 	}
+#ifdef SHOW_HISTORY_LOGS
 	printf("Pushing To Undo Stack @ Index: %d\n", HistoryIndex);
+#endif
 
 	if (History[HistoryIndex] == NULL) {
 		History[HistoryIndex] = (unsigned char *)malloc(CANVAS_SIZE_B);
@@ -974,14 +992,19 @@ void SaveState() {
 
 // Undo - Puts The Pixels from "History" at "HistoryIndex"
 int Undo() {
+	DidUndo = true;
 	HistoryIndex--;
 	clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
 
 	if (History[HistoryIndex] == NULL) {
+#ifdef SHOW_HISTORY_LOGS
 		printf("Cannot Undo @ index: %d\n", HistoryIndex);
+#endif
 		return -1;
 	}
+#ifdef SHOW_HISTORY_LOGS
 	printf("Undo @ index: %d\n", HistoryIndex);
+#endif
 	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
 	return 0;
 }
@@ -1000,10 +1023,14 @@ int Redo() {
 	clampInteger(&HistoryIndex, 0, max);
 
 	if (History[HistoryIndex] == NULL) {
+#ifdef SHOW_HISTORY_LOGS
 		printf("Cannot Redo @ index: %d\n", HistoryIndex);
+#endif
 		return -1;
 	}
+#ifdef SHOW_HISTORY_LOGS
 	printf("Redo @ index: %d\n", HistoryIndex);
+#endif
 	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
 	return 0;
 }
