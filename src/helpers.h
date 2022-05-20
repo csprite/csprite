@@ -9,6 +9,11 @@
 	#include <shellapi.h>
 #endif
 
+void clampInteger(int *input, int min, int max) {
+	*input = *input <= min ? min : *input;
+	*input = *input >= max ? max : *input;
+}
+
 // Convert String To Integer
 int string_to_int(int *out, char *s) {
 	char *end;
