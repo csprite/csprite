@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/DEVLOPRR/CSprite/releases/tag/continuous)
 
 - May 20-21, 2022
-	- Add Undo/Redo Functionality
+	- Add Undo/Redo Functionality [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
+	- Add Undo/Redo Option in Menu [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
+	- Lazy Memory Allocation For Undo/Redo [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
+	- Separate Code into Clamp Function [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
+	- Clamp Redo To Max Available History [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
+	- Call `ResetHistory();` To Reset Undo/Redo Array When Opening a new Image/Creating a new canvas
 	- Add Include/Header Guards in `.h` files
+	- Add Customize-able Options When Building ([How To Use](https://github.com/DEVLOPRR/CSprite/wiki/Building-From-Source#customizing))
 
 - May 18, 2022
 	- Reduce Compiler Warnings
