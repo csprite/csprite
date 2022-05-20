@@ -114,4 +114,4 @@ inline void mat4x4_scale_aniso(mat4x4 M, mat4x4 a, float x, float y, float z) {
 		M[3][i] = a[3][i];
 }
 
-#endif
+#endif // end MATH_LINEAR
