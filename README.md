@@ -42,6 +42,8 @@ Using CSprite isn't rocket science and infact you can learn how to use it in 5 m
 | Left Mouse                   | Draw/Erase/Fill/Ink Dropper  |
 | Ctrl + Plus / Scroll Up      | Zoom In                      |
 | Ctrl + Minus / Scroll Down   | Zoom Out                     |
+| Ctrl + Z                     | Undo                         |
+| Ctrl + Y                     | Redo                         |
 
 ---
 
