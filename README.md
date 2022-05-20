@@ -12,7 +12,7 @@ A Minimalistic Pixel Art Tool For Beginners - Powered By OpenGL & ImGui
 - :moneybag: Free & Open Source
 
 ### Todo
-- [ ] Undo Redo [(Work in progress)](https://github.com/DEVLOPRR/CSprite/pull/5)
+- [x] Undo Redo
 - [x] Ink Dropper Tool.
 - [x] Square/Circle in Brush/Eraser.
 - [x] Adjustable Brush/Eraser Size.
