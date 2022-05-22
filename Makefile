@@ -33,10 +33,10 @@ else
 	endif
 endif
 
-all: CFLAGS += -g -O0
+all: CFLAGS += -g -O0 -DIS_DEBUG
 all: $(BIN)
 
-release: CFLAGS += -O2
+release: CFLAGS += -O3
 release: $(BIN)
 
 .PHONY: clean
