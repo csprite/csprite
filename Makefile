@@ -36,7 +36,7 @@ endif
 all: CFLAGS += -g -O0 -DIS_DEBUG
 all: $(BIN)
 
-release: CFLAGS += -O3
+release: CFLAGS += -O2
 release: $(BIN)
 
 .PHONY: clean
