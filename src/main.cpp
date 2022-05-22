@@ -243,7 +243,7 @@ int main(int argc, char **argv) {
 	glfwSetMouseButtonCallback(window, mouse_button_callback);
 
 	// If not a release build use the local shader files to edit shaders without problem
-#ifndef NDEBUG
+#ifdef IS_DEBUG
 	unsigned int shader_program = create_shader_program("shader.vs", "shader.fs", NULL);
 #else
 	unsigned int shader_program = create_shader_program(NULL, NULL, NULL);
