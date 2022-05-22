@@ -4,17 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/DEVLOPRR/CSprite/releases/tag/continuous)
+## [Unreleased](https://github.com/pegvin/CSprite/releases/tag/continuous)
 
 - May 20-21, 2022
-	- Add Undo/Redo Functionality [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
-	- Add Undo/Redo Option in Menu [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
-	- Lazy Memory Allocation For Undo/Redo [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
-	- Separate Code into Clamp Function [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
-	- Clamp Redo To Max Available History [#6](https://github.com/DEVLOPRR/CSprite/pull/6)
+	- Add Undo/Redo Functionality [#6](https://github.com/pegvin/CSprite/pull/6)
+	- Add Undo/Redo Option in Menu [#6](https://github.com/pegvin/CSprite/pull/6)
+	- Lazy Memory Allocation For Undo/Redo [#6](https://github.com/pegvin/CSprite/pull/6)
+	- Separate Code into Clamp Function [#6](https://github.com/pegvin/CSprite/pull/6)
+	- Clamp Redo To Max Available History [#6](https://github.com/pegvin/CSprite/pull/6)
 	- Call `ResetHistory();` To Reset Undo/Redo Array When Opening a new Image/Creating a new canvas
 	- Add Include/Header Guards in `.h` files
-	- Add Customize-able Options When Building ([How To Use](https://github.com/DEVLOPRR/CSprite/wiki/Building-From-Source#customizing))
+	- Add Customize-able Options When Building ([How To Use](https://github.com/pegvin/CSprite/wiki/Building-From-Source#customizing))
 
 - May 18, 2022
 	- Reduce Compiler Warnings
@@ -50,8 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - May 4, 2022
 
 	- Add Ink Dropper Tool
-	- Add Menu Bar & New Button To Create A new empty canvas [#4](https://github.com/DEVLOPRR/CSprite/pull/4)
-	- Add New, Open, Save & Save As in Menu Bar [#4](https://github.com/DEVLOPRR/CSprite/pull/4)
+	- Add Menu Bar & New Button To Create A new empty canvas [#4](https://github.com/pegvin/CSprite/pull/4)
+	- Add New, Open, Save & Save As in Menu Bar [#4](https://github.com/pegvin/CSprite/pull/4)
 	- Fix Memory Leaks
 	- Remove Zoom Limit (Max Zoom Limit Now is `4294967295`)
 
