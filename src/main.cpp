@@ -415,10 +415,10 @@ int main(int argc, char **argv) {
 
 			if (ImGui::BeginMenu("Help")) {
 				if (ImGui::MenuItem("About")) {
-					openUrl("https://github.com/DEVLOPRR/CSprite/wiki/About-CSprite");
+					openUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
 				}
 				if (ImGui::MenuItem("GitHub")) {
-					openUrl("https://github.com/DEVLOPRR/CSprite");
+					openUrl("https://github.com/pegvin/CSprite");
 				}
 				ImGui::EndMenu();
 			}
