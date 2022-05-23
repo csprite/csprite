@@ -21,7 +21,8 @@
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/imgui_impl_glfw.h"
 #include "../include/imgui/imgui_impl_opengl3.h"
-#include "../include/tinyfiledialogs.h"
+#include "../include/portable-file-dialogs.h"
+#include "../include/platform_folders.h"
 
 #include "../include/glad/glad.h"
 #include "../include/GLFW/glfw3.h"
@@ -33,8 +34,10 @@
 #include "helpers.h"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
-char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
-unsigned char NumOfFilterPatterns = 3;
+std::vector<std::string> FileFilterPatterns {
+	"Image Files", "*.png *.jpg *.jpeg",
+	"All Files", "*"
+};
 
 int WindowDims[2] = {700, 500}; // Default Window Dimensions
 int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
@@ -377,9 +380,15 @@ int main(int argc, char **argv) {
 					ShowNewCanvasWindow = 1;
 				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
-					if (filePath != NULL) {
-						FilePath = std::string(filePath);
+					auto filePath = pfd::open_file(
+						"Open A File",
+						sago::getPicturesFolder(),
+						FileFilterPatterns,
+						pfd::opt::none
+					).result();
+
+					if (!filePath.empty()) {
+						FilePath = std::string(filePath[0]);
 						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						zoomAndLevelViewport();
@@ -392,8 +401,14 @@ int main(int argc, char **argv) {
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
 					if (ImGui::MenuItem("Save As", "Alt+S")) {
-						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
-						if (filePath != NULL) {
+						auto filePath = pfd::save_file(
+							"Save A File",
+							sago::getPicturesFolder() + "/" + FilePath.substr(FilePath.find_last_of("/\\") + 1),
+							FileFilterPatterns,
+							pfd::opt::none
+						).result();
+
+						if (!filePath.empty()) {
 							FilePath = FixFileExtension(std::string(filePath));
 							SaveImageFromCanvas(FilePath);
 							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
@@ -778,8 +793,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				break;
 			case GLFW_KEY_S:
 				if (mods == GLFW_MOD_ALT) { // Show Prompt To Save if Alt + S pressed
-					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
-					if (filePath != NULL) {
+					auto filePath = pfd::save_file(
+						"Save A File",
+						sago::getPicturesFolder() + "/" + FilePath.substr(FilePath.find_last_of("/\\") + 1),
+						FileFilterPatterns,
+						pfd::opt::none
+					).result();
+
+					if (!filePath.empty()) {
 						FilePath = FixFileExtension(std::string(filePath));
 						SaveImageFromCanvas(FilePath);
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
@@ -791,9 +812,15 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 				break;
 			case GLFW_KEY_O: {
 				if (IsCtrlDown == 1) {
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
-					if (filePath != NULL) {
-						FilePath = std::string(filePath);
+					auto filePath = pfd::open_file(
+						"Open A File",
+						sago::getPicturesFolder(),
+						FileFilterPatterns,
+						pfd::opt::none
+					).result();
+
+					if (!filePath.empty()) {
+						FilePath = std::string(filePath[0]);
 						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}

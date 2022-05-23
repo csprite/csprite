@@ -12,13 +12,13 @@ SRC=src
 LIB=lib
 OBJ=obj
 
-SRCS=$(SRC)/main.cpp $(LIB)/glad.c $(LIB)/tinyfiledialogs.c
+SRCS=$(SRC)/main.cpp $(LIB)/glad.c $(LIB)/platform_folders.cpp
 SRCS += $(LIB)/imgui/imgui.cpp $(LIB)/imgui/imgui_impl_opengl3.cpp
 SRCS += $(LIB)/imgui/imgui_impl_glfw.cpp $(LIB)/imgui/imgui_draw.cpp
 SRCS += $(LIB)/imgui/imgui_tables.cpp $(LIB)/imgui/imgui_widgets.cpp
 
-OBJS=$(OBJ)/main.o $(OBJ)/glad.o $(OBJ)/imgui.o $(OBJ)/tinyfiledialogs.o
-OBJS += $(OBJ)/imgui_impl_opengl3.o $(OBJ)/imgui_impl_glfw.o
+OBJS=$(OBJ)/main.o $(OBJ)/glad.o $(OBJ)/platform_folders.o
+OBJS += $(OBJ)/imgui.o $(OBJ)/imgui_impl_opengl3.o $(OBJ)/imgui_impl_glfw.o
 OBJS += $(OBJ)/imgui_draw.o $(OBJ)/imgui_tables.o $(OBJ)/imgui_widgets.o
 
 ifeq ($(OS),Windows_NT)
@@ -33,10 +33,10 @@ else
 	endif
 endif
 
-all: CFLAGS += -g -O0 -DIS_DEBUG
+all: CFLAGS += -g -O0
 all: $(BIN)
 
-release: CFLAGS += -Os
+release: CFLAGS += -O2
 release: $(BIN)
 
 .PHONY: clean
