@@ -31,8 +31,8 @@ void LoadImageToCanvas(const char *filepath, int *canvas_dims, unsigned char **c
 	unsigned char *iptr;
 	for (j = 0; j < imgHeight; j++) {
 		for (k = 0; k < imgWidth; k++) {
-			ptr = get_pixel(k, j);
-			iptr = get_char_data(image_data, k, j);
+			ptr = GetPixel(k, j);
+			iptr = GetCharData(image_data, k, j);
 			*(ptr+0) = *(iptr+0);
 			*(ptr+1) = *(iptr+1);
 			*(ptr+2) = *(iptr+2);
