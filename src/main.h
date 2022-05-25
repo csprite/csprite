@@ -7,21 +7,21 @@
 enum export_format_e { PNG, JPG };
 
 // Callbacks
-void process_input(GLFWwindow* window);
-void scroll_callback(GLFWwindow* window, double, double);
-void key_callback(GLFWwindow* window, int, int, int, int);
-void framebuffer_size_callback(GLFWwindow* window, int, int);
-void window_size_callback(GLFWwindow* window, int width, int height);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+void ProcessInput(GLFWwindow* window);
+void ScrollCallback(GLFWwindow* window, double, double);
+void KeyCallback(GLFWwindow* window, int, int, int, int);
+void FrameBufferSizeCallback(GLFWwindow* window, int, int);
+void WindowSizeCallback(GLFWwindow* window, int width, int height);
+void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
 // Canvas Zoom
-void viewport_set();
-void zoomAndLevelViewport(); // Zooms And Levels The Canvas.
-void adjust_zoom(bool increase);
+void ViewportSet();
+void ZoomNLevelViewport(); // Zooms And Levels The Canvas.
+void AdjustZoom(bool increase);
 
 // Little Helpers
-unsigned char * get_char_data(unsigned char *data, int x, int y);
-unsigned char * get_pixel(int x, int y);
+unsigned char * GetCharData(unsigned char *data, int x, int y);
+unsigned char * GetPixel(int x, int y);
 
 // Canvas Operations
 void fill(int x, int y, unsigned char *old_colour);
