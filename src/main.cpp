@@ -235,12 +235,12 @@ int main(int argc, char **argv) {
 	ViewPort[2] = CanvasDims[0] * ZoomLevel; // Width
 	ViewPort[3] = CanvasDims[1] * ZoomLevel; // Height
 
-	zoomAndLevelViewport();
-	glfwSetWindowSizeCallback(window, window_size_callback);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetScrollCallback(window, scroll_callback);
-	glfwSetKeyCallback(window, key_callback);
-	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	ZoomNLevelViewport();
+	glfwSetWindowSizeCallback(window, WindowSizeCallback);
+	glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
+	glfwSetScrollCallback(window, ScrollCallback);
+	glfwSetKeyCallback(window, KeyCallback);
+	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
 	// If not a release build use the local shader files to edit shaders without problem
 #ifdef IS_DEBUG
@@ -323,7 +323,7 @@ int main(int argc, char **argv) {
 			if (Mode == PAN) {
 				ViewPort[0] -= MousePosLast[0] - MousePos[0];
 				ViewPort[1] += MousePosLast[1] - MousePos[1];
-				viewport_set();
+				ViewportSet();
 			}
 		}
 		MousePosLast[0] = MousePos[0];
@@ -348,7 +348,7 @@ int main(int argc, char **argv) {
 		std::this_thread::sleep_until(next_time);
 
 		glfwPollEvents();
-		process_input(window);
+		ProcessInput(window);
 
 		glClearColor(0.075, 0.075, 0.1, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -382,7 +382,7 @@ int main(int argc, char **argv) {
 						FilePath = std::string(filePath);
 						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
 						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
-						zoomAndLevelViewport();
+						ZoomNLevelViewport();
 					}
 				}
 				if (ImGui::BeginMenu("Save")) {
@@ -443,7 +443,7 @@ int main(int argc, char **argv) {
 						return 1;
 					}
 
-					zoomAndLevelViewport();
+					ZoomNLevelViewport();
 					ResetHistory();
 					CanvasFreeze = 0;
 					ShowNewCanvasWindow = 0;
@@ -525,24 +525,24 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-unsigned char * get_char_data(unsigned char *data, int x, int y) {
+unsigned char * GetCharData(unsigned char *data, int x, int y) {
 	return data + ((y * CanvasDims[0] + x) * 4);
 }
 
-void framebuffer_size_callback(GLFWwindow *window, int w, int h) {
+void FrameBufferSizeCallback(GLFWwindow *window, int w, int h) {
 	glViewport(0, 0, w, h);
 }
 
-void zoomAndLevelViewport() {
+void ZoomNLevelViewport() {
 	// Simple hacky way to adjust canvas zoom level till it fits the window
 	while (true) {
 		if (ViewPort[2] >= WindowDims[1] || ViewPort[3] >= WindowDims[1]) {
-			adjust_zoom(false);
-			adjust_zoom(false);
-			adjust_zoom(false);
+			AdjustZoom(false);
+			AdjustZoom(false);
+			AdjustZoom(false);
 			break;
 		}
-		adjust_zoom(true);
+		AdjustZoom(true);
 		ViewPort[2] = CanvasDims[0] * ZoomLevel;
 		ViewPort[3] = CanvasDims[1] * ZoomLevel;
 	}
@@ -550,10 +550,10 @@ void zoomAndLevelViewport() {
 	// Center On Screen
 	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
 	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
-	viewport_set();
+	ViewportSet();
 }
 
-void window_size_callback(GLFWwindow* window, int width, int height) {
+void WindowSizeCallback(GLFWwindow* window, int width, int height) {
 	WindowDims[0] = width;
 	WindowDims[1] = height;
 
@@ -564,10 +564,10 @@ void window_size_callback(GLFWwindow* window, int width, int height) {
 	// Set The Canvas Size (Not Neccessary Here Tho)
 	ViewPort[2] = CanvasDims[0] * ZoomLevel;
 	ViewPort[3] = CanvasDims[1] * ZoomLevel;
-	viewport_set();
+	ViewportSet();
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
 		int x = (int)(MousePosRelative[0] / ZoomLevel);
 		int y = (int)(MousePosRelative[1] / ZoomLevel);
@@ -590,7 +590,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	}
 }
 
-void process_input(GLFWwindow *window) {
+void ProcessInput(GLFWwindow *window) {
 	if (CanvasFreeze == 1) return;
 
 	int x, y;
@@ -607,7 +607,7 @@ void process_input(GLFWwindow *window) {
 					break;
 				}
 				case FILL: {
-					unsigned char *ptr = get_pixel(x, y);
+					unsigned char *ptr = GetPixel(x, y);
 					// Color Clicked On.
 					unsigned char color[4] = {
 						*(ptr + 0),
@@ -619,7 +619,7 @@ void process_input(GLFWwindow *window) {
 					break;
 				}
 				case INK_DROPPER: {
-					unsigned char *ptr = get_pixel(x, y);
+					unsigned char *ptr = GetPixel(x, y);
 					// Color Clicked On.
 					unsigned char color[4] = {
 						*(ptr + 0),
@@ -646,14 +646,14 @@ void process_input(GLFWwindow *window) {
 	}
 }
 
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
 	if (yoffset > 0)
-		adjust_zoom(true);
+		AdjustZoom(true);
 	else
-		adjust_zoom(false);
+		AdjustZoom(false);
 }
 
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
 	if (action == GLFW_RELEASE) {
 		if (mods == GLFW_MOD_CONTROL)
 			IsCtrlDown = 0;
@@ -672,9 +672,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 			// if IsCtrlDown key is pressed and + or - is pressed, adjust the zoom size
 			if (key == GLFW_KEY_EQUAL) {
-				adjust_zoom(true);
+				AdjustZoom(true);
 			} else if (key == GLFW_KEY_MINUS) {
-				adjust_zoom(false);
+				AdjustZoom(false);
 			}
 		} else if (mods == GLFW_MOD_SHIFT) {
 			IsShiftDown = 1;
@@ -807,11 +807,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 	SelectedColor = ColorPalette[PaletteIndex];
 }
 
-void viewport_set() {
+void ViewportSet() {
 	glViewport(ViewPort[0], ViewPort[1], ViewPort[2], ViewPort[3]);
 }
 
-void adjust_zoom(bool increase) {
+void AdjustZoom(bool increase) {
 	if (increase == true) {
 		if (ZoomLevel < UINT_MAX) { // Max Value Of Unsigned int
 			ZoomLevel++;
@@ -829,11 +829,11 @@ void adjust_zoom(bool increase) {
 	ViewPort[2] = CanvasDims[0] * ZoomLevel;
 	ViewPort[3] = CanvasDims[1] * ZoomLevel;
 
-	viewport_set();
+	ViewportSet();
 	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 }
 
-unsigned char * get_pixel(int x, int y) {
+unsigned char * GetPixel(int x, int y) {
 	return CanvasData + ((y * CanvasDims[0] + x) * 4);
 }
 
@@ -866,7 +866,7 @@ void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
 				if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 					continue;
 
-				unsigned char *ptr = get_pixel(st_x + dirX, st_y + dirY);
+				unsigned char *ptr = GetPixel(st_x + dirX, st_y + dirY);
 
 				// Set Pixel Color
 				*ptr = SelectedColor[0]; // Red
@@ -890,7 +890,7 @@ void draw(int st_x, int st_y) {
 			if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
-			unsigned char *ptr = get_pixel(st_x + dirX, st_y + dirY);
+			unsigned char *ptr = GetPixel(st_x + dirX, st_y + dirY);
 
 			// Set Pixel Color
 			*ptr = SelectedColor[0]; // Red
@@ -903,20 +903,20 @@ void draw(int st_x, int st_y) {
 
 // Fill Tool, Fills The Whole Canvas Using Recursion
 void fill(int x, int y, unsigned char *old_color) {
-	unsigned char *ptr = get_pixel(x, y);
+	unsigned char *ptr = GetPixel(x, y);
 	if (color_equal(ptr, old_color)) {
 		*ptr = SelectedColor[0];
 		*(ptr + 1) = SelectedColor[1];
 		*(ptr + 2) = SelectedColor[2];
 		*(ptr + 3) = SelectedColor[3];
 
-		if (x != 0 && !color_equal(get_pixel(x - 1, y), SelectedColor))
+		if (x != 0 && !color_equal(GetPixel(x - 1, y), SelectedColor))
 			fill(x - 1, y, old_color);
-		if (x != CanvasDims[0] - 1 && !color_equal(get_pixel(x + 1, y), SelectedColor))
+		if (x != CanvasDims[0] - 1 && !color_equal(GetPixel(x + 1, y), SelectedColor))
 			fill(x + 1, y, old_color);
-		if (y != CanvasDims[1] - 1 && !color_equal(get_pixel(x, y + 1), SelectedColor))
+		if (y != CanvasDims[1] - 1 && !color_equal(GetPixel(x, y + 1), SelectedColor))
 			fill(x, y + 1, old_color);
-		if (y != 0 && !color_equal(get_pixel(x, y - 1), SelectedColor))
+		if (y != 0 && !color_equal(GetPixel(x, y - 1), SelectedColor))
 			fill(x, y - 1, old_color);
 	}
 }
