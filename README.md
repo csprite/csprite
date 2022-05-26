@@ -7,9 +7,12 @@ A Minimalistic Pixel Art Tool For Beginners - Powered By OpenGL & ImGui
 ### Features
 - :beginner: Beginner Friendly
 - :zap: Extremely Fast
-- :package: Small (Just 1~2 MB)
+- :package: Small (Just 1 MB)
 - :desktop_computer: Works On Windows & Linux
 - :moneybag: Free & Open Source
+
+### Requirements
+- Any PC With a GPU That Supports OpenGL 3.0 Atleast. (Recommended 3.3 or Higher)
 
 ### Todo
 - [x] Undo Redo
