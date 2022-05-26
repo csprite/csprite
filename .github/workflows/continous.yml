@@ -1,6 +1,6 @@
 
 name: Continous Release Action
-on: 
+on:
   push:
     branches: [ master ]
 
@@ -19,6 +19,9 @@ jobs:
 
     - name: Build CSprite
       run: make release -j4
+
+    - name: Strip Debug Info
+      run: strip ./csprite
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
@@ -47,18 +50,18 @@ jobs:
     needs: [Build-For-Linux, Build-For-Windows]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout 
+    - name: Checkout
       uses: actions/checkout@v2
 
     - name: Clean previous binaries
       run: rm -f csprite csprite.exe
 
-    - name: Download Linux build artifacts 
+    - name: Download Linux build artifacts
       uses: actions/download-artifact@v2
       with:
         name: linux_binary
-        
-    - name: Download Windows build artifacts 
+
+    - name: Download Windows build artifacts
       uses: actions/download-artifact@v2
       with:
         name: win_binary
