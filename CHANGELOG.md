@@ -1,10 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+When The Project Starts To Become Stable, The project will use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/pegvin/CSprite/releases/tag/continuous)
+
+- May 26, 2022
+	- Add Stripping Step in Workflow To Remove Debug Information
+	- Create My Own "Original" Icon
+
+- May 25, 2022
+	- Rename Function Names To Pascal Case
+
+- May 23, 2022
+	- Add 2 New Templates For Issues (Bug, Feature Request)
 
 - May 22, 2022
 	- Reduce Build Size.
