@@ -31,6 +31,7 @@
 #include "main.h"
 #include "save.h"
 #include "helpers.h"
+#include "icon.h"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
@@ -216,6 +217,7 @@ int main(int argc, char **argv) {
 	glfwMakeContextCurrent(window);
 	glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
 	glfwSwapInterval(0);
+	SetWindowIconFromAscii(window);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to init GLAD\n");
