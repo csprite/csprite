@@ -1,12 +1,15 @@
-*       text linguist-vendored=false
+*        text linguist-vendored=false
 
 # Sources
-*.c     text linguist-language=c         diff=c
-*.h     text linguist-language=c         diff=c
-*.inl   text linguist-language=c         diff=c
-*.cpp   text linguist-language=c++       diff=c++
-*.md    text linguist-language=Markdown  diff=Markdown
+*.c      text linguist-language=c         diff=c
+*.h      text linguist-language=c         diff=c
+*.inl    text linguist-language=c         diff=c
+*.cpp    text linguist-language=c++       diff=c++
 
-# Images
-*.ico   binary
-*.png   binary
+# Files To Not Include
+*.bat    linguist-vendored=true
+*.sh     linguist-vendored=true
+*.md     linguist-vendored=true
+*.vs     linguist-vendored=true
+*.fs     linguist-vendored=true
+Makefile linguist-vendored=true
