@@ -4,7 +4,7 @@
 *.c     text diff=c
 *.h     text diff=c
 *.inl   text diff=c
-*.cpp   text diff=cpp
+*.cpp   text diff=c
 *.md    text diff=markdown
 *.bat   text diff=shell
 *.sh    text diff=shell
