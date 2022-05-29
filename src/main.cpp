@@ -12,12 +12,6 @@
 #include <chrono>
 #include <thread>
 
-/*
-  Montserrat Bold Font Converted To Base85 Using "lib/binary_2_compressed_c.cpp"
-  And Stored In A Char Array
-*/
-#include "../include/FontMontserrat_Bold.h"
-
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/imgui_impl_glfw.h"
 #include "../include/imgui/imgui_impl_opengl3.h"
@@ -31,7 +25,6 @@
 #include "main.h"
 #include "save.h"
 #include "helpers.h"
-#include "icon.h"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
@@ -217,7 +210,27 @@ int main(int argc, char **argv) {
 	glfwMakeContextCurrent(window);
 	glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
 	glfwSwapInterval(0);
-	SetWindowIconFromAscii(window);
+
+	// Conditionally Enable/Disable Window icon to reduce compile time in debug mode.
+#ifdef ENABLE_WIN_ICON
+	#include "../include/ProgramIcon16.inl"
+	#include "../include/ProgramIcon32.inl"
+	#include "../include/ProgramIcon48.inl"
+
+	GLFWimage iconArr[3];
+	iconArr[0].width = 16;
+	iconArr[0].height = 16;
+	iconArr[0].pixels = ProgramIcon16;
+
+	iconArr[1].width = 32;
+	iconArr[1].height = 32;
+	iconArr[1].pixels = ProgramIcon32;
+
+	iconArr[2].width = 48;
+	iconArr[2].height = 48;
+	iconArr[2].pixels = ProgramIcon48;
+	glfwSetWindowIcon(window, 3, iconArr);
+#endif
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to init GLAD\n");
@@ -291,7 +304,9 @@ int main(int argc, char **argv) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = NULL; // Disable Generation of .ini file
 
-	// Use Font From The "FontMontserrat_Bold.h"
+
+	// Use Font From The "FontMontserrat_Bold.inl"
+	#include "../include/FontMontserrat_Bold.inl"
 	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold_compressed_data, Montserrat_Bold_compressed_size, 16.0f);
 
 	ImGui::StyleColorsDark();
