@@ -5,22 +5,7 @@
 *.h     text linguist-language=c         diff=c
 *.inl   text linguist-language=c         diff=c
 *.cpp   text linguist-language=c++       diff=c++
-
-# Compiled Object files
-*.o     binary
-
-# Compiled Dynamic libraries
-*.o     binary
-*.lib   binary
-
-# Compiled Static libraries
-*.a     binary
-*.lib   binary
-
-# Executables
-*.exe   binary
-*.out   binary
-*.app   binary
+*.md    text linguist-language=Markdown  diff=Markdown
 
 # Images
 *.ico   binary
