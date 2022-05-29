@@ -1,5 +1,6 @@
 *.o
 *.ini
+*.exe
 csprite
 font2inl
 image2inl
