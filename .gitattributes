@@ -1,13 +1,14 @@
 * text=auto
 
 # Sources
-*.c     text linguist-language=c diff=c
-*.h     text linguist-language=c diff=c
-*.inl   text linguist-language=c diff=c
-*.cpp   text diff=cpp
-*.md    text diff=markdown
-*.bat   text linguist-language=shell diff=shell
-*.sh    text linguist-language=shell diff=shell
+*.c     text linguist-language=c         diff=c
+*.h     text linguist-language=c         diff=c
+*.inl   text linguist-language=c         diff=c
+*.md    text linguist-language=markdown  diff=markdown
+*.bat   text linguist-language=shell     diff=shell
+*.sh    text linguist-language=shell     diff=shell
+*.vs    text linguist-language=glsl      diff=glsl
+*.fs    text linguist-language=glsl      diff=glsl
 *.rc    text
 
 # Compiled Object files
