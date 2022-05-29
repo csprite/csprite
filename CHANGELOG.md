@@ -5,6 +5,14 @@ When The Project Starts To Become Stable, The project will use [Semantic Version
 
 ## [Unreleased](https://github.com/pegvin/CSprite/releases/tag/continuous)
 
+- May 29, 2022
+	- Add Window Icon & Executable Icon (For Windows)
+		- Add 32 & 48 Resolution Icons
+		- Convert PNG Icons To Header Files 16, 32 & 48
+		- Add 256 Resolution .ico For Windows
+		- Add Executable Version & Icon RC For Windows
+		- Add Batch Script For Converting RC To Object File
+
 - May 26, 2022
 	- Add Stripping Step in Workflow To Remove Debug Information
 	- Create My Own "Original" Icon
