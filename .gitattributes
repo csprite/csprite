@@ -4,12 +4,6 @@
 *.c     text linguist-language=c         diff=c
 *.h     text linguist-language=c         diff=c
 *.inl   text linguist-language=c         diff=c
-*.md    text linguist-language=markdown  diff=markdown
-*.bat   text linguist-language=shell     diff=shell
-*.sh    text linguist-language=shell     diff=shell
-*.vs    text linguist-vendored=true      diff=glsl
-*.fs    text linguist-vendored=true      diff=glsl
-*.rc    text linguist-vendored=true
 
 # Compiled Object files
 *.o     binary
