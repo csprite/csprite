@@ -3,8 +3,7 @@ CC := clang
 STD := c++17
 LFLAGS := -I. -std=${STD} -Wall
 CFLAGS := -Wall
-opts:=# Possible Values = SHOW_FRAME_TIME SHOW_HISTORY_LOGS
-DEFINATIONS := $(addprefix -D,$(opts))
+DEFINATIONS :=# Possible Values = -DSHOW_FRAME_TIME -DSHOW_HISTORY_LOGS -DENABLE_WIN_ICON
 
 #IMGUI v1.87
 
@@ -37,6 +36,7 @@ all: CFLAGS += -g -O0 -DIS_DEBUG
 all: $(BIN)
 
 release: CFLAGS += -Os
+release: DEFINATIONS += -DENABLE_WIN_ICON
 release: $(BIN)
 
 .PHONY: clean
