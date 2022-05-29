@@ -1,0 +1,21 @@
+# Sources
+*.c     text diff=c
+*.h     text diff=c
+*.inl   text diff=c
+*.cpp   text diff=cpp
+
+# Compiled Object files
+*.o     binary
+
+# Compiled Dynamic libraries
+*.o     binary
+*.lib   binary
+
+# Compiled Static libraries
+*.a     binary
+*.lib   binary
+
+# Executables
+*.exe   binary
+*.out   binary
+*.app   binary
