@@ -1,4 +1,6 @@
-obj/*.o
+*.o
+*.ini
+*.exe
 csprite
-imgui.ini
-bin2CompC
+font2inl
+image2inl
