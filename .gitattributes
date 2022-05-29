@@ -14,3 +14,11 @@
 *.vs     linguist-vendored=true
 *.fs     linguist-vendored=true
 Makefile linguist-vendored=true
+
+# Object Files
+*.lib   binary
+*.o     binary
+
+# Executables
+*.out   binary
+*.exe   binary
