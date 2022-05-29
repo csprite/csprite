@@ -4,6 +4,7 @@
 *.c     text linguist-language=c         diff=c
 *.h     text linguist-language=c         diff=c
 *.inl   text linguist-language=c         diff=c
+*.cpp   text linguist-language=c++       diff=c++
 
 # Compiled Object files
 *.o     binary
