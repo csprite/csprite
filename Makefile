@@ -7,28 +7,29 @@ DEFINATIONS :=# Possible Values = -DSHOW_FRAME_TIME -DSHOW_HISTORY_LOGS -DENABLE
 
 #IMGUI v1.87
 
-SRC=src
-LIB=lib
-OBJ=obj
+SRC:=src
+LIB:=lib
+OBJ:=obj
 
-SRCS=$(SRC)/main.cpp $(LIB)/glad.c $(LIB)/tinyfiledialogs.c
+SRCS :=$(SRC)/main.cpp $(LIB)/glad.c $(LIB)/tinyfiledialogs.c
 SRCS += $(LIB)/imgui/imgui.cpp $(LIB)/imgui/imgui_impl_opengl3.cpp
 SRCS += $(LIB)/imgui/imgui_impl_glfw.cpp $(LIB)/imgui/imgui_draw.cpp
 SRCS += $(LIB)/imgui/imgui_tables.cpp $(LIB)/imgui/imgui_widgets.cpp
 
-OBJS=$(OBJ)/main.o $(OBJ)/glad.o $(OBJ)/imgui.o $(OBJ)/tinyfiledialogs.o
+OBJS :=$(OBJ)/main.o $(OBJ)/glad.o $(OBJ)/imgui.o $(OBJ)/tinyfiledialogs.o
 OBJS += $(OBJ)/imgui_impl_opengl3.o $(OBJ)/imgui_impl_glfw.o
 OBJS += $(OBJ)/imgui_draw.o $(OBJ)/imgui_tables.o $(OBJ)/imgui_widgets.o
 
 ifeq ($(OS),Windows_NT)
+	_ := $(shell cmd /c genRes.bat)
 	LFLAGS += -lopengl32 -lgdi32 -lcomdlg32 -lole32 -lshell32
-	OBJS += glfw3_mt.lib
-	BIN = csprite.exe
+	OBJS += glfw3_mt.lib windows.o
+	BIN := csprite.exe
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		LFLAGS += -lglfw -lm -ldl
-		BIN = csprite
+		BIN := csprite
 	endif
 endif
 
