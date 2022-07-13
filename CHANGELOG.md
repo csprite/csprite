@@ -5,6 +5,11 @@ When The Project Starts To Become Stable, The project will use [Semantic Version
 
 ## [Unreleased](https://github.com/pegvin/CSprite/releases/tag/continuous)
 
+- July 13, 2022
+	- Re-Format The Code
+		- Define Include Directories
+		- Remove The Absolute Path in Include Headers
+
 - May 29, 2022
 	- Add Window Icon & Executable Icon (For Windows)
 		- Add 32 & 48 Resolution Icons
