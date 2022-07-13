@@ -19,6 +19,10 @@ Makefile linguist-vendored=true
 *.lib   binary
 *.o     binary
 
-# Executables
+# Binaries, Object Files & Executables
 *.out   binary
 *.exe   binary
+*.otf   binary
+*.ttf   binary
+*.png   binary
+*.ico   binary

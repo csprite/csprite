@@ -1,9 +1,13 @@
 CXX := clang++
+CXXSTD := c++17
 CC := clang
-STD := c++17
-LFLAGS := -I. -std=${STD} -Wall
-CFLAGS := -Wall
+CSTD := c99
+LFLAGS := -Wall
 DEFINATIONS :=# Possible Values = -DSHOW_FRAME_TIME -DSHOW_HISTORY_LOGS -DENABLE_WIN_ICON
+
+CXXFLAGS := -std=${CXXSTD} # C++ Compiler Flags
+CFLAGS := -std=${CSTD} # C Compiler Flags
+CCFLAGS := -Wall -I. -Iinclude/ -Ilib/ # C & C++ Compiler Flags
 
 #IMGUI v1.87
 
@@ -33,10 +37,10 @@ else
 	endif
 endif
 
-all: CFLAGS += -g -O0 -DIS_DEBUG
+all: CCFLAGS += -g -O0 -DIS_DEBUG
 all: $(BIN)
 
-release: CFLAGS += -Os
+release: CCFLAGS += -Os
 release: DEFINATIONS += -DENABLE_WIN_ICON
 release: $(BIN)
 
@@ -50,20 +54,20 @@ $(BIN): $(OBJS)
 
 # For Compiling src/*.cpp
 $(OBJ)/%.o: $(SRC)/%.cpp
-	$(CXX) $(CFLAGS) $(DEFINATIONS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CCFLAGS) $(DEFINATIONS) -c $< -o $@
 
 # For Compiling lib/imgui/*.cpp
 $(OBJ)/%.o: $(LIB)/imgui/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
 
 # For Compiling lib/*.cpp
 $(OBJ)/%.o: $(LIB)/%.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
 
 # For Compiling lib/*.c
 $(OBJ)/%.o: $(LIB)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) -c $< -o $@
 
 # For Compiling src/*.c
 $(OBJ)/%.o: $(SRC)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CCFLAGS) -c $< -o $@

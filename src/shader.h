@@ -1,9 +1,10 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "../include/glad/glad.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "glad/glad.h"
 
 // Read files into buffer
 int read_file_into_buffer(char **buffer, const char *path) {

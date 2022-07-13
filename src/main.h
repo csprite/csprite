@@ -1,8 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "../include/GLFW/glfw3.h"
 #include <string>
+#include "GLFW/glfw3.h"
 
 enum export_format_e { PNG, JPG };
 
