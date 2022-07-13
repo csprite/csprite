@@ -7,7 +7,7 @@
 #include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "./stb/stb_image.h"
+#include "stb/stb_image.h"
 
 void help(void) {
 	fprintf(stderr, "Usage: image2inl <input_file> <symbolname> <output_file>\n");
