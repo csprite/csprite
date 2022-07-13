@@ -2,10 +2,10 @@
 #define SAVE_H
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../lib/stb/stb_image_write.h"
+#include "stb/stb_image_write.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../lib/stb/stb_image.h"
+#include "stb/stb_image.h"
 
 // Declaration here, implementation in main.cpp
 void ResetHistory();
