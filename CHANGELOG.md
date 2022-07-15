@@ -1,16 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-When The Project Starts To Become Stable, The project will use [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The project follows [Semantic Versioning v2.0.0](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/pegvin/CSprite/releases/tag/continuous)
-
-- July 13, 2022
+- **[v1.0.0](https://github.com/pegvin/CSprite/releases/tag/v1.0.0)**
 	- Re-Format The Code
 		- Define Include Directories
 		- Remove The Absolute Path in Include Headers
 
-- May 29, 2022
 	- Add Window Icon & Executable Icon (For Windows)
 		- Add 32 & 48 Resolution Icons
 		- Convert PNG Icons To Header Files 16, 32 & 48
@@ -18,9 +15,10 @@ When The Project Starts To Become Stable, The project will use [Semantic Version
 		- Add Executable Version & Icon RC For Windows
 		- Add Batch Script For Converting RC To Object File
 
-- May 26, 2022
 	- Add Stripping Step in Workflow To Remove Debug Information
 	- Create My Own "Original" Icon
+
+## Unreleased
 
 - May 25, 2022
 	- Rename Function Names To Pascal Case
