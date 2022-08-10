@@ -1,11 +1,20 @@
+name: Stable Release Action
+on: 
+  workflow_dispatch:
+    inputs:
+      is_prerelease:
+        description: "is this release a pre-release?"
+        required: false
+        default: false
+        type: boolean 
 
-name: Continous Release Action
-on:
-  push:
-    branches: [ master ]
+      version: 
+        type: string
+        required: true
+        description: 'Version number without "v" Eg: 0.12.2'
 
 jobs:
-  Build-For-Linux:
+  linux-x86_64:
     runs-on: ubuntu-latest
     steps:
     - name: Check out
@@ -20,17 +29,17 @@ jobs:
     - name: Build CSprite
       run: make release -j4
 
-    - name: Strip Debug Info
-      run: strip ./csprite
+    - name: Strip & Rename
+      run: strip ./csprite && mv ./csprite ./csprite.elf
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
         name: linux_binary
-        path: csprite
+        path: csprite.elf
         if-no-files-found: error
 
-  Build-For-Windows:
+  windows-x86_64:
     runs-on: windows-2019
     steps:
     - name: Check out
@@ -47,7 +56,7 @@ jobs:
         if-no-files-found: error
 
   Create-Release:
-    needs: [Build-For-Linux, Build-For-Windows]
+    needs: [linux-x86_64, windows-x86_64]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -70,9 +79,9 @@ jobs:
       uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "continuous"
-        prerelease: true
-        title: "CSprite Continuous Release"
+        automatic_release_tag: "v${{github.event.inputs.version}}"
+        prerelease: ${{github.event.inputs.is_prerelease}}
+        title: "csprite v${{github.event.inputs.version}}"
         files: |
-          csprite
+          csprite.elf
           csprite.exe
