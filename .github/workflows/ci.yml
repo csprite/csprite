@@ -1,0 +1,46 @@
+name: Continous Build Action
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  linux-x86_64:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Install GLFW3 And Git
+      run: |
+        sudo apt-get install libglfw3
+        sudo apt-get install libglfw3-dev
+        sudo apt-get install git
+
+    - name: Build CSprite
+      run: make release -j4
+
+    - name: Strip Debug Info
+      run: strip ./csprite
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux_binary
+        path: csprite
+        if-no-files-found: error
+
+  windows-x86_64:
+    runs-on: windows-2019
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Build CSprite
+      run: make release -j4
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: win_binary
+        path: csprite.exe
+        if-no-files-found: error
