@@ -36,7 +36,6 @@ void SaveImageFromCanvas(std::string filepath);
 int Undo();
 int Redo();
 void SaveState();
-int FreeHistory();
-void ResetHistory();
+void FreeHistory();
 
 #endif // end MAIN_H
