@@ -103,11 +103,18 @@ double MousePosLast[2];
 double MousePosRelative[2];
 double MousePosRelativeLast[2];
 
-#define HISTORY_SIZE 30
-unsigned char *History[HISTORY_SIZE];
-int HistoryIndex = 0;
 bool DidUndo = false;
 bool IsDirty = false;
+
+struct cvstate {
+	unsigned char* pixelData;
+	cvstate* next; // Canvas State Before This Node
+	cvstate* prev; // Canvas State After This Node
+};
+
+typedef struct cvstate cvstate_t; // Canvas State Type
+
+cvstate_t* CurrentState = NULL;
 
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
@@ -461,7 +468,7 @@ int main(int argc, char **argv) {
 					}
 
 					ZoomNLevelViewport();
-					ResetHistory();
+					FreeHistory();
 					CanvasFreeze = 0;
 					ShowNewCanvasWindow = 0;
 				}
@@ -601,7 +608,6 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 					IsDirty = false;
 				}
 				SaveState();
-				HistoryIndex--;
 			}
 		}
 	}
@@ -966,104 +972,95 @@ void SaveImageFromCanvas(std::string filepath) {
 	ShouldSave = 0;
 }
 
-void ResetHistory() {
-	FreeHistory();
-	HistoryIndex = 0;
-}
-
 /*
 	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
 	Removes The Elements in a range from "History" if "IsDirty" is true
 */
 void SaveState() {
-	if (IsDirty == true) {
-		int max = -1;
-		for (int i = 0; i < HISTORY_SIZE; i++) {
-			if (History[i] == NULL) {
-				max = i;
-				break;
+	if (IsDirty == true && CurrentState != NULL) {
+		cvstate_t* tmp;
+		cvstate_t* head = CurrentState->next; // we start freeing from the next node of current node
+
+		while (head != NULL) {
+			tmp = head;
+			head = head->next;
+			if (tmp->pixelData != NULL) {
+				free(tmp->pixelData);
 			}
+			free(tmp);
 		}
-		max = max == -1 ? HISTORY_SIZE - 1 : max;
-#ifdef SHOW_HISTORY_LOGS
-		printf("Clearing History from %d to %d\n", HistoryIndex, max);
-#endif
-		for (int i = HistoryIndex; i < max; i++) {
-			free(History[i]);
-			History[i] = NULL;
-		}
-		clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
-	}
-#ifdef SHOW_HISTORY_LOGS
-	printf("Pushing To Undo Stack @ Index: %d\n", HistoryIndex);
-#endif
-
-	if (History[HistoryIndex] == NULL) {
-		History[HistoryIndex] = (unsigned char *)malloc(CANVAS_SIZE_B);
 	}
 
-	memset(History[HistoryIndex], 0, CANVAS_SIZE_B);
-	memcpy(History[HistoryIndex], CanvasData, CANVAS_SIZE_B);
-	HistoryIndex++;
+	cvstate_t* NewState = (cvstate_t*) malloc(sizeof(cvstate_t));
+	NewState->pixelData = (unsigned char*) malloc(CANVAS_SIZE_B);
+
+	if (CurrentState == NULL) {
+		CurrentState = NewState;
+		CurrentState->prev = NULL;
+		CurrentState->next = NULL;
+	} else {
+		NewState->prev = CurrentState;
+		NewState->next = NULL;
+		CurrentState->next = NewState;
+		CurrentState = NewState;
+	}
+
+	memset(CurrentState->pixelData, 0, CANVAS_SIZE_B);
+	memcpy(CurrentState->pixelData, CanvasData, CANVAS_SIZE_B);
 }
 
 // Undo - Puts The Pixels from "History" at "HistoryIndex"
 int Undo() {
 	DidUndo = true;
-	HistoryIndex--;
-	clampInteger(&HistoryIndex, 0, HISTORY_SIZE - 1);
 
-	if (History[HistoryIndex] == NULL) {
-#ifdef SHOW_HISTORY_LOGS
-		printf("Cannot Undo @ index: %d\n", HistoryIndex);
-#endif
-		return -1;
+	if (CurrentState->prev != NULL) {
+		CurrentState = CurrentState->prev;
+		memcpy(CanvasData, CurrentState->pixelData, CANVAS_SIZE_B);
 	}
-#ifdef SHOW_HISTORY_LOGS
-	printf("Undo @ index: %d\n", HistoryIndex);
-#endif
-	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
 	return 0;
 }
 
 // Redo - Puts The Pixels from "History" at "HistoryIndex"
 int Redo() {
-	HistoryIndex++;
-	int max = -1;
-	for (int i = 0; i < HISTORY_SIZE; i++) {
-		if (History[i] == NULL) {
-			max = i - 1;
-			break;
-		}
+	if (CurrentState->next != NULL) {
+		CurrentState = CurrentState->next;
+		memcpy(CanvasData, CurrentState->pixelData, CANVAS_SIZE_B);
 	}
-	max = max == -1 ? HISTORY_SIZE - 1 : max;
-	clampInteger(&HistoryIndex, 0, max);
 
-	if (History[HistoryIndex] == NULL) {
-#ifdef SHOW_HISTORY_LOGS
-		printf("Cannot Redo @ index: %d\n", HistoryIndex);
-#endif
-		return -1;
-	}
-#ifdef SHOW_HISTORY_LOGS
-	printf("Redo @ index: %d\n", HistoryIndex);
-#endif
-	memcpy(CanvasData, History[HistoryIndex], CANVAS_SIZE_B);
 	return 0;
 }
 
-// Frees the memory in "History"
-int FreeHistory() {
-	int flag = 0;
-	for (int i = 0; i < HISTORY_SIZE; i++) {
-		History[i] = (unsigned char *)malloc(CANVAS_SIZE_B);
-		if (History[i] != NULL) {
-			free(History[i]);
-			History[i] = NULL;
-		} else {
-			printf("Unable To De-Allocate Memory for History @ Index %d\n", i);
-			flag = -1;
+/*
+	Function: FreeHistory()
+	Takes The CurrentState Node
+		- Frees All Of The Nodes Before It
+		- Frees All Of The Nodes After It
+*/
+void FreeHistory() {
+	cvstate_t* tmp;
+	cvstate_t* head = CurrentState->prev;
+
+	while (head != NULL) {
+		tmp = head;
+		head = head->prev;
+		if (tmp != NULL && tmp->pixelData != NULL) {
+			free(tmp->pixelData);
+			free(tmp);
 		}
+		tmp = NULL;
 	}
-	return flag;
+
+	head = CurrentState;
+
+	while (head != NULL) {
+		tmp = head;
+		head = head->next;
+		if (tmp != NULL && tmp->pixelData != NULL) {
+			free(tmp->pixelData);
+			free(tmp);
+		}
+		tmp = NULL;
+	}
+
+	CurrentState = NULL;
 }
