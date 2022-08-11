@@ -2,6 +2,7 @@ name: Continous Build Action
 on:
   push:
     branches: [ master ]
+  pull_request:
 
 jobs:
   linux-x86_64:
