@@ -39,7 +39,7 @@ jobs:
         python -m pip install --user scons
 
     - name: Build CSprite
-      run: make release
+      run: scons -j 2 mode=release
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
