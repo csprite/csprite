@@ -1,5 +1,5 @@
-# CSprite
-A Minimalistic Pixel Art Tool For Beginners - Powered By OpenGL & ImGui
+# csprite
+A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
 
 ![image](https://user-images.githubusercontent.com/75035219/170718904-9e3c0b00-4a1c-4d48-8876-5dd43d5f4d7b.png)
 
@@ -26,10 +26,10 @@ A Minimalistic Pixel Art Tool For Beginners - Powered By OpenGL & ImGui
 ---
 
 ### Installation
-1. [Download Pre-Built Binaries](https://github.com/pegvin/CSprite/releases)
-2. [Building From Source](https://github.com/pegvin/CSprite/wiki/Building-From-Source)
+1. [Download Pre-Built Binaries](https://github.com/pegvin/csprite/releases)
+2. [Building From Source](https://github.com/pegvin/csprite/wiki/Building-From-Source)
 
-### How To Use CSprite
+### How To Use csprite
 Using CSprite isn't rocket science and infact you can learn how to use it in 5 minutes, [Read More...](https://github.com/pegvin/CSprite/wiki)
 
 ### Controls
