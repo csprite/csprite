@@ -128,15 +128,15 @@ jobs:
     - name: Clean previous binaries
       run: rm -f csprite csprite.exe
 
-      uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v2
       with:
         name: linux_binary
 
-      uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v2
       with:
         name: win_binary
 
-      uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v2
       with:
         name: osx_binary
 
