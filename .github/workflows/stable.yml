@@ -20,39 +20,102 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Install GLFW3 And Git
+    - name: Install GLFW3, Git & Scons
       run: |
-        sudo apt-get install libglfw3
-        sudo apt-get install libglfw3-dev
-        sudo apt-get install git
+        sudo apt-get install libglfw3 libglfw3-dev git scons
 
-    - name: Build CSprite
-      run: make release -j4
+    - name: Build
+      run: make release
 
-    - name: Strip & Rename
-      run: strip ./csprite && mv ./csprite ./csprite.elf
+    - name: Strip Debug Info
+      run: strip ./csprite
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
         name: linux_binary
-        path: csprite.elf
+        path: csprite
         if-no-files-found: error
 
   windows-x86_64:
-    runs-on: windows-2019
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
-    - name: Check out
-      uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
-    - name: Build CSprite
-      run: make release -j4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw scons make git
+
+      - name: Build
+        run: |
+          CC=clang make release
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: win_binary
+          path: csprite.exe
+          if-no-files-found: error
+
+  osx_x86_64:
+    runs-on: macos-11
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Install scons, dylibbundler & glfw3
+      run: brew install scons dylibbundler glfw
+
+    - name: Build
+      run: make release
+
+    - name: Generate .icns
+      run: |
+        mkdir csprite.iconset
+        sips -z 16 16     assets/icon-512.png --out csprite.iconset/icon_16x16.png
+        sips -z 32 32     assets/icon-512.png --out csprite.iconset/icon_16x16@2x.png
+        sips -z 32 32     assets/icon-512.png --out csprite.iconset/icon_32x32.png
+        sips -z 64 64     assets/icon-512.png --out csprite.iconset/icon_32x32@2x.png
+        sips -z 128 128   assets/icon-512.png --out csprite.iconset/icon_128x128.png
+        sips -z 256 256   assets/icon-512.png --out csprite.iconset/icon_128x128@2x.png
+        sips -z 256 256   assets/icon-512.png --out csprite.iconset/icon_256x256.png
+        sips -z 512 512   assets/icon-512.png --out csprite.iconset/icon_256x256@2x.png
+        sips -z 512 512   assets/icon-512.png --out csprite.iconset/icon_512x512.png
+        cp assets/icon-512.png csprite.iconset/icon_512x512@2x.png
+        iconutil -c icns -o csprite.icns csprite.iconset
+        rm -R csprite.iconset
+
+    - name: Create Apple Bundle
+      run: |
+        mkdir csprite.app
+        mkdir csprite.app/Contents
+        mkdir csprite.app/Contents/libs
+        mkdir csprite.app/Contents/MacOS
+        mkdir csprite.app/Contents/Resources
+        cp ./csprite ./csprite.app/Contents/MacOS/
+        cp ./csprite.icns ./csprite.app/Contents/Resources/csprite.icns
+        cp ./assets/Info.plist ./csprite.app/Contents/
+
+    - name: Put Dylibs
+      run: |
+        dylibbundler -od -b -ns -x ./csprite.app/Contents/MacOS/csprite -d ./csprite.app/Contents/libs/
+
+    - name: Create Zip
+      run: zip -r csprite-osx.zip ./csprite.app
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: win_binary
-        path: csprite.exe
+        name: osx_binary
+        path: ./csprite-osx.zip
         if-no-files-found: error
 
   Create-Release:
@@ -65,15 +128,17 @@ jobs:
     - name: Clean previous binaries
       run: rm -f csprite csprite.exe
 
-    - name: Download Linux build artifacts
       uses: actions/download-artifact@v2
       with:
         name: linux_binary
 
-    - name: Download Windows build artifacts
       uses: actions/download-artifact@v2
       with:
         name: win_binary
+
+      uses: actions/download-artifact@v2
+      with:
+        name: osx_binary
 
     - name: Update/Create Continous Release
       uses: "marvinpinto/action-automatic-releases@latest"
@@ -85,3 +150,5 @@ jobs:
         files: |
           csprite.elf
           csprite.exe
+          csprite-osx.zip
+
