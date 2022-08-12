@@ -18,14 +18,14 @@ jobs:
     - name: Build
       run: make release
 
-    - name: Strip Debug Info
-      run: strip ./csprite
+    - name: Strip & rename
+      run: strip ./csprite && mv ./csprite csprite.elf
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
         name: linux_binary
-        path: csprite
+        path: csprite.elf
         if-no-files-found: error
 
   windows-x86_64:
