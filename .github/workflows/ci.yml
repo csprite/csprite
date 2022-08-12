@@ -93,7 +93,7 @@ jobs:
         mkdir csprite.app/Contents/Resources
         cp ./csprite ./csprite.app/Contents/MacOS/
         cp ./csprite.icns ./csprite.app/Contents/Resources/csprite.icns
-        cp ./data/Info.plist ./csprite.app/Contents/
+        cp ./assets/Info.plist ./csprite.app/Contents/
 
     - name: Put Dylibs
       run: |
