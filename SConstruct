@@ -77,7 +77,7 @@ env.Append(
 # Windows compilation support.
 if target_os == 'msys':
 	env.Append(
-		LIBS=['opengl32', 'gdi32', 'comdlg32', 'ole32', 'shell32'],
+		LIBS=['glfw3', 'opengl32', 'gdi32', 'comdlg32', 'ole32', 'shell32'],
 		LINKFLAGS="-mwindows" # Fix Console From Popping-Up
 	)
 else:
