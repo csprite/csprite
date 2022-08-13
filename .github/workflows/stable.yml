@@ -23,6 +23,7 @@ jobs:
     - name: Install GLFW3, Git, Scons & Pillow
       run: |
         sudo apt-get install libglfw3 libglfw3-dev git scons
+        python3 -m pip install --upgrade wheel
         python3 -m pip install --upgrade Pillow
         python3 -m pip install --upgrade numpy
 
