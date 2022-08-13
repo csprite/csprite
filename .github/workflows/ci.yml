@@ -15,6 +15,7 @@ jobs:
       run: |
         sudo apt-get install libglfw3 libglfw3-dev git scons
         python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
 
     - name: Generate Assets
       run: |
@@ -48,7 +49,12 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python mingw-w64-x86_64-python-pillow scons make git
+          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python scons make git
+
+      - name: Install Pillow (PIL)
+        run: |
+          python3 -m pip install --upgrade Pillow
+          python3 -m pip install --upgrade numpy
 
       - name: Generate Assets
         run: |
@@ -77,6 +83,7 @@ jobs:
       run: |
         brew install scons dylibbundler glfw
         python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
 
     - name: Generate Assets
       run: |
