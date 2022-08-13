@@ -30,10 +30,10 @@ typedef unsigned int stb_uint;
 typedef unsigned char stb_uchar;
 stb_uint stb_compress(stb_uchar* out, stb_uchar* in, stb_uint len);
 
-static bool binary_to_compressed_c(const char* filename, const char* outputFile, const char* symbol, bool use_compression, bool use_static);
+static bool binary_to_compressed_c(const char* filename, bool use_compression, bool use_static);
 
 int main(int argc, char** argv) {
-	if (argc < 4) {
+	if (argc < 2) {
 		printf("Syntax: %s <inputfile> <symbolname> <outputfile>\n", argv[0]);
 		return 0;
 	}
@@ -42,13 +42,13 @@ int main(int argc, char** argv) {
 	bool use_compression = true;
 	bool use_static = true;
 
-	bool ret = binary_to_compressed_c(argv[argn], argv[argn + 2], argv[argn + 1], use_compression, use_static);
+	bool ret = binary_to_compressed_c(argv[argn], use_compression, use_static);
 	if (!ret)
 		fprintf(stderr, "Error opening or reading file: '%s'\n", argv[argn]);
 	return ret ? 0 : 1;
 }
 
-bool binary_to_compressed_c(const char* filename, const char* outputFile, const char* symbol, bool use_compression, bool use_static) {
+bool binary_to_compressed_c(const char* filename, bool use_compression, bool use_static) {
 	// Read file
 	FILE* f = fopen(filename, "rb");
 	if (!f) return false;
@@ -66,25 +66,15 @@ bool binary_to_compressed_c(const char* filename, const char* outputFile, const 
 	if (use_compression)
 		memset(compressed + compressed_sz, 0, maxlen - compressed_sz);
 
-	FILE* out = fopen(outputFile, "w");
-	fprintf(out, "// File: '%s' (%d bytes)\n", filename, (int)data_sz);
-	fprintf(out, "// Exported using binary_to_compressed_c.cpp\n");
-	const char* static_str = use_static ? "static " : "";
-	const char* compressed_str = use_compression ? "compressed_" : "";
-
-	fprintf(out, "%sconst unsigned int %s_%ssize = %d;\n", static_str, symbol, compressed_str, (int)compressed_sz);
-	fprintf(out, "%sconst unsigned int %s_%sdata[%d/4] =\n{", static_str, symbol, compressed_str, (int)((compressed_sz + 3) / 4)*4);
-	int column = 0;
+	printf("%d\n", (int)compressed_sz);
+	printf("%d/4\n", (int)((compressed_sz + 3) / 4)*4);
 	for (int i = 0; i < compressed_sz; i += 4) {
 		unsigned int d = *(unsigned int*)(compressed + i);
-		if ((column++ % 12) == 0)
-				fprintf(out, "\n0x%08x, ", d);
-		else
-			fprintf(out, "0x%08x, ", d);
+		printf("0x%08x,", d);
 	}
-	fprintf(out, "\n};\n\n");
 
-	fclose(out);
+	printf("\n");
+
 	// Cleanup
 	delete[] data;
 	if (use_compression)
