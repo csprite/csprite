@@ -228,19 +228,21 @@ int main(int argc, char **argv) {
 	}
 
 	GLFWwindow *window;
-	GLFWcursor *cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+	GLFWcursor *cursor;
 
 	SelectedColor = ColorPalette[PaletteIndex];
 
 	glfwInit();
 	glfwSetErrorCallback(logGLFWErrors);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE); // We're Using OpenGL 3.0 and that's why don't requrest for any profile
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
 
 	window = glfwCreateWindow(WindowDims[0], WindowDims[1], "csprite", NULL, NULL);
+	cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+	glfwSetCursor(window, cursor);
 
 	if (!window) {
 		printf("Failed to create GLFW window\n");
@@ -275,10 +277,6 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	glfwSetCursor(window, cursor);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	// Initial Canvas Position
 	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2; // X Position
 	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2; // Y Position
@@ -298,6 +296,9 @@ int main(int argc, char **argv) {
 		"data/shaders/vertex.glsl",
 		"data/shaders/fragment.glsl", NULL
 	);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	unsigned int vertexBuffObj, vertexArrObj, ebo;
 	glGenVertexArrays(1, &vertexArrObj);
