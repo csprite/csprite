@@ -24,6 +24,11 @@ jobs:
       run: |
         sudo apt-get install libglfw3 libglfw3-dev git scons
 
+    - name: Generate Assets
+      run: |
+        python3 tools/create_icons.py
+        python3 tools/create_assets.py
+
     - name: Build
       run: make release
 
@@ -51,7 +56,12 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw scons make git
+          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python scons make git
+
+      - name: Generate Assets
+        run: |
+          python3 tools/create_icons.py
+          python3 tools/create_assets.py
 
       - name: Build
         run: |
@@ -73,6 +83,11 @@ jobs:
 
     - name: Install scons, dylibbundler & glfw3
       run: brew install scons dylibbundler glfw
+
+    - name: Generate Assets
+      run: |
+        python3 tools/create_icons.py
+        python3 tools/create_assets.py
 
     - name: Build
       run: make release
