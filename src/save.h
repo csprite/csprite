@@ -23,13 +23,13 @@ void LoadImageToCanvas(const char *filepath, int *canvas_dims, unsigned char **c
 
 	*canvas_data = (unsigned char *)malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
 	memset(*canvas_data, 0, canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
-	int j, k;
+	int y, x;
 	unsigned char *ptr;
 	unsigned char *iptr;
-	for (j = 0; j < imgHeight; j++) {
-		for (k = 0; k < imgWidth; k++) {
-			ptr = GetPixel(k, j);
-			iptr = GetCharData(image_data, k, j);
+	for (y = 0; y < imgHeight; y++) {
+		for (x = 0; x < imgWidth; x++) {
+			ptr = GetPixel(x, y);
+			iptr = image_data + ((y * canvas_dims[0] + x) * 4); // Gets Pixel At x, y in image_data
 			*(ptr+0) = *(iptr+0);
 			*(ptr+1) = *(iptr+1);
 			*(ptr+2) = *(iptr+2);
