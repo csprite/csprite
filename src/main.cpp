@@ -20,13 +20,12 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "tinyfiledialogs.h"
 
-#include "assets.h"
-#include "shader.h"
-#include "math_linear.h"
 #include "main.h"
 #include "save.h"
-#include "helpers.h"
 #include "macros.h"
+#include "assets.h"
+#include "shader.h"
+#include "helpers.h"
 
 #ifndef CS_VERSION_MAJOR
 	#define CS_VERSION_MAJOR 0
