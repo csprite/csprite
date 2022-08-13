@@ -60,10 +60,6 @@ jobs:
           update: false
           install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-pillow scons make git
 
-      - name: Install Pillow (PIL)
-        run: |
-          python3 -m pip install --upgrade numpy
-
       - name: Generate Assets
         run: |
           python3 tools/create_icons.py
