@@ -29,7 +29,7 @@
 		system((std::string("open \"") + URL + "\"").c_str())
 #elif defined(_WIN32)
 	#define OpenURL(URL) \
-		ShellExecute(0, 0, URL.c_str(), 0, 0, SW_SHOW)
+		ShellExecute(0, 0, std::string(URL).c_str(), 0, 0, SW_SHOWNORMAL)
 #else
 	#define OpenURL(URL) \
 		printf("cannot open url: %s, because no function implementation found!", URL.c_str())
