@@ -6,7 +6,7 @@ release:
 
 clean:
 	scons -c
-	$(RM) -r data/icon.ico data/icons src/assets/*.inl tools/font2inl.out
+	$(RM) -r data/icon.ico data/icons src/assets/*.inl tools/font2inl.out windows.o
 
 generate:
 	tools/create_icons.py
