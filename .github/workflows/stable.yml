@@ -20,9 +20,11 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Install GLFW3, Git & Scons
+    - name: Install GLFW3, Git, Scons & Pillow
       run: |
         sudo apt-get install libglfw3 libglfw3-dev git scons
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
 
     - name: Generate Assets
       run: |
@@ -56,7 +58,12 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python mingw-w64-x86_64-python-pillow scons make git
+          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python scons make git
+
+      - name: Install Pillow (PIL)
+        run: |
+          python3 -m pip install --upgrade Pillow
+          python3 -m pip install --upgrade numpy
 
       - name: Generate Assets
         run: |
@@ -81,8 +88,11 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install scons, dylibbundler & glfw3
-      run: brew install scons dylibbundler glfw
+    - name: Install scons, dylibbundler, glfw3 & Pillow
+      run: |
+        brew install scons dylibbundler glfw
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
 
     - name: Generate Assets
       run: |
