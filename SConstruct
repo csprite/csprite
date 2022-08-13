@@ -5,14 +5,50 @@ import sys
 vars = Variables('settings.py')
 vars.AddVariables(
 	EnumVariable('mode', 'Build mode', 'debug', allowed_values=('debug', 'release')),
-	BoolVariable('werror', 'Warnings as error', True),
-	BoolVariable('yocto', 'Enable yocto renderer', True),
+	BoolVariable('werror', 'Warnings as error', True)
 )
 
 target_os = str(Platform())
 
 env = Environment(variables = vars, ENV = os.environ)
 conf = env.Configure()
+
+MajVer = 0
+MinVer = 0
+PatVer = 0
+Stable = False
+
+if not env.GetOption('clean'):
+	if "MajVer" not in os.environ:
+		print("Major Version Not Specified!")
+		sys.exit(-1)
+	elif "MinVer" not in os.environ:
+		print("Minor Version Not Specified!")
+		sys.exit(-1)
+	elif "PatVer" not in os.environ:
+		print("Patch Version Not Specified!")
+		sys.exit(-1)
+	else:
+		MajVer = int(os.environ['MajVer'])
+		MinVer = int(os.environ['MinVer'])
+		PatVer = int(os.environ['PatVer'])
+		Stable = env['mode'] != "debug"
+
+	env.Append(
+		CDEFINES=[
+			f"CS_VERSION_MAJOR={MajVer}",
+			f"CS_VERSION_MINOR={MinVer}",
+			f"CS_VERSION_PATCH={PatVer}",
+			f"CS_BUILD_STABLE={int(Stable)}"
+		],
+		CPPDEFINES=[
+			"ENABLE_WIN_ICON",
+			f"CS_VERSION_MAJOR={MajVer}",
+			f"CS_VERSION_MINOR={MinVer}",
+			f"CS_VERSION_PATCH={PatVer}",
+			f"CS_BUILD_STABLE={int(Stable)}"
+		],
+	)
 
 if os.environ.get('CC') == 'clang' or target_os == 'darwin':
 	env.Replace(CC='clang', CXX='clang++')
