@@ -12,13 +12,13 @@
 #include <chrono>
 #include <thread>
 
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "tinyfiledialogs.h"
-
-#include "glad/glad.h"
-#include "GLFW/glfw3.h"
 
 #include "assets.h"
 #include "shader.h"
@@ -26,6 +26,39 @@
 #include "main.h"
 #include "save.h"
 #include "helpers.h"
+#include "macros.h"
+
+#ifndef CS_VERSION_MAJOR
+	#define CS_VERSION_MAJOR 0
+#endif
+
+#ifndef CS_VERSION_MAJOR
+	#define CS_VERSION_MINOR 0
+#endif
+
+#ifndef CS_VERSION_MAJOR
+	#define CS_VERSION_PATCH 0
+#endif
+
+#ifndef CS_BUILD_STABLE
+	#define CS_BUILD_STABLE 0
+#endif
+
+#if CS_BUILD_STABLE == 0
+	#define CS_BUILD_TYPE "dev"
+#else
+	#define CS_BUILD_TYPE "stable"
+#endif
+
+#define VERSION_STR "v" + std::to_string(CS_VERSION_MAJOR) + \
+						"." + std::to_string(CS_VERSION_MINOR) + \
+						"." + std::to_string(CS_VERSION_PATCH) + \
+						"-" + CS_BUILD_TYPE
+
+#define WINDOW_TITLE_CSTR (\
+		FilePath.substr(FilePath.find_last_of("/\\") + 1)\
+		+ " - csprite " + VERSION_STR\
+	).c_str()
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
@@ -207,7 +240,7 @@ int main(int argc, char **argv) {
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
 
-	window = glfwCreateWindow(WindowDims[0], WindowDims[1], "CSprite", NULL, NULL);
+	window = glfwCreateWindow(WindowDims[0], WindowDims[1], "csprite", NULL, NULL);
 
 	if (!window) {
 		printf("Failed to create GLFW window\n");
@@ -216,7 +249,7 @@ int main(int argc, char **argv) {
 	}
 
 	glfwMakeContextCurrent(window);
-	glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
+	glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
 	glfwSwapInterval(0);
 
 	// Conditionally Enable/Disable Window icon to reduce compile time in debug mode.
@@ -406,7 +439,7 @@ int main(int argc, char **argv) {
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
 						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
 						ZoomNLevelViewport();
 					}
 				}
@@ -414,14 +447,14 @@ int main(int argc, char **argv) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
 						FilePath = FixFileExtension(FilePath);
 						SaveImageFromCanvas(FilePath);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
 					}
 					if (ImGui::MenuItem("Save As", "Alt+S")) {
 						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
 						if (filePath != NULL) {
 							FilePath = FixFileExtension(std::string(filePath));
 							SaveImageFromCanvas(FilePath);
-							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+							glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
 						}
 					}
 					ImGui::EndMenu();
@@ -440,10 +473,10 @@ int main(int argc, char **argv) {
 
 			if (ImGui::BeginMenu("Help")) {
 				if (ImGui::MenuItem("About")) {
-					openUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
+					OpenURL("https://github.com/pegvin/CSprite/wiki/About-CSprite");
 				}
 				if (ImGui::MenuItem("GitHub")) {
-					openUrl("https://github.com/pegvin/CSprite");
+					OpenURL("https://github.com/pegvin/CSprite");
 				}
 				ImGui::EndMenu();
 			}
@@ -550,10 +583,6 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-unsigned char * GetCharData(unsigned char *data, int x, int y) {
-	return data + ((y * CanvasDims[0] + x) * 4);
-}
-
 void FrameBufferSizeCallback(GLFWwindow *window, int w, int h) {
 	glViewport(0, 0, w, h);
 }
@@ -654,7 +683,7 @@ void ProcessInput(GLFWwindow *window) {
 
 					// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
 					for (int i = 1; i < PaletteCount; i++) {
-						if (color_equal(ColorPalette[i], color) == 1) {
+						if (COLOR_EQUAL(ColorPalette[i], color) == 1) {
 							LastPaletteIndex = PaletteIndex;
 							PaletteIndex = i;
 							break;
@@ -806,7 +835,7 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 					if (filePath != NULL) {
 						FilePath = FixFileExtension(std::string(filePath));
 						SaveImageFromCanvas(FilePath);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						glfwSetWindowTitle(window, WINDOW_TITLE_CSTR); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
 				} else if (IsCtrlDown == 1) { // Directly Save Don't Prompt
 					FilePath = FixFileExtension(FilePath);
@@ -819,7 +848,7 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
 						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						glfwSetWindowTitle(window, WINDOW_TITLE_CSTR); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
 				}
 			}
@@ -857,7 +886,7 @@ void AdjustZoom(bool increase) {
 	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 }
 
-unsigned char * GetPixel(int x, int y) {
+unsigned char* GetPixel(int x, int y) {
 	return CanvasData + ((y * CanvasDims[0] + x) * 4);
 }
 
@@ -906,6 +935,7 @@ void draw(int st_x, int st_y) {
 	// dirY = direction Y
 	// dirX = direction X
 
+	// Loops From -BrushSize/2 To BrushSize/2, ex: -6/2 to 6/2 -> -3 to 3
 	for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
 		for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
 			if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
@@ -928,19 +958,19 @@ void draw(int st_x, int st_y) {
 // Fill Tool, Fills The Whole Canvas Using Recursion
 void fill(int x, int y, unsigned char *old_color) {
 	unsigned char *ptr = GetPixel(x, y);
-	if (color_equal(ptr, old_color)) {
+	if (COLOR_EQUAL(ptr, old_color)) {
 		*ptr = SelectedColor[0];
 		*(ptr + 1) = SelectedColor[1];
 		*(ptr + 2) = SelectedColor[2];
 		*(ptr + 3) = SelectedColor[3];
 
-		if (x != 0 && !color_equal(GetPixel(x - 1, y), SelectedColor))
+		if (x != 0 && !COLOR_EQUAL(GetPixel(x - 1, y), SelectedColor))
 			fill(x - 1, y, old_color);
-		if (x != CanvasDims[0] - 1 && !color_equal(GetPixel(x + 1, y), SelectedColor))
+		if (x != CanvasDims[0] - 1 && !COLOR_EQUAL(GetPixel(x + 1, y), SelectedColor))
 			fill(x + 1, y, old_color);
-		if (y != CanvasDims[1] - 1 && !color_equal(GetPixel(x, y + 1), SelectedColor))
+		if (y != CanvasDims[1] - 1 && !COLOR_EQUAL(GetPixel(x, y + 1), SelectedColor))
 			fill(x, y + 1, old_color);
-		if (y != 0 && !color_equal(GetPixel(x, y - 1), SelectedColor))
+		if (y != 0 && !COLOR_EQUAL(GetPixel(x, y - 1), SelectedColor))
 			fill(x, y - 1, old_color);
 	}
 }

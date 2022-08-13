@@ -20,7 +20,6 @@ void ZoomNLevelViewport(); // Zooms And Levels The Canvas.
 void AdjustZoom(bool increase);
 
 // Little Helpers
-unsigned char * GetCharData(unsigned char *data, int x, int y);
 unsigned char * GetPixel(int x, int y);
 
 // Canvas Operations
