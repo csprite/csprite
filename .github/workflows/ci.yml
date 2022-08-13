@@ -49,7 +49,7 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python scons make git
+          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python mingw-w64-x86_64-python-pip scons make git
 
       - name: Install Pillow (PIL)
         run: |
