@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=CSprite
+Comment=A tiny pixel art editor
+GenericName=pixel editor
+TryExec=csprite
+Exec=csprite
+Icon=csprite
+Type=Application
+Categories=Graphics;2DGraphics;
