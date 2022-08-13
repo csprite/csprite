@@ -20,6 +20,7 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
+#include "assets.h"
 #include "shader.h"
 #include "math_linear.h"
 #include "main.h"
@@ -220,22 +221,18 @@ int main(int argc, char **argv) {
 
 	// Conditionally Enable/Disable Window icon to reduce compile time in debug mode.
 #ifdef ENABLE_WIN_ICON
-	#include "../include/ProgramIcon16.inl"
-	#include "../include/ProgramIcon32.inl"
-	#include "../include/ProgramIcon48.inl"
-
 	GLFWimage iconArr[3];
 	iconArr[0].width = 16;
 	iconArr[0].height = 16;
-	iconArr[0].pixels = ProgramIcon16;
+	iconArr[0].pixels = (unsigned char*)assets_get("data/icons/icon-16.png", NULL);
 
 	iconArr[1].width = 32;
 	iconArr[1].height = 32;
-	iconArr[1].pixels = ProgramIcon32;
+	iconArr[1].pixels = (unsigned char*)assets_get("data/icons/icon-32.png", NULL);
 
 	iconArr[2].width = 48;
 	iconArr[2].height = 48;
-	iconArr[2].pixels = ProgramIcon48;
+	iconArr[2].pixels = (unsigned char*)assets_get("data/icons/icon-48.png", NULL);
 	glfwSetWindowIcon(window, 3, iconArr);
 #endif
 
@@ -264,12 +261,10 @@ int main(int argc, char **argv) {
 	glfwSetKeyCallback(window, KeyCallback);
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
-	// If not a release build use the local shader files to edit shaders without problem
-#ifdef IS_DEBUG
-	unsigned int shader_program = create_shader_program("shader.vs", "shader.fs", NULL);
-#else
-	unsigned int shader_program = create_shader_program(NULL, NULL, NULL);
-#endif
+	unsigned int shader_program = CreateShaderProgram(
+		"data/shaders/vertex.glsl",
+		"data/shaders/fragment.glsl", NULL
+	);
 
 	unsigned int vertexBuffObj, vertexArrObj, ebo;
 	glGenVertexArrays(1, &vertexArrObj);
@@ -312,9 +307,12 @@ int main(int argc, char **argv) {
 	io.IniFilename = NULL; // Disable Generation of .ini file
 
 
-	// Use Font From The "FontMontserrat_Bold.inl"
-	#include "../include/FontMontserrat_Bold.inl"
-	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold_compressed_data, Montserrat_Bold_compressed_size, 16.0f);
+	const void* Montserrat_Bold = NULL;
+	int Montserrat_Bold_Size = 0;
+
+	Montserrat_Bold = assets_get("data/fonts/Montserrat-Bold.ttf", &Montserrat_Bold_Size);
+
+	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold, Montserrat_Bold_Size, 16.0f);
 
 	ImGui::StyleColorsDark();
 
@@ -1037,6 +1035,8 @@ int Redo() {
 		- Frees All Of The Nodes After It
 */
 void FreeHistory() {
+	if (CurrentState == NULL) return;
+
 	cvstate_t* tmp;
 	cvstate_t* head = CurrentState->prev;
 
