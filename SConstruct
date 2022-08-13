@@ -1,6 +1,7 @@
 import glob
 import os
 import sys
+import subprocess
 
 vars = Variables('settings.py')
 vars.AddVariables(
@@ -104,6 +105,17 @@ sources = GatherFiles(['src', 'lib/imgui'])
 sources += glob.glob('lib/glad.c')
 sources += glob.glob('lib/tinyfiledialogs.c')
 
+# Compile windows.rc & link with it.
+if target_os == 'msys' and not env.GetOption('clean'):
+	print("Compiling windows.rc...")
+	result = subprocess.run(['windres.exe', '-O', 'COFF', '-F', 'pe-x86-64', '-i', './windows.rc', '-o', 'windows.o'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	result = result.stdout.decode('utf-8')
+	if not os.path.isfile("./windows.o"):
+		print(result)
+		print("Cannot Compile windows.rc, icon & other meta-data will not be embedded!")
+	else:
+		sources += glob.glob('windows.o')
+
 # Header Directories.
 env.Append(
 	CPATH=['src/', 'include/', 'lib/'],
@@ -114,7 +126,10 @@ env.Append(
 if target_os == 'msys':
 	env.Append(
 		LIBS=['glfw3', 'opengl32', 'gdi32', 'comdlg32', 'ole32', 'shell32'],
-		LINKFLAGS=["-mwindows", "--static"] # Fix Console From Popping-Up
+		LINKFLAGS=[
+			"-mwindows", # Fix Console From Popping-Up
+			"--static"   # Link GLFW & Stuff Statically
+		]
 	)
 else:
 	env.Append(
