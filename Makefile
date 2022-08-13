@@ -2,7 +2,7 @@ all:
 	scons -j 4
 
 release:
-	scons -j 4 mode=release
+	MajVer=0 MinVer=1 PatVer=0 scons -j 4 mode=release
 
 clean:
 	scons -c
