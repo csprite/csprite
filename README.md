@@ -12,7 +12,7 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 - :moneybag: Free & Open Source
 
 ### Requirements
-- Any PC With a GPU That Supports OpenGL 3.0 Atleast. (Recommended 3.3 or Higher)
+- Any PC With OpenGL 3.0 or higher Support.
 
 ### Todo
 - [x] Undo Redo
