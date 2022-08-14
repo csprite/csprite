@@ -129,12 +129,14 @@ GLfloat CanvasVertices[] = {
 unsigned int Indices[] = {0, 1, 3, 1, 2, 3};
 
 // Mouse Position On Window
-double MousePos[2];
-double MousePosLast[2];
+double MPos[2];
+double MPosLast[2];
+double MPosDownLast[2];
 
 // Mouse Position On Canvas
-double MousePosRelative[2];
-double MousePosRelativeLast[2];
+double MPosRel[2];
+double MPosRelLast[2];
+double MPosRelDownLast[2];
 
 bool ImgDidChange = false;
 
@@ -376,22 +378,22 @@ int main(int argc, char **argv) {
 	while (!glfwWindowShouldClose(window)) {
 		// --------------------------------------------------------------------------------------
 		// Updating Cursor Position Here because function callback was causing performance issues.
-		glfwGetCursorPos(window, &MousePos[0], &MousePos[1]);
+		glfwGetCursorPos(window, &MPos[0], &MPos[1]);
 		/* infitesimally small chance aside from startup */
-		if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
+		if (MPosLast[0] != 0 && MPosLast[1] != 0) {
 			if (Mode == PAN) {
-				ViewPort[0] -= MousePosLast[0] - MousePos[0];
-				ViewPort[1] += MousePosLast[1] - MousePos[1];
+				ViewPort[0] -= MPosLast[0] - MPos[0];
+				ViewPort[1] += MPosLast[1] - MPos[1];
 				ViewportSet();
 			}
 		}
-		MousePosLast[0] = MousePos[0];
-		MousePosLast[1] = MousePos[1];
+		MPosLast[0] = MPos[0];
+		MPosLast[1] = MPos[1];
 
-		MousePosRelativeLast[0] = MousePosRelative[0];
-		MousePosRelativeLast[1] = MousePosRelative[1];
-		MousePosRelative[0] = MousePos[0] - ViewPort[0];
-		MousePosRelative[1] = (MousePos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
+		MPosRelLast[0] = MPosRel[0];
+		MPosRelLast[1] = MPosRel[1];
+		MPosRel[0] = MPos[0] - ViewPort[0];
+		MPosRel[1] = (MPos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
 		// --------------------------------------------------------------------------------------
 
 #ifdef SHOW_FRAME_TIME
@@ -632,8 +634,8 @@ void WindowSizeCallback(GLFWwindow* window, int width, int height) {
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
-		int x = (int)(MousePosRelative[0] / ZoomLevel);
-		int y = (int)(MousePosRelative[1] / ZoomLevel);
+		int x = (int)(MPosRel[0] / ZoomLevel);
+		int y = (int)(MPosRel[1] / ZoomLevel);
 
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
 			if (action == GLFW_RELEASE) {
@@ -651,8 +653,8 @@ void ProcessInput(GLFWwindow *window) {
 
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		x = (int)(MousePosRelative[0] / ZoomLevel);
-		y = (int)(MousePosRelative[1] / ZoomLevel);
+		x = (int)(MPosRel[0] / ZoomLevel);
+		y = (int)(MPosRel[1] / ZoomLevel);
 
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
 			switch (Mode) {
@@ -660,7 +662,7 @@ void ProcessInput(GLFWwindow *window) {
 				case CIRCLE_BRUSH: {
 					ImgDidChange = true;
 					draw(x, y);
-					drawInBetween(x, y, (int)(MousePosRelativeLast[0] / ZoomLevel), (int)(MousePosRelativeLast[1] / ZoomLevel));
+					drawInBetween(x, y, (int)(MPosRelLast[0] / ZoomLevel), (int)(MPosRelLast[1] / ZoomLevel));
 					break;
 				}
 				case FILL: {
