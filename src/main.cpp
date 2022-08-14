@@ -66,7 +66,7 @@ unsigned char NumOfFilterPatterns = 3;
 int WindowDims[2] = {700, 500}; // Default Window Dimensions
 int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
 
-unsigned char *CanvasData; // Canvas Data Containg Pixel Values.
+unsigned char *CanvasData = NULL; // Canvas Data Containg Pixel Values.
 #define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char)
 
 unsigned char LastPaletteIndex = 1;
@@ -101,7 +101,7 @@ unsigned char BrushSize = 5; // Default Brush Size
 unsigned char IsCtrlDown = 0;
 unsigned char IsShiftDown = 0;
 
-enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER };
+enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER, LINE_TOOL };
 unsigned char CanvasFreeze = 0;
 
 // Currently & last selected tool
@@ -129,6 +129,7 @@ GLfloat CanvasVertices[] = {
 unsigned int Indices[] = {0, 1, 3, 1, 2, 3};
 
 bool ImgDidChange = false;
+bool LMB_Pressed = false;
 
 struct cvstate {
 	unsigned char* pixels;
@@ -422,7 +423,7 @@ int main(int argc, char **argv) {
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		unsigned int patternSize_loc = glGetUniformLocation(shader_program, "patternSize");
-		glUniform1f(patternSize_loc, ZoomLevel * 2);
+		glUniform1f(patternSize_loc, ZoomLevel);
 
 		unsigned int alpha_loc = glGetUniformLocation(shader_program, "alpha");
 		glUniform1f(alpha_loc, 0.2f);
@@ -557,6 +558,10 @@ int main(int argc, char **argv) {
 				case PAN:
 					selectedToolText = "Panning";
 					break;
+				case LINE_TOOL:
+					selectedToolText = LastMode == CIRCLE_BRUSH ? "Round Line" : "Square Line";
+					selectedToolText += " - (Size: " + std::to_string(BrushSize) + ")";
+					break;
 			}
 
 			ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
@@ -637,10 +642,20 @@ void WindowSizeCallback(GLFWwindow* window, int width, int height) {
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		LMB_Pressed = action == GLFW_PRESS;
+
 		int x = (int)(MousePosRel.X / ZoomLevel);
 		int y = (int)(MousePosRel.Y / ZoomLevel);
 
-		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL || Mode == LINE_TOOL)) {
+			if (action == GLFW_PRESS) {
+				MousePosRel.DownX = MousePosRel.X;
+				MousePosRel.DownY = MousePosRel.Y;
+				if (Mode == LINE_TOOL) {
+					SaveState();
+				}
+			}
+
 			if (action == GLFW_RELEASE) {
 				if (ImgDidChange == true) {
 					SaveState();
@@ -654,11 +669,21 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 void ProcessInput(GLFWwindow *window) {
 	if (CanvasFreeze == 1) return;
 
-	int x, y;
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		x = (int)(MousePosRel.X / ZoomLevel);
-		y = (int)(MousePosRel.Y / ZoomLevel);
+	int x = (int)(MousePosRel.X / ZoomLevel);
+	int y = (int)(MousePosRel.Y / ZoomLevel);
 
+	if (Mode == LINE_TOOL && LMB_Pressed == true) {
+		Undo();
+		int st_x  = (int)(MousePosRel.DownX / ZoomLevel);
+		int st_y  = (int)(MousePosRel.DownY / ZoomLevel);
+		int end_x = (int)(MousePosRel.X / ZoomLevel);
+		int end_y = (int)(MousePosRel.Y / ZoomLevel);
+		drawLine(st_x, st_y, end_x, end_y);
+		SaveState();
+		return;
+	}
+
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
 			switch (Mode) {
 				case SQUARE_BRUSH:
@@ -753,16 +778,16 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 		}
 
 		switch (key) {
-			case GLFW_KEY_K:
-				if (PaletteIndex > 1) {
-					PaletteIndex--;
-				}
-				break;
-			case GLFW_KEY_L:
-				if (PaletteIndex < PaletteCount-1) {
-					PaletteIndex++;
-				}
-				break;
+			// case GLFW_KEY_K:
+			// 	if (PaletteIndex > 1) {
+			// 		PaletteIndex--;
+			// 	}
+			// 	break;
+			// case GLFW_KEY_L:
+			// 	if (PaletteIndex < PaletteCount-1) {
+			// 		PaletteIndex++;
+			// 	}
+			// 	break;
 			case GLFW_KEY_1:
 				if (PaletteCount >= 1) {
 					PaletteIndex = IsShiftDown ? 9 : 1;
@@ -820,6 +845,10 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 			case GLFW_KEY_I:
 				LastMode = Mode;
 				Mode = INK_DROPPER;
+				break;
+			case GLFW_KEY_L:
+				LastMode = Mode;
+				Mode = LINE_TOOL;
 				break;
 			case GLFW_KEY_SPACE:
 				LastMode = Mode;
@@ -902,7 +931,25 @@ void AdjustZoom(bool increase) {
 }
 
 unsigned char* GetPixel(int x, int y) {
+	if (x < 0 || y < 0 || x > CanvasDims[0] || y > CanvasDims[1]) {
+		return NULL;
+	}
 	return CanvasData + ((y * CanvasDims[0] + x) * 4);
+}
+
+// Bresenham's line algorithm
+void drawLine(int x0, int y0, int x1, int y1) {
+	int dx =  abs (x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = -abs (y1 - y0), sy = y0 < y1 ? 1 : -1; 
+	int err = dx + dy, e2; /* error value e_xy */
+
+	for (;;) {
+		draw(x0, y0);
+		if (x0 == x1 && y0 == y1) break;
+		e2 = 2 * err;
+		if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
+		if (e2 <= dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
+	}
 }
 
 /*
@@ -935,6 +982,8 @@ void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
 					continue;
 
 				unsigned char *ptr = GetPixel(st_x + dirX, st_y + dirY);
+				if (ptr == NULL)
+					continue;
 
 				// Set Pixel Color
 				*ptr = SelectedColor[0]; // Red
@@ -956,10 +1005,13 @@ void draw(int st_x, int st_y) {
 			if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
 				continue;
 
-			if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
+			if (Mode == CIRCLE_BRUSH || (Mode == LINE_TOOL && LastMode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2))
 				continue;
 
-			unsigned char *ptr = GetPixel(st_x + dirX, st_y + dirY);
+			unsigned char* ptr = GetPixel(
+				CLAMP_INT(st_x + dirX, 0, CanvasDims[0] - 1),
+				CLAMP_INT(st_y + dirY, 0, CanvasDims[1] - 1)
+			);
 
 			// Set Pixel Color
 			*ptr = SelectedColor[0]; // Red

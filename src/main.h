@@ -26,6 +26,7 @@ unsigned char * GetPixel(int x, int y);
 void fill(int x, int y, unsigned char *old_colour);
 void draw(int x, int y); // Draws on 1 x, y coordinate
 void drawInBetween(int st_x, int st_y, int end_x, int end_y); // Draws Between The Given 2 x, y coordinates
+void drawLine(int lStartX, int lStartY, int lEndX, int lEndY);
 
 // File IO
 std::string FixFileExtension(std::string filepath);
