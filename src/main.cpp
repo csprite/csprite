@@ -128,16 +128,6 @@ GLfloat CanvasVertices[] = {
 // Index Buffer
 unsigned int Indices[] = {0, 1, 3, 1, 2, 3};
 
-// Mouse Position On Window
-double MPos[2];
-double MPosLast[2];
-double MPosDownLast[2];
-
-// Mouse Position On Canvas
-double MPosRel[2];
-double MPosRelLast[2];
-double MPosRelDownLast[2];
-
 bool ImgDidChange = false;
 
 struct cvstate {
@@ -146,9 +136,22 @@ struct cvstate {
 	cvstate* prev;
 };
 
-typedef struct cvstate cvstate_t; // Canvas State Type
+struct mousepos {
+	double X;
+	double Y;
+	double LastX;
+	double LastY;
+	double DownX;
+	double DownY;
+};
+
+typedef struct cvstate cvstate_t;
+typedef struct mousepos mousepos_t;
 
 cvstate_t* CurrentState = NULL;
+
+mousepos_t MousePos = { 0 };
+mousepos_t MousePosRel = { 0 };
 
 int main(int argc, char **argv) {
 	for (unsigned char i = 1; i < argc; i++) {
@@ -378,22 +381,22 @@ int main(int argc, char **argv) {
 	while (!glfwWindowShouldClose(window)) {
 		// --------------------------------------------------------------------------------------
 		// Updating Cursor Position Here because function callback was causing performance issues.
-		glfwGetCursorPos(window, &MPos[0], &MPos[1]);
+		glfwGetCursorPos(window, &MousePos.X, &MousePos.Y);
 		/* infitesimally small chance aside from startup */
-		if (MPosLast[0] != 0 && MPosLast[1] != 0) {
+		if (MousePos.LastX != 0 && MousePos.LastY != 0) {
 			if (Mode == PAN) {
-				ViewPort[0] -= MPosLast[0] - MPos[0];
-				ViewPort[1] += MPosLast[1] - MPos[1];
+				ViewPort[0] -= MousePos.LastX - MousePos.X;
+				ViewPort[1] += MousePos.LastY - MousePos.Y;
 				ViewportSet();
 			}
 		}
-		MPosLast[0] = MPos[0];
-		MPosLast[1] = MPos[1];
+		MousePos.LastX = MousePos.X;
+		MousePos.LastY = MousePos.Y;
 
-		MPosRelLast[0] = MPosRel[0];
-		MPosRelLast[1] = MPosRel[1];
-		MPosRel[0] = MPos[0] - ViewPort[0];
-		MPosRel[1] = (MPos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
+		MousePosRel.LastX = MousePosRel.X;
+		MousePosRel.LastY = MousePosRel.Y;
+		MousePosRel.X = MousePos.X - ViewPort[0];
+		MousePosRel.Y = (MousePos.Y + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
 		// --------------------------------------------------------------------------------------
 
 #ifdef SHOW_FRAME_TIME
@@ -634,8 +637,8 @@ void WindowSizeCallback(GLFWwindow* window, int width, int height) {
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
-		int x = (int)(MPosRel[0] / ZoomLevel);
-		int y = (int)(MPosRel[1] / ZoomLevel);
+		int x = (int)(MousePosRel.X / ZoomLevel);
+		int y = (int)(MousePosRel.Y / ZoomLevel);
 
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
 			if (action == GLFW_RELEASE) {
@@ -653,8 +656,8 @@ void ProcessInput(GLFWwindow *window) {
 
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		x = (int)(MPosRel[0] / ZoomLevel);
-		y = (int)(MPosRel[1] / ZoomLevel);
+		x = (int)(MousePosRel.X / ZoomLevel);
+		y = (int)(MousePosRel.Y / ZoomLevel);
 
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
 			switch (Mode) {
@@ -662,7 +665,7 @@ void ProcessInput(GLFWwindow *window) {
 				case CIRCLE_BRUSH: {
 					ImgDidChange = true;
 					draw(x, y);
-					drawInBetween(x, y, (int)(MPosRelLast[0] / ZoomLevel), (int)(MPosRelLast[1] / ZoomLevel));
+					drawInBetween(x, y, (int)(MousePosRel.LastX / ZoomLevel), (int)(MousePosRel.LastY / ZoomLevel));
 					break;
 				}
 				case FILL: {
