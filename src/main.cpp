@@ -136,13 +136,12 @@ double MousePosLast[2];
 double MousePosRelative[2];
 double MousePosRelativeLast[2];
 
-bool DidUndo = false;
-bool IsDirty = false;
+bool ImgDidChange = false;
 
 struct cvstate {
-	unsigned char* pixelData;
-	cvstate* next; // Canvas State Before This Node
-	cvstate* prev; // Canvas State After This Node
+	unsigned char* pixels;
+	cvstate* next;
+	cvstate* prev;
 };
 
 typedef struct cvstate cvstate_t; // Canvas State Type
@@ -372,6 +371,8 @@ int main(int argc, char **argv) {
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
+	SaveState(); // Save The Inital State
+
 	while (!glfwWindowShouldClose(window)) {
 		// --------------------------------------------------------------------------------------
 		// Updating Cursor Position Here because function callback was causing performance issues.
@@ -397,7 +398,7 @@ int main(int argc, char **argv) {
 		double currentTime = glfwGetTime();
 		nbFrames++;
 		if (currentTime - lastTime >= 1.0) {
-			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+			// printf("%f ms/frame\n", 1000.0 / double(nbFrames));
 			nbFrames = 0;
 			lastTime += 1.0;
 		}
@@ -448,6 +449,8 @@ int main(int argc, char **argv) {
 						FilePath = FixFileExtension(FilePath);
 						SaveImageFromCanvas(FilePath);
 						glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
+						FreeHistory();
+						SaveState();
 					}
 					if (ImGui::MenuItem("Save As", "Alt+S")) {
 						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
@@ -455,6 +458,8 @@ int main(int argc, char **argv) {
 							FilePath = FixFileExtension(std::string(filePath));
 							SaveImageFromCanvas(FilePath);
 							glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
+							FreeHistory();
+							SaveState();
 						}
 					}
 					ImGui::EndMenu();
@@ -491,6 +496,7 @@ int main(int argc, char **argv) {
 				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
 				if (ImGui::Button("Ok")) {
+					FreeHistory();
 					free(CanvasData);
 					CanvasDims[0] = NEW_DIMS[0];
 					CanvasDims[1] = NEW_DIMS[1];
@@ -502,9 +508,9 @@ int main(int argc, char **argv) {
 					}
 
 					ZoomNLevelViewport();
-					FreeHistory();
 					CanvasFreeze = 0;
 					ShowNewCanvasWindow = 0;
+					SaveState();
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
@@ -627,17 +633,11 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 		int y = (int)(MousePosRelative[1] / ZoomLevel);
 
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
-			if (action == GLFW_PRESS) {
-				SaveState();
-			}
 			if (action == GLFW_RELEASE) {
-				if (DidUndo == true) {
-					IsDirty = true;
-					DidUndo = false;
-				} else {
-					IsDirty = false;
+				if (ImgDidChange == true) {
+					SaveState();
+					ImgDidChange = false;
 				}
-				SaveState();
 			}
 		}
 	}
@@ -655,6 +655,7 @@ void ProcessInput(GLFWwindow *window) {
 			switch (Mode) {
 				case SQUARE_BRUSH:
 				case CIRCLE_BRUSH: {
+					ImgDidChange = true;
 					draw(x, y);
 					drawInBetween(x, y, (int)(MousePosRelativeLast[0] / ZoomLevel), (int)(MousePosRelativeLast[1] / ZoomLevel));
 					break;
@@ -836,10 +837,14 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 						FilePath = FixFileExtension(std::string(filePath));
 						SaveImageFromCanvas(FilePath);
 						glfwSetWindowTitle(window, WINDOW_TITLE_CSTR); // Simple Hack To Get The File Name from the path and set it to the window title
+						FreeHistory();
+						SaveState();
 					}
 				} else if (IsCtrlDown == 1) { // Directly Save Don't Prompt
 					FilePath = FixFileExtension(FilePath);
 					SaveImageFromCanvas(FilePath);
+					FreeHistory();
+					SaveState();
 				}
 				break;
 			case GLFW_KEY_O: {
@@ -849,6 +854,8 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 						FilePath = std::string(filePath);
 						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
 						glfwSetWindowTitle(window, WINDOW_TITLE_CSTR); // Simple Hack To Get The File Name from the path and set it to the window title
+						FreeHistory();
+						SaveState();
 					}
 				}
 			}
@@ -959,6 +966,7 @@ void draw(int st_x, int st_y) {
 void fill(int x, int y, unsigned char *old_color) {
 	unsigned char *ptr = GetPixel(x, y);
 	if (COLOR_EQUAL(ptr, old_color)) {
+		ImgDidChange = true;
 		*ptr = SelectedColor[0];
 		*(ptr + 1) = SelectedColor[1];
 		*(ptr + 2) = SelectedColor[2];
@@ -1008,22 +1016,23 @@ void SaveImageFromCanvas(std::string filepath) {
 	Removes The Elements in a range from "History" if "IsDirty" is true
 */
 void SaveState() {
-	if (IsDirty == true && CurrentState != NULL) {
+	// Runs When We Did Undo And Tried To Modify The Canvas
+	if (CurrentState != NULL && CurrentState->next != NULL) {
 		cvstate_t* tmp;
 		cvstate_t* head = CurrentState->next; // we start freeing from the next node of current node
 
 		while (head != NULL) {
 			tmp = head;
 			head = head->next;
-			if (tmp->pixelData != NULL) {
-				free(tmp->pixelData);
+			if (tmp->pixels != NULL) {
+				free(tmp->pixels);
 			}
 			free(tmp);
 		}
 	}
 
 	cvstate_t* NewState = (cvstate_t*) malloc(sizeof(cvstate_t));
-	NewState->pixelData = (unsigned char*) malloc(CANVAS_SIZE_B);
+	NewState->pixels = (unsigned char*) malloc(CANVAS_SIZE_B);
 
 	if (CurrentState == NULL) {
 		CurrentState = NewState;
@@ -1036,17 +1045,15 @@ void SaveState() {
 		CurrentState = NewState;
 	}
 
-	memset(CurrentState->pixelData, 0, CANVAS_SIZE_B);
-	memcpy(CurrentState->pixelData, CanvasData, CANVAS_SIZE_B);
+	memset(CurrentState->pixels, 0, CANVAS_SIZE_B);
+	memcpy(CurrentState->pixels, CanvasData, CANVAS_SIZE_B);
 }
 
 // Undo - Puts The Pixels from "History" at "HistoryIndex"
 int Undo() {
-	DidUndo = true;
-
 	if (CurrentState->prev != NULL) {
 		CurrentState = CurrentState->prev;
-		memcpy(CanvasData, CurrentState->pixelData, CANVAS_SIZE_B);
+		memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
 	}
 	return 0;
 }
@@ -1055,7 +1062,7 @@ int Undo() {
 int Redo() {
 	if (CurrentState->next != NULL) {
 		CurrentState = CurrentState->next;
-		memcpy(CanvasData, CurrentState->pixelData, CANVAS_SIZE_B);
+		memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
 	}
 
 	return 0;
@@ -1076,11 +1083,12 @@ void FreeHistory() {
 	while (head != NULL) {
 		tmp = head;
 		head = head->prev;
-		if (tmp != NULL && tmp->pixelData != NULL) {
-			free(tmp->pixelData);
+		if (tmp != NULL && tmp->pixels != NULL) {
+			free(tmp->pixels);
+			tmp->pixels = NULL;
 			free(tmp);
+			tmp = NULL;
 		}
-		tmp = NULL;
 	}
 
 	head = CurrentState;
@@ -1088,11 +1096,12 @@ void FreeHistory() {
 	while (head != NULL) {
 		tmp = head;
 		head = head->next;
-		if (tmp != NULL && tmp->pixelData != NULL) {
-			free(tmp->pixelData);
+		if (tmp != NULL && tmp->pixels != NULL) {
+			free(tmp->pixels);
+			tmp->pixels = NULL;
 			free(tmp);
+			tmp = NULL;
 		}
-		tmp = NULL;
 	}
 
 	CurrentState = NULL;
