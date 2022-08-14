@@ -1,8 +1,12 @@
+MajVer:=0
+MinVer:=1
+PatVer:=0
+
 all:
-	scons -j 4
+	MajVer=$(MajVer) MinVer=$(MinVer) PatVer=$(PatVer) scons -j 4
 
 release:
-	MajVer=0 MinVer=1 PatVer=0 scons -j 4 mode=release
+	MajVer=$(MajVer) MinVer=$(MinVer) PatVer=$(PatVer) scons -j 4 mode=release
 
 clean:
 	scons -c
