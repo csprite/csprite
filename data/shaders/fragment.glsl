@@ -16,11 +16,12 @@ in mediump vec2 out_tex_coords;
 uniform sampler2D a_texture;
 uniform mediump vec2 offset;
 uniform lowp float alpha;
+uniform float patternSize;
 
 void main() {
 	float sampleAlpha = texture(a_texture, (out_tex_coords + offset).xy).w;
 	if (sampleAlpha <= 0.0) {
-		vec2 Pos = floor(gl_FragCoord.xy / 10.0); // 10.0 - Size of Squares
+		vec2 Pos = floor(gl_FragCoord.xy / patternSize);
 		float PatternMask = mod(Pos.x + mod(Pos.y, 2.0), 2.0);
 		frag_color = PatternMask * vec4(1.0, 1.0, 1.0, 1.0);
 	} else {
