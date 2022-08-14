@@ -416,6 +416,9 @@ int main(int argc, char **argv) {
 		glBindVertexArray(vertexArrObj);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
+		unsigned int patternSize_loc = glGetUniformLocation(shader_program, "patternSize");
+		glUniform1f(patternSize_loc, ZoomLevel * 2);
+
 		unsigned int alpha_loc = glGetUniformLocation(shader_program, "alpha");
 		glUniform1f(alpha_loc, 0.2f);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
