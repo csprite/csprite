@@ -55,16 +55,18 @@ jobs:
         run: |
           python3 tools/create_icons.py
           python3 tools/create_assets.py
+          python3 tools/create_rc.py --arch=x86_64 --majver=0 --minver=0 --patver=0
 
-      - name: Build
+      - name: Build & Rename
         run: |
           CC=clang make release
+          mv csprite.exe csprite-x86_64.exe
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: win_binary
-          path: csprite.exe
+          path: csprite-x86_64.exe
           if-no-files-found: error
 
   osx_x86_64:

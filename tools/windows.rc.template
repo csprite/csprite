@@ -1,0 +1,23 @@
+id ICON "data/icon.ico"
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  __PRODUCT_VERSION1__
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "080904E4"
+    BEGIN
+      VALUE "FileDescription", "A Minimalistic Pixel Art Tool"
+      VALUE "FileVersion", "1.0"
+      VALUE "InternalName", "csprite"
+      VALUE "LegalCopyright", "Aditya Mishra"
+      VALUE "OriginalFilename", "__ORIGINAL_FILENAME__"
+      VALUE "ProductName", "csprite"
+      VALUE "ProductVersion", "__PRODUCT_VERSION2__"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x809, 1252
+  END
+END
