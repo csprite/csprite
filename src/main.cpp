@@ -672,6 +672,9 @@ void ProcessInput(GLFWwindow *window) {
 	int x = (int)(MousePosRel.X / ZoomLevel);
 	int y = (int)(MousePosRel.Y / ZoomLevel);
 
+	if (!(x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]))
+		return;
+
 	if (Mode == LINE_TOOL && LMB_Pressed == true) {
 		Undo();
 		int st_x  = (int)(MousePosRel.DownX / ZoomLevel);
@@ -681,9 +684,7 @@ void ProcessInput(GLFWwindow *window) {
 		drawLine(st_x, st_y, end_x, end_y);
 		SaveState();
 		return;
-	}
-
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+	} else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
 			switch (Mode) {
 				case SQUARE_BRUSH:
