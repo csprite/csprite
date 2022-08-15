@@ -156,7 +156,7 @@ jobs:
 
       - name: Build & Rename
         run: |
-          CC=clang make release
+          PATH=/mingw32/bin/:$PATH CC=clang make release
           mv csprite.exe csprite-i686.exe
 
       - name: Upload Artifacts
