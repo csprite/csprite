@@ -443,6 +443,7 @@ int main(int argc, char **argv) {
 			if (ImGui::BeginMenu("File")) {
 				if (ImGui::MenuItem("New", "Ctrl+N")) {
 					ShowNewCanvasWindow = 1;
+					CanvasFreeze = true;
 				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
 					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
@@ -497,10 +498,16 @@ int main(int argc, char **argv) {
 			ImGui::EndMainMenuBar();
 		}
 
-		if (ShowNewCanvasWindow == 1) {
-			CanvasFreeze = 1;
-			ImGui::SetNextWindowSize({280, 100}, 0);
-			if (ImGui::Begin("NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
+		if (ShowNewCanvasWindow) {
+			ImGui::SetNextWindowSize({230, 100}, 0);
+			if (ImGui::BeginPopupModal(
+					"ShowNewCanvasWindow",
+					NULL,
+					ImGuiWindowFlags_NoCollapse |
+					ImGuiWindowFlags_NoTitleBar |
+					ImGuiWindowFlags_NoResize   |
+					ImGuiWindowFlags_NoMove
+			)) {
 				ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
 				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
@@ -517,17 +524,18 @@ int main(int argc, char **argv) {
 					}
 
 					ZoomNLevelViewport();
-					CanvasFreeze = 0;
-					ShowNewCanvasWindow = 0;
+					CanvasFreeze = false;
+					ShowNewCanvasWindow = false;
 					SaveState();
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
-					CanvasFreeze = 0;
-					ShowNewCanvasWindow = 0;
+					CanvasFreeze = false;
+					ShowNewCanvasWindow = false;
 				}
-
-				ImGui::End();
+				ImGui::EndPopup();
+			} else {
+				ImGui::OpenPopup("ShowNewCanvasWindow");
 			}
 		}
 
