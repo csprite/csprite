@@ -103,6 +103,7 @@ def encode_font(fontPath):
 	result = res.stdout.decode('utf-8').split('\n')
 	if (len(result) < 3):
 		print("Length of result is less than 3...\n")
+		print(res)
 		print(res.stdout.decode('utf-8'))
 		sys.exit(1)
 
