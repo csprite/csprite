@@ -89,6 +89,10 @@ def encode_font(fontPath):
 
 	result = subprocess.run(['tools/font2inl.out', fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	result = result.stdout.decode('utf-8').split('\n')
+	if (len(result) < 3):
+		print("Length of result is less than 3...\n")
+		print(result)
+
 	ret = "(const unsigned int["
 	ret += result[1]
 	ret += "]) {"
