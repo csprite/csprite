@@ -350,6 +350,7 @@ int main(int argc, char **argv) {
 
 	const void* Montserrat_Bold = NULL;
 	int Montserrat_Bold_Size = 0;
+	ImDrawList* ImGuiDrawList = NULL;
 
 	Montserrat_Bold = assets_get("data/fonts/Montserrat-Bold.ttf", &Montserrat_Bold_Size);
 
@@ -584,10 +585,14 @@ int main(int argc, char **argv) {
 		if (ImGui::Begin("ColorPaletteWindow", NULL, window_flags)) {
 			ImGui::SetWindowPos({0, (float)WindowDims[1] - 35});
 			for (int i = 1; i < PaletteCount; i++) {
+				ImGuiDrawList = ImGui::GetWindowDrawList();
 				if (i != 1) ImGui::SameLine();
 				if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)ColorPalette[i][0]/255, (float)ColorPalette[i][1]/255, (float)ColorPalette[i][2]/255, (float)ColorPalette[i][3]/255})) {
 					PaletteIndex = i;
 					SelectedColor = ColorPalette[PaletteIndex];
+				}
+				if (PaletteIndex == i) {
+					ImGuiDrawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), 0xFFFFFFFF, 0, 0, 1);
 				}
 			};
 			ImGui::End();
