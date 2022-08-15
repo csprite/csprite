@@ -15,3 +15,4 @@ clean:
 generate:
 	tools/create_icons.py
 	tools/create_assets.py
+	tools/create_rc.py --arch=x86_64 --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
