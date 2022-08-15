@@ -87,11 +87,12 @@ def encode_font(fontPath):
 			print("Cannot compile lib/font2inl.cpp for compressing font!")
 			sys.exit(1)
 
-	result = subprocess.run(['tools/font2inl.out', fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	result = subprocess.run(['./tools/font2inl.out', fontPath], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	result = result.stdout.decode('utf-8').split('\n')
 	if (len(result) < 3):
 		print("Length of result is less than 3...\n")
 		print(result)
+		sys.exit(1)
 
 	ret = "(const unsigned int["
 	ret += result[1]
