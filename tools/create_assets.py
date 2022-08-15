@@ -11,11 +11,16 @@ from collections import namedtuple
 import numpy as np
 import os
 import sys
+import shutil
 import subprocess
 
 CWD = os.getcwd()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
+IS_ON_CI = False
+
+if 'SCRIPT_IS_ON_CI' in os.environ:
+	IS_ON_CI = True
 
 if CWD != PROJECT_ROOT:
 	print("Error: Run the script from project root, i.e.", PROJECT_ROOT)
@@ -87,7 +92,7 @@ def encode_font(fontPath):
 			print("Cannot compile lib/font2inl.cpp for compressing font!")
 			sys.exit(1)
 
-	res = subprocess.run(['./tools/font2inl.out {0}'.format(fontPath)], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	res = subprocess.run(['{0} {1}'.format(os.path.realpath('./tools/font2inl.out')[2:], fontPath)], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	result = res.stdout.decode('utf-8').split('\n')
 	if (len(result) < 3):
 		print("Length of result is less than 3...\n")
