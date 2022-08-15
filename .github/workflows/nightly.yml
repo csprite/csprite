@@ -1,4 +1,4 @@
-name: Continous Build Action
+name: nightly
 on:
   push:
     branches: [ master ]
