@@ -10,30 +10,35 @@ from PIL import Image
 from collections import namedtuple
 import numpy as np
 import os
-import platform
 import sys
-import shutil
 import subprocess
 
 CWD = os.getcwd()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
-IS_ON_CI = False
-
-if 'SCRIPT_IS_ON_CI' in os.environ:
-	IS_ON_CI = True
 
 if CWD != PROJECT_ROOT:
 	print("Error: Run the script from project root, i.e.", PROJECT_ROOT)
 	sys.exit(-1)
 
 TYPES = {
-	"csv":   { "text": True   },
-	"ini":   { "text": True   },
-	"glsl":  { "text": True   },
-	"png":   { "text": False  },
-	"ttf":   { "text": False  }
+	"csv":   { "text": True,  "Disabled": False },
+	"ini":   { "text": True,  "Disabled": False },
+	"glsl":  { "text": True,  "Disabled": False },
+	"png":   { "text": False, "Disabled": False },
+	"ttf":   { "text": False, "Disabled": False }
 }
+
+# Parse Disabled Stuff, --disabled=csv,glsl
+for argument in sys.argv:
+	if argument.startswith("--disabled="):
+		argument = argument.replace("--disabled=", '')
+		argument = argument.split(',')
+		for item in argument:
+			if item in TYPES:
+				TYPES[item]["Disabled"] = True
+
+		break;
 
 GROUPS = [
 	'fonts', 'icons',
@@ -93,13 +98,7 @@ def encode_font(fontPath):
 			print("Cannot compile lib/font2inl.cpp for compressing font!")
 			sys.exit(1)
 
-	res = ''
-
-	if platform.platform() == 'msys':
-		res = subprocess.run([os.path.realpath('./tools/font2inl.out')[2:], fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-	else:
-		res = subprocess.run(['./tools/font2inl.out', fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
+	res = subprocess.run(['./tools/font2inl.out', fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	result = res.stdout.decode('utf-8').split('\n')
 	if (len(result) < 3):
 		print("Length of result is less than 3...\n")
@@ -132,6 +131,9 @@ def create_file(f):
 	name = f.replace('/', '_').replace('.', '_').replace('-', '_')
 	ext = f.split(".")[-1]
 
+	if TYPES[ext]['Disabled']:
+		return False;
+
 	if TYPES[ext]['text']:
 		size += 1 # So that we NULL terminate the string.
 		data = encode_str(data)
@@ -148,7 +150,10 @@ for group in GROUPS:
 	files = []
 
 	for f in list_files(group):
-		files.append(create_file(f))
+		file = create_file(f)
+		if file:
+			files.append(file)
+
 	if not files:
 		continue
 
