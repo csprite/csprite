@@ -37,17 +37,17 @@ if not env.GetOption('clean'):
 
 	env.Append(
 		CDEFINES=[
-			f"CS_VERSION_MAJOR={MajVer}",
-			f"CS_VERSION_MINOR={MinVer}",
-			f"CS_VERSION_PATCH={PatVer}",
-			f"CS_BUILD_STABLE={int(Stable)}"
+			"CS_VERSION_MAJOR={0}".format(MajVer),
+			"CS_VERSION_MINOR={0}".format(MinVer),
+			"CS_VERSION_PATCH={0}".format(PatVer),
+			"CS_BUILD_STABLE={0}".format(int(Stable))
 		],
 		CPPDEFINES=[
 			"ENABLE_WIN_ICON",
-			f"CS_VERSION_MAJOR={MajVer}",
-			f"CS_VERSION_MINOR={MinVer}",
-			f"CS_VERSION_PATCH={PatVer}",
-			f"CS_BUILD_STABLE={int(Stable)}"
+			"CS_VERSION_MAJOR={0}".format(MajVer),
+			"CS_VERSION_MINOR={0}".format(MinVer),
+			"CS_VERSION_PATCH={0}".format(PatVer),
+			"CS_BUILD_STABLE={0}".format(int(Stable))
 		],
 	)
 
