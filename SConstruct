@@ -29,8 +29,6 @@ if not env.GetOption('clean'):
 	elif "PatVer" not in os.environ:
 		print("Patch Version Not Specified!")
 		sys.exit(-1)
-	elif "Arch" not in os.environ:
-		os.environ['Arch'] = ''
 	else:
 		MajVer = int(os.environ['MajVer'])
 		MinVer = int(os.environ['MinVer'])
@@ -135,7 +133,7 @@ if target_os == 'msys':
 	)
 else:
 	env.Append(
-		LIBS=['glfw3' if os.environ['Arch'] == 'i686' else 'glfw', 'dl', 'm'],
+		LIBS=['glfw', 'dl', 'm'],
 		CXXFLAGS=['-Wall', '-Wno-narrowing'],
 		CFLAGS=['-Wall', '-Wno-unknown-pragma']
 	)
