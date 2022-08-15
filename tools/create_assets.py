@@ -81,13 +81,13 @@ def encode_bin(data):
 
 def encode_font(fontPath):
 	if not os.path.isfile("./tools/font2inl.out"):
-		result = subprocess.run(['clang++', 'lib/font2inl.cpp', '-o', 'tools/font2inl.out'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		result = subprocess.run(['clang++ lib/font2inl.cpp -o tools/font2inl.out'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 		print(result.stdout.decode('utf-8'))
 		if not os.path.isfile("./tools/font2inl.out"):
 			print("Cannot compile lib/font2inl.cpp for compressing font!")
 			sys.exit(1)
 
-	result = subprocess.run(['tools/font2inl.out', fontPath], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	result = subprocess.run(['tools/font2inl.out {0}'.format(fontPath)], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	result = result.stdout.decode('utf-8').split('\n')
 	ret = "(const unsigned int["
 	ret += result[1]
