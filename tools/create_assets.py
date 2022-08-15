@@ -10,6 +10,7 @@ from PIL import Image
 from collections import namedtuple
 import numpy as np
 import os
+import platform
 import sys
 import shutil
 import subprocess
@@ -92,7 +93,13 @@ def encode_font(fontPath):
 			print("Cannot compile lib/font2inl.cpp for compressing font!")
 			sys.exit(1)
 
-	res = subprocess.run(['{0} {1}'.format(os.path.realpath('./tools/font2inl.out')[2:], fontPath)], shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	res = ''
+
+	if platform.Platform() == 'msys':
+		res = subprocess.run([os.path.realpath('./tools/font2inl.out')[2:], fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	else:
+		res = subprocess.run(['./tools/font2inl.out', fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
 	result = res.stdout.decode('utf-8').split('\n')
 	if (len(result) < 3):
 		print("Length of result is less than 3...\n")
