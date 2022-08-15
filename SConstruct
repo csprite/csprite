@@ -108,7 +108,16 @@ sources += glob.glob('lib/tinyfiledialogs.c')
 # Compile windows.rc & link with it.
 if target_os == 'msys' and not env.GetOption('clean'):
 	print("Compiling windows.rc...")
-	result = subprocess.run(['windres.exe', '-O', 'COFF', '-F', 'pe-x86-64', '-i', './windows.rc', '-o', 'windows.o'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	result = ''
+
+	try:
+		result = subprocess.run(['windres.exe', '-O', 'COFF', '-F', 'pe-x86-64', '-i', './windows.rc', '-o', 'windows.o'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	except Exception as e:
+		# Will Be raised mostly when trying to compile for i686 on msys
+		print("Exception raised when trying to compile rc")
+		print(e)
+		result = subprocess.run(['i686-w64-mingw32-windres.exe', '-O', 'COFF', '-F', 'pe-i686', '-i', './windows.rc', '-o', 'windows.o'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
 	result = result.stdout.decode('utf-8')
 	if not os.path.isfile("./windows.o"):
 		print(result)
