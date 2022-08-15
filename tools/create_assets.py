@@ -95,7 +95,7 @@ def encode_font(fontPath):
 
 	res = ''
 
-	if platform.Platform() == 'msys':
+	if platform.platform() == 'msys':
 		res = subprocess.run([os.path.realpath('./tools/font2inl.out')[2:], fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	else:
 		res = subprocess.run(['./tools/font2inl.out', fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
