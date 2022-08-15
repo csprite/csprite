@@ -57,8 +57,8 @@ jobs:
       with:
         command: |
           apt-get update -y
-          apt-get install -y libglfw3 libglfw3-dev pkg-config git libgtk-3-dev scons
-          make release
+          apt-get install -y libglfw3 libglfw3-dev pkg-config git libgtk-3-dev scons clang
+          CC=clang make release
           mv csprite csprite-i686.elf
 
     - name: Exit if file not exists
@@ -127,9 +127,9 @@ jobs:
 
       - name: Generate Assets
         run: |
-          python3w tools/create_icons.py
-          python3w tools/create_assets.py
-          python3w tools/create_rc.py --arch=i686 --majver=0 --minver=0 --patver=0
+          pythonw.exe tools/create_icons.py
+          pythonw.exe tools/create_assets.py
+          pythonw.exe tools/create_rc.py --arch=i686 --majver=0 --minver=0 --patver=0
 
       - name: Build & Rename
         run: |
