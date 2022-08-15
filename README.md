@@ -1,6 +1,12 @@
 # csprite
 A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
 
+[![Stable Release](https://github.com/pegvin/csprite/actions/workflows/stable.yml/badge.svg)](https://github.com/pegvin/csprite/releases)
+[![Nightly Release](https://github.com/pegvin/csprite/actions/workflows/ci.yml/badge.svg)](https://github.com/pegvin/csprite/actions/workflows/ci.yml)
+
+[![Open Issues](https://img.shields.io/github/issues/pegvin/csprite)](https://github.com/pegvin/csprite/issues)
+[![Total Downloads](https://img.shields.io/github/downloads/pegvin/csprite/total)](https://github.com/pegvin/csprite/releases)
+
 ![image](https://user-images.githubusercontent.com/75035219/170718904-9e3c0b00-4a1c-4d48-8876-5dd43d5f4d7b.png)
 
 ---
@@ -26,11 +32,14 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 ---
 
 ### Installation
-1. [Download Pre-Built Binaries](https://github.com/pegvin/csprite/releases)
-2. [Building From Source](https://github.com/pegvin/csprite/wiki/Building-From-Source)
+You can download the latest stable build of CSprite from [GitHub Release](https://github.com/pegvin/csprite/releases).
+
+If you want the latest unreleased build of csprite you can either [Build it from source](https://github.com/pegvin/csprite/wiki/Building-From-Source) or you can goto the [ci.yml - GitHub Actions](https://github.com/pegvin/csprite/actions/workflows/ci.yml) page, click on the latest run with green tick, scroll-down a little and download your desired build.
 
 ### How To Use csprite
 Using CSprite isn't rocket science and infact you can learn how to use it in 5 minutes, [Read More...](https://github.com/pegvin/CSprite/wiki)
+
+**NOTE**: the shortcuts below work with the latest stable release of csprite, and may or may not work with older or latest unreleased build of csprite.
 
 ### Controls
 | Key                          | Description                  |
