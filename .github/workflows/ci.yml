@@ -5,6 +5,23 @@ on:
   pull_request:
 
 jobs:
+  generate-assets:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Generate Asset
+      run: |
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
+        python3 tools/create_icons.py
+        python3 tools/create_assets.py
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: generated_assets
+        path: ./src/assets/
+        if-no-files-found: error
+
   linux-x86_64:
     runs-on: ubuntu-latest
     steps:
@@ -76,6 +93,7 @@ jobs:
         if-no-files-found: error
 
   windows-x86_64:
+    needs: [generate-assets]
     runs-on: windows-latest
     defaults:
       run:
@@ -89,12 +107,14 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-pillow scons make git
+          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python scons make git
 
-      - name: Generate Assets
+      - uses: actions/download-artifact@v2
+        with:
+          name: generated_assets
+
+      - name: Generate RC
         run: |
-          python3 tools/create_icons.py
-          python3 tools/create_assets.py
           python3 tools/create_rc.py --arch=x86_64 --majver=0 --minver=0 --patver=0
 
       - name: Build & Rename
@@ -110,6 +130,7 @@ jobs:
           if-no-files-found: error
 
   windows-i686:
+    needs: [generate-assets]
     runs-on: windows-latest
     defaults:
       run:
@@ -124,6 +145,10 @@ jobs:
           msystem: MINGW64
           update: false
           install: mingw-w64-i686-clang mingw-w64-i686-glfw mingw-w64-x86_64-python mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-pillow scons make git
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: generated_assets
 
       - name: Generate Assets
         run: |
