@@ -148,7 +148,7 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-i686-clang mingw-w64-i686-glfw mingw-w64-x86_64-python mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-pillow scons make git
+          install: mingw-w64-cross-binutils mingw-w64-i686-clang mingw-w64-i686-glfw mingw-w64-x86_64-python scons make git
 
       - uses: actions/download-artifact@v2
         with:
