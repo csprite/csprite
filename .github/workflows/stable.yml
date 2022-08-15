@@ -21,7 +21,28 @@ on:
         required: true
 
 jobs:
+  generate-assets:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Generate Asset
+      run: |
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
+        python3 tools/create_icons.py
+        python3 tools/create_assets.py
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: generated_assets
+        path: ./src/assets/
+        if-no-files-found: error
+
   linux-x86_64:
+    needs: [generate-assets]
     runs-on: ubuntu-latest
     steps:
     - name: Check out
@@ -30,13 +51,11 @@ jobs:
     - name: Install GLFW3, Git, Scons & Pillow
       run: |
         sudo apt-get install libglfw3 libglfw3-dev git scons
-        python3 -m pip install --upgrade Pillow
-        python3 -m pip install --upgrade numpy
 
-    - name: Generate Assets
-      run: |
-        python3 tools/create_icons.py
-        python3 tools/create_assets.py
+    - uses: actions/download-artifact@v2
+      with:
+        name: generated_assets
+        path: ./src/assets/
 
     - name: Build
       run: make release
@@ -52,21 +71,17 @@ jobs:
         if-no-files-found: error
 
   linux_i686:
+    needs: [generate-assets]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
 
-    - name: Install Pillow & Numpy
-      run: |
-        python3 -m pip install --upgrade Pillow
-        python3 -m pip install --upgrade numpy
-
-    - name: Generate Assets
-      run: |
-        python3 tools/create_icons.py
-        python3 tools/create_assets.py
+    - uses: actions/download-artifact@v2
+      with:
+        name: generated_assets
+        path: ./src/assets/
 
     - name: Setup Ubuntu 18.04 x86
       uses: paulproteus/ubuntu-18.04-x86@0.1
@@ -92,6 +107,7 @@ jobs:
         if-no-files-found: error
 
   windows-x86_64:
+    needs: [generate-assets]
     runs-on: windows-latest
     defaults:
       run:
@@ -105,12 +121,15 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-pillow scons make git
+          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python scons make git
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: generated_assets
+          path: ./src/assets/
 
       - name: Generate Assets
         run: |
-          python3 tools/create_icons.py
-          python3 tools/create_assets.py
           python3 tools/create_rc.py --arch=x86_64 --majver=${{github.event.inputs.MajVer}} --minver=${{github.event.inputs.MinVer}} --patver=${{github.event.inputs.PatVer}}
 
       - name: Build & Rename
@@ -126,6 +145,7 @@ jobs:
           if-no-files-found: error
 
   windows-i686:
+    needs: [generate-assets]
     runs-on: windows-latest
     defaults:
       run:
@@ -139,12 +159,15 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-i686-clang mingw-w64-i686-glfw mingw-w64-i686-python mingw-w64-i686-python-numpy mingw-w64-i686-python-pillow scons make git
+          install: mingw-w64-i686-clang mingw-w64-i686-glfw mingw-w64-i686-python scons make git
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: generated_assets
+          path: ./src/assets/
 
       - name: Generate Assets
         run: |
-          python3w tools/create_icons.py
-          python3w tools/create_assets.py
           python3w tools/create_rc.py --arch=i686 --majver=${{github.event.inputs.MajVer}} --minver=${{github.event.inputs.MinVer}} --patver=${{github.event.inputs.PatVer}}
 
       - name: Build & Rename
@@ -160,22 +183,21 @@ jobs:
           if-no-files-found: error
 
   osx_x86_64:
+    needs: [generate-assets]
     runs-on: macos-11
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
 
-    - name: Install scons, dylibbundler, glfw3 & Pillow
+    - name: Install scons, dylibbundler, glfw3
       run: |
         brew install scons dylibbundler glfw
-        python3 -m pip install --upgrade Pillow
-        python3 -m pip install --upgrade numpy
 
-    - name: Generate Assets
-      run: |
-        python3 tools/create_icons.py
-        python3 tools/create_assets.py
+    - uses: actions/download-artifact@v2
+      with:
+        name: generated_assets
+        path: ./src/assets/
 
     - name: Build
       run: make release
