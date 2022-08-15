@@ -683,7 +683,6 @@ void ProcessInput(GLFWwindow *window) {
 		int end_y = (int)(MousePosRel.Y / ZoomLevel);
 		drawLine(st_x, st_y, end_x, end_y);
 		SaveState();
-		return;
 	} else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
 			switch (Mode) {
