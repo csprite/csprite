@@ -69,6 +69,40 @@ jobs:
           path: csprite-x86_64.exe
           if-no-files-found: error
 
+  windows-i686:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: mingw-w64-i686-clang mingw-w64-i686-glfw mingw-w64-i686-python mingw-w64-i686-python-numpy mingw-w64-i686-python-pillow scons make git
+
+      - name: Generate Assets
+        run: |
+          python3 tools/create_icons.py
+          python3 tools/create_assets.py
+          python3 tools/create_rc.py --arch=i686 --majver=0 --minver=0 --patver=0
+
+      - name: Build & Rename
+        run: |
+          CC=clang make release
+          mv csprite.exe csprite-i686.exe
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: win_binary
+          path: csprite-i686.exe
+          if-no-files-found: error
+
   osx_x86_64:
     runs-on: macos-11
     steps:
