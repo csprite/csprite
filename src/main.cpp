@@ -306,7 +306,6 @@ int main(int argc, char **argv) {
 
 	unsigned int shader_program = CreateShaderProgram(
 #ifdef __APPLE__
-		TEST TO SEE IF IT GETS EVALUATED
 		"data/shaders/vertex_33.glsl",
 		"data/shaders/fragment_33.glsl",
 #else
@@ -374,7 +373,11 @@ int main(int argc, char **argv) {
 	ImGui::StyleColorsDark();
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
+#ifdef __APPLE__
+	ImGui_ImplOpenGL3_Init("#version 330");
+#else
 	ImGui_ImplOpenGL3_Init("#version 130");
+#endif
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
