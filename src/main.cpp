@@ -306,6 +306,7 @@ int main(int argc, char **argv) {
 
 	unsigned int shader_program = CreateShaderProgram(
 #ifdef __APPLE__
+		TEST TO SEE IF IT GETS EVALUATED
 		"data/shaders/vertex_33.glsl",
 		"data/shaders/fragment_33.glsl",
 #else
