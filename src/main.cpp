@@ -239,8 +239,16 @@ int main(int argc, char **argv) {
 	glfwInit();
 	glfwSetErrorCallback(logGLFWErrors);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#else
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE); // We're Using OpenGL 3.0 and that's why don't requrest for any profile
+#endif
+
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
 
@@ -297,8 +305,14 @@ int main(int argc, char **argv) {
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
 	unsigned int shader_program = CreateShaderProgram(
+#ifdef __APPLE__
+		"data/shaders/vertex_33.glsl",
+		"data/shaders/fragment_33.glsl",
+#else
 		"data/shaders/vertex.glsl",
-		"data/shaders/fragment.glsl", NULL
+		"data/shaders/fragment.glsl",
+#endif
+		NULL
 	);
 
 	glEnable(GL_BLEND);
