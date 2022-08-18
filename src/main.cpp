@@ -42,7 +42,7 @@ unsigned int ZoomLevel = 8; // Default Zoom Level
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
 unsigned char BrushSize = 5; // Default Brush Size
 
-enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE };
+enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECT };
 enum mode_e { SQUARE, CIRCLE };
 
 // Currently & last selected tool
@@ -546,6 +546,12 @@ int main(int argc, char **argv) {
 					else
 						selectedToolText = "Round Line - (Size: " + std::to_string(BrushSize) + ")";
 					break;
+				case RECT:
+					if (Mode == SQUARE)
+						selectedToolText = "Square Rect - (Size: " + std::to_string(BrushSize) + ")";
+					else
+						selectedToolText = "Round Rect - (Size: " + std::to_string(BrushSize) + ")";
+					break;
 			}
 
 			ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
@@ -637,11 +643,11 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 		int x = (int)(MousePosRel.X / ZoomLevel);
 		int y = (int)(MousePosRel.Y / ZoomLevel);
 
-		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Tool == BRUSH || Tool == ERASER || Tool == FILL || Tool == LINE)) {
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Tool == BRUSH || Tool == ERASER || Tool == FILL || Tool == LINE || Tool == RECT)) {
 			if (action == GLFW_PRESS) {
 				MousePosRel.DownX = MousePosRel.X;
 				MousePosRel.DownY = MousePosRel.Y;
-				if (Tool == LINE) {
+				if (Tool == LINE || Tool == RECT) {
 					SaveState();
 				}
 			}
@@ -665,13 +671,17 @@ void ProcessInput(GLFWwindow *window) {
 	if (!(x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]))
 		return;
 
-	if (Tool == LINE && LMB_Pressed == true) {
+	if ((Tool == LINE || Tool == RECT) && LMB_Pressed == true) {
 		Undo();
 		int st_x  = (int)(MousePosRel.DownX / ZoomLevel);
 		int st_y  = (int)(MousePosRel.DownY / ZoomLevel);
 		int end_x = (int)(MousePosRel.X / ZoomLevel);
 		int end_y = (int)(MousePosRel.Y / ZoomLevel);
-		drawLine(st_x, st_y, end_x, end_y);
+		if (Tool == LINE) {
+			drawLine(st_x, st_y, end_x, end_y);
+		} else {
+			drawRect(st_x, st_y, end_x, end_y);
+		}
 		SaveState();
 	} else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
@@ -837,6 +847,10 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 				Mode = IsShiftDown ? SQUARE : CIRCLE;
 				Tool = LINE;
 				break;
+			case GLFW_KEY_R:
+				Mode = IsShiftDown ? SQUARE : CIRCLE;
+				Tool = RECT;
+				break;
 			case GLFW_KEY_I:
 				LastTool = Tool;
 				Tool = INK_DROPPER;
@@ -924,6 +938,25 @@ unsigned char* GetPixel(int x, int y) {
 		return NULL;
 	}
 	return CanvasData + ((y * CanvasDims[0] + x) * 4);
+}
+
+/*
+
+ x0, y0 ------------------ x1, y0
+        |                |
+        |                |
+        |                |
+        |                |
+        |                |
+ x0, y1 ------------------ x1, y1
+
+*/
+
+void drawRect(int x0, int y0, int x1, int y1) {
+	drawLine(x0, y0, x1, y0);
+	drawLine(x1, y0, x1, y1);
+	drawLine(x1, y1, x0, y1);
+	drawLine(x0, y1, x0, y0);
 }
 
 // Bresenham's line algorithm
