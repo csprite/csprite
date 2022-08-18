@@ -38,5 +38,6 @@ static asset_t ASSETS[] = {
 	#include "assets/fonts.inl"
 	#include "assets/icons.inl"
 	#include "assets/shaders.inl"
+	#include "assets/palettes.inl"
 {}, // NULL asset at the end of the list.
 };
