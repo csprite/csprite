@@ -1008,10 +1008,17 @@ void draw(int st_x, int st_y) {
 			);
 
 			// Set Pixel Color
-			*ptr = SelectedColor[0]; // Red
-			*(ptr + 1) = SelectedColor[1]; // Green
-			*(ptr + 2) = SelectedColor[2]; // Blue
-			*(ptr + 3) = SelectedColor[3]; // Alpha
+			if (Tool == ERASER) {
+				*ptr = 0;
+				*(ptr + 1) = 0;
+				*(ptr + 2) = 0;
+				*(ptr + 3) = 0;
+			} else {
+				*ptr = SelectedColor[0]; // Red
+				*(ptr + 1) = SelectedColor[1]; // Green
+				*(ptr + 2) = SelectedColor[2]; // Blue
+				*(ptr + 3) = SelectedColor[3]; // Alpha
+			}
 		}
 	}
 }
