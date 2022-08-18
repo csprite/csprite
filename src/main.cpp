@@ -285,16 +285,20 @@ int main(int argc, char **argv) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-	glBindAttribLocation(shader_program, 0, "position");
 	glEnableVertexAttribArray(0);
 
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
-	glBindAttribLocation(shader_program, 1, "color");
 	glEnableVertexAttribArray(1);
 
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-	glBindAttribLocation(shader_program, 2, "tex_coords");
 	glEnableVertexAttribArray(2);
+
+#ifndef __APPLE__
+	// We Bind Attrib Locations Using These Functions Because OpenGL 3.0 Didn't Support Layouts
+	glBindAttribLocation(shader_program, 0, "position");
+	glBindAttribLocation(shader_program, 1, "color");
+	glBindAttribLocation(shader_program, 2, "tex_coords");
+#endif
 
 	unsigned int texture;
 	glGenTextures(1, &texture);
