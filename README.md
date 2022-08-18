@@ -14,7 +14,7 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 - :beginner: Beginner Friendly
 - :zap: Extremely Fast
 - :package: Small (Just 1 MB)
-- :desktop_computer: Works On Windows & Linux
+- :desktop_computer: Works On Windows, Linux & Mac
 - :moneybag: Free & Open Source
 
 ### Requirements
