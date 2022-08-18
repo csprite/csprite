@@ -26,91 +26,42 @@
 #include "assets.h"
 #include "shader.h"
 #include "helpers.h"
-
-#ifndef CS_VERSION_MAJOR
-	#define CS_VERSION_MAJOR 0
-#endif
-
-#ifndef CS_VERSION_MAJOR
-	#define CS_VERSION_MINOR 0
-#endif
-
-#ifndef CS_VERSION_MAJOR
-	#define CS_VERSION_PATCH 0
-#endif
-
-#ifndef CS_BUILD_STABLE
-	#define CS_BUILD_STABLE 0
-#endif
-
-#if CS_BUILD_STABLE == 0
-	#define CS_BUILD_TYPE "dev"
-#else
-	#define CS_BUILD_TYPE "stable"
-#endif
-
-#define VERSION_STR "v" + std::to_string(CS_VERSION_MAJOR) + \
-						"." + std::to_string(CS_VERSION_MINOR) + \
-						"." + std::to_string(CS_VERSION_PATCH) + \
-						"-" + CS_BUILD_TYPE
-
-#define WINDOW_TITLE_CSTR (\
-		FilePath.substr(FilePath.find_last_of("/\\") + 1)\
-		+ " - csprite " + VERSION_STR\
-	).c_str()
+#include "palette.h"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
-unsigned char NumOfFilterPatterns = 3;
+unsigned int NumOfFilterPatterns = 3;
 
 int WindowDims[2] = {700, 500}; // Default Window Dimensions
 int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
 
-unsigned char *CanvasData = NULL; // Canvas Data Containg Pixel Values.
-#define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char)
-
-unsigned char LastPaletteIndex = 1;
-unsigned char PaletteIndex = 1;
-unsigned char PaletteCount = 17;
-unsigned char ColorPalette[17][4] = {
-	{ 0,   0,   0,   0   }, // Black Transparent/None
-	// Pico 8 Color Palette - https://lospec.com/ColorPalette-list/pico-8
-	{ 0,   0,   0,   255 }, // Black Color
-	{ 29,  43,  83,  255 }, // Dark Violet
-	{ 126, 37,  83,  255 }, // Dark Pink
-	{ 0,   135, 81,  255 }, // Dark Green
-	{ 171, 82,  54,  255 }, // Dark Orange
-	{ 95,  87,  79,  255 }, // Dark Brown
-	{ 194, 195, 199, 255 }, // Grey
-	{ 255, 241, 232, 255 }, // Seashell
-	{ 255, 0,   77,  255 }, // Redish Pink
-	{ 255, 163, 0,   255 }, // Orange
-	{ 255, 236, 39,  255 }, // Yellow
-	{ 0,   228, 54,  255 }, // Green
-	{ 41,  173, 255, 255 }, // Blue
-	{ 131, 118, 156, 255 }, // Light Purple
-	{ 255, 119, 168, 255 }, // Pink
-	{ 255, 204, 170, 255 }  // Pale Orange
-};
+uint8_t *CanvasData = NULL; // Canvas Data Containg Pixel Values.
+#define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t)
 
 unsigned int ZoomLevel = 8; // Default Zoom Level
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
 unsigned char BrushSize = 5; // Default Brush Size
 
-// Holds if a ctrl/shift is pressed or not
-unsigned char IsCtrlDown = 0;
-unsigned char IsShiftDown = 0;
-
-enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER, LINE_TOOL };
-unsigned char CanvasFreeze = 0;
+enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE };
+enum mode_e { SQUARE, CIRCLE };
 
 // Currently & last selected tool
-enum mode_e Mode = CIRCLE_BRUSH;
-enum mode_e LastMode = CIRCLE_BRUSH;
+enum tool_e Tool = BRUSH;
+enum tool_e LastTool = BRUSH;
+enum mode_e Mode = CIRCLE;
+enum mode_e LastMode = CIRCLE;
 
-unsigned char *SelectedColor; // Holds Pointer To Currently Selected Color
-unsigned char ShouldSave = 0;
-unsigned char ShowNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
+bool IsCtrlDown = false;
+bool IsShiftDown = false;
+bool CanvasFreeze = false;
+bool ShouldSave = false;
+bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
+
+unsigned int LastPaletteIndex = 0;
+unsigned int PaletteIndex = 0;
+palette_t* P = NULL;
+
+#define SelectedColor P->entries[PaletteIndex]
 
 GLfloat ViewPort[4];
 GLfloat CanvasVertices[] = {
@@ -184,9 +135,9 @@ int main(int argc, char **argv) {
 			WindowDims[1] = h;
 			i += 2;
 		}
-
+#if 0
 		if (strcmp(argv[i], "-p") == 0) {
-			PaletteCount = 0;
+			PaletteIndex = 0;
 			i++;
 
 			while (i < argc && (strlen(argv[i]) == 6 || strlen(argv[i]) == 8)) {
@@ -201,7 +152,7 @@ int main(int argc, char **argv) {
 					start = 24;
 					a = number >> (start - 24) & 0xff;
 				} else {
-					printf("Invalid color in ColorPalette, check the length is 6 or 8.\n");
+					printf("Invalid color in P, check the length is 6 or 8.\n");
 					break;
 				}
 
@@ -209,17 +160,18 @@ int main(int argc, char **argv) {
 				g = number >> (start - 8) & 0xff;
 				b = number >> (start - 16) & 0xff;
 
-				ColorPalette[PaletteCount + 1][0] = r;
-				ColorPalette[PaletteCount + 1][1] = g;
-				ColorPalette[PaletteCount + 1][2] = b;
-				ColorPalette[PaletteCount + 1][3] = a;
+				P[PaletteIndex + 1][0] = r;
+				P[PaletteIndex + 1][1] = g;
+				P[PaletteIndex + 1][2] = b;
+				P[PaletteIndex + 1][3] = a;
 
 				printf("Adding color: #%s - rgb(%d, %d, %d)\n", argv[i], r, g, b);
 
-				PaletteCount++;
+				PaletteIndex++;
 				i++;
 			}
 		}
+#endif
 	}
 
 	if (CanvasData == NULL) {
@@ -231,10 +183,10 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	P = LoadCsvPalette((const char*)assets_get("data/palettes/cc-29.csv", NULL));
+
 	GLFWwindow *window;
 	GLFWcursor *cursor;
-
-	SelectedColor = ColorPalette[PaletteIndex];
 
 	glfwInit();
 	glfwSetErrorCallback(logGLFWErrors);
@@ -259,6 +211,7 @@ int main(int argc, char **argv) {
 	if (!window) {
 		printf("Failed to create GLFW window\n");
 		free(CanvasData);
+		free(P);
 		return 1;
 	}
 
@@ -266,7 +219,7 @@ int main(int argc, char **argv) {
 	glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
 	glfwSwapInterval(0);
 
-	// Conditionally Enable/Disable Window icon to reduce compile time in debug mode.
+	// Conditionally Enable/Disable Window icon to reduce compile time in debug Tool.
 #ifdef ENABLE_WIN_ICON
 	GLFWimage iconArr[3];
 	iconArr[0].width = 16;
@@ -286,6 +239,7 @@ int main(int argc, char **argv) {
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to init GLAD\n");
 		free(CanvasData);
+		free(P);
 		return 1;
 	}
 
@@ -404,7 +358,7 @@ int main(int argc, char **argv) {
 		glfwGetCursorPos(window, &MousePos.X, &MousePos.Y);
 		/* infitesimally small chance aside from startup */
 		if (MousePos.LastX != 0 && MousePos.LastY != 0) {
-			if (Mode == PAN) {
+			if (Tool == PAN) {
 				ViewPort[0] -= MousePos.LastX - MousePos.X;
 				ViewPort[1] += MousePos.LastY - MousePos.Y;
 				ViewportSet();
@@ -562,19 +516,18 @@ int main(int argc, char **argv) {
 			ImGui::SetWindowPos({0, 20});
 			std::string selectedToolText;
 
-			switch (Mode) {
-				case SQUARE_BRUSH:
-					if (PaletteIndex == 0)
+			switch (Tool) {
+				case BRUSH:
+					if (Mode == SQUARE)
+						selectedToolText = "Square Brush - (Size: " + std::to_string(BrushSize) + ")";
+					else
+						selectedToolText = "Circle Brush - (Size: " + std::to_string(BrushSize) + ")";
+					break;
+				case ERASER:
+					if (Mode == SQUARE)
 						selectedToolText = "Square Eraser - (Size: " + std::to_string(BrushSize) + ")";
 					else
-						selectedToolText = "Square Brush - (Size: " + std::to_string(BrushSize) + ")";
-					break;
-				case CIRCLE_BRUSH:
-					if (PaletteIndex == 0) {
 						selectedToolText = "Circle Eraser - (Size: " + std::to_string(BrushSize) + ")";
-					} else {
-						selectedToolText = "Circle Brush - (Size: " + std::to_string(BrushSize) + ")";
-					}
 					break;
 				case FILL:
 					selectedToolText = "Fill";
@@ -585,9 +538,11 @@ int main(int argc, char **argv) {
 				case PAN:
 					selectedToolText = "Panning";
 					break;
-				case LINE_TOOL:
-					selectedToolText = LastMode == CIRCLE_BRUSH ? "Round Line" : "Square Line";
-					selectedToolText += " - (Size: " + std::to_string(BrushSize) + ")";
+				case LINE:
+					if (Mode == SQUARE)
+						selectedToolText = "Square Line - (Size: " + std::to_string(BrushSize) + ")";
+					else
+						selectedToolText = "Round Line - (Size: " + std::to_string(BrushSize) + ")";
 					break;
 			}
 
@@ -600,18 +555,19 @@ int main(int argc, char **argv) {
 			ImGui::End();
 		}
 
-		if (ImGui::Begin("ColorPaletteWindow", NULL, window_flags)) {
-			ImGui::SetWindowPos({0, (float)WindowDims[1] - 35});
-			for (int i = 1; i < PaletteCount; i++) {
+		if (ImGui::Begin("PWindow", NULL, window_flags)) {
+			ImGui::SetWindowSize({(float)WindowDims[0], 40});
+			ImGui::SetWindowPos({0, (float)WindowDims[1] - (35)});
+			for (unsigned int i = 0; i < P->numOfEntries; i++) {
 				ImGuiDrawList = ImGui::GetWindowDrawList();
-				if (i != 1) ImGui::SameLine();
-				if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)ColorPalette[i][0]/255, (float)ColorPalette[i][1]/255, (float)ColorPalette[i][2]/255, (float)ColorPalette[i][3]/255})) {
+				if (i != 0)
+					ImGui::SameLine();
+
+				if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)P->entries[i][0]/255, (float)P->entries[i][1]/255, (float)P->entries[i][2]/255, (float)P->entries[i][3]/255}))
 					PaletteIndex = i;
-					SelectedColor = ColorPalette[PaletteIndex];
-				}
-				if (PaletteIndex == i) {
+
+				if (PaletteIndex == i)
 					ImGuiDrawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), 0xFFFFFFFF, 0, 0, 1);
-				}
 			};
 			ImGui::End();
 		}
@@ -630,6 +586,7 @@ int main(int argc, char **argv) {
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	FreeHistory();
+	FreePalette(P);
 	return 0;
 }
 
@@ -678,11 +635,11 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 		int x = (int)(MousePosRel.X / ZoomLevel);
 		int y = (int)(MousePosRel.Y / ZoomLevel);
 
-		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL || Mode == LINE_TOOL)) {
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Tool == BRUSH || Tool == ERASER || Tool == FILL || Tool == LINE)) {
 			if (action == GLFW_PRESS) {
 				MousePosRel.DownX = MousePosRel.X;
 				MousePosRel.DownY = MousePosRel.Y;
-				if (Mode == LINE_TOOL) {
+				if (Tool == LINE) {
 					SaveState();
 				}
 			}
@@ -706,7 +663,7 @@ void ProcessInput(GLFWwindow *window) {
 	if (!(x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]))
 		return;
 
-	if (Mode == LINE_TOOL && LMB_Pressed == true) {
+	if (Tool == LINE && LMB_Pressed == true) {
 		Undo();
 		int st_x  = (int)(MousePosRel.DownX / ZoomLevel);
 		int st_y  = (int)(MousePosRel.DownY / ZoomLevel);
@@ -716,9 +673,9 @@ void ProcessInput(GLFWwindow *window) {
 		SaveState();
 	} else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
-			switch (Mode) {
-				case SQUARE_BRUSH:
-				case CIRCLE_BRUSH: {
+			switch (Tool) {
+				case ERASER:
+				case BRUSH: {
 					ImgDidChange = true;
 					draw(x, y);
 					drawInBetween(x, y, (int)(MousePosRel.LastX / ZoomLevel), (int)(MousePosRel.LastY / ZoomLevel));
@@ -747,8 +704,8 @@ void ProcessInput(GLFWwindow *window) {
 					};
 
 					// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
-					for (int i = 1; i < PaletteCount; i++) {
-						if (COLOR_EQUAL(ColorPalette[i], color) == 1) {
+					for (unsigned int i = 0; i < P->numOfEntries; i++) {
+						if (COLOR_EQUAL(P->entries[i], color) == 1) {
 							LastPaletteIndex = PaletteIndex;
 							PaletteIndex = i;
 							break;
@@ -780,7 +737,7 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 			IsShiftDown = 0;
 
 		if (key == GLFW_KEY_SPACE) {
-			Mode = LastMode;
+			Tool = LastTool;
 		}
 	}
 
@@ -815,75 +772,76 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 			// 	}
 			// 	break;
 			// case GLFW_KEY_L:
-			// 	if (PaletteIndex < PaletteCount-1) {
+			// 	if (PaletteIndex < P->numOfEntries-1) {
 			// 		PaletteIndex++;
 			// 	}
 			// 	break;
 			case GLFW_KEY_1:
-				if (PaletteCount >= 1) {
+				if (P->numOfEntries >= 1) {
 					PaletteIndex = IsShiftDown ? 9 : 1;
 				}
 				break;
 			case GLFW_KEY_2:
-				if (PaletteCount >= 2) {
+				if (P->numOfEntries >= 2) {
 					PaletteIndex = IsShiftDown ? 10 : 2;
 				}
 				break;
 			case GLFW_KEY_3:
-				if (PaletteCount >= 3) {
+				if (P->numOfEntries >= 3) {
 					PaletteIndex = IsShiftDown ? 11 : 3;
 				}
 				break;
 			case GLFW_KEY_4:
-				if (PaletteCount >= 4) {
+				if (P->numOfEntries >= 4) {
 					PaletteIndex = IsShiftDown ? 12 : 4;
 				}
 				break;
 			case GLFW_KEY_5:
-				if (PaletteCount >= 5) {
+				if (P->numOfEntries >= 5) {
 					PaletteIndex = IsShiftDown ? 13 : 5;
 				}
 				break;
 			case GLFW_KEY_6:
-				if (PaletteCount >= 6) {
+				if (P->numOfEntries >= 6) {
 					PaletteIndex = IsShiftDown ? 14 : 6;
 				}
 				break;
 			case GLFW_KEY_7:
-				if (PaletteCount >= 7) {
+				if (P->numOfEntries >= 7) {
 					PaletteIndex = IsShiftDown ? 15 : 7;
 				}
 				break;
 			case GLFW_KEY_8:
-				if (PaletteCount >= 8) {
+				if (P->numOfEntries >= 8) {
 					PaletteIndex = IsShiftDown ? 16 : 8;
 				}
 				break;
 			case GLFW_KEY_F:
-				Mode = FILL;
+				Tool = FILL;
 				break;
 			case GLFW_KEY_B:
-				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
-				PaletteIndex = LastPaletteIndex;
+				Mode = IsShiftDown ? SQUARE : CIRCLE;
+				Tool = BRUSH;
 				break;
 			case GLFW_KEY_E:
-				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
+				Mode = IsShiftDown ? SQUARE : CIRCLE;
+				Tool = ERASER;
 				if (PaletteIndex != 0) {
 					LastPaletteIndex = PaletteIndex;
 					PaletteIndex = 0;
 				}
 				break;
-			case GLFW_KEY_I:
-				LastMode = Mode;
-				Mode = INK_DROPPER;
-				break;
 			case GLFW_KEY_L:
-				LastMode = Mode;
-				Mode = LINE_TOOL;
+				Mode = IsShiftDown ? SQUARE : CIRCLE;
+				Tool = LINE;
+				break;
+			case GLFW_KEY_I:
+				LastTool = Tool;
+				Tool = INK_DROPPER;
 				break;
 			case GLFW_KEY_SPACE:
-				LastMode = Mode;
-				Mode = PAN;
+				LastTool = Tool;
+				Tool = PAN;
 				break;
 			case GLFW_KEY_Z:
 				if (IsCtrlDown == 1) {
@@ -931,8 +889,6 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 				break;
 		}
 	}
-
-	SelectedColor = ColorPalette[PaletteIndex];
 }
 
 void ViewportSet() {
@@ -1009,7 +965,7 @@ void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
 				if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
 					continue;
 
-				if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
+				if (Mode == CIRCLE && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 					continue;
 
 				unsigned char *ptr = GetPixel(st_x + dirX, st_y + dirY);
@@ -1017,10 +973,17 @@ void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
 					continue;
 
 				// Set Pixel Color
-				*ptr = SelectedColor[0]; // Red
-				*(ptr + 1) = SelectedColor[1]; // Green
-				*(ptr + 2) = SelectedColor[2]; // Blue
-				*(ptr + 3) = SelectedColor[3]; // Alpha
+				if (Tool == ERASER) {
+					*ptr = 0;
+					*(ptr + 1) = 0;
+					*(ptr + 2) = 0;
+					*(ptr + 3) = 0;
+				} else {
+					*ptr = SelectedColor[0]; // Red
+					*(ptr + 1) = SelectedColor[1]; // Green
+					*(ptr + 2) = SelectedColor[2]; // Blue
+					*(ptr + 3) = SelectedColor[3]; // Alpha
+				}
 			}
 		}
 	}
@@ -1036,7 +999,7 @@ void draw(int st_x, int st_y) {
 			if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
 				continue;
 
-			if (Mode == CIRCLE_BRUSH || (Mode == LINE_TOOL && LastMode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2))
+			if (Mode == CIRCLE && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
 			unsigned char* ptr = GetPixel(
