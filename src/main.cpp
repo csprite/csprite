@@ -55,6 +55,8 @@ bool IsCtrlDown = false;
 bool IsShiftDown = false;
 bool CanvasFreeze = false;
 bool ShouldSave = false;
+bool ImgDidChange = false;
+bool LMB_Pressed = false;
 bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
 
 unsigned int LastPaletteIndex = 0;
@@ -78,9 +80,6 @@ GLfloat CanvasVertices[] = {
 
 // Index Buffer
 unsigned int Indices[] = {0, 1, 3, 1, 2, 3};
-
-bool ImgDidChange = false;
-bool LMB_Pressed = false;
 
 struct cvstate {
 	unsigned char* pixels;
@@ -318,7 +317,6 @@ int main(int argc, char **argv) {
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = NULL; // Disable Generation of .ini file
-
 
 	const void* Montserrat_Bold = NULL;
 	int Montserrat_Bold_Size = 0;
