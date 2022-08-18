@@ -1,6 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <stdint.h>
 #include <string>
 #include "GLFW/glfw3.h"
 
@@ -37,5 +38,39 @@ int Undo();
 int Redo();
 void SaveState();
 void FreeHistory();
+
+// Versions & Stuff
+
+#ifndef CS_VERSION_MAJOR
+	#define CS_VERSION_MAJOR 0
+#endif
+
+#ifndef CS_VERSION_MAJOR
+	#define CS_VERSION_MINOR 0
+#endif
+
+#ifndef CS_VERSION_MAJOR
+	#define CS_VERSION_PATCH 0
+#endif
+
+#ifndef CS_BUILD_STABLE
+	#define CS_BUILD_STABLE 0
+#endif
+
+#if CS_BUILD_STABLE == 0
+	#define CS_BUILD_TYPE "dev"
+#else
+	#define CS_BUILD_TYPE "stable"
+#endif
+
+#define VERSION_STR "v" + std::to_string(CS_VERSION_MAJOR) + \
+						"." + std::to_string(CS_VERSION_MINOR) + \
+						"." + std::to_string(CS_VERSION_PATCH) + \
+						"-" + CS_BUILD_TYPE
+
+#define WINDOW_TITLE_CSTR (\
+		FilePath.substr(FilePath.find_last_of("/\\") + 1)\
+		+ " - csprite " + VERSION_STR\
+	).c_str()
 
 #endif // end MAIN_H
