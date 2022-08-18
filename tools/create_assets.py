@@ -115,7 +115,14 @@ def encode_font(fontPath):
 
 def encode_img(imgPath):
 	ret = "(unsigned char[]) {"
-	data = Image.open(imgPath).convert('RGBA').getdata()
+	data = Image.open(imgPath)
+	width, height = data.size
+	data = data.convert('RGBA').getdata()
+
+	# We Don't Generate Icons For Sizes more than 48 because of file sizes
+	if width > 48 or height > 48:
+		return False
+
 	pixelArr = []
 	for pixel in data:
 		for comp in pixel:
@@ -139,6 +146,8 @@ def create_file(f):
 		data = encode_str(data)
 	elif ext == 'png':
 		data = encode_img(f)
+		if not data:
+			return False
 	elif ext == 'ttf':
 		data, size = encode_font(f)
 	else:
