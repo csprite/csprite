@@ -42,7 +42,7 @@ unsigned int ZoomLevel = 8; // Default Zoom Level
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
 unsigned char BrushSize = 5; // Default Brush Size
 
-enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECT };
+enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE };
 enum mode_e { SQUARE, CIRCLE };
 
 // Currently & last selected tool
@@ -546,7 +546,7 @@ int main(int argc, char **argv) {
 					else
 						selectedToolText = "Round Line - (Size: " + std::to_string(BrushSize) + ")";
 					break;
-				case RECT:
+				case RECTANGLE:
 					if (Mode == SQUARE)
 						selectedToolText = "Square Rect - (Size: " + std::to_string(BrushSize) + ")";
 					else
@@ -643,11 +643,11 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 		int x = (int)(MousePosRel.X / ZoomLevel);
 		int y = (int)(MousePosRel.Y / ZoomLevel);
 
-		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Tool == BRUSH || Tool == ERASER || Tool == FILL || Tool == LINE || Tool == RECT)) {
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Tool == BRUSH || Tool == ERASER || Tool == FILL || Tool == LINE || Tool == RECTANGLE)) {
 			if (action == GLFW_PRESS) {
 				MousePosRel.DownX = MousePosRel.X;
 				MousePosRel.DownY = MousePosRel.Y;
-				if (Tool == LINE || Tool == RECT) {
+				if (Tool == LINE || Tool == RECTANGLE) {
 					SaveState();
 				}
 			}
@@ -671,7 +671,7 @@ void ProcessInput(GLFWwindow *window) {
 	if (!(x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]))
 		return;
 
-	if ((Tool == LINE || Tool == RECT) && LMB_Pressed == true) {
+	if ((Tool == LINE || Tool == RECTANGLE) && LMB_Pressed == true) {
 		Undo();
 		int st_x  = (int)(MousePosRel.DownX / ZoomLevel);
 		int st_y  = (int)(MousePosRel.DownY / ZoomLevel);
@@ -849,7 +849,7 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 				break;
 			case GLFW_KEY_R:
 				Mode = IsShiftDown ? SQUARE : CIRCLE;
-				Tool = RECT;
+				Tool = RECTANGLE;
 				break;
 			case GLFW_KEY_I:
 				LastTool = Tool;
