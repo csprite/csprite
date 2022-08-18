@@ -101,7 +101,7 @@ def GatherFiles(Directories):
 	return files
 
 # Get all the c and c++ files in src, recursively.
-sources = GatherFiles(['src', 'lib/imgui'])
+sources = GatherFiles(['src', 'lib/imgui', 'lib/log/'])
 sources += glob.glob('lib/glad.c')
 sources += glob.glob('lib/tinyfiledialogs.c')
 
