@@ -675,6 +675,12 @@ void ProcessInput(GLFWwindow *window) {
 		return;
 
 	if ((Tool == LINE || Tool == RECTANGLE) && LMB_Pressed == true) {
+		/*
+			One Way is To undo whatever we wrote now, write new data, and then save the state
+			again the same thing, to reduce the undo/redo calls we just copy whatever was here
+			previously, and then write on it, again & again, so we won't need to add new item to
+			our undo/redo list & stuff.
+		*/
 		if (CurrentState->prev != NULL) {
 			memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
 		} else {
@@ -948,15 +954,23 @@ unsigned char* GetPixel(int x, int y) {
 }
 
 /*
+ In Simplest form a rectangle is made up of 4 lines,
+ this is how we make our rectangle using 2 x, y co-ords.
 
- x0, y0 ------------------ x1, y0
-        |                |
-        |                |
-        |                |
-        |                |
-        |                |
- x0, y1 ------------------ x1, y1
+ Since we're using the drawLine Function for making our,
+ rectangle we don't need to worry about round edges.
 
+ x0, y0           x1, y0
+   .------->--------.
+   |                |
+   |                |
+   ^                v
+   |                |
+   |                |
+   .-------<--------.
+ x0, y1           x1, y1
+
+ XX - Could be converted to a macro?
 */
 
 void drawRect(int x0, int y0, int x1, int y1) {
