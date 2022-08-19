@@ -35,7 +35,12 @@ unsigned int NumOfFilterPatterns = 3;
 int WindowDims[2] = {700, 500}; // Default Window Dimensions
 int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
 
-uint8_t *CanvasData = NULL; // Canvas Data Containg Pixel Values.
+/*
+	This is a Pixel Array, and this is what is used to directly display stuff
+	for tools like rectangle or line we directly draw to this array, and then
+	revert it from the previous data we have stored in undo/redo buffer.
+*/
+uint8_t* CanvasData = NULL;
 #define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t)
 
 unsigned int ZoomLevel = 8; // Default Zoom Level
@@ -647,12 +652,10 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 			if (action == GLFW_PRESS) {
 				MousePosRel.DownX = MousePosRel.X;
 				MousePosRel.DownY = MousePosRel.Y;
-				if (Tool == LINE || Tool == RECTANGLE) {
-					SaveState();
-				}
 			}
 
 			if (action == GLFW_RELEASE) {
+				ImgDidChange = ImgDidChange || (Tool == LINE || Tool == RECTANGLE);
 				if (ImgDidChange == true) {
 					SaveState();
 					ImgDidChange = false;
@@ -672,7 +675,12 @@ void ProcessInput(GLFWwindow *window) {
 		return;
 
 	if ((Tool == LINE || Tool == RECTANGLE) && LMB_Pressed == true) {
-		Undo();
+		if (CurrentState->prev != NULL) {
+			memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
+		} else {
+			memset(CanvasData, 0, CANVAS_SIZE_B);
+		}
+
 		int st_x  = (int)(MousePosRel.DownX / ZoomLevel);
 		int st_y  = (int)(MousePosRel.DownY / ZoomLevel);
 		int end_x = (int)(MousePosRel.X / ZoomLevel);
@@ -682,7 +690,6 @@ void ProcessInput(GLFWwindow *window) {
 		} else {
 			drawRect(st_x, st_y, end_x, end_y);
 		}
-		SaveState();
 	} else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
 			switch (Tool) {
