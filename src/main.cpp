@@ -520,7 +520,7 @@ int main(int argc, char **argv) {
 		}
 
 		if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
-			ImGui::SetWindowPos({0, 20});
+			ImGui::SetWindowPos({0, WindowDims[1] - 55});
 			std::string selectedToolText;
 
 			switch (Tool) {
@@ -569,11 +569,11 @@ int main(int argc, char **argv) {
 		}
 
 		if (ImGui::Begin("PWindow", NULL, window_flags)) {
-			ImGui::SetWindowSize({(float)WindowDims[0], 40});
-			ImGui::SetWindowPos({0, (float)WindowDims[1] - (35)});
+			ImGui::SetWindowSize({70, (float)WindowDims[1]});
+			ImGui::SetWindowPos({0, 25});
 			for (unsigned int i = 0; i < P->numOfEntries; i++) {
 				ImGuiDrawList = ImGui::GetWindowDrawList();
-				if (i != 0)
+				if (i != 0 && i % 2 != 0)
 					ImGui::SameLine();
 
 				if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)P->entries[i][0]/255, (float)P->entries[i][1]/255, (float)P->entries[i][2]/255, (float)P->entries[i][3]/255}))
@@ -791,54 +791,17 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 		}
 
 		switch (key) {
-			// case GLFW_KEY_K:
-			// 	if (PaletteIndex > 1) {
-			// 		PaletteIndex--;
-			// 	}
-			// 	break;
-			// case GLFW_KEY_L:
-			// 	if (PaletteIndex < P->numOfEntries-1) {
-			// 		PaletteIndex++;
-			// 	}
-			// 	break;
-			case GLFW_KEY_1:
-				if (P->numOfEntries >= 1) {
-					PaletteIndex = IsShiftDown ? 9 : 1;
+			case GLFW_KEY_LEFT_BRACKET:
+				if (PaletteIndex == 0) {
+					PaletteIndex = P->numOfEntries - 1;
+				} else {
+					PaletteIndex--;
 				}
 				break;
-			case GLFW_KEY_2:
-				if (P->numOfEntries >= 2) {
-					PaletteIndex = IsShiftDown ? 10 : 2;
-				}
-				break;
-			case GLFW_KEY_3:
-				if (P->numOfEntries >= 3) {
-					PaletteIndex = IsShiftDown ? 11 : 3;
-				}
-				break;
-			case GLFW_KEY_4:
-				if (P->numOfEntries >= 4) {
-					PaletteIndex = IsShiftDown ? 12 : 4;
-				}
-				break;
-			case GLFW_KEY_5:
-				if (P->numOfEntries >= 5) {
-					PaletteIndex = IsShiftDown ? 13 : 5;
-				}
-				break;
-			case GLFW_KEY_6:
-				if (P->numOfEntries >= 6) {
-					PaletteIndex = IsShiftDown ? 14 : 6;
-				}
-				break;
-			case GLFW_KEY_7:
-				if (P->numOfEntries >= 7) {
-					PaletteIndex = IsShiftDown ? 15 : 7;
-				}
-				break;
-			case GLFW_KEY_8:
-				if (P->numOfEntries >= 8) {
-					PaletteIndex = IsShiftDown ? 16 : 8;
+			case GLFW_KEY_RIGHT_BRACKET:
+				PaletteIndex++;
+				if (PaletteIndex > P->numOfEntries - 1) {
+					PaletteIndex = 0;
 				}
 				break;
 			case GLFW_KEY_F:
