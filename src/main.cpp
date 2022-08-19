@@ -479,7 +479,7 @@ int main(int argc, char **argv) {
 		}
 
 		if (ShowNewCanvasWindow) {
-			ImGui::SetNextWindowSize({230, 100}, 0);
+			ImGui::SetNextWindowSize({230.0f, 100.0f}, 0);
 			if (ImGui::BeginPopupModal(
 					"ShowNewCanvasWindow",
 					NULL,
@@ -520,7 +520,7 @@ int main(int argc, char **argv) {
 		}
 
 		if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
-			ImGui::SetWindowPos({0, WindowDims[1] - 55});
+			ImGui::SetWindowPos({0.0f, (float)(WindowDims[1] - 55)});
 			std::string selectedToolText;
 
 			switch (Tool) {
@@ -569,8 +569,8 @@ int main(int argc, char **argv) {
 		}
 
 		if (ImGui::Begin("PWindow", NULL, window_flags)) {
-			ImGui::SetWindowSize({70, (float)WindowDims[1]});
-			ImGui::SetWindowPos({0, 25});
+			ImGui::SetWindowSize({70.0f, (float)WindowDims[1]});
+			ImGui::SetWindowPos({0.0f, 25.0f});
 			for (unsigned int i = 0; i < P->numOfEntries; i++) {
 				ImGuiDrawList = ImGui::GetWindowDrawList();
 				if (i != 0 && i % 2 != 0)
