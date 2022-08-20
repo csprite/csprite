@@ -470,6 +470,11 @@ void ProcessEvents() {
 					LastTool = Tool;
 					Tool = PAN;
 				}
+			} else if (event.key.keysym.sym == SDLK_i && !CanvasFreeze) {
+				if (Tool != INK_DROPPER) {
+					LastTool = Tool;
+					Tool = INK_DROPPER;
+				}
 			}
 			break;
 		case SDL_KEYUP:
@@ -498,6 +503,19 @@ void ProcessEvents() {
 				if (ImgDidChange == true) {
 					SaveState();
 					ImgDidChange = false;
+				}
+				if (Tool == INK_DROPPER) {
+					Uint32* color = GetPixel(MousePosRel.X, MousePosRel.Y);
+					if (color != NULL) {
+						for (unsigned int i = 0; i < P->numOfEntries; i++) {
+							if (P->entries[i] == *color) {
+								LastPaletteIndex = PaletteIndex;
+								PaletteIndex = i;
+								Tool = LastTool;
+								break;
+							}
+						}
+					}
 				}
 			}
 			break;
