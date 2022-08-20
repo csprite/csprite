@@ -18,7 +18,7 @@ SDL_Window* window = NULL;
 int WindowDims[2] = { 700, 500 };
 int CanvasDims[2] = { 60, 40 };
 int BrushSize = 4;
-int ZoomLevel = 8;
+unsigned int ZoomLevel = 8;
 
 Uint32* CanvasData = NULL;
 Uint32* CanvasBgData = NULL;
@@ -132,26 +132,12 @@ int main(int argc, char** argv) {
 		{
 			ImGui::Begin("Controls");
 			ImGui::SetWindowPos({0, 0});
-
-			ImGui::SliderInt("Brush Size", &BrushSize, 1, 20);
-			ImGui::ColorEdit3("clear color", (float*)&clear_color);
-
-			if (ImGui::Button("Brush"))
-				Tool = BRUSH;
-
-			ImGui::SameLine();
-			if (ImGui::Button("Eraser"))
-				Tool = ERASER;
-
-			if (ImGui::Button("Round"))
-				Mode = CIRCLE;
-
-			ImGui::SameLine();
-
-			if (ImGui::Button("Square"))
-				Mode = SQUARE;
-
+			ImGui::Text(
+				"Zoom: %d\nTool Size: %d\nTool: %s %s",
+				ZoomLevel, BrushSize, Mode == CIRCLE ? "Circle" : "Square", Tool == BRUSH ? "brush" : "eraser"
+			);
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::ColorEdit3("clear color", (float*)&clear_color);
 			ImGui::End();
 		}
 
@@ -210,15 +196,44 @@ void ProcessEvents() {
 				AppCloseRequested = true;
 			break;
 		case SDL_KEYDOWN:
-			if (event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT)
+			if (event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT) {
 				IsShiftDown = true;
-			else if (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)
+			} else if (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL) {
 				IsCtrlDown = true;
+			} else if (event.key.keysym.sym == SDLK_b) {
+				Tool = BRUSH;
+				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
+			} else if (event.key.keysym.sym == SDLK_e) {
+				Tool = ERASER;
+				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
+			} else if (event.key.keysym.sym == SDLK_EQUALS) {
+				if (IsCtrlDown == true) {
+					AdjustZoom(true);
+				} else {
+					BrushSize++;
+				}
+			} else if (event.key.keysym.sym == SDLK_MINUS) {
+				if (IsCtrlDown == true) {
+					AdjustZoom(false);
+				} else {
+					BrushSize--;
+					BrushSize = BrushSize < 1 ? 1 : BrushSize; // Clamp So It Doesn't Go Below 1
+				}
+			}
+			break;
 		case SDL_KEYUP:
 			if (event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT)
 				IsShiftDown = false;
 			else if (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)
 				IsCtrlDown = false;
+			break;
+		case SDL_MOUSEWHEEL:
+			if (event.wheel.y > 0 && IsCtrlDown) { // Scroll Up - Zoom In
+				AdjustZoom(true);
+			} else if (event.wheel.y < 0 && IsCtrlDown) { // Scroll Down - Zoom Out
+				AdjustZoom(false);
+			}
+			break;
 		case SDL_MOUSEBUTTONUP:
 			if (event.button.button == SDL_BUTTON_LEFT)
 				IsLMBDown = false;
@@ -256,6 +271,20 @@ Uint32* GetPixel(int x, int y, Uint32* data) {
 		return data != NULL ? &data[(y * CanvasDims[0] + x)] : &CanvasData[(y * CanvasDims[0] + x)];
 	}
 	return NULL;
+}
+
+void AdjustZoom(bool increase) {
+	if (increase == true) {
+		if (ZoomLevel < UINT_MAX) { // Max Value Of Unsigned int
+			ZoomLevel++;
+		}
+	} else {
+		if (ZoomLevel != 1) { // if zoom is 1 then don't decrease it further
+			ZoomLevel--;
+		}
+	}
+
+	UpdateCanvasRect();
 }
 
 // Uint32 rgba2Uint32(int r = 255, int g = 255, int b = 255, int a = 255) {
