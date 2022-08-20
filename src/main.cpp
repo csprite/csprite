@@ -13,11 +13,22 @@
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
 #endif
 
+SDL_Window* window = NULL;
+
 int WindowDims[2] = { 700, 500 };
 int CanvasDims[2] = { 60, 40 };
 int BrushSize = 4;
 int ZoomLevel = 8;
+
 Uint32* CanvasData = NULL;
+Uint32* CanvasBgData = NULL;
+#define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * sizeof(Uint32)
+SDL_Rect CanvasContRect = {}; // Rectangle In Which Our Canvas Will Be Placed
+
+bool IsCtrlDown = false;
+bool IsShiftDown = false;
+bool IsLMBDown = false;
+bool AppCloseRequested = false;
 
 enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE };
 enum mode_e { SQUARE, CIRCLE };
@@ -28,6 +39,14 @@ enum tool_e LastTool = BRUSH;
 enum mode_e Mode = CIRCLE;
 enum mode_e LastMode = CIRCLE;
 
+#define UpdateCanvasRect()                                             \
+	CanvasContRect = {                                                 \
+		.x = (WindowDims[0] / 2) - (CanvasDims[0] * ZoomLevel / 2),    \
+		.y = (WindowDims[1] / 2) - (CanvasDims[1] * ZoomLevel / 2),    \
+		.w = CanvasDims[0] * ZoomLevel,                                \
+		.h = CanvasDims[1] * ZoomLevel                                 \
+	}                                                                  \
+
 int main(int argc, char** argv) {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
 		printf("Error: %s\n", SDL_GetError());
@@ -35,7 +54,7 @@ int main(int argc, char** argv) {
 	}
 
 	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], window_flags);
+	window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], window_flags);
 
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 	if (renderer == NULL) {
@@ -54,18 +73,25 @@ int main(int argc, char** argv) {
 
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	SDL_Rect CanvasRect = {
-		.x = 150,
-		.y = 150,
-		.w = CanvasDims[0] * ZoomLevel,
-		.h = CanvasDims[1] * ZoomLevel
-	};
-
 	SDL_Texture* CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
 	SDL_Texture* CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
 
-	CanvasData = new Uint32[60 * 40];
-	Uint32* CanvasBgData = new Uint32[60 * 40];
+	if (CanvasData == NULL) {
+		CanvasData = (Uint32*)malloc(CANVAS_SIZE_B);
+		memset(CanvasData, 0, CANVAS_SIZE_B);
+		if (CanvasData == NULL) {
+			printf("Unable To allocate memory for canvas.\n");
+			return 1;
+		}
+	}
+
+	if (CanvasBgData == NULL) {
+		CanvasBgData = (Uint32*)malloc(CANVAS_SIZE_B);
+		if (CanvasBgData == NULL) {
+			printf("Unable To allocate memory for canvas.\n");
+			return 1;
+		}
+	}
 
 	for (int x = 0; x < CanvasDims[0]; x++) {
 		for (int y = 0; y < CanvasDims[1]; y++) {
@@ -74,49 +100,16 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	memset(CanvasData, 0, 60 * 40 * sizeof(Uint32));
-
-	bool done = false;
-	bool leftMouseButtonDown = false;
+	UpdateCanvasRect();
 
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	SDL_SetTextureBlendMode(CanvasTex, SDL_BLENDMODE_BLEND);
 	SDL_SetTextureBlendMode(CanvasBgTex, SDL_BLENDMODE_BLEND);
-	while (!done) {
+	while (!AppCloseRequested) {
+		ProcessEvents();
+
 		SDL_UpdateTexture(CanvasTex, NULL, CanvasData, 60 * sizeof(Uint32));
 		SDL_UpdateTexture(CanvasBgTex, NULL, CanvasBgData, 60 * sizeof(Uint32));
-
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			ImGui_ImplSDL2_ProcessEvent(&event);
-			switch (event.type) {
-			case SDL_QUIT:
-				done = true;
-				break;
-			case SDL_WINDOWEVENT:
-				if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-					done = true;
-				break;
-			case SDL_MOUSEBUTTONUP:
-				if (event.button.button == SDL_BUTTON_LEFT)
-					leftMouseButtonDown = false;
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				if (event.button.button == SDL_BUTTON_LEFT)
-					leftMouseButtonDown = true;
-				break;
-			case SDL_MOUSEMOTION:
-				if (leftMouseButtonDown) {
-					int x = (event.motion.x - CanvasRect.x) / ZoomLevel;
-					int y = (event.motion.y - CanvasRect.y) / ZoomLevel;
-
-					if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
-						draw(x, y);
-					}
-				}
-				break;
-			}
-		}
 
 		ImGui_ImplSDLRenderer_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
@@ -156,8 +149,8 @@ int main(int argc, char** argv) {
 			We Render The Textures To The Screen Here.
 			Note The Order Of Rendering Matters.
 		*/
-		SDL_RenderCopy(renderer, CanvasBgTex, NULL, &CanvasRect);
-		SDL_RenderCopy(renderer, CanvasTex, NULL, &CanvasRect);
+		SDL_RenderCopy(renderer, CanvasBgTex, NULL, &CanvasContRect);
+		SDL_RenderCopy(renderer, CanvasTex, NULL, &CanvasContRect);
 
 		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
@@ -171,13 +164,65 @@ int main(int argc, char** argv) {
 	ImGui::DestroyContext();
 
 	SDL_DestroyTexture(CanvasTex);
+	SDL_DestroyTexture(CanvasBgTex);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-	delete[] CanvasData;
-	delete[] CanvasBgData;
 
+	free(CanvasData);
+	free(CanvasBgData);
+
+	// Unneccessary but why not?
+	CanvasTex = NULL;
+	CanvasBgTex = NULL;
+	renderer = NULL;
+	window = NULL;
+	CanvasData = NULL;
+	CanvasBgData = NULL;
 	return 0;
+}
+
+void ProcessEvents() {
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		ImGui_ImplSDL2_ProcessEvent(&event);
+		switch (event.type) {
+		case SDL_QUIT:
+			AppCloseRequested = true;
+			break;
+		case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+				AppCloseRequested = true;
+			break;
+		case SDL_KEYDOWN:
+			if (event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT)
+				IsShiftDown = true;
+			else if (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)
+				IsCtrlDown = true;
+		case SDL_KEYUP:
+			if (event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT)
+				IsShiftDown = false;
+			else if (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)
+				IsCtrlDown = false;
+		case SDL_MOUSEBUTTONUP:
+			if (event.button.button == SDL_BUTTON_LEFT)
+				IsLMBDown = false;
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			if (event.button.button == SDL_BUTTON_LEFT)
+				IsLMBDown = true;
+			break;
+		case SDL_MOUSEMOTION:
+			if (IsLMBDown == true) {
+				int x = (event.motion.x - CanvasContRect.x) / ZoomLevel;
+				int y = (event.motion.y - CanvasContRect.y) / ZoomLevel;
+				if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
+					draw(x, y);
+				}
+			}
+			break;
+		}
+	}
 }
 
 Uint32* GetPixel(int x, int y, Uint32* data) {

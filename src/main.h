@@ -9,6 +9,8 @@ enum export_format_e { PNG, JPG };
 // Little Helpers
 Uint32* GetPixel(int x, int y, Uint32* data = NULL);
 
+void ProcessEvents();
+void UpdateCanvasRect();
 void draw(int x, int y); // Draws on 1 x, y coordinate
 
 // Versions & Stuff
