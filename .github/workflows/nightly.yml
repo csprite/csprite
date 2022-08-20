@@ -25,70 +25,70 @@ jobs:
         path: ./src/assets/
         if-no-files-found: error
 
-  linux-x86_64:
-    needs: [generate-assets]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check out
-      uses: actions/checkout@v2
+  # linux-x86_64:
+  #   needs: [generate-assets]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Check out
+  #     uses: actions/checkout@v2
 
-    - uses: actions/download-artifact@v2
-      with:
-        name: generated_assets
-        path: ./src/assets/
+  #   - uses: actions/download-artifact@v2
+  #     with:
+  #       name: generated_assets
+  #       path: ./src/assets/
 
-    - name: Install SDL2, Git & Scons
-      run: |
-        sudo apt-get install libsdl2-2.0-0 libsdl2-dev git scons
+  #   - name: Install SDL2, Git & Scons
+  #     run: |
+  #       sudo apt-get install libsdl2-2.0-0 libsdl2-dev git scons
 
-    - name: Build
-      run: make release
+  #   - name: Build
+  #     run: make release
 
-    - name: Strip & rename
-      run: strip ./csprite && mv ./csprite csprite.elf
+  #   - name: Strip & rename
+  #     run: strip ./csprite && mv ./csprite csprite.elf
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: linux-x86_64
-        path: csprite.elf
-        if-no-files-found: error
+  #   - name: Upload Artifacts
+  #     uses: actions/upload-artifact@v2
+  #     with:
+  #       name: linux-x86_64
+  #       path: csprite.elf
+  #       if-no-files-found: error
 
-  linux_i686:
-    needs: [generate-assets]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+  # linux_i686:
+  #   needs: [generate-assets]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       submodules: recursive
 
-    - uses: actions/download-artifact@v2
-      with:
-        name: generated_assets
-        path: ./src/assets/
+  #   - uses: actions/download-artifact@v2
+  #     with:
+  #       name: generated_assets
+  #       path: ./src/assets/
 
-    - name: Setup Ubuntu 18.04 x86
-      uses: paulproteus/ubuntu-18.04-x86@0.1
-      with:
-        command: |
-          apt-get update -y
-          apt-get install -y libsdl2-2.0-0 libsdl2-dev pkg-config git libgtk-3-dev scons clang
-          CC=clang make release
-          mv csprite csprite-i686.elf
+  #   - name: Setup Ubuntu 18.04 x86
+  #     uses: paulproteus/ubuntu-18.04-x86@0.1
+  #     with:
+  #       command: |
+  #         apt-get update -y
+  #         apt-get install -y libsdl2-2.0-0 libsdl2-dev pkg-config git libgtk-3-dev scons clang
+  #         CC=clang make release
+  #         mv csprite csprite-i686.elf
 
-    - name: Exit if file not exists
-      run: |
-        if [ ! -e ./csprite-i686.elf ]; then
-            echo "'csprite-i686.elf' executable not found"
-            exit 1
-        fi
+  #   - name: Exit if file not exists
+  #     run: |
+  #       if [ ! -e ./csprite-i686.elf ]; then
+  #           echo "'csprite-i686.elf' executable not found"
+  #           exit 1
+  #       fi
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: linux-i686
-        path: ./csprite-i686.elf
-        if-no-files-found: error
+  #   - name: Upload Artifacts
+  #     uses: actions/upload-artifact@v2
+  #     with:
+  #       name: linux-i686
+  #       path: ./csprite-i686.elf
+  #       if-no-files-found: error
 
   windows-x86_64:
     needs: [generate-assets]
