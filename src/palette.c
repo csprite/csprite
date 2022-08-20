@@ -52,7 +52,7 @@ palette_t* LoadCsvPalette(const char* csvText) {
 	token = strtok(NULL, ","); // First Color
 
 	for (int i = 0; token != NULL; ++i) {
-		int r = 0, g = 0, b = 0;
+		unsigned int r = 0, g = 0, b = 0;
 		sscanf(token, "%02x%02x%02x", &r, &g, &b);
 		newPalette->entries[i] = RGBA2UINT32(r, g, b, 255);
 		token = strtok(NULL, ",");
