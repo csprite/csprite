@@ -19,6 +19,12 @@ void AdjustZoom(bool increase);
 
 void draw(int x, int y); // Draws on 1 x, y coordinate
 void drawInBetween(int st_x, int st_y, int end_x, int end_y);
+void fill(int x, int y, Uint32* old_color);
+
+void SaveState();
+void FreeHistory();
+void Redo();
+void Undo();
 
 std::string FixFileExtension(std::string filepath);
 void SaveImageFromCanvas(std::string filepath);
