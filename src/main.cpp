@@ -19,6 +19,7 @@ int WindowDims[2] = { 700, 500 };
 int CanvasDims[2] = { 60, 40 };
 int BrushSize = 4;
 unsigned int ZoomLevel = 8;
+std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 
 Uint32* CanvasData = NULL;
 Uint32* CanvasBgData = NULL;
@@ -67,8 +68,7 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], window_flags);
+	window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 	if (renderer == NULL) {
@@ -114,6 +114,12 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	ImGuiWindowFlags window_flags = 0;
+	window_flags |= ImGuiWindowFlags_NoBackground;
+	window_flags |= ImGuiWindowFlags_NoTitleBar;
+	window_flags |= ImGuiWindowFlags_NoResize;
+	window_flags |= ImGuiWindowFlags_NoMove;
+
 	UpdateCanvasRect();
 
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -130,15 +136,60 @@ int main(int argc, char** argv) {
 		ImGui::NewFrame();
 
 		{
-			ImGui::Begin("Controls");
-			ImGui::SetWindowPos({0, 0});
-			ImGui::Text(
-				"Zoom: %d\nTool Size: %d\nTool: %s %s",
-				ZoomLevel, BrushSize, Mode == CIRCLE ? "Circle" : "Square", Tool == BRUSH ? "brush" : "eraser"
-			);
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			ImGui::ColorEdit3("clear color", (float*)&clear_color);
-			ImGui::End();
+			// ImGui::Begin("Controls");
+			// ImGui::SetWindowPos({0, 0});
+			// ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			// ImGui::ColorEdit3("clear color", (float*)&clear_color);
+			// ImGui::End();
+
+			if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
+				ImGui::SetWindowPos({0.0f, (float)(WindowDims[1] - 55)});
+				std::string selectedToolText;
+
+				switch (Tool) {
+					case BRUSH:
+						if (Mode == SQUARE)
+							selectedToolText = "Square Brush - (Size: " + std::to_string(BrushSize) + ")";
+						else
+							selectedToolText = "Circle Brush - (Size: " + std::to_string(BrushSize) + ")";
+						break;
+					case ERASER:
+						if (Mode == SQUARE)
+							selectedToolText = "Square Eraser - (Size: " + std::to_string(BrushSize) + ")";
+						else
+							selectedToolText = "Circle Eraser - (Size: " + std::to_string(BrushSize) + ")";
+						break;
+					case FILL:
+						selectedToolText = "Fill";
+						break;
+					case INK_DROPPER:
+						selectedToolText = "Ink Dropper";
+						break;
+					case PAN:
+						selectedToolText = "Panning";
+						break;
+					case LINE:
+						if (Mode == SQUARE)
+							selectedToolText = "Square Line - (Size: " + std::to_string(BrushSize) + ")";
+						else
+							selectedToolText = "Round Line - (Size: " + std::to_string(BrushSize) + ")";
+						break;
+					case RECTANGLE:
+						if (Mode == SQUARE)
+							selectedToolText = "Square Rect - (Size: " + std::to_string(BrushSize) + ")";
+						else
+							selectedToolText = "Round Rect - (Size: " + std::to_string(BrushSize) + ")";
+						break;
+				}
+
+				ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
+				ImVec2 textSize2 = ImGui::CalcTextSize(ZoomText.c_str(), NULL, false, -2.0f);
+				ImGui::SetWindowSize({(float)(textSize1.x + textSize2.x), (float)(textSize1.y + textSize2.y) * 2}); // Make Sure Text is visible everytime.
+
+				ImGui::Text("%s", selectedToolText.c_str());
+				ImGui::Text("%s", ZoomText.c_str());
+				ImGui::End();
+			}
 		}
 
 		ImGui::Render();
@@ -219,6 +270,11 @@ void ProcessEvents() {
 					BrushSize--;
 					BrushSize = BrushSize < 1 ? 1 : BrushSize; // Clamp So It Doesn't Go Below 1
 				}
+			} else if (event.key.keysym.sym == SDLK_SPACE) {
+				if (Tool != PAN) {
+					LastTool = Tool;
+					Tool = PAN;
+				}
 			}
 			break;
 		case SDL_KEYUP:
@@ -226,6 +282,8 @@ void ProcessEvents() {
 				IsShiftDown = false;
 			else if (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)
 				IsCtrlDown = false;
+			else if (event.key.keysym.sym == SDLK_SPACE)
+				Tool = LastTool;
 			break;
 		case SDL_MOUSEWHEEL:
 			if (event.wheel.y > 0 && IsCtrlDown) { // Scroll Up - Zoom In
@@ -255,7 +313,10 @@ void ProcessEvents() {
 			MousePosRel.X = (event.motion.x - CanvasContRect.x) / ZoomLevel;
 			MousePosRel.Y = (event.motion.y - CanvasContRect.y) / ZoomLevel;
 
-			if (IsLMBDown == true) {
+			if (Tool == PAN) {
+				CanvasContRect.x = CanvasContRect.x + (MousePos.X - MousePos.LastX);
+				CanvasContRect.y = CanvasContRect.y + (MousePos.Y - MousePos.LastY);
+			} else if (IsLMBDown == true) {
 				if (MousePosRel.X >= 0 && MousePosRel.X < CanvasDims[0] && MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1]) {
 					draw(MousePosRel.X, MousePosRel.Y);
 					drawInBetween(MousePosRel.X, MousePosRel.Y, MousePosRel.LastX, MousePosRel.LastY);
@@ -277,10 +338,12 @@ void AdjustZoom(bool increase) {
 	if (increase == true) {
 		if (ZoomLevel < UINT_MAX) { // Max Value Of Unsigned int
 			ZoomLevel++;
+			ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 		}
 	} else {
 		if (ZoomLevel != 1) { // if zoom is 1 then don't decrease it further
 			ZoomLevel--;
+			ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 		}
 	}
 
