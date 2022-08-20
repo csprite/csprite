@@ -126,7 +126,7 @@ env.Append(
 # Windows compilation support.
 if target_os == 'msys':
 	env.Append(
-		LIBS=['SDL2', 'SDL2main', 'mingw32', 'opengl32', 'gdi32', 'comdlg32', 'ole32', 'shell32'],
+		LIBS=['SDL2main', 'SDL2', 'mingw32', 'opengl32', 'gdi32', 'comdlg32', 'ole32', 'shell32'],
 		LINKFLAGS=[
 			"-mwindows", # Fix Console From Popping-Up
 			"--static"   # Link GLFW & Stuff Statically
