@@ -446,6 +446,12 @@ void ProcessEvents() {
 				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
 			} else if (event.key.keysym.sym == SDLK_f && !CanvasFreeze) {
 				Tool = FILL;
+			} else if (event.key.keysym.sym == SDLK_l && !CanvasFreeze) {
+				Tool = LINE;
+				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
+			} else if (event.key.keysym.sym == SDLK_r && !CanvasFreeze) {
+				Tool = RECTANGLE;
+				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
 			} else if (event.key.keysym.sym == SDLK_EQUALS && !CanvasFreeze) {
 				if (IsCtrlDown == true) {
 					AdjustZoom(true);
@@ -498,6 +504,9 @@ void ProcessEvents() {
 		case SDL_MOUSEBUTTONDOWN:
 			if (event.button.button == SDL_BUTTON_LEFT && !CanvasFreeze) {
 				IsLMBDown = true;
+				MousePosRel.DownX = MousePosRel.X;
+				MousePosRel.DownY = MousePosRel.Y;
+
 				if (Tool == BRUSH || Tool == ERASER) {
 					ImgDidChange = true;
 					draw(MousePosRel.X, MousePosRel.Y);
@@ -531,6 +540,25 @@ void ProcessEvents() {
 				}
 			}
 			break;
+		}
+	}
+
+	if (
+		MousePosRel.X >= 0 && MousePosRel.X < CanvasDims[0] &&
+		MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1] &&
+		IsLMBDown == true                                   &&
+		(Tool == LINE || Tool == RECTANGLE)
+	) {
+		if (CurrentState->prev != NULL) {
+			memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
+		} else {
+			memset(CanvasData, 0, CANVAS_SIZE_B);
+		}
+
+		if (Tool == LINE) {
+			drawLine(MousePosRel.DownX, MousePosRel.DownY, MousePosRel.X, MousePosRel.Y);
+		} else {
+			drawRect(MousePosRel.DownX, MousePosRel.DownY, MousePosRel.X, MousePosRel.Y);
 		}
 	}
 }
@@ -635,6 +663,48 @@ void fill(int x, int y, Uint32 old_color) {
 		fill(x, y + 1, old_color);
 		fill(x, y - 1, old_color);
 	}
+}
+
+// Bresenham's line algorithm
+void drawLine(int x0, int y0, int x1, int y1) {
+	int dx =  abs (x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = -abs (y1 - y0), sy = y0 < y1 ? 1 : -1;
+	int err = dx + dy, e2; /* error value e_xy */
+
+	for (;;) {
+		draw(x0, y0);
+		if (x0 == x1 && y0 == y1) break;
+		e2 = 2 * err;
+		if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
+		if (e2 <= dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
+	}
+}
+
+/*
+ In Simplest form a rectangle is made up of 4 lines,
+ this is how we make our rectangle using 2 x, y co-ords.
+
+ Since we're using the drawLine Function for making our,
+ rectangle we don't need to worry about round edges.
+
+ x0, y0           x1, y0
+   .------->--------.
+   |                |
+   |                |
+   ^                v
+   |                |
+   |                |
+   .-------<--------.
+ x0, y1           x1, y1
+
+ XX - Could be converted to a macro?
+*/
+
+void drawRect(int x0, int y0, int x1, int y1) {
+	drawLine(x0, y0, x1, y0);
+	drawLine(x1, y0, x1, y1);
+	drawLine(x1, y1, x0, y1);
+	drawLine(x0, y1, x0, y0);
 }
 
 // Makes sure that the file extension is .png or .jpg/.jpeg
