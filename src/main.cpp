@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 	if (renderer == NULL) {
 		SDL_Log("Error creating SDL_Renderer for ImGui!");
-		return false;
+		return -1;
 	}
 
 	IMGUI_CHECKVERSION();
