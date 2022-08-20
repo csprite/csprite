@@ -105,7 +105,7 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python scons make git
+          install: mingw-w64-x86_64-clang mingw-w64-x86_64-SDL2 mingw-w64-x86_64-python scons make git
 
       - uses: actions/download-artifact@v2
         with:
@@ -143,7 +143,7 @@ jobs:
         with:
           msystem: MINGW64
           update: false
-          install: mingw-w64-i686-binutils mingw-w64-i686-clang mingw-w64-i686-glfw mingw-w64-x86_64-python scons make git
+          install: mingw-w64-i686-binutils mingw-w64-i686-clang mingw-w64-i686-SDL2 mingw-w64-x86_64-python scons make git
 
       - uses: actions/download-artifact@v2
         with:
@@ -174,9 +174,9 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install scons, dylibbundler, pillow & glfw3
+    - name: Install scons, dylibbundler, pillow & SDL2
       run: |
-        brew install scons dylibbundler glfw
+        brew install scons dylibbundler sdl2
 
     - uses: actions/download-artifact@v2
       with:
