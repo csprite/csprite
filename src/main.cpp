@@ -95,6 +95,15 @@ int main(int argc, char** argv) {
 
 	window = SDL_CreateWindow(WINDOW_TITLE_CSTR, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
+#ifdef ENABLE_WIN_ICON
+	{
+		unsigned char* winIcon = (unsigned char*)assets_get("data/icons/icon-48.png", NULL);
+		SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(winIcon, 48, 48, 8, 48 * 2, 0x0f00, 0x00f0, 0x000f, 0xf000);
+		SDL_SetWindowIcon(window, surface);
+		SDL_FreeSurface(surface);
+	}
+#endif
+
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 	if (renderer == NULL) {
 		SDL_Log("Error creating SDL_Renderer!");
