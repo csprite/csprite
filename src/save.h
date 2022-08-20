@@ -42,18 +42,12 @@ void LoadImageToCanvas(const char *filepath, int *canvas_dims, Uint32 **canvas_d
 	// FreeHistory();
 }
 
-// void WritePngFromCanvas(const char *filepath, int *canvas_dims) {
-// 	unsigned char *data = (unsigned char *) malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
-// 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-// 	stbi_write_png(filepath, canvas_dims[0], canvas_dims[1], 4, data, 0);
-// 	free(data);
-// }
+void WritePngFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
+	stbi_write_png(filepath, canvas_dims[0], canvas_dims[1], 4, data, 0);
+}
 
-// void WriteJpgFromCanvas(const char *filepath, int *canvas_dims) {
-// 	unsigned char *data = (unsigned char *) malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
-// 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-// 	stbi_write_jpg(filepath, canvas_dims[0], canvas_dims[1], 4, data, 100);
-// 	free(data);
-// }
+void WriteJpgFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
+	stbi_write_jpg(filepath, canvas_dims[0], canvas_dims[1], 4, data, 100);
+}
 
 #endif // end SAVE_H
