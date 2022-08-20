@@ -502,9 +502,9 @@ void ProcessEvents() {
 					ImgDidChange = true;
 					draw(MousePosRel.X, MousePosRel.Y);
 				} else if (Tool == FILL) {
-					Uint32* ptr = GetPixel(MousePosRel.X, MousePosRel.Y);
-					if (ptr != NULL)
-						fill(MousePosRel.X, MousePosRel.Y, ptr);
+					Uint32* oldColor = GetPixel(MousePosRel.X, MousePosRel.Y);
+					if (oldColor != NULL)
+						fill(MousePosRel.X, MousePosRel.Y, *oldColor);
 				}
 			}
 			break;
@@ -621,20 +621,19 @@ void draw(int st_x, int st_y) {
 
 
 // Fill Tool, Fills The Whole Canvas Using Recursion
-void fill(int x, int y, Uint32* old_color) {
+void fill(int x, int y, Uint32 old_color) {
+	if (!(x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]))
+		return;
+
 	Uint32* ptr = GetPixel(x, y);
-	if (ptr != NULL && *ptr == *old_color) {
+	if (ptr != NULL && *ptr == old_color) {
 		ImgDidChange = true;
 		*ptr = SelectedColor;
 
-		if (x != 0 && GetPixel(x - 1, y) != NULL && *(GetPixel(x - 1, y)) != SelectedColor)
-			fill(x - 1, y, old_color);
-		if (x != CanvasDims[0] - 1 && GetPixel(x + 1, y) != NULL && *(GetPixel(x + 1, y)) != SelectedColor)
-			fill(x + 1, y, old_color);
-		if (y != CanvasDims[1] - 1 && GetPixel(x, y + 1) != NULL && *(GetPixel(x, y + 1)) != SelectedColor)
-			fill(x, y + 1, old_color);
-		if (y != 0 && GetPixel(x, y - 1) != NULL && *(GetPixel(x, y - 1)) != SelectedColor)
-			fill(x, y - 1, old_color);
+		fill(x + 1, y, old_color);
+		fill(x - 1, y, old_color);
+		fill(x, y + 1, old_color);
+		fill(x, y - 1, old_color);
 	}
 }
 
