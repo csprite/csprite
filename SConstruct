@@ -142,7 +142,7 @@ else:
 # OSX Compilation support.
 if target_os == 'darwin':
 	env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
-	env.Append(LIBS=['m', 'sdl', 'objc'])
+	env.Append(LIBS=['m', 'sdl2', 'objc'])
 
 # Append external environment flags
 env.Append(
