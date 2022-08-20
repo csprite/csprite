@@ -16,6 +16,9 @@
 	  *(a + 2) == *(b + 2)   &&    \
 	  *(a + 3) == *(b + 3) )
 
+#define RGBA2UINT32(r, g, b, a) \
+	((r & 0xff) << 24) + ((g & 0xff) << 16) + ((b & 0xff) << 8) + (a & 0xff)
+
 /*
 	Macro: OpenURL(std::string URL)
 	Description: Opens The Given URL in default browser, if no implementation found logs a msg in console
