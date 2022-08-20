@@ -25,34 +25,44 @@ jobs:
         path: ./src/assets/
         if-no-files-found: error
 
-  # linux-x86_64:
-  #   needs: [generate-assets]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Check out
-  #     uses: actions/checkout@v2
+  linux-x86_64:
+    needs: [generate-assets]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
 
-  #   - uses: actions/download-artifact@v2
-  #     with:
-  #       name: generated_assets
-  #       path: ./src/assets/
+    - uses: actions/download-artifact@v2
+      with:
+        name: generated_assets
+        path: ./src/assets/
 
-  #   - name: Install SDL2, Git & Scons
-  #     run: |
-  #       sudo apt-get install libsdl2-2.0-0 libsdl2-dev git scons
+    - name: Install Git & Scons
+      run: |
+        sudo apt-get install git scons
 
-  #   - name: Build
-  #     run: make release
+    - name: Build & Install SDL2
+      run: |
+        git clone https://github.com/libsdl-org/SDL -b release-2.24.0
+        cd SDL
+        mkdir build
+        cd build
+        ../configure
+        make
+        sudo make install
 
-  #   - name: Strip & rename
-  #     run: strip ./csprite && mv ./csprite csprite.elf
+    - name: Build
+      run: make release
 
-  #   - name: Upload Artifacts
-  #     uses: actions/upload-artifact@v2
-  #     with:
-  #       name: linux-x86_64
-  #       path: csprite.elf
-  #       if-no-files-found: error
+    - name: Strip & rename
+      run: strip ./csprite && mv ./csprite csprite.elf
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-x86_64
+        path: csprite.elf
+        if-no-files-found: error
 
   # linux_i686:
   #   needs: [generate-assets]
