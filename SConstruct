@@ -127,10 +127,10 @@ env.Append(
 if target_os == 'msys':
 	env.Append(
 		LIBS=[
-			# 'SDL2main',
+			'SDL2main',
 			'SDL2', 'mingw32', 'opengl32', 'comdlg32', 'imagehlp', 'dinput8',
 			'dxguid', 'dxerr8', 'user32', 'gdi32', 'winmm', 'imm32', 'ole32', 'oleaut32',
-			'shell32', 'version', 'uuid'
+			'shell32', 'version', 'uuid', 'setupapi'
 		],
 		LINKFLAGS=[
 			"-mwindows", # Fix Console From Popping-Up
