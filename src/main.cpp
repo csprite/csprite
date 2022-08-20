@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
 
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 	if (renderer == NULL) {
-		SDL_Log("Error creating SDL_Renderer for ImGui!");
+		SDL_Log("Error creating SDL_Renderer!");
 		return -1;
 	}
 
@@ -508,7 +508,7 @@ Uint32* GetPixel(int x, int y, Uint32* data) {
 
 void AdjustZoom(bool increase) {
 	if (increase == true) {
-		if (ZoomLevel < UINT_MAX) { // Max Value Of Unsigned int
+		if (ZoomLevel < INT_MAX) { // Max Value Of Unsigned int
 			ZoomLevel++;
 			ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 		}
