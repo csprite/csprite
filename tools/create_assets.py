@@ -120,7 +120,7 @@ def encode_img(imgPath):
 	data = data.convert('RGBA').getdata()
 
 	# We Don't Generate Icons For Sizes more than 48 because of file sizes
-	if width > 48 or height > 48:
+	if not width == 48 or not height == 48:
 		return False
 
 	pixelArr = []
