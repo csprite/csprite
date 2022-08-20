@@ -1,44 +1,35 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#define SDL_MAIN_HANDLED
+#include <SDL2/SDL.h>
+#include <stdio.h>
+#include <limits.h>
 #include <stdint.h>
 #include <string>
-#include "GLFW/glfw3.h"
 
 enum export_format_e { PNG, JPG };
 
-// Callbacks
-void ProcessInput(GLFWwindow* window);
-void ScrollCallback(GLFWwindow* window, double, double);
-void KeyCallback(GLFWwindow* window, int, int, int, int);
-void FrameBufferSizeCallback(GLFWwindow* window, int, int);
-void WindowSizeCallback(GLFWwindow* window, int width, int height);
-void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+// Little Helpers
+Uint32* GetPixel(int x, int y, Uint32* data = NULL);
 
-// Canvas Zoom
-void ViewportSet();
-void ZoomNLevelViewport(); // Zooms And Levels The Canvas.
+void ProcessEvents();
+void UpdateCanvasRect();
 void AdjustZoom(bool increase);
 
-// Little Helpers
-unsigned char * GetPixel(int x, int y);
-
-// Canvas Operations
-void fill(int x, int y, unsigned char *old_colour);
 void draw(int x, int y); // Draws on 1 x, y coordinate
-void drawInBetween(int st_x, int st_y, int end_x, int end_y); // Draws Between The Given 2 x, y coordinates
-void drawLine(int lStartX, int lStartY, int lEndX, int lEndY);
+void drawInBetween(int st_x, int st_y, int end_x, int end_y);
+void fill(int x, int y, Uint32 old_color);
+void drawLine(int x0, int y0, int x1, int y1);
 void drawRect(int x0, int y0, int x1, int y1);
 
-// File IO
-std::string FixFileExtension(std::string filepath);
-void SaveImageFromCanvas(std::string filepath);
-
-// Undo/Redo Related
-int Undo();
-int Redo();
 void SaveState();
 void FreeHistory();
+void Redo();
+void Undo();
+
+std::string FixFileExtension(std::string filepath);
+void SaveImageFromCanvas(std::string filepath);
 
 // Versions & Stuff
 
