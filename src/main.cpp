@@ -1,13 +1,9 @@
-#define SDL_MAIN_HANDLED
-#include <SDL2/SDL.h>
-#include <stdio.h>
-
-#include "main.h"
-#include "macros.h"
-
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
+
+#include "main.h"
+#include "macros.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -18,7 +14,7 @@ SDL_Window* window = NULL;
 int WindowDims[2] = { 700, 500 };
 int CanvasDims[2] = { 60, 40 };
 int BrushSize = 4;
-unsigned int ZoomLevel = 8;
+int ZoomLevel = 8;
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 
 Uint32* CanvasData = NULL;
@@ -30,6 +26,8 @@ bool IsCtrlDown = false;
 bool IsShiftDown = false;
 bool IsLMBDown = false;
 bool AppCloseRequested = false;
+bool ShowNewCanvasWindow = false;
+bool CanvasFreeze = false;
 
 enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE };
 enum mode_e { SQUARE, CIRCLE };
@@ -128,19 +126,137 @@ int main(int argc, char** argv) {
 	while (!AppCloseRequested) {
 		ProcessEvents();
 
-		SDL_UpdateTexture(CanvasTex, NULL, CanvasData, 60 * sizeof(Uint32));
-		SDL_UpdateTexture(CanvasBgTex, NULL, CanvasBgData, 60 * sizeof(Uint32));
+		SDL_UpdateTexture(CanvasTex, NULL, CanvasData, CanvasDims[0] * sizeof(Uint32));
+		SDL_UpdateTexture(CanvasBgTex, NULL, CanvasBgData, CanvasDims[0] * sizeof(Uint32));
 
 		ImGui_ImplSDLRenderer_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 
 		{
-			// ImGui::Begin("Controls");
-			// ImGui::SetWindowPos({0, 0});
-			// ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			// ImGui::ColorEdit3("clear color", (float*)&clear_color);
-			// ImGui::End();
+			static int NEW_DIMS[2] = {60, 40};
+
+			if (ImGui::BeginMainMenuBar()) {
+				if (ImGui::BeginMenu("File")) {
+					if (ImGui::MenuItem("New", "Ctrl+N")) {
+						ShowNewCanvasWindow = 1;
+						CanvasFreeze = true;
+					}
+				// 	if (ImGui::MenuItem("Open", "Ctrl+O")) {
+				// 		char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
+				// 		if (filePath != NULL) {
+				// 			FilePath = std::string(filePath);
+				// 			LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
+				// 			glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
+				// 			ZoomNLevelViewport();
+				// 		}
+				// 	}
+				// 	if (ImGui::BeginMenu("Save")) {
+				// 		if (ImGui::MenuItem("Save", "Ctrl+S")) {
+				// 			FilePath = FixFileExtension(FilePath);
+				// 			SaveImageFromCanvas(FilePath);
+				// 			glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
+				// 			FreeHistory();
+				// 			SaveState();
+				// 		}
+				// 		if (ImGui::MenuItem("Save As", "Alt+S")) {
+				// 			char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
+				// 			if (filePath != NULL) {
+				// 				FilePath = FixFileExtension(std::string(filePath));
+				// 				SaveImageFromCanvas(FilePath);
+				// 				glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
+				// 				FreeHistory();
+				// 				SaveState();
+				// 			}
+				// 		}
+				// 		ImGui::EndMenu();
+				// 	}
+					ImGui::EndMenu();
+				}
+				// if (ImGui::BeginMenu("Edit")) {
+				// 	if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
+				// 		Undo();
+				// 	}
+				// 	if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
+				// 		Redo();
+				// 	}
+				// 	ImGui::EndMenu();
+				// }
+				if (ImGui::BeginMenu("Help")) {
+					if (ImGui::MenuItem("About")) {
+						OpenURL("https://github.com/pegvin/CSprite/wiki/About-CSprite");
+					}
+					if (ImGui::MenuItem("GitHub")) {
+						OpenURL("https://github.com/pegvin/CSprite");
+					}
+					ImGui::EndMenu();
+				}
+				ImGui::EndMainMenuBar();
+			}
+
+			if (ShowNewCanvasWindow) {
+				ImGui::SetNextWindowSize({230.0f, 100.0f}, 0);
+				if (ImGui::BeginPopupModal(
+						"ShowNewCanvasWindow",
+						NULL,
+						ImGuiWindowFlags_NoCollapse |
+						ImGuiWindowFlags_NoTitleBar |
+						ImGuiWindowFlags_NoResize   |
+						ImGuiWindowFlags_NoMove
+				)) {
+					ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
+					ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
+
+					if (ImGui::Button("Ok")) {
+						free(CanvasData);
+						free(CanvasBgData);
+						CanvasDims[0] = NEW_DIMS[0];
+						CanvasDims[1] = NEW_DIMS[1];
+
+						CanvasData = (Uint32*)malloc(CANVAS_SIZE_B);
+						memset(CanvasData, 0, CANVAS_SIZE_B);
+
+						if (CanvasData == NULL) {
+							printf("Unable To allocate memory for canvas.\n");
+							return 1;
+						}
+
+						CanvasBgData = (Uint32*)malloc(CANVAS_SIZE_B);
+						if (CanvasBgData == NULL) {
+							printf("Unable To allocate memory for canvas.\n");
+							return 1;
+						}
+
+						for (int x = 0; x < CanvasDims[0]; x++) {
+							for (int y = 0; y < CanvasDims[1]; y++) {
+								Uint32* pixel = GetPixel(x, y, CanvasBgData);
+								*pixel = (x + y) % 2 ? 0x000000FF : 0xFFFFFFFF;
+							}
+						}
+
+						SDL_DestroyTexture(CanvasTex);
+						SDL_DestroyTexture(CanvasBgTex);
+						CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
+						CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
+
+						SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+						SDL_SetTextureBlendMode(CanvasTex, SDL_BLENDMODE_BLEND);
+						SDL_SetTextureBlendMode(CanvasBgTex, SDL_BLENDMODE_BLEND);
+
+						UpdateCanvasRect();
+						CanvasFreeze = false;
+						ShowNewCanvasWindow = false;
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Cancel")) {
+						CanvasFreeze = false;
+						ShowNewCanvasWindow = false;
+					}
+					ImGui::EndPopup();
+				} else {
+					ImGui::OpenPopup("ShowNewCanvasWindow");
+				}
+			}
 
 			if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
 				ImGui::SetWindowPos({0.0f, (float)(WindowDims[1] - 55)});
@@ -251,26 +367,26 @@ void ProcessEvents() {
 				IsShiftDown = true;
 			} else if (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL) {
 				IsCtrlDown = true;
-			} else if (event.key.keysym.sym == SDLK_b) {
+			} else if (event.key.keysym.sym == SDLK_b && !CanvasFreeze) {
 				Tool = BRUSH;
 				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
-			} else if (event.key.keysym.sym == SDLK_e) {
+			} else if (event.key.keysym.sym == SDLK_e && !CanvasFreeze) {
 				Tool = ERASER;
 				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
-			} else if (event.key.keysym.sym == SDLK_EQUALS) {
+			} else if (event.key.keysym.sym == SDLK_EQUALS && !CanvasFreeze) {
 				if (IsCtrlDown == true) {
 					AdjustZoom(true);
 				} else {
 					BrushSize++;
 				}
-			} else if (event.key.keysym.sym == SDLK_MINUS) {
+			} else if (event.key.keysym.sym == SDLK_MINUS && !CanvasFreeze) {
 				if (IsCtrlDown == true) {
 					AdjustZoom(false);
 				} else {
 					BrushSize--;
 					BrushSize = BrushSize < 1 ? 1 : BrushSize; // Clamp So It Doesn't Go Below 1
 				}
-			} else if (event.key.keysym.sym == SDLK_SPACE) {
+			} else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze) {
 				if (Tool != PAN) {
 					LastTool = Tool;
 					Tool = PAN;
@@ -282,7 +398,7 @@ void ProcessEvents() {
 				IsShiftDown = false;
 			else if (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)
 				IsCtrlDown = false;
-			else if (event.key.keysym.sym == SDLK_SPACE)
+			else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze)
 				Tool = LastTool;
 			break;
 		case SDL_MOUSEWHEEL:
@@ -297,7 +413,7 @@ void ProcessEvents() {
 				IsLMBDown = false;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			if (event.button.button == SDL_BUTTON_LEFT) {
+			if (event.button.button == SDL_BUTTON_LEFT && !CanvasFreeze) {
 				IsLMBDown = true;
 				draw(MousePosRel.X, MousePosRel.Y);
 			}
@@ -313,10 +429,10 @@ void ProcessEvents() {
 			MousePosRel.X = (event.motion.x - CanvasContRect.x) / ZoomLevel;
 			MousePosRel.Y = (event.motion.y - CanvasContRect.y) / ZoomLevel;
 
-			if (Tool == PAN) {
+			if (Tool == PAN && !CanvasFreeze) {
 				CanvasContRect.x = CanvasContRect.x + (MousePos.X - MousePos.LastX);
 				CanvasContRect.y = CanvasContRect.y + (MousePos.Y - MousePos.LastY);
-			} else if (IsLMBDown == true) {
+			} else if (IsLMBDown == true && !CanvasFreeze) {
 				if (MousePosRel.X >= 0 && MousePosRel.X < CanvasDims[0] && MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1]) {
 					draw(MousePosRel.X, MousePosRel.Y);
 					drawInBetween(MousePosRel.X, MousePosRel.Y, MousePosRel.LastX, MousePosRel.LastY);
