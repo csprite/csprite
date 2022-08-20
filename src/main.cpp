@@ -46,6 +46,7 @@ bool IsLMBDown = false;
 bool AppCloseRequested = false;
 bool ShowNewCanvasWindow = false;
 bool CanvasFreeze = false;
+bool ImgDidChange = false;
 
 enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE };
 enum mode_e { SQUARE, CIRCLE };
@@ -56,6 +57,12 @@ enum tool_e LastTool = BRUSH;
 enum mode_e Mode = CIRCLE;
 enum mode_e LastMode = CIRCLE;
 
+struct cvstate {
+	unsigned char* pixels;
+	cvstate* next;
+	cvstate* prev;
+};
+
 struct mousepos {
 	double X;
 	double Y;
@@ -65,10 +72,12 @@ struct mousepos {
 	double DownY;
 };
 
+typedef struct cvstate cvstate_t;
 typedef struct mousepos mousepos_t;
 
 mousepos_t MousePos = { 0 };
 mousepos_t MousePosRel = { 0 };
+cvstate_t* CurrentState = NULL;
 
 #define UpdateCanvasRect()                                                  \
 	CanvasContRect = {                                                      \
@@ -148,6 +157,9 @@ int main(int argc, char** argv) {
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	SDL_SetTextureBlendMode(CanvasTex, SDL_BLENDMODE_BLEND);
 	SDL_SetTextureBlendMode(CanvasBgTex, SDL_BLENDMODE_BLEND);
+
+	SaveState();
+
 	while (!AppCloseRequested) {
 		ProcessEvents();
 
@@ -192,8 +204,8 @@ int main(int argc, char** argv) {
 							FilePath = FixFileExtension(FilePath);
 							SaveImageFromCanvas(FilePath);
 							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-							// FreeHistory();
-							// SaveState();
+							FreeHistory();
+							SaveState();
 						}
 						if (ImGui::MenuItem("Save As", "Alt+S")) {
 							char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
@@ -201,23 +213,23 @@ int main(int argc, char** argv) {
 								FilePath = FixFileExtension(std::string(filePath));
 								SaveImageFromCanvas(FilePath);
 								SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-								// FreeHistory();
-								// SaveState();
+								FreeHistory();
+								SaveState();
 							}
 						}
 						ImGui::EndMenu();
 					}
 					ImGui::EndMenu();
 				}
-				// if (ImGui::BeginMenu("Edit")) {
-				// 	if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
-				// 		Undo();
-				// 	}
-				// 	if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
-				// 		Redo();
-				// 	}
-				// 	ImGui::EndMenu();
-				// }
+				if (ImGui::BeginMenu("Edit")) {
+					if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
+						Undo();
+					}
+					if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
+						Redo();
+					}
+					ImGui::EndMenu();
+				}
 				if (ImGui::BeginMenu("Help")) {
 					if (ImGui::MenuItem("About")) {
 						OpenURL("https://github.com/pegvin/CSprite/wiki/About-CSprite");
@@ -244,6 +256,7 @@ int main(int argc, char** argv) {
 					ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
 					if (ImGui::Button("Ok")) {
+						FreeHistory();
 						free(CanvasData);
 						free(CanvasBgData);
 						CanvasDims[0] = NEW_DIMS[0];
@@ -280,6 +293,7 @@ int main(int argc, char** argv) {
 						SDL_SetTextureBlendMode(CanvasBgTex, SDL_BLENDMODE_BLEND);
 
 						UpdateCanvasRect();
+						SaveState();
 						CanvasFreeze = false;
 						ShowNewCanvasWindow = false;
 					}
@@ -391,6 +405,7 @@ int main(int argc, char** argv) {
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
+	FreeHistory();
 	FreePalette(P);
 	free(CanvasData);
 	free(CanvasBgData);
@@ -429,6 +444,8 @@ void ProcessEvents() {
 			} else if (event.key.keysym.sym == SDLK_e && !CanvasFreeze) {
 				Tool = ERASER;
 				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
+			} else if (event.key.keysym.sym == SDLK_f && !CanvasFreeze) {
+				Tool = FILL;
 			} else if (event.key.keysym.sym == SDLK_EQUALS && !CanvasFreeze) {
 				if (IsCtrlDown == true) {
 					AdjustZoom(true);
@@ -456,6 +473,10 @@ void ProcessEvents() {
 				IsCtrlDown = false;
 			else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze)
 				Tool = LastTool;
+			else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze)
+				Undo();
+			else if (event.key.keysym.sym == SDLK_y && IsCtrlDown && !CanvasFreeze)
+				Redo();
 			break;
 		case SDL_MOUSEWHEEL:
 			if (event.wheel.y > 0 && IsCtrlDown) { // Scroll Up - Zoom In
@@ -465,13 +486,26 @@ void ProcessEvents() {
 			}
 			break;
 		case SDL_MOUSEBUTTONUP:
-			if (event.button.button == SDL_BUTTON_LEFT)
+			if (event.button.button == SDL_BUTTON_LEFT) {
 				IsLMBDown = false;
+				ImgDidChange = ImgDidChange || (Tool == LINE || Tool == RECTANGLE);
+				if (ImgDidChange == true) {
+					SaveState();
+					ImgDidChange = false;
+				}
+			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 			if (event.button.button == SDL_BUTTON_LEFT && !CanvasFreeze) {
 				IsLMBDown = true;
-				draw(MousePosRel.X, MousePosRel.Y);
+				if (Tool == BRUSH || Tool == ERASER) {
+					ImgDidChange = true;
+					draw(MousePosRel.X, MousePosRel.Y);
+				} else if (Tool == FILL) {
+					Uint32* ptr = GetPixel(MousePosRel.X, MousePosRel.Y);
+					if (ptr != NULL)
+						fill(MousePosRel.X, MousePosRel.Y, ptr);
+				}
 			}
 			break;
 		case SDL_MOUSEMOTION:
@@ -490,8 +524,10 @@ void ProcessEvents() {
 				CanvasContRect.y = CanvasContRect.y + (MousePos.Y - MousePos.LastY);
 			} else if (IsLMBDown == true && !CanvasFreeze) {
 				if (MousePosRel.X >= 0 && MousePosRel.X < CanvasDims[0] && MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1]) {
-					draw(MousePosRel.X, MousePosRel.Y);
-					drawInBetween(MousePosRel.X, MousePosRel.Y, MousePosRel.LastX, MousePosRel.LastY);
+					if (Tool == BRUSH || Tool == ERASER) {
+						draw(MousePosRel.X, MousePosRel.Y);
+						drawInBetween(MousePosRel.X, MousePosRel.Y, MousePosRel.LastX, MousePosRel.LastY);
+					}
 				}
 			}
 			break;
@@ -583,6 +619,25 @@ void draw(int st_x, int st_y) {
 	}
 }
 
+
+// Fill Tool, Fills The Whole Canvas Using Recursion
+void fill(int x, int y, Uint32* old_color) {
+	Uint32* ptr = GetPixel(x, y);
+	if (ptr != NULL && *ptr == *old_color) {
+		ImgDidChange = true;
+		*ptr = SelectedColor;
+
+		if (x != 0 && GetPixel(x - 1, y) != NULL && *(GetPixel(x - 1, y)) != SelectedColor)
+			fill(x - 1, y, old_color);
+		if (x != CanvasDims[0] - 1 && GetPixel(x + 1, y) != NULL && *(GetPixel(x + 1, y)) != SelectedColor)
+			fill(x + 1, y, old_color);
+		if (y != CanvasDims[1] - 1 && GetPixel(x, y + 1) != NULL && *(GetPixel(x, y + 1)) != SelectedColor)
+			fill(x, y + 1, old_color);
+		if (y != 0 && GetPixel(x, y - 1) != NULL && *(GetPixel(x, y - 1)) != SelectedColor)
+			fill(x, y - 1, old_color);
+	}
+}
+
 // Makes sure that the file extension is .png or .jpg/.jpeg
 std::string FixFileExtension(std::string filepath) {
 	std::string fileExt = filepath.substr(filepath.find_last_of(".") + 1);
@@ -608,4 +663,98 @@ void SaveImageFromCanvas(std::string filepath) {
 		filepath = filepath + ".png";
 		WritePngFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
 	}
+}
+
+/*
+	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
+	Removes The Elements in a range from "History" if "IsDirty" is true
+*/
+void SaveState() {
+	printf("Save State...\n");
+	// Runs When We Did Undo And Tried To Modify The Canvas
+	if (CurrentState != NULL && CurrentState->next != NULL) {
+		cvstate_t* tmp;
+		cvstate_t* head = CurrentState->next; // we start freeing from the next node of current node
+
+		while (head != NULL) {
+			tmp = head;
+			head = head->next;
+			if (tmp->pixels != NULL) {
+				free(tmp->pixels);
+			}
+			free(tmp);
+		}
+	}
+
+	cvstate_t* NewState = (cvstate_t*) malloc(sizeof(cvstate_t));
+	NewState->pixels = (unsigned char*) malloc(CANVAS_SIZE_B);
+
+	if (CurrentState == NULL) {
+		CurrentState = NewState;
+		CurrentState->prev = NULL;
+		CurrentState->next = NULL;
+	} else {
+		NewState->prev = CurrentState;
+		NewState->next = NULL;
+		CurrentState->next = NewState;
+		CurrentState = NewState;
+	}
+
+	memset(CurrentState->pixels, 0, CANVAS_SIZE_B);
+	memcpy(CurrentState->pixels, CanvasData, CANVAS_SIZE_B);
+}
+
+// Undo - Puts The Pixels from "History" at "HistoryIndex"
+void Undo() {
+	if (CurrentState->prev != NULL) {
+		CurrentState = CurrentState->prev;
+		memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
+	}
+}
+
+// Redo - Puts The Pixels from "History" at "HistoryIndex"
+void Redo() {
+	if (CurrentState->next != NULL) {
+		CurrentState = CurrentState->next;
+		memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
+	}
+}
+
+/*
+	Function: FreeHistory()
+	Takes The CurrentState Node
+		- Frees All Of The Nodes Before It
+		- Frees All Of The Nodes After It
+*/
+void FreeHistory() {
+	if (CurrentState == NULL) return;
+
+	cvstate_t* tmp;
+	cvstate_t* head = CurrentState->prev;
+
+	while (head != NULL) {
+		tmp = head;
+		head = head->prev;
+		if (tmp != NULL && tmp->pixels != NULL) {
+			free(tmp->pixels);
+			tmp->pixels = NULL;
+			free(tmp);
+			tmp = NULL;
+		}
+	}
+
+	head = CurrentState;
+
+	while (head != NULL) {
+		tmp = head;
+		head = head->next;
+		if (tmp != NULL && tmp->pixels != NULL) {
+			free(tmp->pixels);
+			tmp->pixels = NULL;
+			free(tmp);
+			tmp = NULL;
+		}
+	}
+
+	CurrentState = NULL;
 }
