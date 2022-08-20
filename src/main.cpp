@@ -1,13 +1,20 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
+#include "tinyfiledialogs.h"
 
 #include "main.h"
+#include "save.h"
 #include "macros.h"
+#include "assets.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
 #endif
+
+std::string FilePath = "untitled.png"; // Default Output Filename
+char const* FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
+unsigned int NumOfFilterPatterns = 3;
 
 SDL_Window* window = NULL;
 
@@ -66,7 +73,7 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	window = SDL_CreateWindow("Dear ImGui SDL2+SDL_Renderer example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+	window = SDL_CreateWindow("csprite", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 	if (renderer == NULL) {
@@ -78,6 +85,11 @@ int main(int argc, char** argv) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = NULL;
+
+	const void* Montserrat_Bold = NULL;
+	int Montserrat_Bold_Size = 0;
+	Montserrat_Bold = assets_get("data/fonts/Montserrat-Bold.ttf", &Montserrat_Bold_Size);
+	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold, Montserrat_Bold_Size, 16.0f);
 	ImGui::StyleColorsDark();
 
 	ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
@@ -142,15 +154,26 @@ int main(int argc, char** argv) {
 						ShowNewCanvasWindow = 1;
 						CanvasFreeze = true;
 					}
-				// 	if (ImGui::MenuItem("Open", "Ctrl+O")) {
-				// 		char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
-				// 		if (filePath != NULL) {
-				// 			FilePath = std::string(filePath);
-				// 			LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-				// 			glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
-				// 			ZoomNLevelViewport();
-				// 		}
-				// 	}
+					if (ImGui::MenuItem("Open", "Ctrl+O")) {
+						char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
+						if (filePath != NULL) {
+							FilePath = std::string(filePath);
+
+							LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
+							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+
+							SDL_DestroyTexture(CanvasTex);
+							SDL_DestroyTexture(CanvasBgTex);
+							CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
+							CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
+
+							SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+							SDL_SetTextureBlendMode(CanvasTex, SDL_BLENDMODE_BLEND);
+							SDL_SetTextureBlendMode(CanvasBgTex, SDL_BLENDMODE_BLEND);
+
+							UpdateCanvasRect();
+						}
+					}
 				// 	if (ImGui::BeginMenu("Save")) {
 				// 		if (ImGui::MenuItem("Save", "Ctrl+S")) {
 				// 			FilePath = FixFileExtension(FilePath);
