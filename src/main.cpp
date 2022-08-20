@@ -54,13 +54,13 @@ typedef struct mousepos mousepos_t;
 mousepos_t MousePos = { 0 };
 mousepos_t MousePosRel = { 0 };
 
-#define UpdateCanvasRect()                                             \
-	CanvasContRect = {                                                 \
-		.x = (WindowDims[0] / 2) - (CanvasDims[0] * ZoomLevel / 2),    \
-		.y = (WindowDims[1] / 2) - (CanvasDims[1] * ZoomLevel / 2),    \
-		.w = CanvasDims[0] * ZoomLevel,                                \
-		.h = CanvasDims[1] * ZoomLevel                                 \
-	}                                                                  \
+#define UpdateCanvasRect()                                                  \
+	CanvasContRect = {                                                      \
+		.x = (int)(WindowDims[0] / 2) - (CanvasDims[0] * ZoomLevel / 2),    \
+		.y = (int)(WindowDims[1] / 2) - (CanvasDims[1] * ZoomLevel / 2),    \
+		.w = (int)CanvasDims[0] * ZoomLevel,                                \
+		.h = (int)CanvasDims[1] * ZoomLevel                                 \
+	}                                                                       \
 
 int main(int argc, char** argv) {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
