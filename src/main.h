@@ -11,7 +11,9 @@ Uint32* GetPixel(int x, int y, Uint32* data = NULL);
 
 void ProcessEvents();
 void UpdateCanvasRect();
+
 void draw(int x, int y); // Draws on 1 x, y coordinate
+void drawInBetween(int st_x, int st_y, int end_x, int end_y);
 
 // Versions & Stuff
 
