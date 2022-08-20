@@ -525,13 +525,20 @@ void ProcessEvents() {
 				MousePosRel.DownX = MousePosRel.X;
 				MousePosRel.DownY = MousePosRel.Y;
 
-				if (Tool == BRUSH || Tool == ERASER) {
-					ImgDidChange = true;
-					draw(MousePosRel.X, MousePosRel.Y);
-				} else if (Tool == FILL) {
-					Uint32* oldColor = GetPixel(MousePosRel.X, MousePosRel.Y);
-					if (oldColor != NULL)
-						fill(MousePosRel.X, MousePosRel.Y, *oldColor);
+				if (
+					MousePosRel.X >= 0            &&
+					MousePosRel.X < CanvasDims[0] &&
+					MousePosRel.Y >= 0            &&
+					MousePosRel.Y < CanvasDims[1]
+				) {
+					if (Tool == BRUSH || Tool == ERASER) {
+						draw(MousePosRel.X, MousePosRel.Y);
+						ImgDidChange = true;
+					} else if (Tool == FILL) {
+						Uint32* oldColor = GetPixel(MousePosRel.X, MousePosRel.Y);
+						if (oldColor != NULL)
+							fill(MousePosRel.X, MousePosRel.Y, *oldColor);
+					}
 				}
 			}
 			break;
