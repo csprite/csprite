@@ -1,3 +1,7 @@
+// For Converting Strings To LowerCase in FixFileExtension function
+#include <algorithm>
+#include <cctype>
+
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
@@ -7,6 +11,7 @@
 #include "save.h"
 #include "macros.h"
 #include "assets.h"
+#include "palette.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -20,9 +25,15 @@ SDL_Window* window = NULL;
 
 int WindowDims[2] = { 700, 500 };
 int CanvasDims[2] = { 60, 40 };
-int BrushSize = 4;
 int ZoomLevel = 8;
+int BrushSize = 5;
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
+
+unsigned int LastPaletteIndex = 0;
+unsigned int PaletteIndex = 0;
+palette_t* P = NULL;
+
+#define SelectedColor P->entries[PaletteIndex]
 
 Uint32* CanvasData = NULL;
 Uint32* CanvasBgData = NULL;
@@ -86,16 +97,18 @@ int main(int argc, char** argv) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = NULL;
 
+	ImDrawList* ImGuiDrawList = NULL;
 	const void* Montserrat_Bold = NULL;
 	int Montserrat_Bold_Size = 0;
 	Montserrat_Bold = assets_get("data/fonts/Montserrat-Bold.ttf", &Montserrat_Bold_Size);
 	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold, Montserrat_Bold_Size, 16.0f);
 	ImGui::StyleColorsDark();
+	P = LoadCsvPalette((const char*)assets_get("data/palettes/cc-29.csv", NULL));
 
 	ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
 	ImGui_ImplSDLRenderer_Init(renderer);
 
-	ImVec4 clear_color = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
+	ImVec4 EditorBG = ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
 
 	SDL_Texture* CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
 	SDL_Texture* CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
@@ -174,26 +187,26 @@ int main(int argc, char** argv) {
 							UpdateCanvasRect();
 						}
 					}
-				// 	if (ImGui::BeginMenu("Save")) {
-				// 		if (ImGui::MenuItem("Save", "Ctrl+S")) {
-				// 			FilePath = FixFileExtension(FilePath);
-				// 			SaveImageFromCanvas(FilePath);
-				// 			glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
-				// 			FreeHistory();
-				// 			SaveState();
-				// 		}
-				// 		if (ImGui::MenuItem("Save As", "Alt+S")) {
-				// 			char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
-				// 			if (filePath != NULL) {
-				// 				FilePath = FixFileExtension(std::string(filePath));
-				// 				SaveImageFromCanvas(FilePath);
-				// 				glfwSetWindowTitle(window, WINDOW_TITLE_CSTR);
-				// 				FreeHistory();
-				// 				SaveState();
-				// 			}
-				// 		}
-				// 		ImGui::EndMenu();
-				// 	}
+					if (ImGui::BeginMenu("Save")) {
+						if (ImGui::MenuItem("Save", "Ctrl+S")) {
+							FilePath = FixFileExtension(FilePath);
+							SaveImageFromCanvas(FilePath);
+							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+							// FreeHistory();
+							// SaveState();
+						}
+						if (ImGui::MenuItem("Save As", "Alt+S")) {
+							char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
+							if (filePath != NULL) {
+								FilePath = FixFileExtension(std::string(filePath));
+								SaveImageFromCanvas(FilePath);
+								SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+								// FreeHistory();
+								// SaveState();
+							}
+						}
+						ImGui::EndMenu();
+					}
 					ImGui::EndMenu();
 				}
 				// if (ImGui::BeginMenu("Edit")) {
@@ -329,10 +342,28 @@ int main(int argc, char** argv) {
 				ImGui::Text("%s", ZoomText.c_str());
 				ImGui::End();
 			}
+
+			if (ImGui::Begin("PWindow", NULL, window_flags)) {
+				ImGui::SetWindowSize({70.0f, (float)WindowDims[1]});
+				ImGui::SetWindowPos({0.0f, 25.0f});
+				for (unsigned int i = 0; i < P->numOfEntries; i++) {
+					ImGuiDrawList = ImGui::GetWindowDrawList();
+					if (i != 0 && i % 2 != 0)
+						ImGui::SameLine();
+
+					if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)((P->entries[i] >> 24) & 0xFF)/255, (float)((P->entries[i] >> 16) & 0xFF)/255, (float)((P->entries[i] >> 8) & 0xFF)/255, (float)(P->entries[i] & 0xFF)/255}))
+						PaletteIndex = i;
+
+					if (PaletteIndex == i)
+						ImGuiDrawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), 0xFFFFFFFF, 0, 0, 1);
+				};
+				ImGui::End();
+			}
+
 		}
 
 		ImGui::Render();
-		SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+		SDL_SetRenderDrawColor(renderer, (Uint8)(EditorBG.x * 255), (Uint8)(EditorBG.y * 255), (Uint8)(EditorBG.z * 255), (Uint8)(EditorBG.w * 255));
 
 		SDL_RenderClear(renderer); // Render ImGui Stuff To Screen
 
@@ -524,8 +555,7 @@ void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
 
 				Uint32* ptr = GetPixel(st_x + dirX, st_y + dirY, NULL);
 				if (ptr != NULL)
-					// 0x00000000, 0xFFFFFFFF
-					*ptr = Tool == ERASER ? RGBA2UINT32(0, 0, 0, 0) : RGBA2UINT32(255, 255, 255, 255);
+					*ptr = Tool == ERASER ? 0x00000000 : SelectedColor;
 			}
 		}
 	}
@@ -546,9 +576,34 @@ void draw(int st_x, int st_y) {
 
 			Uint32* ptr = GetPixel(st_x + dirX, st_y + dirY, NULL);
 			if (ptr != NULL)
-				// 0x00000000, 0xFFFFFFFF
-				*ptr = Tool == ERASER ? RGBA2UINT32(0, 0, 0, 0) : RGBA2UINT32(255, 255, 255, 255);
+				*ptr = Tool == ERASER ? 0x00000000 : SelectedColor;
 		}
 	}
 }
 
+// Makes sure that the file extension is .png or .jpg/.jpeg
+std::string FixFileExtension(std::string filepath) {
+	std::string fileExt = filepath.substr(filepath.find_last_of(".") + 1);
+	std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), [](unsigned char c){ return std::tolower(c); });
+
+	if (fileExt != "png" && fileExt != "jpg" && fileExt != "jpeg") {
+		filepath = filepath + ".png";
+	}
+
+	return filepath;
+}
+
+void SaveImageFromCanvas(std::string filepath) {
+	std::string fileExt = filepath.substr(filepath.find_last_of(".") + 1);
+	// Convert File Extension to LowerCase
+	std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), [](unsigned char c){ return std::tolower(c); });
+
+	if (fileExt == "png") {
+		WritePngFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
+	} else if (fileExt == "jpg" || fileExt == "jpeg") {
+		WriteJpgFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
+	} else {
+		filepath = filepath + ".png";
+		WritePngFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
+	}
+}

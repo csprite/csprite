@@ -20,6 +20,9 @@ void AdjustZoom(bool increase);
 void draw(int x, int y); // Draws on 1 x, y coordinate
 void drawInBetween(int st_x, int st_y, int end_x, int end_y);
 
+std::string FixFileExtension(std::string filepath);
+void SaveImageFromCanvas(std::string filepath);
+
 // Versions & Stuff
 
 #ifndef CS_VERSION_MAJOR
