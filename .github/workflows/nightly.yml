@@ -90,6 +90,7 @@ jobs:
           ../configure
           make -j4
           make install
+          cd ../../
           CC=clang make release
           mv csprite csprite-i686.elf
 
