@@ -391,10 +391,12 @@ int main(int argc, char** argv) {
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
+	FreePalette(P);
 	free(CanvasData);
 	free(CanvasBgData);
 
 	// Unneccessary but why not?
+	P = NULL;
 	CanvasTex = NULL;
 	CanvasBgTex = NULL;
 	renderer = NULL;
