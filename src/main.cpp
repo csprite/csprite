@@ -39,6 +39,20 @@ enum tool_e LastTool = BRUSH;
 enum mode_e Mode = CIRCLE;
 enum mode_e LastMode = CIRCLE;
 
+struct mousepos {
+	double X;
+	double Y;
+	double LastX;
+	double LastY;
+	double DownX;
+	double DownY;
+};
+
+typedef struct mousepos mousepos_t;
+
+mousepos_t MousePos = { 0 };
+mousepos_t MousePosRel = { 0 };
+
 #define UpdateCanvasRect()                                             \
 	CanvasContRect = {                                                 \
 		.x = (WindowDims[0] / 2) - (CanvasDims[0] * ZoomLevel / 2),    \
@@ -116,7 +130,8 @@ int main(int argc, char** argv) {
 		ImGui::NewFrame();
 
 		{
-			ImGui::Begin("Hello, world!");
+			ImGui::Begin("Controls");
+			ImGui::SetWindowPos({0, 0});
 
 			ImGui::SliderInt("Brush Size", &BrushSize, 1, 20);
 			ImGui::ColorEdit3("clear color", (float*)&clear_color);
@@ -209,15 +224,26 @@ void ProcessEvents() {
 				IsLMBDown = false;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			if (event.button.button == SDL_BUTTON_LEFT)
+			if (event.button.button == SDL_BUTTON_LEFT) {
 				IsLMBDown = true;
+				draw(MousePosRel.X, MousePosRel.Y);
+			}
 			break;
 		case SDL_MOUSEMOTION:
+			MousePos.LastX = MousePos.X;
+			MousePos.LastY = MousePos.Y;
+			MousePos.X = event.motion.x;
+			MousePos.Y = event.motion.y;
+
+			MousePosRel.LastX = MousePosRel.X;
+			MousePosRel.LastY = MousePosRel.Y;
+			MousePosRel.X = (event.motion.x - CanvasContRect.x) / ZoomLevel;
+			MousePosRel.Y = (event.motion.y - CanvasContRect.y) / ZoomLevel;
+
 			if (IsLMBDown == true) {
-				int x = (event.motion.x - CanvasContRect.x) / ZoomLevel;
-				int y = (event.motion.y - CanvasContRect.y) / ZoomLevel;
-				if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
-					draw(x, y);
+				if (MousePosRel.X >= 0 && MousePosRel.X < CanvasDims[0] && MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1]) {
+					draw(MousePosRel.X, MousePosRel.Y);
+					drawInBetween(MousePosRel.X, MousePosRel.Y, MousePosRel.LastX, MousePosRel.LastY);
 				}
 			}
 			break;
@@ -236,6 +262,44 @@ Uint32* GetPixel(int x, int y, Uint32* data) {
 // 	return ((r & 0xff) << 24) + ((g & 0xff) << 16) + ((b & 0xff) << 8) + (a & 0xff);
 // }
 
+/*
+	Function Takes 4 Argument First 2 Are starting x, y coordinates,
+	and second 2 are ending x, y coordinates.
+	And using a while loop it draws between the 2 given coordinates,
+	hence no gap is left when mouse is being moved very fast
+*/
+void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
+	while (st_x != end_x || st_y != end_y) {
+		if (st_x < end_x) {
+			st_x++;
+		}
+		if (st_x > end_x) {
+			st_x--;
+		}
+		if (st_y < end_y) {
+			st_y++;
+		}
+		if (st_y > end_y) {
+			st_y--;
+		}
+
+		for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
+			for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
+				if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
+					continue;
+
+				if (Mode == CIRCLE && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
+					continue;
+
+				Uint32* ptr = GetPixel(st_x + dirX, st_y + dirY, NULL);
+				if (ptr != NULL)
+					// 0x00000000, 0xFFFFFFFF
+					*ptr = Tool == ERASER ? RGBA2UINT32(0, 0, 0, 0) : RGBA2UINT32(255, 255, 255, 255);
+			}
+		}
+	}
+}
+
 void draw(int st_x, int st_y) {
 	// dirY = direction Y
 	// dirX = direction X
@@ -250,10 +314,9 @@ void draw(int st_x, int st_y) {
 				continue;
 
 			Uint32* ptr = GetPixel(st_x + dirX, st_y + dirY, NULL);
-
 			if (ptr != NULL)
-				//                                     0xFFFFFFFF                    0x00000000
-				*ptr = Tool == BRUSH ? RGBA2UINT32(255, 255, 255, 255) : RGBA2UINT32(0, 0, 0, 0);
+				// 0x00000000, 0xFFFFFFFF
+				*ptr = Tool == ERASER ? RGBA2UINT32(0, 0, 0, 0) : RGBA2UINT32(255, 255, 255, 255);
 		}
 	}
 }
