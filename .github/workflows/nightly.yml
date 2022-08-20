@@ -37,9 +37,9 @@ jobs:
         name: generated_assets
         path: ./src/assets/
 
-    - name: Install GLFW3, Git & Scons
+    - name: Install SDL2, Git & Scons
       run: |
-        sudo apt-get install libglfw3 libglfw3-dev git scons
+        sudo apt-get install libsdl2-2.0-0 libsdl2-dev git scons
 
     - name: Build
       run: make release
@@ -72,7 +72,7 @@ jobs:
       with:
         command: |
           apt-get update -y
-          apt-get install -y libglfw3 libglfw3-dev pkg-config git libgtk-3-dev scons clang
+          apt-get install -y libsdl2-2.0-0 libsdl2-dev pkg-config git libgtk-3-dev scons clang
           CC=clang make release
           mv csprite csprite-i686.elf
 
