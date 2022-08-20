@@ -126,7 +126,7 @@ env.Append(
 # Windows compilation support.
 if target_os == 'msys':
 	env.Append(
-		LIBS=['glfw3', 'opengl32', 'gdi32', 'comdlg32', 'ole32', 'shell32'],
+		LIBS=['sdl2', 'opengl32', 'gdi32', 'comdlg32', 'ole32', 'shell32'],
 		LINKFLAGS=[
 			"-mwindows", # Fix Console From Popping-Up
 			"--static"   # Link GLFW & Stuff Statically
@@ -134,7 +134,7 @@ if target_os == 'msys':
 	)
 else:
 	env.Append(
-		LIBS=['glfw', 'dl', 'm'],
+		LIBS=['SDL2', 'dl', 'm'],
 		CXXFLAGS=['-Wall', '-Wno-narrowing'],
 		CFLAGS=['-Wall', '-Wno-unknown-pragma']
 	)
@@ -142,7 +142,7 @@ else:
 # OSX Compilation support.
 if target_os == 'darwin':
 	env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
-	env.Append(LIBS=['m', 'glfw', 'objc'])
+	env.Append(LIBS=['m', 'sdl', 'objc'])
 
 # Append external environment flags
 env.Append(
