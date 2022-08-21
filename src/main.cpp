@@ -462,8 +462,6 @@ int main(int argc, char** argv) {
 	FreePalette(P);
 	free(CanvasData);
 	free(CanvasBgData);
-
-	WriteSettings(AppSettings);
 	free(AppSettings);
 
 	// Unneccessary but why not?
