@@ -11,6 +11,7 @@
 // https://stackoverflow.com/a/42906151/14516016
 #if defined(_WIN32) || defined(WIN32)
 	#include <windows.h>
+	#include <direct.h>
 	#define mkdir(dir, mode) _mkdir(dir)
 #endif
 
