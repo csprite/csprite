@@ -8,8 +8,9 @@ jobs:
   generate-assets:
     runs-on: ubuntu-latest
     steps:
-    - name: Check out
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - name: Generate Asset
       run: |
@@ -36,8 +37,9 @@ jobs:
     needs: [generate-assets]
     runs-on: ubuntu-latest
     steps:
-    - name: Check out
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - uses: actions/download-artifact@v2
       with:
