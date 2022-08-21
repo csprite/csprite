@@ -141,7 +141,9 @@ else:
 	env.Append(
 		LIBS=['SDL2', 'dl', 'm'],
 		CXXFLAGS=['-Wall', '-Wno-narrowing'],
-		CFLAGS=['-Wall', '-Wno-unknown-pragma']
+		CFLAGS=['-Wall', '-Wno-unknown-pragma'],
+		CDEFINES=['LOG_USE_COLOR'],
+		CPPDEFINES=['LOG_USE_COLOR']
 	)
 
 # OSX Compilation support.
