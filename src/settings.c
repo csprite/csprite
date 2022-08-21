@@ -50,18 +50,27 @@ settings_t* LoadSettings(void) {
 	if (access(configPath, F_OK) == 0) {
 		ini_t *config = ini_load(configPath);
 		const char* vsync = ini_get(config, "csprite", "vsync");
+		const char* accelerated = ini_get(config, "csprite", "accelerated");
 		const char* renderer = ini_get(config, "csprite", "renderer");
 		if (vsync == NULL)
 			s->vsync = true;
-		if (renderer == NULL)
-			strncpy(s->renderer, "software", 128);
-
-		if (strncmp(vsync, "true", 5) == 0)
+		else if (strncmp(vsync, "true", 5) == 0)
 			s->vsync = true;
 		else
 			s->vsync = false;
 
-		strncpy(s->renderer, renderer, 128);
+		if (renderer == NULL)
+			strncpy(s->renderer, "software", 128);
+		else
+			strncpy(s->renderer, renderer, 128);
+
+		if (accelerated == NULL)
+			s->accelerated = true;
+		else if (strncmp(accelerated, "true", 5) == 0)
+			s->accelerated = true;
+		else
+			s->accelerated = false;
+
 		ini_free(config);
 		config = NULL;
 		return s;
@@ -99,7 +108,12 @@ int WriteSettings(settings_t* s) {
 	}
 
 	FILE* f = fopen(configPath, "w");
-	fprintf(f, "[csprite]\nvsync = %s\nrenderer = %s\n", s->vsync == true ? "true" : "false", s->renderer);
+	fprintf(
+		f, "[csprite]\nvsync = %s\nrenderer = %s\naccelerated = %s\n",
+		s->vsync == true ? "true" : "false",
+		s->renderer,
+		s->accelerated == true ? "true" : "false"
+	);
 	fclose(f);
 	f = NULL;
 
