@@ -5,6 +5,7 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
+#include "log/log.h"
 #include "tinyfiledialogs.h"
 
 #include "main.h"
@@ -89,7 +90,7 @@ cvstate_t* CurrentState = NULL;
 
 int main(int argc, char** argv) {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
-		printf("Error: %s\n", SDL_GetError());
+		log_error("failed to initialize SDL2: %s\n", SDL_GetError());
 		return -1;
 	}
 
@@ -109,6 +110,10 @@ int main(int argc, char** argv) {
 		SDL_Log("Error creating SDL_Renderer!");
 		return -1;
 	}
+
+	SDL_RendererInfo rendererInfo;
+	SDL_GetRendererInfo(renderer, &rendererInfo);
+	log_info("Renderer: %s", rendererInfo.name);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -135,16 +140,16 @@ int main(int argc, char** argv) {
 		CanvasData = (Uint32*)malloc(CANVAS_SIZE_B);
 		memset(CanvasData, 0, CANVAS_SIZE_B);
 		if (CanvasData == NULL) {
-			printf("Unable To allocate memory for canvas.\n");
-			return 1;
+			log_error("failed to allocate %d bytes for canvas.\n", CANVAS_SIZE_B);
+			return -1;
 		}
 	}
 
 	if (CanvasBgData == NULL) {
 		CanvasBgData = (Uint32*)malloc(CANVAS_SIZE_B);
 		if (CanvasBgData == NULL) {
-			printf("Unable To allocate memory for canvas.\n");
-			return 1;
+			log_error("failed to allocate %d bytes for checkerboard bg.\n", CANVAS_SIZE_B);
+			return -1;
 		}
 	}
 
@@ -773,7 +778,6 @@ void SaveImageFromCanvas(std::string filepath) {
 	Removes The Elements in a range from "History" if "IsDirty" is true
 */
 void SaveState() {
-	printf("Save State...\n");
 	// Runs When We Did Undo And Tried To Modify The Canvas
 	if (CurrentState != NULL && CurrentState->next != NULL) {
 		cvstate_t* tmp;
