@@ -101,8 +101,7 @@ def GatherFiles(Directories):
 	return files
 
 # Get all the c and c++ files in src, recursively.
-sources = GatherFiles(['src', 'lib/imgui', 'lib/log/'])
-sources += glob.glob('lib/glad.c')
+sources = GatherFiles(['src', 'lib/imgui', 'lib/log/', 'lib/ini'])
 sources += glob.glob('lib/tinyfiledialogs.c')
 
 # Compile windows.rc & link with it.
