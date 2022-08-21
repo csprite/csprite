@@ -13,6 +13,7 @@
 #include "macros.h"
 #include "assets.h"
 #include "palette.h"
+#include "settings.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -79,17 +80,18 @@ typedef struct mousepos mousepos_t;
 mousepos_t MousePos = { 0 };
 mousepos_t MousePosRel = { 0 };
 cvstate_t* CurrentState = NULL;
+settings_t* AppSettings = NULL;
 
-#define MAX_DEF_SDL_RENDERER_SIZE 128
-#if defined(__APPLE__)
-	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "metal";
-#elif defined(__linux__) || defined(__unix__)
-	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "opengl";
-#elif defined(_WIN32) || defined(WIN32)
-	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "direct3d";
-#else
-	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "Software";
-#endif
+// #define MAX_DEF_SDL_RENDERER_SIZE 128
+// #if defined(__APPLE__)
+// 	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "metal";
+// #elif defined(__linux__) || defined(__unix__)
+// 	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "opengl";
+// #elif defined(_WIN32) || defined(WIN32)
+// 	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "direct3d";
+// #else
+// 	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "Software";
+// #endif
 
 #define UpdateCanvasRect()                                                  \
 	CanvasContRect = {                                                      \
@@ -100,12 +102,26 @@ cvstate_t* CurrentState = NULL;
 	}                                                                       \
 
 int main(int argc, char** argv) {
+	AppSettings = LoadSettings();
+	if (AppSettings == NULL) {
+		log_error("failed to load settings!");
+		return -1;
+	} else {
+		log_info("settings loaded successfully!\n - vsync: %s\n - renderer: %s", AppSettings->vsync == true ? "enabled" : "disabled", AppSettings->renderer);
+	}
+
+	Uint32 sdl_window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+
+	Uint32 sdl_renderer_flags = SDL_RENDERER_ACCELERATED;
+	if (AppSettings->vsync)
+		sdl_renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
+
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
 		log_error("failed to initialize SDL2: %s", SDL_GetError());
 		return -1;
 	}
 
-	window = SDL_CreateWindow(WINDOW_TITLE_CSTR, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+	window = SDL_CreateWindow(WINDOW_TITLE_CSTR, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], sdl_window_flags);
 
 #ifdef ENABLE_WIN_ICON
 	{
@@ -116,13 +132,13 @@ int main(int argc, char** argv) {
 	}
 #endif
 
-	if (SDL_SetHint(SDL_HINT_RENDER_DRIVER, DefaultSdlRenderer) == SDL_TRUE) {
-		log_info("requested to use %s renderer.", DefaultSdlRenderer);
+	if (SDL_SetHint(SDL_HINT_RENDER_DRIVER, AppSettings->renderer) == SDL_TRUE) {
+		log_info("requested to use %s renderer.", AppSettings->renderer);
 	} else {
-		log_error("request failed to use %s renderer!", DefaultSdlRenderer);
+		log_error("request failed to use %s renderer!", AppSettings->renderer);
 	}
 
-	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, sdl_renderer_flags);
 	if (renderer == NULL) {
 		SDL_Log("Error creating SDL_Renderer: %s", SDL_GetError());
 		return -1;
@@ -131,10 +147,11 @@ int main(int argc, char** argv) {
 	SDL_RendererInfo rendererInfo;
 	SDL_GetRendererInfo(renderer, &rendererInfo);
 
-	if (strncmp(rendererInfo.name, DefaultSdlRenderer, MAX_DEF_SDL_RENDERER_SIZE) == 0) {
-		log_info("initialized app with %s renderer!", DefaultSdlRenderer);
+	if (strncmp(rendererInfo.name, AppSettings->renderer, 128) == 0) {
+		log_info("initialized app with %s renderer!", AppSettings->renderer);
 	} else {
-		log_info("failed to initialize app with %s renderer! usinng %s renderer instead.", DefaultSdlRenderer, rendererInfo);
+		log_info("failed to initialize app with %s renderer! using %s renderer instead.", AppSettings->renderer, rendererInfo.name);
+		strncpy(AppSettings->renderer, rendererInfo.name, 128);
 	}
 
 	IMGUI_CHECKVERSION();
@@ -446,6 +463,9 @@ int main(int argc, char** argv) {
 	free(CanvasData);
 	free(CanvasBgData);
 
+	WriteSettings(AppSettings);
+	free(AppSettings);
+
 	// Unneccessary but why not?
 	P = NULL;
 	CanvasTex = NULL;
@@ -454,6 +474,7 @@ int main(int argc, char** argv) {
 	window = NULL;
 	CanvasData = NULL;
 	CanvasBgData = NULL;
+	AppSettings = NULL;
 	return 0;
 }
 
