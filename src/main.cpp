@@ -102,6 +102,15 @@ settings_t* AppSettings = NULL;
 		.h = (int)CanvasDims[1] * ZoomLevel                                 \
 	}                                                                       \
 
+static double get_scale(void) {
+#ifndef __APPLE__
+	float dpi;
+	if (SDL_GetDisplayDPI(0, NULL, &dpi, NULL) == 0)
+		return dpi / 96.0;
+#endif
+	return 1.0;
+}
+
 int main(int argc, char** argv) {
 	AppSettings = LoadSettings();
 	if (AppSettings == NULL) {
@@ -117,7 +126,6 @@ int main(int argc, char** argv) {
 	}
 
 	Uint32 sdl_window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-
 	Uint32 sdl_renderer_flags = 0;
 
 	if (AppSettings->vsync)
@@ -125,12 +133,43 @@ int main(int argc, char** argv) {
 	if (AppSettings->accelerated)
 		sdl_renderer_flags |= SDL_RENDERER_ACCELERATED;
 
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
 		log_error("failed to initialize SDL2: %s", SDL_GetError());
 		return -1;
 	}
 
+#ifdef _WIN32
+	#include <windows.h>
+	HINSTANCE lib = LoadLibrary("user32.dll");
+	int (*SetProcessDPIAware)() = (void*) GetProcAddress(lib, "SetProcessDPIAware");
+	SetProcessDPIAware();
+#endif
+
+	SDL_DisplayMode dm;
+	SDL_GetCurrentDisplayMode(0, &dm);
+
 	window = SDL_CreateWindow(WINDOW_TITLE_CSTR, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], sdl_window_flags);
+	SDL_EnableScreenSaver();
+
+#ifdef SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR /* Available since 2.0.8 */
+	SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
+#endif
+#if SDL_VERSION_ATLEAST(2, 0, 5)
+	SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+#endif
+
+#if SDL_VERSION_ATLEAST(2, 0, 8)
+	/* This hint tells SDL to respect borderless window as a normal window.
+	** For example, the window will sit right on top of the taskbar instead
+	** of obscuring it. */
+	SDL_SetHint("SDL_BORDERLESS_WINDOWED_STYLE", "1");
+#endif
+#if SDL_VERSION_ATLEAST(2, 0, 12)
+	/* This hint tells SDL to allow the user to resize a borderless windoow.
+	** It also enables aero-snap on Windows apparently. */
+	SDL_SetHint("SDL_BORDERLESS_RESIZABLE_STYLE", "1");
+#endif
+
 
 #ifdef ENABLE_WIN_ICON
 	{
