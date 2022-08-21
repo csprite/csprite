@@ -80,6 +80,17 @@ mousepos_t MousePos = { 0 };
 mousepos_t MousePosRel = { 0 };
 cvstate_t* CurrentState = NULL;
 
+#define MAX_DEF_SDL_RENDERER_SIZE 128
+#if defined(__APPLE__)
+	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "metal";
+#elif defined(__linux__) || defined(__unix__)
+	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "opengl";
+#elif defined(_WIN32) || defined(WIN32)
+	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "direct3d";
+#else
+	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "Software";
+#endif
+
 #define UpdateCanvasRect()                                                  \
 	CanvasContRect = {                                                      \
 		.x = (int)(WindowDims[0] / 2) - (CanvasDims[0] * ZoomLevel / 2),    \
@@ -89,8 +100,8 @@ cvstate_t* CurrentState = NULL;
 	}                                                                       \
 
 int main(int argc, char** argv) {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
-		log_error("failed to initialize SDL2: %s\n", SDL_GetError());
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
+		log_error("failed to initialize SDL2: %s", SDL_GetError());
 		return -1;
 	}
 
@@ -105,15 +116,26 @@ int main(int argc, char** argv) {
 	}
 #endif
 
+	if (SDL_SetHint(SDL_HINT_RENDER_DRIVER, DefaultSdlRenderer) == SDL_TRUE) {
+		log_info("requested to use %s renderer.", DefaultSdlRenderer);
+	} else {
+		log_error("request failed to use %s renderer!", DefaultSdlRenderer);
+	}
+
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 	if (renderer == NULL) {
-		SDL_Log("Error creating SDL_Renderer!");
+		SDL_Log("Error creating SDL_Renderer: %s", SDL_GetError());
 		return -1;
 	}
 
 	SDL_RendererInfo rendererInfo;
 	SDL_GetRendererInfo(renderer, &rendererInfo);
-	log_info("Renderer: %s", rendererInfo.name);
+
+	if (strncmp(rendererInfo.name, DefaultSdlRenderer, MAX_DEF_SDL_RENDERER_SIZE) == 0) {
+		log_info("initialized app with %s renderer!", DefaultSdlRenderer);
+	} else {
+		log_info("failed to initialize app with %s renderer! usinng %s renderer instead.", DefaultSdlRenderer, rendererInfo);
+	}
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
