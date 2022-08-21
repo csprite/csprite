@@ -47,6 +47,7 @@ bool IsShiftDown = false;
 bool IsLMBDown = false;
 bool AppCloseRequested = false;
 bool ShowNewCanvasWindow = false;
+bool ShowSettingsWindow = false;
 bool CanvasFreeze = false;
 bool ImgDidChange = false;
 
@@ -289,6 +290,10 @@ int main(int argc, char** argv) {
 					if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
 						Redo();
 					}
+					if (ImGui::MenuItem("Preferences")) {
+						ShowSettingsWindow = true;
+						CanvasFreeze = true;
+					}
 					ImGui::EndMenu();
 				}
 				if (ImGui::BeginMenu("Help")) {
@@ -301,6 +306,42 @@ int main(int argc, char** argv) {
 					ImGui::EndMenu();
 				}
 				ImGui::EndMainMenuBar();
+			}
+
+			if (ShowSettingsWindow) {
+				ImGui::SetNextWindowSize({240.0f, 140.0f}, 0);
+				if (ImGui::BeginPopupModal(
+						"ShowSettingsWindow",
+						NULL,
+						ImGuiWindowFlags_NoCollapse |
+						ImGuiWindowFlags_NoResize   |
+						ImGuiWindowFlags_NoMove
+				)) {
+					static bool vsync = AppSettings->vsync;
+					static bool accel = AppSettings->accelerated;
+					static int currItemIdx = 0;
+					static const char* rendererList[5] = { "OpenGL", "Vulkan", "Metal", "Direct3D", "Software" };
+					ImGui::Checkbox("VSync", &vsync);
+					ImGui::Checkbox("Hardware accelerated", &accel);
+					ImGui::Combo("Renderer", &currItemIdx, rendererList, 5, -1);
+
+					if (ImGui::Button("Ok")) {
+						AppSettings->vsync = vsync;
+						AppSettings->accelerated = accel;
+						strncpy(AppSettings->renderer, rendererList[currItemIdx], 128);
+						WriteSettings(AppSettings);
+						CanvasFreeze = false;
+						ShowSettingsWindow = false;
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Cancel")) {
+						CanvasFreeze = false;
+						ShowSettingsWindow = false;
+					}
+					ImGui::EndPopup();
+				} else {
+					ImGui::OpenPopup("ShowSettingsWindow");
+				}
 			}
 
 			if (ShowNewCanvasWindow) {
