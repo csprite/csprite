@@ -1,4 +1,4 @@
-#define _SVID_SOURCE
+#define _DEFAULT_SOURCE
 
 #include "palette.h"
 #include <string.h>
