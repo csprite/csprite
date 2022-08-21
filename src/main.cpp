@@ -141,12 +141,9 @@ int main(int argc, char** argv) {
 #ifdef _WIN32
 	#include <windows.h>
 	HINSTANCE lib = LoadLibrary("user32.dll");
-	int (*SetProcessDPIAware)() = (void*) GetProcAddress(lib, "SetProcessDPIAware");
+	int (*SetProcessDPIAware)() = (int*) GetProcAddress(lib, "SetProcessDPIAware");
 	SetProcessDPIAware();
 #endif
-
-	SDL_DisplayMode dm;
-	SDL_GetCurrentDisplayMode(0, &dm);
 
 	window = SDL_CreateWindow(WINDOW_TITLE_CSTR, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], sdl_window_flags);
 	SDL_EnableScreenSaver();
