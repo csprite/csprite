@@ -79,7 +79,7 @@ char* CCGetConfigDir(void) {
 
 // Uses $APPDATA, env variables
 char* CCGetConfigDir(void) {
-	static fullPath[CC_PATH_SIZE_MAX] = "";
+	static char fullPath[CC_PATH_SIZE_MAX] = "";
 	const char* appdata = getenv("APPDATA");
 	strncpy(fullPath, appdata, CC_PATH_SIZE_MAX);
 	return fullPath;
