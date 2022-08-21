@@ -538,6 +538,22 @@ void ProcessEvents() {
 					LastTool = Tool;
 					Tool = INK_DROPPER;
 				}
+			} else if (event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze) {
+				if (PaletteIndex != 0) {
+					LastPaletteIndex = PaletteIndex;
+					PaletteIndex--;
+				} else {
+					LastPaletteIndex = PaletteIndex;
+					PaletteIndex = P->numOfEntries - 1;
+				}
+			} else if (event.key.keysym.sym == SDLK_RIGHTBRACKET && !CanvasFreeze) {
+				if (PaletteIndex < P->numOfEntries - 1) {
+					LastPaletteIndex = PaletteIndex;
+					PaletteIndex++;
+				} else {
+					LastPaletteIndex = PaletteIndex;
+					PaletteIndex = 0;
+				}
 			}
 			break;
 		case SDL_KEYUP:
