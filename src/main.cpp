@@ -107,14 +107,22 @@ int main(int argc, char** argv) {
 		log_error("failed to load settings!");
 		return -1;
 	} else {
-		log_info("settings loaded successfully!\n - vsync: %s\n - renderer: %s", AppSettings->vsync == true ? "enabled" : "disabled", AppSettings->renderer);
+		log_info(
+			"settings loaded successfully!\n - vsync: %s\n - renderer: %s\n - hardware acceleration: %s",
+			AppSettings->vsync == true ? "enabled" : "disabled",
+			AppSettings->renderer,
+			AppSettings->accelerated == true ? "enabled" : "disabled"
+		);
 	}
 
 	Uint32 sdl_window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 
-	Uint32 sdl_renderer_flags = SDL_RENDERER_ACCELERATED;
+	Uint32 sdl_renderer_flags = 0;
+
 	if (AppSettings->vsync)
 		sdl_renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
+	if (AppSettings->accelerated)
+		sdl_renderer_flags |= SDL_RENDERER_ACCELERATED;
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
 		log_error("failed to initialize SDL2: %s", SDL_GetError());
