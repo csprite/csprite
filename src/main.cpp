@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
 #ifdef _WIN32
 	#include <windows.h>
 	HINSTANCE lib = LoadLibrary("user32.dll");
-	int (*SetProcessDPIAware)() = (int*) GetProcAddress(lib, "SetProcessDPIAware");
+	int (*SetProcessDPIAware)() = (int*()) GetProcAddress(lib, "SetProcessDPIAware");
 	SetProcessDPIAware();
 #endif
 
