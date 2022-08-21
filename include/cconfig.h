@@ -37,7 +37,6 @@ extern "C" {
 		- Mac: $HOME/Library/Application Support
 	Note:
 		- Returned Pointer doesn't need to be freed as it's allocated & de-allocated autmatically.
-		- Except on Windows where the returned string is allocated on heap and is need to be freed.
 */
 char* CCGetConfigDir(void);
 
@@ -80,12 +79,10 @@ char* CCGetConfigDir(void) {
 
 // Uses $APPDATA, env variables
 char* CCGetConfigDir(void) {
-	char *appdata;
-	if (_dupenv_s(&appdata, NULL, "APPDATA") != 0) {
-		return NULL;
-	} else if (!appdata) return NULL;
-
-	return appdata;
+	static fullPath[CC_PATH_SIZE_MAX] = "";
+	const char* appdata = getenv("APPDATA");
+	strncpy(fullPath, appdata, CC_PATH_SIZE_MAX);
+	return fullPath;
 }
 
 #elif defined(__APPLE__) || defined(__MACH__)
