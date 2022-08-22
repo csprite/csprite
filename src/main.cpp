@@ -139,11 +139,6 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-#ifdef _WIN32
-	#include <winuser.h>
-	SetProcessDPIAware();
-#endif
-
 	window = SDL_CreateWindow(
 		WINDOW_TITLE_CSTR,
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
