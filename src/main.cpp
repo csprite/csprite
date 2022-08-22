@@ -102,13 +102,14 @@ settings_t* AppSettings = NULL;
 		.h = (int)CanvasDims[1] * ZoomLevel                                 \
 	}                                                                       \
 
-static double get_scale(void) {
-#ifndef __APPLE__
-	float dpi;
-	if (SDL_GetDisplayDPI(0, NULL, &dpi, NULL) == 0)
-		return dpi / 96.0;
-#endif
-	return 1.0;
+static double GetScale(void) {
+	float ddpi, hdpi, vdpi;
+	if (SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi) == 0) {
+		return hdpi / 96.0f;
+	} else {
+		log_error("error getting DPI: %s", SDL_GetError());
+		return 1.0;
+	}
 }
 
 int main(int argc, char** argv) {
@@ -143,8 +144,14 @@ int main(int argc, char** argv) {
 	SetProcessDPIAware();
 #endif
 
-	window = SDL_CreateWindow(WINDOW_TITLE_CSTR, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WindowDims[0], WindowDims[1], sdl_window_flags);
+	window = SDL_CreateWindow(
+		WINDOW_TITLE_CSTR,
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		WindowDims[0], WindowDims[1],
+		sdl_window_flags
+	);
 	SDL_EnableScreenSaver();
+	SDL_AddEventWatch(_EventWatcher, window);
 
 #ifdef SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR /* Available since 2.0.8 */
 	SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
@@ -556,6 +563,17 @@ int main(int argc, char** argv) {
 	CanvasData = NULL;
 	CanvasBgData = NULL;
 	AppSettings = NULL;
+	return 0;
+}
+
+static int _EventWatcher(void* data, SDL_Event* event) {
+	if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED) {
+		SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
+		if (win == (SDL_Window*)data) {
+			SDL_GetWindowSize(win, &WindowDims[0], &WindowDims[1]);
+			UpdateCanvasRect();
+		}
+	}
 	return 0;
 }
 
