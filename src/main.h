@@ -13,6 +13,9 @@ enum export_format_e { PNG, JPG };
 // Little Helpers
 Uint32* GetPixel(int x, int y, Uint32* data = NULL);
 
+// Callback Function used by SDL for events
+static int _EventWatcher(void* data, SDL_Event* event);
+
 void ProcessEvents();
 void UpdateCanvasRect();
 void AdjustZoom(bool increase);
