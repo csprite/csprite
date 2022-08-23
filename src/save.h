@@ -43,11 +43,53 @@ void LoadImageToCanvas(const char *filepath, int *canvas_dims, Uint32 **canvas_d
 }
 
 void WritePngFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
-	stbi_write_png(filepath, canvas_dims[0], canvas_dims[1], 4, data, 0);
+	/*
+		Basically stbi takes a pixel array of values rgba like: [r, g, b, a, r, g, b, a...],
+		and what we are giving it is: [rgba, rgba, rgba...] so we need to convert it to above format
+		and then write it.
+	*/
+
+	unsigned char* pixels = (unsigned char*)malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
+	memset(pixels, 0, canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
+
+	unsigned char* ptr;
+	for (int x = 0; x < canvas_dims[0]; x++) {
+		for (int y = 0; y < canvas_dims[1]; y++) {
+			Uint32* pixel = GetPixel(x, y, data);
+			ptr = pixels + ((y * canvas_dims[0] + x) * 4);
+			*(ptr+0) = (*pixel >> 24 ) & 0xff;
+			*(ptr+1) = (*pixel >> 16) & 0xff;
+			*(ptr+2) = (*pixel >> 8) & 0xff;
+			*(ptr+3) = (*pixel) & 0xff;
+		}
+	}
+
+	stbi_write_png(filepath, canvas_dims[0], canvas_dims[1], 4, pixels, 0);
+	free(pixels);
 }
 
-void WriteJpgFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
-	stbi_write_jpg(filepath, canvas_dims[0], canvas_dims[1], 4, data, 100);
-}
+/*
+	XX - Weird Behavior - runtime error: left shift of negative value -62521344
+	temporarily disabled
+*/
+// void WriteJpgFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
+// 	unsigned char* pixels = (unsigned char*)malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
+// 	memset(pixels, 0, canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
+
+// 	unsigned char* ptr;
+// 	for (int x = 0; x < canvas_dims[0]; x++) {
+// 		for (int y = 0; y < canvas_dims[1]; y++) {
+// 			Uint32* pixel = GetPixel(x, y, data);
+// 			ptr = pixels + ((y * canvas_dims[0] + x) * 4);
+// 			*(ptr+0) = (*pixel >> 24 ) & 0xff;
+// 			*(ptr+1) = (*pixel >> 16) & 0xff;
+// 			*(ptr+2) = (*pixel >> 8) & 0xff;
+// 			*(ptr+3) = (*pixel) & 0xff;
+// 		}
+// 	}
+
+// 	stbi_write_jpg(filepath, canvas_dims[0], canvas_dims[1], 4, data, 100);
+// 	free(pixels);
+// }
 
 #endif // end SAVE_H
