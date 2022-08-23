@@ -20,8 +20,8 @@
 #endif
 
 std::string FilePath = "untitled.png"; // Default Output Filename
-char const* FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
-unsigned int NumOfFilterPatterns = 3;
+char const* FileFilterPatterns[1] = { "*.png" };
+unsigned int NumOfFilterPatterns = 1;
 
 SDL_Window* window = NULL;
 
@@ -918,8 +918,8 @@ void SaveImageFromCanvas(std::string filepath) {
 
 	if (fileExt == "png") {
 		WritePngFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
-	} else if (fileExt == "jpg" || fileExt == "jpeg") {
-		WriteJpgFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
+	// } else if (fileExt == "jpg" || fileExt == "jpeg") {
+	// 	WriteJpgFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
 	} else {
 		filepath = filepath + ".png";
 		WritePngFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
