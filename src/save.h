@@ -10,22 +10,22 @@
 #include "stb/stb_image.h"
 
 // Loads a image to canvas and automatically calls FreeHistory to reset undo/redo
-void LoadImageToCanvas(const char *filepath, int *canvas_dims, Uint32 **canvas_data) {
-	int imgWidth, imgHeight, c;
-	unsigned char* image_data = stbi_load(filepath, &imgWidth, &imgHeight, &c, 0);
+void LoadImageToCanvas(const char* filepath, int* cvWidth, int* cvHeight, Uint32** canvas_data) {
+	int imgWidth, imgHeight, channels;
+	unsigned char* image_data = stbi_load(filepath, &imgWidth, &imgHeight, &channels, 0);
 	if (image_data == NULL) {
 		printf("Unable to load image %s\n", filepath);
 		return;
 	}
 
-	canvas_dims[0] = imgWidth;
-	canvas_dims[1] = imgHeight;
+	*cvWidth = imgWidth;
+	*cvHeight = imgHeight;
 
 	if (*canvas_data != NULL)
 		free(*canvas_data);
 
-	*canvas_data = (Uint32*)malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(Uint32));
-	memset(*canvas_data, 0, canvas_dims[0] * canvas_dims[1] * 4 * sizeof(Uint32));
+	*canvas_data = (Uint32*)malloc(imgWidth * imgHeight * 4 * sizeof(Uint32));
+	memset(*canvas_data, 0, imgWidth * imgHeight * 4 * sizeof(Uint32));
 
 	int y, x;
 	Uint32* ptr;
@@ -33,13 +33,18 @@ void LoadImageToCanvas(const char *filepath, int *canvas_dims, Uint32 **canvas_d
 	for (y = 0; y < imgHeight; y++) {
 		for (x = 0; x < imgWidth; x++) {
 			ptr = GetPixel(x, y, NULL); // XX - Check For NULL
-			iptr = image_data + ((y * canvas_dims[0] + x) * 4); // Gets Pixel At x, y in image_data
-
-			*(ptr+0) = RGBA2UINT32(*(iptr+0), *(iptr+1), *(iptr+2), *(iptr+3));
+			if (channels == 3) {
+				iptr = image_data + ((y * imgWidth + x) * 3); // Gets Pixel At x, y in image_data
+				*ptr = RGBA2UINT32(*(iptr+0), *(iptr+1), *(iptr+2), 255);
+			} else if (channels == 4) {
+				iptr = image_data + ((y * imgWidth + x) * 4); // Gets Pixel At x, y in image_data
+				*ptr = RGBA2UINT32(*(iptr+0), *(iptr+1), *(iptr+2), *(iptr+3));
+			}
 		}
 	}
 	stbi_image_free(image_data);
-	// FreeHistory();
+	FreeHistory();
+	SaveState();
 }
 
 void WritePngFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
