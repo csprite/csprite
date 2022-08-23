@@ -282,9 +282,7 @@ int main(int argc, char** argv) {
 						if (filePath != NULL) {
 							FilePath = std::string(filePath);
 
-							LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-
+							LoadImageToCanvas(FilePath.c_str(), &CanvasDims[0], &CanvasDims[1], &CanvasData);
 							SDL_DestroyTexture(CanvasTex);
 							SDL_DestroyTexture(CanvasBgTex);
 							CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
@@ -294,7 +292,17 @@ int main(int argc, char** argv) {
 							SDL_SetTextureBlendMode(CanvasTex, SDL_BLENDMODE_BLEND);
 							SDL_SetTextureBlendMode(CanvasBgTex, SDL_BLENDMODE_BLEND);
 
+							free(CanvasBgData);
+							CanvasBgData = (Uint32*)malloc(CANVAS_SIZE_B);
+							for (int x = 0; x < CanvasDims[0]; x++) {
+								for (int y = 0; y < CanvasDims[1]; y++) {
+									Uint32* pixel = GetPixel(x, y, CanvasBgData);
+									*pixel = (x + y) % 2 ? 0x000000FF : 0xFFFFFFFF;
+								}
+							}
+
 							UpdateCanvasRect();
+							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
 						}
 					}
 					if (ImGui::BeginMenu("Save")) {
