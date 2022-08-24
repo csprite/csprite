@@ -39,7 +39,13 @@ palette_t* P = NULL;
 #define SelectedColor P->entries[PaletteIndex]
 
 Uint32* CanvasData = NULL;
+SDL_Texture* CanvasTex = NULL;
+
 Uint32* CanvasBgData = NULL;
+SDL_Texture* CanvasBgTex = NULL;
+
+SDL_Renderer* renderer = NULL;
+
 #define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * sizeof(Uint32)
 SDL_Rect CanvasContRect = {}; // Rectangle In Which Our Canvas Will Be Placed
 
@@ -113,7 +119,35 @@ static double GetScale(void) {
 	}
 }
 
+/*
+	Function: FreeEverything
+	Description:
+		Frees all the memory, destroys sdl stuff & closes all the files
+		Is used with atexit function as a callback
+*/
+void FreeEverything(void) {
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
+
+	FreeHistory();
+
+	if (P != NULL) { FreePalette(P); P = NULL; }
+	if (LogFilePtr != NULL) { fclose(LogFilePtr); LogFilePtr = NULL; }
+	if (CanvasData != NULL) { free(CanvasData); CanvasData = NULL; }
+	if (CanvasBgData != NULL) {	free(CanvasBgData);	CanvasBgData = NULL; }
+	if (AppSettings != NULL) { free(AppSettings); AppSettings = NULL; }
+	if (CanvasTex != NULL) { SDL_DestroyTexture(CanvasTex); CanvasTex = NULL; }
+	if (CanvasBgTex != NULL) { SDL_DestroyTexture(CanvasBgTex); CanvasBgTex = NULL; }
+	if (renderer != NULL) { SDL_DestroyRenderer(renderer); renderer = NULL; }
+	if (window != NULL) { SDL_DestroyWindow(window); window = NULL; }
+
+	SDL_Quit();
+}
+
 int main(int argc, char** argv) {
+	atexit(FreeEverything);
+
 #ifdef IS_DEBUG
 	LogFilePtr = fopen("csprite.log", "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
@@ -189,7 +223,7 @@ int main(int argc, char** argv) {
 		log_error("request failed to use %s renderer!", AppSettings->renderer);
 	}
 
-	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, sdl_renderer_flags);
+	renderer = SDL_CreateRenderer(window, -1, sdl_renderer_flags);
 	if (renderer == NULL) {
 		SDL_Log("Error creating SDL_Renderer: %s", SDL_GetError());
 		return -1;
@@ -223,8 +257,8 @@ int main(int argc, char** argv) {
 
 	ImVec4 EditorBG = ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
 
-	SDL_Texture* CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
-	SDL_Texture* CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
+	CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
+	CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
 
 	if (CanvasData == NULL) {
 		CanvasData = (Uint32*)malloc(CANVAS_SIZE_B);
@@ -546,36 +580,6 @@ int main(int argc, char** argv) {
 		SDL_RenderPresent(renderer);
 	}
 
-	// Cleanup
-	ImGui_ImplSDLRenderer_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
-	ImGui::DestroyContext();
-
-	SDL_DestroyTexture(CanvasTex);
-	SDL_DestroyTexture(CanvasBgTex);
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
-	SDL_Quit();
-
-	FreeHistory();
-	FreePalette(P);
-	free(CanvasData);
-	free(CanvasBgData);
-	free(AppSettings);
-
-	if (LogFilePtr != NULL)
-		fclose(LogFilePtr);
-		LogFilePtr = NULL;
-
-	// Unneccessary but why not?
-	P = NULL;
-	CanvasTex = NULL;
-	CanvasBgTex = NULL;
-	renderer = NULL;
-	window = NULL;
-	CanvasData = NULL;
-	CanvasBgData = NULL;
-	AppSettings = NULL;
 	return 0;
 }
 
