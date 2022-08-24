@@ -409,7 +409,7 @@ int main(int argc, char** argv) {
 					ImGui::Checkbox("Hardware accelerated", &accel);
 					ImGui::Combo("Renderer", &currItemIdx, rendererList, 5, -1);
 
-					if (ImGui::Button("Ok")) {
+					if (ImGui::Button("Save")) {
 						AppSettings->vsync = vsync;
 						AppSettings->accelerated = accel;
 						strncpy(AppSettings->renderer, rendererList[currItemIdx], 128);
