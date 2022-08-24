@@ -34,10 +34,6 @@ static char* getSettingsPath() {
 			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "%s/csprite/settings.ini", configdir);
 		}
 
-	#if defined(_WIN32) || defined(WIN32)
-		if (configdir != NULL)
-			free(configdir);
-	#endif
 		return configPath;
 	}
 
