@@ -211,7 +211,7 @@ int main(int argc, char** argv) {
 #ifdef ENABLE_WIN_ICON
 	{
 		unsigned char* winIcon = (unsigned char*)assets_get("data/icons/icon-48.png", NULL);
-		SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(winIcon, 48, 48, 8, 48 * 2, 0x0f00, 0x00f0, 0x000f, 0xf000);
+		SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(winIcon, 48, 48, 32, 48 * 4, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
 		SDL_SetWindowIcon(window, surface);
 		SDL_FreeSurface(surface);
 	}
