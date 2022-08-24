@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <ctype.h>
 
 #include "settings.h"
 #include "cconfig.h"
@@ -57,8 +58,12 @@ settings_t* LoadSettings(void) {
 
 		if (renderer == NULL)
 			strncpy(s->renderer, "software", 128);
-		else
+		else {
 			strncpy(s->renderer, renderer, 128);
+			for(int i = 0; s->renderer[i]; i++){
+				s->renderer[i] = tolower(s->renderer[i]);
+			}
+		}
 
 		if (accelerated == NULL)
 			s->accelerated = true;
@@ -101,6 +106,11 @@ int WriteSettings(settings_t* s) {
 	if (configPath == NULL) {
 		log_error("getSettingsPath returned NULL pointer");
 		return -1;
+	}
+
+	// Convert String To LowerCase
+	for(int i = 0; s->renderer[i]; i++){
+		s->renderer[i] = tolower(s->renderer[i]);
 	}
 
 	FILE* f = fopen(configPath, "w");
