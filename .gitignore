@@ -5,6 +5,7 @@
 *.swp
 *.out
 *.inl
+*.log
 *~
 *.obj
 csprite
@@ -27,3 +28,5 @@ data/icons/
 
 # Icon For Windows
 data/icon.ico
+
+csprite-*.manifest
