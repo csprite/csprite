@@ -23,6 +23,7 @@ std::string FilePath = "untitled.png"; // Default Output Filename
 char const* FileFilterPatterns[1] = { "*.png" };
 unsigned int NumOfFilterPatterns = 1;
 
+FILE* LogFilePtr = NULL;
 SDL_Window* window = NULL;
 
 int WindowDims[2] = { 700, 500 };
@@ -113,6 +114,11 @@ static double GetScale(void) {
 }
 
 int main(int argc, char** argv) {
+#ifdef IS_DEBUG
+	LogFilePtr = fopen("csprite.log", "w");
+	log_add_fp(LogFilePtr, LOG_TRACE);
+#endif
+
 	AppSettings = LoadSettings();
 	if (AppSettings == NULL) {
 		log_error("failed to load settings!");
@@ -556,6 +562,10 @@ int main(int argc, char** argv) {
 	free(CanvasData);
 	free(CanvasBgData);
 	free(AppSettings);
+
+	if (LogFilePtr != NULL)
+		fclose(LogFilePtr);
+		LogFilePtr = NULL;
 
 	// Unneccessary but why not?
 	P = NULL;
