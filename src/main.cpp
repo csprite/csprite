@@ -48,6 +48,7 @@ SDL_Renderer* renderer = NULL;
 
 #define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * sizeof(Uint32)
 SDL_Rect CanvasContRect = {}; // Rectangle In Which Our Canvas Will Be Placed
+SDL_Rect SelectionRect = {}; // Rectangle Which Represents Our Selection
 
 bool IsCtrlDown = false;
 bool IsShiftDown = false;
@@ -58,7 +59,7 @@ bool ShowSettingsWindow = false;
 bool CanvasFreeze = false;
 bool ImgDidChange = false;
 
-enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE };
+enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE, RECT_SELECT };
 enum mode_e { SQUARE, CIRCLE };
 
 // Currently & last selected tool
@@ -525,6 +526,9 @@ int main(int argc, char** argv) {
 						else
 							selectedToolText = "Round Rect - (Size: " + std::to_string(BrushSize) + ")";
 						break;
+					case RECT_SELECT:
+						selectedToolText = "Rectangle Selection";
+						break;
 				}
 
 				ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
@@ -566,6 +570,11 @@ int main(int argc, char** argv) {
 		*/
 		SDL_RenderCopy(renderer, CanvasBgTex, NULL, &CanvasContRect);
 		SDL_RenderCopy(renderer, CanvasTex, NULL, &CanvasContRect);
+
+		if (SelectionRect.w != 0 && SelectionRect.h != 0) {
+			SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0xff, 0xff);
+			SDL_RenderDrawRect(renderer, &SelectionRect);
+		}
 
 		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
@@ -618,6 +627,8 @@ void ProcessEvents() {
 			} else if (event.key.keysym.sym == SDLK_r && !CanvasFreeze) {
 				Tool = RECTANGLE;
 				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
+			} else if (event.key.keysym.sym == SDLK_s && !CanvasFreeze) {
+				Tool = RECT_SELECT;
 			} else if (event.key.keysym.sym == SDLK_EQUALS && !CanvasFreeze) {
 				if (IsCtrlDown == true) {
 					AdjustZoom(true);
@@ -704,6 +715,9 @@ void ProcessEvents() {
 		case SDL_MOUSEBUTTONDOWN:
 			if (event.button.button == SDL_BUTTON_LEFT && !CanvasFreeze) {
 				IsLMBDown = true;
+				MousePos.DownX = MousePos.X;
+				MousePos.DownY = MousePos.Y;
+
 				MousePosRel.DownX = MousePosRel.X;
 				MousePosRel.DownY = MousePosRel.Y;
 
@@ -753,19 +767,34 @@ void ProcessEvents() {
 	if (
 		MousePosRel.X >= 0 && MousePosRel.X < CanvasDims[0] &&
 		MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1] &&
-		IsLMBDown == true                                   &&
-		(Tool == LINE || Tool == RECTANGLE)
+		IsLMBDown == true
 	) {
-		if (CurrentState->prev != NULL) {
-			memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
-		} else {
-			memset(CanvasData, 0, CANVAS_SIZE_B);
-		}
+		if (Tool == LINE || Tool == RECTANGLE) {
+			if (CurrentState->prev != NULL) {
+				memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
+			} else {
+				memset(CanvasData, 0, CANVAS_SIZE_B);
+			}
 
-		if (Tool == LINE) {
-			drawLine(MousePosRel.DownX, MousePosRel.DownY, MousePosRel.X, MousePosRel.Y);
-		} else {
-			drawRect(MousePosRel.DownX, MousePosRel.DownY, MousePosRel.X, MousePosRel.Y);
+			if (Tool == LINE) {
+				drawLine(MousePosRel.DownX, MousePosRel.DownY, MousePosRel.X, MousePosRel.Y);
+			} else {
+				drawRect(MousePosRel.DownX, MousePosRel.DownY, MousePosRel.X, MousePosRel.Y);
+			}
+		} else if (Tool == RECT_SELECT) {
+			SelectionRect.x = (CanvasContRect.x + (MousePosRel.DownX * ZoomLevel));
+			SelectionRect.y = (CanvasContRect.y + (MousePosRel.DownY * ZoomLevel));
+			SelectionRect.w = MousePosRel.X - MousePosRel.DownX;
+			SelectionRect.h = MousePosRel.Y - MousePosRel.DownY;
+
+			// Basically it resets the selection by checking if height & width is 0 else it sets the selection's offset
+			if (SelectionRect.w == 0 && SelectionRect.h == 0) {
+				SelectionRect.w = 0;
+				SelectionRect.h = 0;
+			} else {
+				SelectionRect.w = (SelectionRect.w + 1) * ZoomLevel;
+				SelectionRect.h = (SelectionRect.h + 1) * ZoomLevel;
+			}
 		}
 	}
 }
