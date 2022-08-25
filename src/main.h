@@ -20,6 +20,12 @@ void ProcessEvents();
 void UpdateCanvasRect();
 void AdjustZoom(bool increase);
 
+void GenCanvasBgTex(void); // Generates a SDL_Texture and generates a checkerboard pattern for it
+void GenCanvasBuff(void); // Just Allocates Memory For CanvasData & frees old memory
+int UpdateTextures(void); // Updates The Textures To Use New* Canvas Dimensions
+static void InitWindowIcon(void); // Basically Set's The Window Icon
+static void FreeEverything(void); // Simply Free-s/Destroys Everything
+
 void draw(int x, int y); // Draws on 1 x, y coordinate
 void drawInBetween(int st_x, int st_y, int end_x, int end_y);
 void fill(int x, int y, Uint32 old_color);
