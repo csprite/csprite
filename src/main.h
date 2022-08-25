@@ -31,6 +31,7 @@ void drawInBetween(int st_x, int st_y, int end_x, int end_y);
 void fill(int x, int y, Uint32 old_color);
 void drawLine(int x0, int y0, int x1, int y1);
 void drawRect(int x0, int y0, int x1, int y1);
+void drawCircle(int centreX, int centreY, int radius);
 
 void SaveState();
 void FreeHistory();
