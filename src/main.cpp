@@ -57,7 +57,7 @@ bool ShowSettingsWindow = false;
 bool CanvasFreeze = false;
 bool ImgDidChange = false;
 
-enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE, RECT_SELECT };
+enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE, CIRCLE_TOOL, RECT_SELECT };
 enum mode_e { SQUARE, CIRCLE };
 
 // Currently & last selected tool
@@ -430,6 +430,9 @@ int main(int argc, char** argv) {
 					case RECT_SELECT:
 						selectedToolText = "Rectangle Selection";
 						break;
+					case CIRCLE_TOOL:
+						selectedToolText = "Circle - (Border Size: " + std::to_string(BrushSize) + ")";
+						break;
 				}
 
 				ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
@@ -528,6 +531,8 @@ void ProcessEvents() {
 			} else if (event.key.keysym.sym == SDLK_r && !CanvasFreeze) {
 				Tool = RECTANGLE;
 				Mode = IsShiftDown == true ? SQUARE : CIRCLE;
+			} else if (event.key.keysym.sym == SDLK_c && !CanvasFreeze) {
+				Tool = CIRCLE_TOOL;
 			} else if (event.key.keysym.sym == SDLK_s && !CanvasFreeze) {
 				Tool = RECT_SELECT;
 			} else if (event.key.keysym.sym == SDLK_EQUALS && !CanvasFreeze) {
@@ -593,7 +598,7 @@ void ProcessEvents() {
 		case SDL_MOUSEBUTTONUP:
 			if (event.button.button == SDL_BUTTON_LEFT) {
 				IsLMBDown = false;
-				ImgDidChange = ImgDidChange || (Tool == LINE || Tool == RECTANGLE);
+				ImgDidChange = ImgDidChange || (Tool == LINE || Tool == RECTANGLE || Tool == CIRCLE_TOOL);
 				if (ImgDidChange == true) {
 					SaveState();
 					ImgDidChange = false;
@@ -670,7 +675,7 @@ void ProcessEvents() {
 		MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1] &&
 		IsLMBDown == true
 	) {
-		if (Tool == LINE || Tool == RECTANGLE) {
+		if (Tool == LINE || Tool == RECTANGLE || Tool == CIRCLE_TOOL) {
 			if (CurrentState->prev != NULL) {
 				memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
 			} else {
@@ -679,8 +684,17 @@ void ProcessEvents() {
 
 			if (Tool == LINE) {
 				drawLine(MousePosRel.DownX, MousePosRel.DownY, MousePosRel.X, MousePosRel.Y);
-			} else {
+			} else if (Tool == RECTANGLE) {
 				drawRect(MousePosRel.DownX, MousePosRel.DownY, MousePosRel.X, MousePosRel.Y);
+			} else if (Tool == CIRCLE_TOOL) {
+				drawCircle(
+					MousePosRel.DownX,
+					MousePosRel.DownY,
+					(int)sqrt( // Calculates Distance Between 2 x, y points
+						(MousePosRel.X - MousePosRel.DownX) * (MousePosRel.X - MousePosRel.DownX) +
+						(MousePosRel.Y - MousePosRel.DownY) * (MousePosRel.Y - MousePosRel.DownY)
+					)
+				);
 			}
 		} else if (Tool == RECT_SELECT) {
 			SelectionRect.x = (CanvasContRect.x + (MousePosRel.DownX * ZoomLevel));
@@ -795,7 +809,7 @@ void GenCanvasBgTex(void) {
 		CanvasBgTex = NULL;
 	}
 
-	CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
+	CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
 	Uint32* pixels = NULL;
 	int pitch = 8;
 	SDL_LockTexture(CanvasBgTex, NULL, (void**)&pixels, &pitch);
@@ -895,7 +909,6 @@ void draw(int st_x, int st_y) {
 	}
 }
 
-
 // Fill Tool, Fills The Whole Canvas Using Recursion
 void fill(int x, int y, Uint32 old_color) {
 	if (!(x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]))
@@ -953,6 +966,40 @@ void drawRect(int x0, int y0, int x1, int y1) {
 	drawLine(x1, y0, x1, y1);
 	drawLine(x1, y1, x0, y1);
 	drawLine(x0, y1, x0, y0);
+}
+
+// Mid Point Circle Drawing Algorithm
+void drawCircle(int centreX, int centreY, int radius) {
+	const int diameter = (radius * 2);
+
+	int32_t x = (radius - 1);
+	int32_t y = 0;
+	int32_t tx = 1;
+	int32_t ty = 1;
+	int32_t error = (tx - diameter);
+
+	while (x >= y) {
+		// Each of the following renders an octant of the circle
+		draw(centreX + x, centreY - y);
+		draw(centreX + x, centreY + y);
+		draw(centreX - x, centreY - y);
+		draw(centreX - x, centreY + y);
+		draw(centreX + y, centreY - x);
+		draw(centreX + y, centreY + x);
+		draw(centreX - y, centreY - x);
+		draw(centreX - y, centreY + x);
+
+		if (error <= 0) {
+			++y;
+			error += ty;
+			ty += 2;
+		}
+		if (error > 0) {
+			--x;
+			tx += 2;
+			error += (tx - diameter);
+		}
+	}
 }
 
 // Makes sure that the file extension is .png or .jpg/.jpeg
