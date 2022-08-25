@@ -784,11 +784,17 @@ void ProcessEvents() {
 		} else if (Tool == RECT_SELECT) {
 			SelectionRect.x = (CanvasContRect.x + (MousePosRel.DownX * ZoomLevel));
 			SelectionRect.y = (CanvasContRect.y + (MousePosRel.DownY * ZoomLevel));
-			SelectionRect.w = ((MousePosRel.X - MousePosRel.DownX) + 1) * ZoomLevel;
-			SelectionRect.h = ((MousePosRel.Y - MousePosRel.DownY) + 1) * ZoomLevel;
-		} else {
-			SelectionRect.w = 0;
-			SelectionRect.h = 0;
+			SelectionRect.w = MousePosRel.X - MousePosRel.DownX;
+			SelectionRect.h = MousePosRel.Y - MousePosRel.DownY;
+
+			// Basically it resets the selection by checking if height & width is 0 else it sets the selection's offset
+			if (SelectionRect.w == 0 && SelectionRect.h == 0) {
+				SelectionRect.w = 0;
+				SelectionRect.h = 0;
+			} else {
+				SelectionRect.w = (SelectionRect.w + 1) * ZoomLevel;
+				SelectionRect.h = (SelectionRect.h + 1) * ZoomLevel;
+			}
 		}
 	}
 }
