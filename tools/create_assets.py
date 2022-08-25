@@ -42,7 +42,8 @@ for argument in sys.argv:
 
 GROUPS = [
 	'fonts', 'icons',
-	'palettes', 'shaders'
+	'palettes', 'shaders',
+	'cursors'
 ]
 
 TEMPLATE = '{{\n\t.path = "{path}",\n\t.size = {size},\n\t.data = {data}\n}},\n\n'
@@ -120,8 +121,9 @@ def encode_img(imgPath):
 	data = data.convert('RGBA').getdata()
 
 	# We Don't Generate Icons For Sizes more than 48 because of file sizes
-	if not width == 48 or not height == 48:
-		return False
+	if not imgPath.startswith("data/cursors"):
+		if not width == 48 or not height == 48:
+			return False
 
 	pixelArr = []
 	for pixel in data:
