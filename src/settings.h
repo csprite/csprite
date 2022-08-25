@@ -9,6 +9,7 @@ extern "C" {
 
 struct settings {
 	bool vsync;
+	bool CustomCursor;
 	bool accelerated; // Hardware acceleration
 	char renderer[128]; // Renderer To use eg: opengl, vulkan or metal.
 };
