@@ -14,6 +14,7 @@
 #include "assets.h"
 #include "palette.h"
 #include "settings.h"
+#include "mouse.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -48,6 +49,8 @@ SDL_Renderer* renderer = NULL;
 SDL_Rect CanvasContRect = {}; // Rectangle In Which Our Canvas Will Be Placed
 SDL_Rect SelectionRect = {}; // Rectangle Which Represents Our Selection
 
+Mouse* MouseInstance = NULL;
+
 bool IsCtrlDown = false;
 bool IsShiftDown = false;
 bool IsLMBDown = false;
@@ -56,6 +59,7 @@ bool ShowNewCanvasWindow = false;
 bool ShowSettingsWindow = false;
 bool CanvasFreeze = false;
 bool ImgDidChange = false;
+bool MouseInBounds = false;
 
 enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE, CIRCLE_TOOL, RECT_SELECT };
 enum mode_e { SQUARE, CIRCLE };
@@ -118,6 +122,11 @@ static double GetScale(void) {
 	}
 }
 
+static void _SetCursor(mouse_t cursorType) {
+	if (MouseInstance != NULL)
+		MouseInstance->SetCursor(cursorType);
+}
+
 int main(int argc, char** argv) {
 	atexit(FreeEverything);
 
@@ -132,10 +141,11 @@ int main(int argc, char** argv) {
 		return -1;
 	} else {
 		log_info(
-			"settings loaded successfully!\n - vsync: %s\n - renderer: %s\n - hardware acceleration: %s",
+			"settings loaded successfully!\n - vsync: %s\n - renderer: %s\n - hardware acceleration: %s\n - custom cursor: %s",
 			AppSettings->vsync == true ? "enabled" : "disabled",
 			AppSettings->renderer,
-			AppSettings->accelerated == true ? "enabled" : "disabled"
+			AppSettings->accelerated == true ? "enabled" : "disabled",
+			AppSettings->CustomCursor == true ? "enabled" : "disabled"
 		);
 	}
 
@@ -205,6 +215,9 @@ int main(int argc, char** argv) {
 		strncpy(AppSettings->renderer, rendererInfo.name, 128);
 	}
 
+	if (AppSettings->CustomCursor == true)
+		MouseInstance = new Mouse(renderer);
+
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -241,6 +254,10 @@ int main(int argc, char** argv) {
 
 	SaveState();
 	while (!AppCloseRequested) {
+		if (MouseInBounds == true && AppSettings->CustomCursor == true) {
+			MouseInstance->Update();
+		}
+
 		ProcessEvents();
 
 		SDL_UpdateTexture(CanvasTex, NULL, CanvasData, CanvasDims[0] * sizeof(Uint32));
@@ -318,7 +335,7 @@ int main(int argc, char** argv) {
 			}
 
 			if (ShowSettingsWindow) {
-				ImGui::SetNextWindowSize({240.0f, 140.0f}, 0);
+				ImGui::SetNextWindowSize({240.0f, 165.0f}, 0);
 				if (ImGui::BeginPopupModal(
 						"ShowSettingsWindow",
 						NULL,
@@ -327,15 +344,18 @@ int main(int argc, char** argv) {
 						ImGuiWindowFlags_NoMove
 				)) {
 					static bool vsync = AppSettings->vsync;
+					static bool custom_cursor = AppSettings->CustomCursor;
 					static bool accel = AppSettings->accelerated;
 					static int currItemIdx = 0;
 					static const char* rendererList[5] = { "OpenGL", "Vulkan", "Metal", "Direct3D", "Software" };
 					ImGui::Checkbox("VSync", &vsync);
+					ImGui::Checkbox("Custom Curspr", &custom_cursor);
 					ImGui::Checkbox("Hardware accelerated", &accel);
 					ImGui::Combo("Renderer", &currItemIdx, rendererList, 5, -1);
 
 					if (ImGui::Button("Save")) {
 						AppSettings->vsync = vsync;
+						AppSettings->CustomCursor = custom_cursor;
 						AppSettings->accelerated = accel;
 						strncpy(AppSettings->renderer, rendererList[currItemIdx], 128);
 						WriteSettings(AppSettings);
@@ -482,6 +502,10 @@ int main(int argc, char** argv) {
 
 		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
+		if (MouseInBounds == true && AppSettings->CustomCursor == true) {
+			MouseInstance->Draw(renderer);
+		}
+
 		// Swap Front & Back Buffers
 		SDL_RenderPresent(renderer);
 	}
@@ -490,11 +514,25 @@ int main(int argc, char** argv) {
 }
 
 static int _EventWatcher(void* data, SDL_Event* event) {
-	if (event->type == SDL_WINDOWEVENT && event->window.event == SDL_WINDOWEVENT_RESIZED) {
-		SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
-		if (win == (SDL_Window*)data) {
-			SDL_GetWindowSize(win, &WindowDims[0], &WindowDims[1]);
-			UpdateCanvasRect();
+	switch (event->type) {
+		case SDL_WINDOWEVENT: {
+			switch (event->window.event) {
+				case SDL_WINDOWEVENT_RESIZED: {
+					SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
+					if (win == (SDL_Window*)data) {
+						SDL_GetWindowSize(win, &WindowDims[0], &WindowDims[1]);
+						UpdateCanvasRect();
+					}
+					break;
+				}
+				case SDL_WINDOWEVENT_ENTER:
+					MouseInBounds = true;
+					break;
+				case SDL_WINDOWEVENT_LEAVE:
+					MouseInBounds = false;
+					break;
+			}
+			break;
 		}
 	}
 	return 0;
@@ -552,11 +590,13 @@ void ProcessEvents() {
 				if (Tool != PAN) {
 					LastTool = Tool;
 					Tool = PAN;
+					_SetCursor(CLOSE_HAND);
 				}
 			} else if (event.key.keysym.sym == SDLK_i && !CanvasFreeze) {
 				if (Tool != INK_DROPPER) {
 					LastTool = Tool;
 					Tool = INK_DROPPER;
+					_SetCursor(EYEDROPPER);
 				}
 			} else if (event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze) {
 				if (PaletteIndex != 0) {
@@ -581,9 +621,10 @@ void ProcessEvents() {
 				IsShiftDown = false;
 			else if (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)
 				IsCtrlDown = false;
-			else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze)
+			else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze) {
 				Tool = LastTool;
-			else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze)
+				_SetCursor(DEFAULT);
+			} else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze)
 				Undo();
 			else if (event.key.keysym.sym == SDLK_y && IsCtrlDown && !CanvasFreeze)
 				Redo();
@@ -611,6 +652,7 @@ void ProcessEvents() {
 								LastPaletteIndex = PaletteIndex;
 								PaletteIndex = i;
 								Tool = LastTool;
+								_SetCursor(DEFAULT);
 								break;
 							}
 						}
@@ -733,6 +775,7 @@ static void FreeEverything(void) {
 	if (AppSettings != NULL) { free(AppSettings); AppSettings = NULL; }
 	if (CanvasTex != NULL) { SDL_DestroyTexture(CanvasTex); CanvasTex = NULL; }
 	if (CanvasBgTex != NULL) { SDL_DestroyTexture(CanvasBgTex); CanvasBgTex = NULL; }
+	if (MouseInstance != NULL) { delete MouseInstance; }
 	if (renderer != NULL) { SDL_DestroyRenderer(renderer); renderer = NULL; }
 	if (window != NULL) { SDL_DestroyWindow(window); window = NULL; }
 
