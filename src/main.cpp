@@ -359,6 +359,10 @@ int main(int argc, char** argv) {
 						AppSettings->accelerated = accel;
 						strncpy(AppSettings->renderer, rendererList[currItemIdx], 128);
 						WriteSettings(AppSettings);
+
+						if (MouseInstance == NULL)
+							MouseInstance = new Mouse(renderer);
+
 						CanvasFreeze = false;
 						ShowSettingsWindow = false;
 					}
