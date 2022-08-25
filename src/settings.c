@@ -77,7 +77,6 @@ settings_t* LoadSettings(void) {
 		return s;
 	} else {
 		s->vsync = true;
-		s->vsync = true;
 
 	#if defined(__APPLE__)
 		strncpy(s->renderer, "metal", 128);
