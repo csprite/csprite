@@ -782,10 +782,10 @@ void ProcessEvents() {
 				drawRect(MousePosRel.DownX, MousePosRel.DownY, MousePosRel.X, MousePosRel.Y);
 			}
 		} else if (Tool == RECT_SELECT) {
-			SelectionRect.x = MousePos.DownX;
-			SelectionRect.y = MousePos.DownY;
-			SelectionRect.w = (MousePosRel.X - MousePosRel.DownX) * ZoomLevel;
-			SelectionRect.h = (MousePosRel.Y - MousePosRel.DownY) * ZoomLevel;
+			SelectionRect.x = (CanvasContRect.x + (MousePosRel.DownX * ZoomLevel));
+			SelectionRect.y = (CanvasContRect.y + (MousePosRel.DownY * ZoomLevel));
+			SelectionRect.w = ((MousePosRel.X - MousePosRel.DownX) + 1) * ZoomLevel;
+			SelectionRect.h = ((MousePosRel.Y - MousePosRel.DownY) + 1) * ZoomLevel;
 		} else {
 			SelectionRect.w = 0;
 			SelectionRect.h = 0;
