@@ -2,6 +2,14 @@
 this document roughly explains about code of csprite & stuff, so that contributors or any code reader get's some idea.
 
 ---
+
+## Code
+
+most of the code of CSprite is C & C Styled & that's why i have used `malloc` & `free` instead of `new` & `delete`, i'm just using C++ for some stuff like strings etc & will completely switch to C in future because i didn't have much experience with strings in c back then.
+
+you might've noticed that there is just a single executable with no-dlls & stuff that's because csprite embeds required stuff like fonts & icons, this is basically done in 2 parts, first you need to convert the assets to include-able c arrays which is done via the `tools/create_assets.py` python3 script, second you need a way to access the c-arrays which is basically done in `src/assets.c`, this is the file where our assets are included & this file provides functions to interact with the assets like: `assets_get` & `assets_list`
+
+---
 ## Libraries
 
 #### SDL2
@@ -27,4 +35,4 @@ i can control the theme too!
 
 ---
 
-...
+# Thanks
