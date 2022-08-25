@@ -49,12 +49,20 @@ settings_t* LoadSettings(void) {
 		const char* vsync = ini_get(config, "csprite", "vsync");
 		const char* accelerated = ini_get(config, "csprite", "accelerated");
 		const char* renderer = ini_get(config, "csprite", "renderer");
+		const char* customCursor = ini_get(config, "csprite", "CustomCursor");
 		if (vsync == NULL)
 			s->vsync = true;
 		else if (strncmp(vsync, "true", 5) == 0)
 			s->vsync = true;
 		else
 			s->vsync = false;
+
+		if (customCursor == NULL)
+			s->CustomCursor = true;
+		else if (strncmp(customCursor, "true", 5) == 0)
+			s->CustomCursor = true;
+		else
+			s->CustomCursor = false;
 
 		if (renderer == NULL)
 			strncpy(s->renderer, "software", 128);
@@ -114,10 +122,11 @@ int WriteSettings(settings_t* s) {
 
 	FILE* f = fopen(configPath, "w");
 	fprintf(
-		f, "[csprite]\nvsync = %s\nrenderer = %s\naccelerated = %s\n",
+		f, "[csprite]\nvsync = %s\nrenderer = %s\naccelerated = %s\nCustomCursor = %s\n",
 		s->vsync == true ? "true" : "false",
 		s->renderer,
-		s->accelerated == true ? "true" : "false"
+		s->accelerated == true ? "true" : "false",
+		s->CustomCursor == true ? "true" : "false"
 	);
 	fclose(f);
 	f = NULL;
