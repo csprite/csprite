@@ -40,8 +40,6 @@ palette_t* P = NULL;
 
 Uint32* CanvasData = NULL;
 SDL_Texture* CanvasTex = NULL;
-
-Uint32* CanvasBgData = NULL;
 SDL_Texture* CanvasBgTex = NULL;
 
 SDL_Renderer* renderer = NULL;
@@ -118,101 +116,6 @@ static double GetScale(void) {
 		log_error("error getting DPI: %s", SDL_GetError());
 		return 1.0;
 	}
-}
-
-/*
-	Function: FreeEverything
-	Description:
-		Frees all the memory, destroys sdl stuff & closes all the files
-		Is used with atexit function as a callback
-*/
-static void FreeEverything(void) {
-	ImGui_ImplSDLRenderer_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
-	ImGui::DestroyContext();
-
-	FreeHistory();
-
-	if (P != NULL) { FreePalette(P); P = NULL; }
-	if (LogFilePtr != NULL) { fclose(LogFilePtr); LogFilePtr = NULL; }
-	if (CanvasData != NULL) { free(CanvasData); CanvasData = NULL; }
-	if (CanvasBgData != NULL) {	free(CanvasBgData);	CanvasBgData = NULL; }
-	if (AppSettings != NULL) { free(AppSettings); AppSettings = NULL; }
-	if (CanvasTex != NULL) { SDL_DestroyTexture(CanvasTex); CanvasTex = NULL; }
-	if (CanvasBgTex != NULL) { SDL_DestroyTexture(CanvasBgTex); CanvasBgTex = NULL; }
-	if (renderer != NULL) { SDL_DestroyRenderer(renderer); renderer = NULL; }
-	if (window != NULL) { SDL_DestroyWindow(window); window = NULL; }
-
-	SDL_Quit();
-}
-
-// Sets Window Icon
-static void InitWindowIcon(void) {
-	unsigned char* winIcon = (unsigned char*)assets_get("data/icons/icon-48.png", NULL);
-	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
-		winIcon,
-		48, 48, 32, 48 * 4,
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-	);
-	if (surface == NULL) {
-		log_error("failed to set window icon: %s", SDL_GetError());
-		return;
-	}
-	SDL_SetWindowIcon(window, surface);
-	SDL_FreeSurface(surface);
-}
-
-// Updates Texture When Canvas Size Changes
-int UpdateTextures(void) {
-	if (CanvasTex != NULL) { SDL_DestroyTexture(CanvasTex); CanvasTex = NULL; }
-	if (CanvasBgTex != NULL) { SDL_DestroyTexture(CanvasBgTex); CanvasBgTex = NULL; }
-
-	CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
-
-	if (CanvasTex == NULL) {
-		log_error("failed to create main canvas texture: %s", SDL_GetError());
-		return -1;
-	}
-
-	CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
-
-	if (CanvasBgTex == NULL) {
-		log_error("failed to create main canvas background texture: %s", SDL_GetError());
-		return -1;
-	}
-
-	if (SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND) != 0) {
-		log_error("failed to set blend mode: %s", SDL_GetError());
-	}
-	if (SDL_SetTextureBlendMode(CanvasTex, SDL_BLENDMODE_BLEND) != 0) {;
-		log_error("failed to set texture blend mode: %s", SDL_GetError());
-	}
-	if (SDL_SetTextureBlendMode(CanvasBgTex, SDL_BLENDMODE_BLEND) != 0) {;
-		log_error("failed to set texture blend mode: %s", SDL_GetError());
-	}
-	return 0;
-}
-
-// Just Allocates Memory For CanvasBgData & frees old memory
-void GenCanvasBgBuff(void) {
-	if (CanvasBgData != NULL) { free(CanvasBgData); CanvasBgData = NULL; }
-	CanvasBgData = (Uint32*)malloc(CANVAS_SIZE_B);
-	for (int x = 0; x < CanvasDims[0]; x++) {
-		for (int y = 0; y < CanvasDims[1]; y++) {
-			Uint32* pixel = GetPixel(x, y, CanvasBgData);
-			*pixel = (x + y) % 2 ? 0x000000FF : 0xFFFFFFFF;
-		}
-	}
-}
-
-// Just Allocates Memory For CanvasData & frees old memory
-void GenCanvasBuff(void) {
-	if (CanvasData != NULL) { free(CanvasData); CanvasData = NULL; }
-	CanvasData = (Uint32*)malloc(CANVAS_SIZE_B);
-	memset(CanvasData, 0, CANVAS_SIZE_B);
 }
 
 int main(int argc, char** argv) {
@@ -321,10 +224,9 @@ int main(int argc, char** argv) {
 	ImVec4 EditorBG = ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
 
 	CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
-	CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
 
 	GenCanvasBuff();
-	GenCanvasBgBuff();
+	GenCanvasBgTex();
 	UpdateCanvasRect();
 
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -342,7 +244,6 @@ int main(int argc, char** argv) {
 		ProcessEvents();
 
 		SDL_UpdateTexture(CanvasTex, NULL, CanvasData, CanvasDims[0] * sizeof(Uint32));
-		SDL_UpdateTexture(CanvasBgTex, NULL, CanvasBgData, CanvasDims[0] * sizeof(Uint32));
 
 		ImGui_ImplSDLRenderer_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
@@ -364,7 +265,7 @@ int main(int argc, char** argv) {
 
 							LoadImageToCanvas(FilePath.c_str(), &CanvasDims[0], &CanvasDims[1], &CanvasData);
 							if (UpdateTextures() != 0) return -1;
-							GenCanvasBgBuff();
+							GenCanvasBgTex();
 							UpdateCanvasRect();
 							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
 						}
@@ -470,7 +371,7 @@ int main(int argc, char** argv) {
 						CanvasDims[0] = NEW_DIMS[0];
 						CanvasDims[1] = NEW_DIMS[1];
 						GenCanvasBuff();
-						GenCanvasBgBuff();
+						GenCanvasBgTex();
 						UpdateTextures();
 						UpdateCanvasRect();
 						SaveState();
@@ -799,6 +700,121 @@ void ProcessEvents() {
 	}
 }
 
+/*
+	Function: FreeEverything
+	Description:
+		Frees all the memory, destroys sdl stuff & closes all the files
+		Is used with atexit function as a callback
+*/
+static void FreeEverything(void) {
+	ImGui_ImplSDLRenderer_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
+
+	FreeHistory();
+
+	if (P != NULL) { FreePalette(P); P = NULL; }
+	if (LogFilePtr != NULL) { fclose(LogFilePtr); LogFilePtr = NULL; }
+	if (CanvasData != NULL) { free(CanvasData); CanvasData = NULL; }
+	if (AppSettings != NULL) { free(AppSettings); AppSettings = NULL; }
+	if (CanvasTex != NULL) { SDL_DestroyTexture(CanvasTex); CanvasTex = NULL; }
+	if (CanvasBgTex != NULL) { SDL_DestroyTexture(CanvasBgTex); CanvasBgTex = NULL; }
+	if (renderer != NULL) { SDL_DestroyRenderer(renderer); renderer = NULL; }
+	if (window != NULL) { SDL_DestroyWindow(window); window = NULL; }
+
+	SDL_Quit();
+}
+
+// Sets Window Icon
+static void InitWindowIcon(void) {
+	unsigned char* winIcon = (unsigned char*)assets_get("data/icons/icon-48.png", NULL);
+	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
+		winIcon,
+		48, 48, 32, 48 * 4,
+		0x000000ff,
+		0x0000ff00,
+		0x00ff0000,
+		0xff000000
+	);
+	if (surface == NULL) {
+		log_error("failed to set window icon: %s", SDL_GetError());
+		return;
+	}
+	SDL_SetWindowIcon(window, surface);
+	SDL_FreeSurface(surface);
+}
+
+/*
+	Function: UpdateTextures
+	Description: Updates The Textures To Use New* Canvas Dimensions
+	Remarks:
+		- Automatically Destroys Old Textures If They Exist
+		- Returns Non-Zero Value On Error & Also Logs The Error
+*/
+int UpdateTextures(void) {
+	if (CanvasTex != NULL) { SDL_DestroyTexture(CanvasTex); CanvasTex = NULL; }
+	if (CanvasBgTex != NULL) { SDL_DestroyTexture(CanvasBgTex); CanvasBgTex = NULL; }
+
+	CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CanvasDims[0], CanvasDims[1]);
+
+	if (CanvasTex == NULL) {
+		log_error("failed to create main canvas texture: %s", SDL_GetError());
+		return -1;
+	}
+
+	GenCanvasBgTex();
+
+	if (CanvasBgTex == NULL) {
+		log_error("failed to create main canvas background texture: %s", SDL_GetError());
+		return -1;
+	}
+
+	if (SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND) != 0) {
+		log_error("failed to set blend mode: %s", SDL_GetError());
+	}
+	if (SDL_SetTextureBlendMode(CanvasTex, SDL_BLENDMODE_BLEND) != 0) {;
+		log_error("failed to set texture blend mode: %s", SDL_GetError());
+	}
+	if (SDL_SetTextureBlendMode(CanvasBgTex, SDL_BLENDMODE_BLEND) != 0) {;
+		log_error("failed to set texture blend mode: %s", SDL_GetError());
+	}
+	return 0;
+}
+
+/*
+	Function: GenCanvasBgTex
+	Description: Generates a SDL_Texture and generates a checkerboard pattern for it
+	Remarks:
+		- Destroys The Texture if It Exists
+		- Generates Checkerboard Pattern For It
+		- Stores The Generated Texture in Global Variable
+*/
+void GenCanvasBgTex(void) {
+	if (CanvasBgTex != NULL) {
+		SDL_DestroyTexture(CanvasBgTex);
+		CanvasBgTex = NULL;
+	}
+
+	CanvasBgTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, CanvasDims[0], CanvasDims[1]);
+	Uint32* pixels = NULL;
+	int pitch = 8;
+	SDL_LockTexture(CanvasBgTex, NULL, (void**)&pixels, &pitch);
+	for (int x = 0; x < CanvasDims[0]; x++) {
+		for (int y = 0; y < CanvasDims[1]; y++) {
+			Uint32* pixel = GetPixel(x, y, pixels);
+			*pixel = (x + y) % 2 ? 0x000000FF : 0xFFFFFFFF;
+		}
+	}
+	SDL_UnlockTexture(CanvasBgTex);
+}
+
+// Just Allocates Memory For CanvasData & frees old memory
+void GenCanvasBuff(void) {
+	if (CanvasData != NULL) { free(CanvasData); CanvasData = NULL; }
+	CanvasData = (Uint32*)malloc(CANVAS_SIZE_B);
+	memset(CanvasData, 0, CANVAS_SIZE_B);
+}
+
 Uint32* GetPixel(int x, int y, Uint32* data) {
 	if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
 		return data != NULL ? &data[(y * CanvasDims[0] + x)] : &CanvasData[(y * CanvasDims[0] + x)];
@@ -821,10 +837,6 @@ void AdjustZoom(bool increase) {
 
 	UpdateCanvasRect();
 }
-
-// Uint32 rgba2Uint32(int r = 255, int g = 255, int b = 255, int a = 255) {
-// 	return ((r & 0xff) << 24) + ((g & 0xff) << 16) + ((b & 0xff) << 8) + (a & 0xff);
-// }
 
 /*
 	Function Takes 4 Argument First 2 Are starting x, y coordinates,
