@@ -571,7 +571,7 @@ int main(int argc, char** argv) {
 		SDL_RenderCopy(renderer, CanvasBgTex, NULL, &CanvasContRect);
 		SDL_RenderCopy(renderer, CanvasTex, NULL, &CanvasContRect);
 
-		if (Tool == RECT_SELECT && SelectionRect.w != 0 && SelectionRect.h != 0) {
+		if (SelectionRect.w != 0 && SelectionRect.h != 0) {
 			SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0xff, 0xff);
 			SDL_RenderDrawRect(renderer, &SelectionRect);
 		}
