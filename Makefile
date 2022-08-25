@@ -12,7 +12,10 @@ clean:
 	scons -c
 	$(RM) -r data/icon.ico data/icons src/assets/*.inl tools/font2inl.out windows.o
 
-generate:
-	tools/create_icons.py
-	tools/create_assets.py
-	tools/create_rc.py --arch=x86_64 --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
+gen-assets:
+	python3 tools/create_icons.py
+	python3 tools/create_assets.py
+
+# For Windows RC
+gen-rc:
+	python3 tools/create_rc.py --arch=x86_64 --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
