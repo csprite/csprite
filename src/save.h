@@ -2,6 +2,7 @@
 #define SAVE_H
 
 #include "macros.h"
+#include "log/log.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
@@ -10,12 +11,12 @@
 #include "stb/stb_image.h"
 
 // Loads a image to canvas and automatically calls FreeHistory to reset undo/redo
-void LoadImageToCanvas(const char* filepath, int* cvWidth, int* cvHeight, Uint32** canvas_data) {
+int LoadImageToCanvas(const char* filepath, int* cvWidth, int* cvHeight, Uint32** canvas_data) {
 	int imgWidth, imgHeight, channels;
 	unsigned char* image_data = stbi_load(filepath, &imgWidth, &imgHeight, &channels, 0);
 	if (image_data == NULL) {
-		printf("Unable to load image %s\n", filepath);
-		return;
+		log_error("unable to load image %s", filepath);
+		return -1;
 	}
 
 	*cvWidth = imgWidth;
@@ -45,6 +46,7 @@ void LoadImageToCanvas(const char* filepath, int* cvWidth, int* cvHeight, Uint32
 	stbi_image_free(image_data);
 	FreeHistory();
 	SaveState();
+	return 0;
 }
 
 void WritePngFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
