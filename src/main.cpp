@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 		);
 	}
 
-	Uint32 sdl_window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+	Uint32 sdl_window_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN;
 	Uint32 sdl_renderer_flags = 0;
 
 	if (AppSettings->vsync) sdl_renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
@@ -160,17 +160,43 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	window = SDL_CreateWindow(
-		WINDOW_TITLE_CSTR,
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		WindowDims[0], WindowDims[1],
-		sdl_window_flags
-	);
+	{
+		SDL_version compiled;
+		SDL_version linked;
+
+		SDL_VERSION(&compiled);
+		SDL_GetVersion(&linked);
+		log_info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
+		log_info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
+	}
+
+	{
+		SDL_DisplayMode dm;
+		SDL_GetCurrentDisplayMode(0, &dm);
+		WindowDims[0] = dm.w * 0.7;
+		WindowDims[1] = dm.h * 0.8;
+
+		window = SDL_CreateWindow(
+			WINDOW_TITLE_CSTR,
+			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+			WindowDims[0], WindowDims[1],
+			sdl_window_flags
+		);
+	}
+
+	log_info("detected scale: %f", GetScale());
+
+	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	SDL_EnableScreenSaver();
 	SDL_AddEventWatch(_EventWatcher, window);
 
 #ifdef SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR /* Available since 2.0.8 */
 	SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0");
+#endif
+#if SDL_VERSION_ATLEAST(2, 0, 12)
+	// This hint tells SDL to allow the user to resize a borderless windoow.
+	// It also enables aero-snap on Windows apparently.
+	SDL_SetHint("SDL_BORDERLESS_RESIZABLE_STYLE", "1");
 #endif
 #if SDL_VERSION_ATLEAST(2, 0, 5)
 	SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
@@ -187,7 +213,6 @@ int main(int argc, char** argv) {
 	** It also enables aero-snap on Windows apparently. */
 	SDL_SetHint("SDL_BORDERLESS_RESIZABLE_STYLE", "1");
 #endif
-
 
 #ifdef ENABLE_WIN_ICON
 	InitWindowIcon();
@@ -253,6 +278,7 @@ int main(int argc, char** argv) {
 	window_flags |= ImGuiWindowFlags_NoMove;
 
 	SaveState();
+	SDL_ShowWindow(window);
 	while (!AppCloseRequested) {
 		if (MouseInBounds == true && AppSettings->CustomCursor == true) {
 			MouseInstance->Update();
