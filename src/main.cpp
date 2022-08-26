@@ -299,14 +299,13 @@ int main(int argc, char** argv) {
 					if (ImGui::MenuItem("Open", "Ctrl+O")) {
 						char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
 						if (filePath != NULL) {
-							FilePath = std::string(filePath);
-
-							if (LoadImageToCanvas(FilePath.c_str(), &CanvasDims[0], &CanvasDims[1], &CanvasData) == 0) {
+							if (LoadImageToCanvas(filePath, &CanvasDims[0], &CanvasDims[1], &CanvasData) == 0) {
 								if (UpdateTextures() != 0)
 									return -1;
 
 								GenCanvasBgTex();
 								UpdateCanvasRect();
+								FilePath = std::string(filePath);
 								SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
 							}
 						}
@@ -566,16 +565,16 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 			char* filePath = event->drop.file;
 			if (filePath != NULL) {
 				log_info("file dropped: %s", filePath);
-				FilePath = std::string(filePath);
-				if (LoadImageToCanvas(FilePath.c_str(), &CanvasDims[0], &CanvasDims[1], &CanvasData) == 0) {
+				if (LoadImageToCanvas(filePath, &CanvasDims[0], &CanvasDims[1], &CanvasData) == 0) {
 					if (UpdateTextures() != 0)
 						return -1;
 
 					GenCanvasBgTex();
 					UpdateCanvasRect();
+					FilePath = std::string(filePath);
 					SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-					SDL_free(filePath);
 				}
+				SDL_free(filePath);
 			}
 
 			break;
