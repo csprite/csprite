@@ -4,11 +4,11 @@
 #include "macros.h"
 #include "log/log.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb/stb_image_write.h"
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb/stb_image_write.h"
 
 // Loads a image to canvas and automatically calls FreeHistory to reset undo/redo
 int LoadImageToCanvas(const char* filepath, int* cvWidth, int* cvHeight, Uint32** canvas_data) {
@@ -79,24 +79,24 @@ void WritePngFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
 	XX - Weird Behavior - runtime error: left shift of negative value -62521344
 	temporarily disabled
 */
-// void WriteJpgFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
-// 	unsigned char* pixels = (unsigned char*)malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
-// 	memset(pixels, 0, canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
+void WriteJpgFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
+	unsigned char* pixels = (unsigned char*)malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
+	memset(pixels, 0, canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
 
-// 	unsigned char* ptr;
-// 	for (int x = 0; x < canvas_dims[0]; x++) {
-// 		for (int y = 0; y < canvas_dims[1]; y++) {
-// 			Uint32* pixel = GetPixel(x, y, data);
-// 			ptr = pixels + ((y * canvas_dims[0] + x) * 4);
-// 			*(ptr+0) = (*pixel >> 24 ) & 0xff;
-// 			*(ptr+1) = (*pixel >> 16) & 0xff;
-// 			*(ptr+2) = (*pixel >> 8) & 0xff;
-// 			*(ptr+3) = (*pixel) & 0xff;
-// 		}
-// 	}
+	unsigned char* ptr;
+	for (int y = 0; y < canvas_dims[1]; y++) {
+		for (int x = 0; x < canvas_dims[0]; x++) {
+			Uint32* pixel = GetPixel(x, y, data);
+			ptr = pixels + ((y * canvas_dims[0] + x) * 4);
+			*(ptr+0) = (*pixel & 0xFF000000) >> 24;  // R
+			*(ptr+1) = (*pixel & 0x00FF0000) >> 16;  // G
+			*(ptr+2) = (*pixel & 0x0000FF00) >> 8;   // B
+			*(ptr+3) = (*pixel & 0x000000FF);        // A
+		}
+	}
 
-// 	stbi_write_jpg(filepath, canvas_dims[0], canvas_dims[1], 4, data, 100);
-// 	free(pixels);
-// }
+	stbi_write_jpg(filepath, canvas_dims[0], canvas_dims[1], 4, data, 100);
+	free(pixels);
+}
 
 #endif // end SAVE_H
