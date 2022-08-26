@@ -21,8 +21,8 @@
 #endif
 
 std::string FilePath = "untitled.png"; // Default Output Filename
-char const* FileFilterPatterns[1] = { "*.png" };
-unsigned int NumOfFilterPatterns = 1;
+char const* FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
+unsigned int NumOfFilterPatterns = 3;
 
 FILE* LogFilePtr = NULL;
 SDL_Window* window = NULL;
@@ -113,9 +113,11 @@ static double GetScale(void) {
 	float ddpi, hdpi, vdpi;
 	if (SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi) == 0) {
 		return hdpi / 96.0f;
+		// return 2.302083; // Test DPI i got from a tester
 	} else {
 		log_error("error getting DPI: %s", SDL_GetError());
 		return 1.0;
+		// return 2.302083;
 	}
 }
 
@@ -224,7 +226,7 @@ int main(int argc, char** argv) {
 		SDL_Log("Error creating SDL_Renderer: %s", SDL_GetError());
 		return -1;
 	}
-
+	SDL_RenderSetScale(renderer, GetScale(), GetScale());
 	SDL_RendererInfo rendererInfo;
 	SDL_GetRendererInfo(renderer, &rendererInfo);
 
@@ -1109,8 +1111,8 @@ void SaveImageFromCanvas(std::string filepath) {
 
 	if (fileExt == "png") {
 		WritePngFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
-	// } else if (fileExt == "jpg" || fileExt == "jpeg") {
-	// 	WriteJpgFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
+	} else if (fileExt == "jpg" || fileExt == "jpeg") {
+		WriteJpgFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
 	} else {
 		filepath = filepath + ".png";
 		WritePngFromCanvas(filepath.c_str(), CanvasDims, CanvasData);
