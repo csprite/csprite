@@ -70,23 +70,20 @@ enum tool_e LastTool = BRUSH;
 enum mode_e Mode = CIRCLE;
 enum mode_e LastMode = CIRCLE;
 
-struct cvstate {
+typedef struct cvstate {
 	unsigned char* pixels;
 	cvstate* next;
 	cvstate* prev;
-};
+} cvstate_t;
 
-struct mousepos {
+typedef struct mousepos {
 	double X;
 	double Y;
 	double LastX;
 	double LastY;
 	double DownX;
 	double DownY;
-};
-
-typedef struct cvstate cvstate_t;
-typedef struct mousepos mousepos_t;
+} mousepos_t;
 
 mousepos_t MousePos = { 0 };
 mousepos_t MousePosRel = { 0 };
