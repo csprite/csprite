@@ -301,11 +301,14 @@ int main(int argc, char** argv) {
 						if (filePath != NULL) {
 							FilePath = std::string(filePath);
 
-							LoadImageToCanvas(FilePath.c_str(), &CanvasDims[0], &CanvasDims[1], &CanvasData);
-							if (UpdateTextures() != 0) return -1;
-							GenCanvasBgTex();
-							UpdateCanvasRect();
-							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+							if (LoadImageToCanvas(FilePath.c_str(), &CanvasDims[0], &CanvasDims[1], &CanvasData) == 0) {
+								if (UpdateTextures() != 0)
+									return -1;
+
+								GenCanvasBgTex();
+								UpdateCanvasRect();
+								SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+							}
 						}
 					}
 					if (ImGui::BeginMenu("Save")) {
@@ -557,6 +560,24 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 					MouseInBounds = false;
 					break;
 			}
+			break;
+		}
+		case SDL_DROPFILE: {
+			char* filePath = event->drop.file;
+			if (filePath != NULL) {
+				log_info("file dropped: %s", filePath);
+				FilePath = std::string(filePath);
+				if (LoadImageToCanvas(FilePath.c_str(), &CanvasDims[0], &CanvasDims[1], &CanvasData) == 0) {
+					if (UpdateTextures() != 0)
+						return -1;
+
+					GenCanvasBgTex();
+					UpdateCanvasRect();
+					SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+					SDL_free(filePath);
+				}
+			}
+
 			break;
 		}
 	}
