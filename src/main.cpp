@@ -90,6 +90,8 @@ mousepos_t MousePosRel = { 0 };
 cvstate_t* CurrentState = NULL;
 settings_t* AppSettings = NULL;
 
+float AppScale = 1.0f;
+
 // #define MAX_DEF_SDL_RENDERER_SIZE 128
 // #if defined(__APPLE__)
 // 	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "metal";
@@ -183,7 +185,9 @@ int main(int argc, char** argv) {
 		);
 	}
 
-	log_info("detected scale: %f", GetScale());
+	AppScale = GetScale();
+
+	log_info("detected scale: %f", AppScale);
 
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	SDL_EnableScreenSaver();
@@ -226,7 +230,7 @@ int main(int argc, char** argv) {
 		SDL_Log("Error creating SDL_Renderer: %s", SDL_GetError());
 		return -1;
 	}
-	SDL_RenderSetScale(renderer, GetScale(), GetScale());
+	SDL_RenderSetScale(renderer, AppScale, AppScale);
 	SDL_RendererInfo rendererInfo;
 	SDL_GetRendererInfo(renderer, &rendererInfo);
 
@@ -741,12 +745,12 @@ void ProcessEvents() {
 
 			MousePosRel.LastX = MousePosRel.X;
 			MousePosRel.LastY = MousePosRel.Y;
-			MousePosRel.X = (event.motion.x - CanvasContRect.x) / ZoomLevel;
-			MousePosRel.Y = (event.motion.y - CanvasContRect.y) / ZoomLevel;
+			MousePosRel.X = ((event.motion.x - CanvasContRect.x) / ZoomLevel) * AppScale;
+			MousePosRel.Y = ((event.motion.y - CanvasContRect.y) / ZoomLevel) * AppScale;
 
 			if (Tool == PAN && !CanvasFreeze) {
-				CanvasContRect.x = CanvasContRect.x + (MousePos.X - MousePos.LastX);
-				CanvasContRect.y = CanvasContRect.y + (MousePos.Y - MousePos.LastY);
+				CanvasContRect.x = (CanvasContRect.x + (MousePos.X - MousePos.LastX)) * AppScale;
+				CanvasContRect.y = (CanvasContRect.y + (MousePos.Y - MousePos.LastY)) * AppScale;
 			} else if (IsLMBDown == true && !CanvasFreeze) {
 				if (MousePosRel.X >= 0 && MousePosRel.X < CanvasDims[0] && MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1]) {
 					if (Tool == BRUSH || Tool == ERASER) {
