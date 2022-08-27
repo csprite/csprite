@@ -1,0 +1,43 @@
+version: 1
+script:
+  - rm -rf AppDir | true
+  - mkdir -p AppDir/bin/ AppDir/usr/share/icons/
+  - cp ./build/csprite AppDir/bin
+  - cp data/icon-512.png AppDir/usr/share/icons/csprite.png
+  - ./tools/BuildNInstall.sh
+
+AppDir:
+  path: ./AppDir
+
+  app_info:
+    id: user.pegvin.csprite
+    name: csprite
+    icon: csprite
+    version: !ENV ${CSPRITE_VERSION}
+    exec: bin/csprite
+    exec_args: $@
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse'
+        key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+      # - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse'
+      # - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ bionic-backports main restricted universe multiverse'
+      - sourceline: 'deb http://archive.neon.kde.org/user bionic main'
+        key_url: 'http://archive.neon.kde.org/public.key'
+
+    include:
+      - libappimage0
+    exclude:
+      - libpcre3
+      - binutils
+      - dpkg-dev
+      - gir1.2-freedesktop
+      - python3
+      - libxrender1
+
+AppImage:
+  update-information: 'gh-releases-zsync|pegvin|csprite|latest|*x86_64.AppImage.zsync'
+  sign-key: None
+  arch: x86_64
