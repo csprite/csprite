@@ -8,6 +8,12 @@ all:
 release:
 	MajVer=$(MajVer) MinVer=$(MinVer) PatVer=$(PatVer) scons -j 4 mode=release
 
+version:
+	@echo $(MajVer).$(MinVer).$(PatVer)
+
+appimage: clean release
+	CSPRITE_VERSION=$(MajVer).$(MinVer).$(PatVer) appimage-builder --skip-test --recipe=AppImage-Builder.yml
+
 clean:
 	scons -c
 	$(RM) -r data/icon.ico data/icons src/assets/*.inl tools/font2inl.out windows.o
