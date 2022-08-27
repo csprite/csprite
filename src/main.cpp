@@ -71,7 +71,7 @@ enum mode_e Mode = CIRCLE;
 enum mode_e LastMode = CIRCLE;
 
 typedef struct cvstate {
-	unsigned char* pixels;
+	Uint32* pixels;
 	cvstate* next;
 	cvstate* prev;
 } cvstate_t;
@@ -1144,7 +1144,7 @@ void SaveState() {
 	}
 
 	cvstate_t* NewState = (cvstate_t*) malloc(sizeof(cvstate_t));
-	NewState->pixels = (unsigned char*) malloc(CANVAS_SIZE_B);
+	NewState->pixels = (Uint32*) malloc(CANVAS_SIZE_B);
 
 	if (CurrentState == NULL) {
 		CurrentState = NewState;
