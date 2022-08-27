@@ -14,7 +14,7 @@
 #include "assets.h"
 #include "palette.h"
 #include "settings.h"
-#include "mouse.h"
+#include "vmouse.h"
 
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
@@ -48,8 +48,6 @@ SDL_Renderer* renderer = NULL;
 #define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * sizeof(Uint32)
 SDL_Rect CanvasContRect = {}; // Rectangle In Which Our Canvas Will Be Placed
 SDL_Rect SelectionRect = {}; // Rectangle Which Represents Our Selection
-
-Mouse* MouseInstance = NULL;
 
 bool IsCtrlDown = false;
 bool IsShiftDown = false;
@@ -121,11 +119,6 @@ static double GetScale(void) {
 		return 1.0;
 		// return 2.302083;
 	}
-}
-
-static void _SetCursor(mouse_t cursorType) {
-	if (MouseInstance != NULL)
-		MouseInstance->SetCursor(cursorType);
 }
 
 int main(int argc, char** argv) {
@@ -242,7 +235,7 @@ int main(int argc, char** argv) {
 	}
 
 	if (AppSettings->CustomCursor == true)
-		MouseInstance = new Mouse(renderer);
+		VirtualMouseInit(renderer);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -282,7 +275,8 @@ int main(int argc, char** argv) {
 	SDL_ShowWindow(window);
 	while (!AppCloseRequested) {
 		if (MouseInBounds == true && AppSettings->CustomCursor == true) {
-			MouseInstance->Update();
+			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+			VirtualMouseUpdate();
 		}
 
 		ProcessEvents();
@@ -388,9 +382,7 @@ int main(int argc, char** argv) {
 						AppSettings->accelerated = accel;
 						strncpy(AppSettings->renderer, rendererList[currItemIdx], 128);
 						WriteSettings(AppSettings);
-
-						if (MouseInstance == NULL)
-							MouseInstance = new Mouse(renderer);
+						VirtualMouseInit(renderer);
 
 						CanvasFreeze = false;
 						ShowSettingsWindow = false;
@@ -536,7 +528,7 @@ int main(int argc, char** argv) {
 		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
 		if (MouseInBounds == true && AppSettings->CustomCursor == true) {
-			MouseInstance->Draw(renderer);
+			VirtualMouseDraw(renderer);
 		}
 
 		// Swap Front & Back Buffers
@@ -641,13 +633,13 @@ void ProcessEvents() {
 				if (Tool != PAN) {
 					LastTool = Tool;
 					Tool = PAN;
-					_SetCursor(CLOSE_HAND);
+					VirtualMouseSet(CLOSE_HAND);
 				}
 			} else if (event.key.keysym.sym == SDLK_i && !CanvasFreeze) {
 				if (Tool != INK_DROPPER) {
 					LastTool = Tool;
 					Tool = INK_DROPPER;
-					_SetCursor(EYEDROPPER);
+					VirtualMouseSet(EYEDROPPER);
 				}
 			} else if (event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze) {
 				if (PaletteIndex != 0) {
@@ -674,7 +666,7 @@ void ProcessEvents() {
 				IsCtrlDown = false;
 			else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze) {
 				Tool = LastTool;
-				_SetCursor(DEFAULT);
+				VirtualMouseSet(DEFAULT);
 			} else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze)
 				Undo();
 			else if (event.key.keysym.sym == SDLK_y && IsCtrlDown && !CanvasFreeze)
@@ -703,7 +695,7 @@ void ProcessEvents() {
 								LastPaletteIndex = PaletteIndex;
 								PaletteIndex = i;
 								Tool = LastTool;
-								_SetCursor(DEFAULT);
+								VirtualMouseSet(DEFAULT);
 								break;
 							}
 						}
@@ -818,6 +810,7 @@ static void FreeEverything(void) {
 	ImGui_ImplSDL2_Shutdown();
 	ImGui::DestroyContext();
 
+	VirtualMouseFree();
 	FreeHistory();
 
 	if (P != NULL) { FreePalette(P); P = NULL; }
@@ -826,7 +819,6 @@ static void FreeEverything(void) {
 	if (AppSettings != NULL) { free(AppSettings); AppSettings = NULL; }
 	if (CanvasTex != NULL) { SDL_DestroyTexture(CanvasTex); CanvasTex = NULL; }
 	if (CanvasBgTex != NULL) { SDL_DestroyTexture(CanvasBgTex); CanvasBgTex = NULL; }
-	if (MouseInstance != NULL) { delete MouseInstance; }
 	if (renderer != NULL) { SDL_DestroyRenderer(renderer); renderer = NULL; }
 	if (window != NULL) { SDL_DestroyWindow(window); window = NULL; }
 
