@@ -237,6 +237,13 @@ jobs:
     - name: Build
       run: make release
 
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: osx_executable
+        path: ./csprite
+        if-no-files-found: error
+
     - name: Generate .icns
       run: |
         mkdir csprite.iconset
