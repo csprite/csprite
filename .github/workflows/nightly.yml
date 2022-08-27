@@ -73,7 +73,7 @@ jobs:
       run: make appimage
 
     - name: Rename
-      run: mv ./csprite csprite.elf
+      run: mv ./csprite csprite.elf && mv ./csprite-*.AppImage ./csprite-x86_64.AppImage
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
@@ -86,7 +86,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: linux-x86_64-appimage
-        path: csprite-*.AppImage
+        path: csprite-x86_64.AppImage
         if-no-files-found: error
 
   linux_i686:
