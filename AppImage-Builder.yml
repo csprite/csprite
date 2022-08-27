@@ -19,15 +19,15 @@ AppDir:
   apt:
     arch: amd64
     sources:
-      - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse'
-        key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+      - sourceline: 'deb http://archive.debian.org/debian/ bullseye main restricted universe multiverse'
+      #   key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
       # - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse'
       # - sourceline: 'deb http://archive.ubuntu.com/ubuntu/ bionic-backports main restricted universe multiverse'
-      - sourceline: 'deb http://archive.neon.kde.org/user bionic main'
-        key_url: 'http://archive.neon.kde.org/public.key'
+      # - sourceline: 'deb http://archive.neon.kde.org/user bionic main'
+      #   key_url: 'http://archive.neon.kde.org/public.key'
 
     include:
-      - sdl2
+      - libsdl2-2.0-0
     exclude:
       - libpcre3
       - binutils
