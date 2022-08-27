@@ -9,4 +9,11 @@ mkdir build
 cd build/
 ../configure
 make -j4
-sudo make install
+
+# On Ubuntu 18.04 VM Sudo Isn't Installed.
+if ! command -v sudo &> /dev/null; then
+	echo "Sudo Not Found, Installing Without Sudo"
+	make install
+else
+	sudo make install
+fi
