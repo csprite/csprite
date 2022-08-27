@@ -11,7 +11,7 @@ release:
 version:
 	@echo $(MajVer).$(MinVer).$(PatVer)
 
-appimage: clean release
+appimage:
 	CSPRITE_VERSION=$(MajVer).$(MinVer).$(PatVer) appimage-builder --skip-test --recipe=AppImage-Builder.yml
 
 clean:
