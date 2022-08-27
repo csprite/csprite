@@ -2,10 +2,11 @@
 
 set -e
 
+rm -rf SDL/
 git clone https://github.com/libsdl-org/SDL -b release-2.24.0
-cd SDL
+cd SDL/
 mkdir build
-cd build
+cd build/
 ../configure
 make -j4
 sudo make install
