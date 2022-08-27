@@ -60,7 +60,7 @@ jobs:
         cd SDL
         mkdir build
         cd build
-        ../configure --disable-audio --disable-joystick --disable-haptic
+        ../configure
         make -j4
         sudo make install
 
@@ -105,7 +105,7 @@ jobs:
           cd SDL
           mkdir build
           cd build
-          ../configure --disable-shared --enable-static --disable-audio --disable-joystick --disable-haptic
+          ../configure
           make -j4
           make install
           cd ../../
