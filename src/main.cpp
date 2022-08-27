@@ -745,12 +745,12 @@ void ProcessEvents() {
 
 			MousePosRel.LastX = MousePosRel.X;
 			MousePosRel.LastY = MousePosRel.Y;
-			MousePosRel.X = ((event.motion.x - CanvasContRect.x) / ZoomLevel) * AppScale;
-			MousePosRel.Y = ((event.motion.y - CanvasContRect.y) / ZoomLevel) * AppScale;
+			MousePosRel.X = (event.motion.x - CanvasContRect.x) / ZoomLevel;
+			MousePosRel.Y = (event.motion.y - CanvasContRect.y) / ZoomLevel;
 
 			if (Tool == PAN && !CanvasFreeze) {
-				CanvasContRect.x = (CanvasContRect.x + (MousePos.X - MousePos.LastX)) * AppScale;
-				CanvasContRect.y = (CanvasContRect.y + (MousePos.Y - MousePos.LastY)) * AppScale;
+				CanvasContRect.x = CanvasContRect.x + (MousePos.X - MousePos.LastX);
+				CanvasContRect.y = CanvasContRect.y + (MousePos.Y - MousePos.LastY);
 			} else if (IsLMBDown == true && !CanvasFreeze) {
 				if (MousePosRel.X >= 0 && MousePosRel.X < CanvasDims[0] && MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1]) {
 					if (Tool == BRUSH || Tool == ERASER) {
