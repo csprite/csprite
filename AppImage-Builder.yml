@@ -27,7 +27,7 @@ AppDir:
         key_url: 'http://archive.neon.kde.org/public.key'
 
     include:
-      - libsdl2
+      - sdl2
     exclude:
       - libpcre3
       - binutils
