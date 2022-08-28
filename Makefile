@@ -8,6 +8,9 @@ all:
 release:
 	MajVer=$(MajVer) MinVer=$(MinVer) PatVer=$(PatVer) scons -j 4 mode=release
 
+targz:
+	bash tools/build_targz.sh $(MajVer).$(MinVer).$(PatVer)
+
 version:
 	@echo $(MajVer).$(MinVer).$(PatVer)
 
