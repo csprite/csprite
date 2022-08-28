@@ -11,7 +11,15 @@ SDL_Rect point;
 const char* _cursor_img_path[_VMOUSE_TEX_ARRAY_SIZE] = {
 	"data/cursors/default.png",
 	"data/cursors/closehand.png",
-	"data/cursors/eyedropper.png"
+	"data/cursors/eyedropper.png",
+	"data/cursors/crosshair.png",
+};
+
+int iconOffsets[_VMOUSE_TEX_ARRAY_SIZE][2] = {
+	{ 0, 0 },
+	{ -16, -16 },
+	{ 0, 0 },
+	{ -16, -16 },
 };
 
 static SDL_Texture* _loadPngToTex(SDL_Renderer* ren, const char* cursorImgPath) {
@@ -77,8 +85,14 @@ void VirtualMouseUpdate() {
 	SDL_GetMouseState(&rect.x, &rect.y);
 	point.x = rect.x;
 	point.y = rect.y;
+	rect.x += iconOffsets[CurrentCursor][0];
+	rect.y += iconOffsets[CurrentCursor][1];
 }
 
 void VirtualMouseDraw(SDL_Renderer* ren) {
 	SDL_RenderCopy(ren, tex[CurrentCursor], NULL, &rect);
+}
+
+vmouse_icon_t VirtualMouseGetIcon() {
+	return CurrentCursor;
 }
