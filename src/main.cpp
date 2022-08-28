@@ -274,16 +274,16 @@ int main(int argc, char** argv) {
 	SaveState();
 	SDL_ShowWindow(window);
 	while (!AppCloseRequested) {
+		ProcessEvents();
+
 		if (MouseInBounds == true && AppSettings->CustomCursor == true) {
 			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 			VirtualMouseUpdate();
-		}
 
-		ProcessEvents();
-
-		// Mouse is being hovered over a ImGui Element
-		if (io.WantCaptureMouse == true) {
-			VirtualMouseSet(DEFAULT);
+			// Mouse is being hovered over a ImGui Element Change Cursor To Default
+			if (io.WantCaptureMouse == true) {
+				VirtualMouseSet(DEFAULT);
+			}
 		}
 
 		SDL_UpdateTexture(CanvasTex, NULL, CanvasData, CanvasDims[0] * sizeof(Uint32));
