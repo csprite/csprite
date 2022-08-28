@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = NULL;
-	io.FontGlobalScale = GetScale();
+	io.FontGlobalScale = AppScale;
 
 	ImDrawList* ImGuiDrawList = NULL;
 	const void* Montserrat_Bold = NULL;
@@ -734,8 +734,8 @@ void ProcessEvents() {
 		case SDL_MOUSEMOTION:
 			MousePos.LastX = MousePos.X;
 			MousePos.LastY = MousePos.Y;
-			MousePos.X = event.motion.x;
-			MousePos.Y = event.motion.y;
+			MousePos.X = event.motion.x / AppScale;
+			MousePos.Y = event.motion.y / AppScale;
 
 			MousePosRel.LastX = MousePosRel.X;
 			MousePosRel.LastY = MousePosRel.Y;
