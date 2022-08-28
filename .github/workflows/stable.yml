@@ -135,7 +135,6 @@ jobs:
           git clone https://github.com/libsdl-org/SDL -b release-2.24.0
           ./tools/BuildNInstall.sh
           CC=clang make release
-          mv csprite csprite-i686.elf
 
     - name: Exit if file not exists
       run: |
