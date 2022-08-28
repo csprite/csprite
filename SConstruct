@@ -101,8 +101,8 @@ def GatherFiles(Directories):
 	return files
 
 # Get all the c and c++ files in src, recursively.
-sources = GatherFiles(['src', 'lib/imgui', 'lib/log/', 'lib/ini'])
-sources += glob.glob('lib/tinyfiledialogs.c')
+sources = GatherFiles(['src', 'lib/imgui', 'lib/log/', 'lib/ini', 'lib/tfd/src'])
+# sources += glob.glob('lib/tinyfiledialogs.c')
 
 # Compile windows.rc & link with it.
 if target_os == 'msys' and not env.GetOption('clean'):
@@ -118,8 +118,8 @@ if target_os == 'msys' and not env.GetOption('clean'):
 
 # Header Directories.
 env.Append(
-	CPATH=['src/', 'include/', 'lib/'],
-	CPPPATH=['src/', 'include/', 'lib/']
+	CPATH=['src/', 'include/', 'lib/', 'lib/tfd/src'],
+	CPPPATH=['src/', 'include/', 'lib/', 'lib/tfd/src']
 )
 
 # Windows compilation support.
