@@ -278,12 +278,14 @@ int main(int argc, char** argv) {
 
 		if (MouseInBounds == true && AppSettings->CustomCursor == true) {
 			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
-			VirtualMouseUpdate();
 
 			// Mouse is being hovered over a ImGui Element Change Cursor To Default
 			if (io.WantCaptureMouse == true) {
 				VirtualMouseSet(DEFAULT);
 			}
+
+			// This Function should be always called after you have done all the Set Calls.
+			VirtualMouseUpdate();
 		}
 
 		SDL_UpdateTexture(CanvasTex, NULL, CanvasData, CanvasDims[0] * sizeof(Uint32));
