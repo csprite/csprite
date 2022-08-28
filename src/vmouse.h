@@ -8,14 +8,17 @@
 extern "C" {
 #endif
 
-#define _VMOUSE_TEX_ARRAY_SIZE 3
+#define _VMOUSE_TEX_ARRAY_SIZE 4
 
 // These icon types directly correspond the the index in the texture array
 typedef enum vmouse_icon_t {
 	DEFAULT = 0,
 	CLOSE_HAND = 1,
-	EYEDROPPER = 2
+	EYEDROPPER = 2,
+	CROSSHAIR = 3
 } vmouse_icon_t;
+
+vmouse_icon_t VirtualMouseGetIcon();
 
 /*
 	Function: VirtualMouseInit
