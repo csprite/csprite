@@ -138,8 +138,8 @@ jobs:
 
     - name: Exit if file not exists
       run: |
-        if [ ! -e ./csprite-i686.elf ]; then
-            echo "'csprite-i686.elf' executable not found"
+        if [ ! -e ./csprite ]; then
+            echo "'csprite' executable not found"
             exit 1
         fi
 
