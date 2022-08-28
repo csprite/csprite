@@ -1,9 +1,13 @@
 [Desktop Entry]
+Type=Application
 Name=CSprite
 Comment=A tiny pixel art editor
 GenericName=pixel editor
-TryExec=csprite
-Exec=csprite
+Categories=Graphics;2DGraphics;RasterGraphics
 Icon=csprite
-Type=Application
-Categories=Graphics;2DGraphics;
+Exec=csprite %U
+TryExec=csprite
+Terminal=false
+StartupNotify=false
+StartupWMClass=CSprite
+MimeType=image/jpeg;image/png;
