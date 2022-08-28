@@ -241,6 +241,7 @@ int main(int argc, char** argv) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.IniFilename = NULL;
+	io.FontGlobalScale = GetScale();
 
 	ImDrawList* ImGuiDrawList = NULL;
 	const void* Montserrat_Bold = NULL;
