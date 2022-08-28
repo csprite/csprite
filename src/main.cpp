@@ -800,8 +800,8 @@ void ProcessEvents() {
 				);
 			}
 		} else if (Tool == RECT_SELECT) {
-			SelectionRect.x = (CanvasContRect.x + (MousePosRel.DownX * ZoomLevel)) * AppScale;
-			SelectionRect.y = (CanvasContRect.y + (MousePosRel.DownY * ZoomLevel)) * AppScale;
+			SelectionRect.x = (CanvasContRect.x + (MousePosRel.DownX * ZoomLevel)) / AppScale;
+			SelectionRect.y = (CanvasContRect.y + (MousePosRel.DownY * ZoomLevel)) / AppScale;
 			SelectionRect.w = MousePosRel.X - MousePosRel.DownX;
 			SelectionRect.h = MousePosRel.Y - MousePosRel.DownY;
 
