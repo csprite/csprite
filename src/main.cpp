@@ -734,8 +734,8 @@ void ProcessEvents() {
 		case SDL_MOUSEMOTION:
 			MousePos.LastX = MousePos.X;
 			MousePos.LastY = MousePos.Y;
-			MousePos.X = event.motion.x / AppScale;
-			MousePos.Y = event.motion.y / AppScale;
+			MousePos.X = event.motion.x * AppScale;
+			MousePos.Y = event.motion.y * AppScale;
 
 			MousePosRel.LastX = MousePosRel.X;
 			MousePosRel.LastY = MousePosRel.Y;
