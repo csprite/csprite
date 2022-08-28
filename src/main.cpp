@@ -919,7 +919,7 @@ void GenCanvasBgTex(void) {
 	for (int x = 0; x < CanvasDims[0]; x++) {
 		for (int y = 0; y < CanvasDims[1]; y++) {
 			Uint32* pixel = GetPixel(x, y, pixels);
-			*pixel = (x + y) % 2 ? 0x000000FF : 0xFFFFFFFF;
+			*pixel = (x + y) % 2 ? 0x808080FF : 0xC0C0C0FF;
 		}
 	}
 	SDL_UnlockTexture(CanvasBgTex);
