@@ -4,3 +4,6 @@
 [submodule "lib/stb"]
 	path = lib/stb
 	url = https://github.com/nothings/stb
+[submodule "lib/tfd"]
+	path = lib/tfd
+	url = https://github.com/pegvin/TinyFileDialogs
