@@ -281,6 +281,11 @@ int main(int argc, char** argv) {
 
 		ProcessEvents();
 
+		// Mouse is being hovered over a ImGui Element
+		if (io.WantCaptureMouse == true) {
+			VirtualMouseSet(DEFAULT);
+		}
+
 		SDL_UpdateTexture(CanvasTex, NULL, CanvasData, CanvasDims[0] * sizeof(Uint32));
 
 		ImGui_ImplSDLRenderer_NewFrame();
@@ -633,13 +638,11 @@ void ProcessEvents() {
 				if (Tool != PAN) {
 					LastTool = Tool;
 					Tool = PAN;
-					VirtualMouseSet(CLOSE_HAND);
 				}
 			} else if (event.key.keysym.sym == SDLK_i && !CanvasFreeze) {
 				if (Tool != INK_DROPPER) {
 					LastTool = Tool;
 					Tool = INK_DROPPER;
-					VirtualMouseSet(EYEDROPPER);
 				}
 			} else if (event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze) {
 				if (PaletteIndex != 0) {
@@ -666,7 +669,6 @@ void ProcessEvents() {
 				IsCtrlDown = false;
 			else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze) {
 				Tool = LastTool;
-				VirtualMouseSet(DEFAULT);
 			} else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze)
 				Undo();
 			else if (event.key.keysym.sym == SDLK_y && IsCtrlDown && !CanvasFreeze)
@@ -695,7 +697,6 @@ void ProcessEvents() {
 								LastPaletteIndex = PaletteIndex;
 								PaletteIndex = i;
 								Tool = LastTool;
-								VirtualMouseSet(DEFAULT);
 								break;
 							}
 						}
@@ -753,6 +754,22 @@ void ProcessEvents() {
 			}
 			break;
 		}
+	}
+
+	switch (Tool) {
+		case BRUSH:
+		case ERASER:
+			VirtualMouseSet(CROSSHAIR);
+			break;
+		case INK_DROPPER:
+			VirtualMouseSet(EYEDROPPER);
+			break;
+		case PAN:
+			VirtualMouseSet(CLOSE_HAND);
+			break;
+		default:
+			VirtualMouseSet(DEFAULT);
+			break;
 	}
 
 	if (
