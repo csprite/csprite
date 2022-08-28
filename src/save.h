@@ -75,27 +75,25 @@ void WritePngFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
 	free(pixels);
 }
 
-/*
-	XX - Weird Behavior - runtime error: left shift of negative value -62521344
-	temporarily disabled
-*/
 void WriteJpgFromCanvas(const char *filepath, int *canvas_dims, Uint32* data) {
-	unsigned char* pixels = (unsigned char*)malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
-	memset(pixels, 0, canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
+	int channels = 3;
+	unsigned char* pixels = (unsigned char*)malloc(canvas_dims[0] * canvas_dims[1] * channels * sizeof(unsigned char));
+	memset(pixels, 0, canvas_dims[0] * canvas_dims[1] * channels * sizeof(unsigned char));
 
 	unsigned char* ptr;
 	for (int y = 0; y < canvas_dims[1]; y++) {
 		for (int x = 0; x < canvas_dims[0]; x++) {
 			Uint32* pixel = GetPixel(x, y, data);
-			ptr = pixels + ((y * canvas_dims[0] + x) * 4);
+			ptr = pixels + ((y * canvas_dims[0] + x) * channels);
 			*(ptr+0) = (*pixel & 0xFF000000) >> 24;  // R
 			*(ptr+1) = (*pixel & 0x00FF0000) >> 16;  // G
 			*(ptr+2) = (*pixel & 0x0000FF00) >> 8;   // B
-			*(ptr+3) = (*pixel & 0x000000FF);        // A
+			// Uncomment If you want to use 4 channels even tho jpeg uses 3.
+			// *(ptr+3) = (*pixel & 0x000000FF);        // A
 		}
 	}
 
-	stbi_write_jpg(filepath, canvas_dims[0], canvas_dims[1], 4, data, 100);
+	stbi_write_jpg(filepath, canvas_dims[0], canvas_dims[1], channels, pixels, 100);
 	free(pixels);
 }
 
