@@ -187,13 +187,13 @@ static char* getPaletteDirPath() {
 			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "palettes");
 			struct stat st = {0};
 			if (stat(configPath, &st) == -1) {
-				mkdir(configPath, 0700);
+				sys_make_dir(configPath);
 			}
 		} else {
 			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "%s/csprite/palettes", configdir);
 			struct stat st = {0};
 			if (stat(configPath, &st) == -1) {
-				mkdir(configPath, 0700);
+				sys_make_dir(configPath);
 			}
 		}
 	}
