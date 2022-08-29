@@ -82,6 +82,8 @@ palette_t* LoadCsvPalette(const char* csvText) {
 	token = strtok(NULL, ","); // Author Name
 	token = strtok(NULL, ","); // First Color
 
+	// XX - Todo Fix When Author Name Or Palette Name is Not Present it glitches
+
 	for (int i = 0; token != NULL; ++i) {
 		unsigned int r = 0, g = 0, b = 0;
 		sscanf(token, "%02x%02x%02x", &r, &g, &b);
