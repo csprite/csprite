@@ -33,11 +33,15 @@ int ZoomLevel = 8;
 int BrushSize = 5;
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 
-unsigned int LastPaletteIndex = 0;
 unsigned int PaletteIndex = 0;
-palette_t* P = NULL;
 
-#define SelectedColor P->entries[PaletteIndex]
+unsigned int LastColorIndex = 0;
+unsigned int ColorIndex = 0;
+
+palette_arr_t* P_Arr = NULL;
+
+#define P P_Arr->entries[PaletteIndex]
+#define SelectedColor P->entries[ColorIndex]
 
 Uint32* CanvasData = NULL;
 SDL_Texture* CanvasTex = NULL;
@@ -122,8 +126,6 @@ static double GetScale(void) {
 }
 
 int main(int argc, char** argv) {
-	atexit(FreeEverything);
-
 #ifdef IS_DEBUG
 	LogFilePtr = fopen("csprite.log", "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
@@ -248,7 +250,11 @@ int main(int argc, char** argv) {
 	defaultUiFont = assets_get("data/fonts/bm-mini.ttf", &defaultUiFontSize);
 	io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 16.0f);
 	ImGui::StyleColorsDark();
-	P = LoadCsvPalette((const char*)assets_get("data/palettes/cc-29.csv", NULL));
+
+	P_Arr = PalletteLoadAll();
+	for (unsigned int i = 0; i < P_Arr->numOfEntries; ++i) {
+		printf("Loaded Palette: %s...\n", P_Arr->entries[i]->name);
+	}
 
 	ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
 	ImGui_ImplSDLRenderer_Init(renderer);
@@ -350,6 +356,16 @@ int main(int argc, char** argv) {
 						ShowSettingsWindow = true;
 						CanvasFreeze = true;
 					}
+
+					if (ImGui::BeginMenu("Palette")) {
+						for (int i = 0; i < P_Arr->numOfEntries; ++i) {
+							if (ImGui::MenuItem(P_Arr->entries[i]->name, NULL)) {
+								PaletteIndex = i;
+							}
+						}
+						ImGui::EndMenu();
+					}
+
 					ImGui::EndMenu();
 				}
 				if (ImGui::BeginMenu("Help")) {
@@ -504,10 +520,10 @@ int main(int argc, char** argv) {
 					if (i != 0 && i % 2 != 0)
 						ImGui::SameLine();
 
-					if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)((P->entries[i] >> 24) & 0xFF)/255, (float)((P->entries[i] >> 16) & 0xFF)/255, (float)((P->entries[i] >> 8) & 0xFF)/255, (float)(P->entries[i] & 0xFF)/255}))
-						PaletteIndex = i;
+					if (ImGui::ColorButton(ColorIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)((P->entries[i] >> 24) & 0xFF)/255, (float)((P->entries[i] >> 16) & 0xFF)/255, (float)((P->entries[i] >> 8) & 0xFF)/255, (float)(P->entries[i] & 0xFF)/255}))
+						ColorIndex = i;
 
-					if (PaletteIndex == i)
+					if (ColorIndex == i)
 						ImGuiDrawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), 0xFFFFFFFF, 0, 0, 1);
 				};
 				ImGui::End();
@@ -647,20 +663,20 @@ void ProcessEvents() {
 					Tool = INK_DROPPER;
 				}
 			} else if (event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze) {
-				if (PaletteIndex != 0) {
-					LastPaletteIndex = PaletteIndex;
-					PaletteIndex--;
+				if (ColorIndex != 0) {
+					LastColorIndex = ColorIndex;
+					ColorIndex--;
 				} else {
-					LastPaletteIndex = PaletteIndex;
-					PaletteIndex = P->numOfEntries - 1;
+					LastColorIndex = ColorIndex;
+					ColorIndex = P->numOfEntries - 1;
 				}
 			} else if (event.key.keysym.sym == SDLK_RIGHTBRACKET && !CanvasFreeze) {
-				if (PaletteIndex < P->numOfEntries - 1) {
-					LastPaletteIndex = PaletteIndex;
-					PaletteIndex++;
+				if (ColorIndex < P->numOfEntries - 1) {
+					LastColorIndex = ColorIndex;
+					ColorIndex++;
 				} else {
-					LastPaletteIndex = PaletteIndex;
-					PaletteIndex = 0;
+					LastColorIndex = ColorIndex;
+					ColorIndex = 0;
 				}
 			}
 			break;
@@ -696,8 +712,8 @@ void ProcessEvents() {
 					if (color != NULL) {
 						for (unsigned int i = 0; i < P->numOfEntries; i++) {
 							if (P->entries[i] == *color) {
-								LastPaletteIndex = PaletteIndex;
-								PaletteIndex = i;
+								LastColorIndex = ColorIndex;
+								ColorIndex = i;
 								Tool = LastTool;
 								break;
 							}
@@ -832,7 +848,7 @@ static void FreeEverything(void) {
 	VirtualMouseFree();
 	FreeHistory();
 
-	if (P != NULL) { FreePalette(P); P = NULL; }
+	if (P_Arr != NULL) { FreePaletteArr(P_Arr); P_Arr = NULL; }
 	if (LogFilePtr != NULL) { fclose(LogFilePtr); LogFilePtr = NULL; }
 	if (CanvasData != NULL) { free(CanvasData); CanvasData = NULL; }
 	if (AppSettings != NULL) { free(AppSettings); AppSettings = NULL; }
