@@ -58,5 +58,10 @@ Using CSprite isn't rocket science and infact you can learn how to use it in 5 m
 | Ctrl + Y                     | Redo                         |
 
 ---
+### Credits
+
+CSprite Uses [BB Mini](https://www.dafont.com/bm-mini.font) Font Designed By [Bitmap Mania](https://www.dafont.com/bitmapmania.d283)
+
+---
 
 ### Thanks
