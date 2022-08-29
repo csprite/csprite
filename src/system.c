@@ -47,7 +47,7 @@ int sys_make_dir(const char *path) {
 	for (p = tmp + 1; *p; p++) {
 		if (*p != '/') continue;
 		*p = '\0';
-#ifdef WIN32 // On Windows mkdir only takes path
+#if defined(_WIN32) || defined(WIN32) // On Windows mkdir only takes path
 		if (mkdir(tmp) != 0) {
 #else
 		if (mkdir(tmp, S_IRWXU) != 0) {
