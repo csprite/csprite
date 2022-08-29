@@ -90,6 +90,7 @@ static char* CCGetConfigDir(void) {
 
 #elif defined(__APPLE__) || defined(__MACH__)
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
