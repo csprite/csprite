@@ -21,6 +21,9 @@
  * SOFTWARE.
 */
 
+#ifndef CCONFIG_H
+#define CCONFIG_H
+
 #ifndef CC_PATH_SIZE_MAX
 	#define CC_PATH_SIZE_MAX 2048
 #endif
@@ -38,7 +41,7 @@ extern "C" {
 	Note:
 		- Returned Pointer doesn't need to be freed as it's allocated & de-allocated autmatically.
 */
-char* CCGetConfigDir(void);
+static char* CCGetConfigDir(void);
 
 #ifdef __cplusplus
 }
@@ -52,7 +55,7 @@ char* CCGetConfigDir(void);
 #include <pwd.h>
 
 // Uses $XDG_CONFIG_HOME or $HOME/.config, env variables
-char* CCGetConfigDir(void) {
+static char* CCGetConfigDir(void) {
 	static char fullPath[CC_PATH_SIZE_MAX] = "";
 	const char* configHome = NULL;
 
@@ -78,7 +81,7 @@ char* CCGetConfigDir(void) {
 #include <stdlib.h>
 
 // Uses $APPDATA, env variables
-char* CCGetConfigDir(void) {
+static char* CCGetConfigDir(void) {
 	static char fullPath[CC_PATH_SIZE_MAX] = "";
 	const char* appdata = getenv("APPDATA");
 	strncpy(fullPath, appdata, CC_PATH_SIZE_MAX);
@@ -91,7 +94,7 @@ char* CCGetConfigDir(void) {
 #include <string.h>
 
 // Returns $HOME/Library/Application Support
-char* CCGetConfigDir(void) {
+static char* CCGetConfigDir(void) {
 	static char fullPath[CC_PATH_SIZE_MAX] = "";
 	const char* home = getenv("HOME");
 	snprintf(fullPath, CC_PATH_SIZE_MAX, "%s/Library/Application Support", home);
@@ -99,3 +102,5 @@ char* CCGetConfigDir(void) {
 }
 
 #endif
+
+#endif // CCONFIG_H

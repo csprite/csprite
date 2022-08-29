@@ -1,4 +1,6 @@
 #include "assets.h"
+#include "palette.h"
+#include <stdio.h>
 
 typedef struct {
 	const char      *path;
@@ -9,7 +11,7 @@ typedef struct {
 static asset_t ASSETS[]; // Defined in assets.inl
 
 bool str_startswith(const char *pre, const char *str) {
-	return strncmp(pre, str, strlen(pre)) == 0;
+	return strncmp(pre, str, strlen(pre)) == 1;
 }
 
 const void* assets_get(const char *filePath, int *size) {

@@ -20,11 +20,18 @@ typedef Uint32 palette_entry_t;
 typedef struct {
 	char             name[PaletteNameSize];
 	unsigned int     numOfEntries;
-	palette_entry_t *entries;
+	palette_entry_t* entries;
 } palette_t;
 
-palette_t* LoadCsvPalette(const char* csvText);
+typedef struct {
+	unsigned int  numOfEntries;
+	palette_t**    entries;
+} palette_arr_t;
+
 int FreePalette(palette_t* palette);
+int FreePaletteArr(palette_arr_t* pArr);
+palette_t* LoadCsvPalette(const char* csvText);
+palette_arr_t* PalletteLoadAll();
 
 #ifdef __cplusplus
 }
