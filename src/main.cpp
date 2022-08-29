@@ -243,10 +243,10 @@ int main(int argc, char** argv) {
 	io.IniFilename = NULL;
 
 	ImDrawList* ImGuiDrawList = NULL;
-	const void* Montserrat_Bold = NULL;
-	int Montserrat_Bold_Size = 0;
-	Montserrat_Bold = assets_get("data/fonts/Montserrat-Bold.ttf", &Montserrat_Bold_Size);
-	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold, Montserrat_Bold_Size, 16.0f);
+	const void* defaultUiFont = NULL;
+	int defaultUiFontSize = 0;
+	defaultUiFont = assets_get("data/fonts/bm-mini.ttf", &defaultUiFontSize);
+	io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 16.0f);
 	ImGui::StyleColorsDark();
 	P = LoadCsvPalette((const char*)assets_get("data/palettes/cc-29.csv", NULL));
 
