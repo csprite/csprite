@@ -104,12 +104,8 @@ palette_arr_t* PalletteLoadAll() {
 	char* pallete_dir_path = getPaletteDirPath();
 	char dir[CC_PATH_SIZE_MAX + 128] = "";
 	strncpy(dir, pallete_dir_path, CC_PATH_SIZE_MAX);
-	printf("%s\n", dir);
 
 	int numOfPalettes = sys_list_dir((const char*)dir, NULL, NULL);
-
-	printf("Number Of Palettes: %d\n", numOfPalettes);
-
 	if (numOfPalettes <= 0) {
 		sys_make_dir(dir);
 		assets_list("data/palettes/", OnAssetMgrList);
@@ -137,7 +133,6 @@ palette_arr_t* PalletteLoadAll() {
 static int OnSysDirList(const char *dir, const char *fname, void* data) {
 	palette_arr_t* pArr = (palette_arr_t*) data;
 	int pItems = pArr->numOfEntries;
-	printf("%d\n", pItems);
 
 	for (int i = 0; i < pItems; ++i) {
 		if (pArr->entries[i] == NULL) {
@@ -147,7 +142,7 @@ static int OnSysDirList(const char *dir, const char *fname, void* data) {
 			FILE* fp = fopen(fullPath, "r");
 			long int size = fsize(fp); // XX - Do Error (-1) Checking
 			char* csvtxt = (char*) malloc(size * sizeof(char) + 1);
-			fgets(csvtxt, size, fp);
+			fgets(csvtxt, size + 1, fp);
 			pArr->entries[i] = LoadCsvPalette(csvtxt);
 
 			free(csvtxt);
