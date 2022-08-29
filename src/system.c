@@ -9,11 +9,6 @@
 #define PATH_MAX 1024
 #endif
 
-#ifdef WIN32
-	// On mingw mkdir takes only one argument!
-	#define mkdir(p, m) mkdir(p)
-#endif
-
 #if defined(__unix__) && !defined(ANDROID)
 	#include <pwd.h>
 #endif
@@ -52,7 +47,15 @@ int sys_make_dir(const char *path) {
 	for (p = tmp + 1; *p; p++) {
 		if (*p != '/') continue;
 		*p = '\0';
-		if ((mkdir(tmp, S_IRWXU) != 0) && (errno != EEXIST)) return -1;
+#ifdef WIN32 // On Windows mkdir only takes path
+		if (mkdir(tmp) != 0) {
+#else
+		if (mkdir(tmp, S_IRWXU) != 0) {
+#endif
+			if (errno != EEXIST) {
+				return -1;
+			}
+		}
 		*p = '/';
 	}
 	return 0;
