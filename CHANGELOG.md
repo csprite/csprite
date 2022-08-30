@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The project follows [Semantic Versioning v2.0.0](https://semver.org/spec/v2.0.0.html), all the changes are added every new release.
 
+- **v1.0.0 (coming soon)**
+	- Switched From OpenGL To SDL2
+		- Now CSprite Supports OpenGL, Direct3D, Metal, Vulkan & Software Based Rendering.
+
+	- New Tool Line Tool (<kbd>L</kbd> or <kbd>Shift</kbd> + <kbd>L</kbd>)
+	- New Tool Rectangle Tool (<kbd>R</kbd> or <kbd>Shift</kbd> + <kbd>R</kbd>)
+	- New Tool Circle Tool (<kbd>C</kbd>)
+	- New Configuration System
+		- You Can Edit CSprite's Configuration By Going into Edit -> Preferences
+
+	- New Palette System
+		- CSprite Provides 3 Palettes By Default.
+		- Palettes Can Be Changed Via Edit -> Palette
+		- New Palettes Can Be Added By Going into Palette Directory Inside CSprite's Config Directory
+
+	- New Custom Cursors
+		- CSprite Provides New Custom Cursor Icons Which are enabled by default
+		- If you are having performance problems you can disable that in Edit -> Preferences
+
 - **[v0.1.0](https://github.com/pegvin/csprite/releases/tag/v0.1.0)**
 	- Re-Format The Code
 		- Define Include Directories
