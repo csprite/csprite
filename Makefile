@@ -1,5 +1,5 @@
-MajVer:=0
-MinVer:=1
+MajVer:=1
+MinVer:=0
 PatVer:=0
 
 all:
