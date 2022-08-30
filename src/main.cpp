@@ -393,7 +393,7 @@ int main(int argc, char** argv) {
 			if (ShowSettingsWindow) {
 				ImGui::SetNextWindowSize({240.0f, 165.0f}, 0);
 				if (ImGui::BeginPopupModal(
-						"ShowSettingsWindow",
+						"Settings###ShowSettingsWindow",
 						NULL,
 						ImGuiWindowFlags_NoCollapse |
 						ImGuiWindowFlags_NoResize   |
@@ -427,17 +427,16 @@ int main(int argc, char** argv) {
 					}
 					ImGui::EndPopup();
 				} else {
-					ImGui::OpenPopup("ShowSettingsWindow");
+					ImGui::OpenPopup("Settings###ShowSettingsWindow");
 				}
 			}
 
 			if (ShowNewCanvasWindow) {
-				ImGui::SetNextWindowSize({230.0f, 100.0f}, 0);
+				ImGui::SetNextWindowSize({240.0f, 115.0f}, 0);
 				if (ImGui::BeginPopupModal(
-						"ShowNewCanvasWindow",
+						"New Canvas###ShowNewCanvasWindow",
 						NULL,
 						ImGuiWindowFlags_NoCollapse |
-						ImGuiWindowFlags_NoTitleBar |
 						ImGuiWindowFlags_NoResize   |
 						ImGuiWindowFlags_NoMove
 				)) {
@@ -463,7 +462,7 @@ int main(int argc, char** argv) {
 					}
 					ImGui::EndPopup();
 				} else {
-					ImGui::OpenPopup("ShowNewCanvasWindow");
+					ImGui::OpenPopup("New Canvas###ShowNewCanvasWindow");
 				}
 			}
 
