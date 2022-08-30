@@ -44,8 +44,6 @@ int LoadImageToCanvas(const char* filepath, int* cvWidth, int* cvHeight, Uint32*
 		}
 	}
 	stbi_image_free(image_data);
-	FreeHistory();
-	SaveState();
 	return 0;
 }
 
