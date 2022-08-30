@@ -9,6 +9,8 @@ most of the code of CSprite is C & C Styled & that's why i have used `malloc` & 
 
 you might've noticed that there is just a single executable with no-dlls & stuff that's because csprite embeds required stuff like fonts & icons, this is basically done in 2 parts, first you need to convert the assets to include-able c arrays which is done via the `tools/create_assets.py` python3 script, second you need a way to access the c-arrays which is basically done in `src/assets.c`, this is the file where our assets are included & this file provides functions to interact with the assets like: `assets_get` & `assets_list`
 
+all of the gui code of csprite is inside [src/_GuiImpl.h](src/_GuiImpl.h), it's a simple c++ header file only to be included by [src/main.cpp](src/main.cpp), it has `static inline` functions which are called in the main loop of the app, since the functions are `static inline` the function calls is substituted with the code so we don't need to worry about it "slowing down" the code, it's just something i did to make the code clean (& might remove it in future?).
+
 ---
 ## Libraries
 
