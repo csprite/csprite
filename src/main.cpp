@@ -252,8 +252,16 @@ int main(int argc, char** argv) {
 	ImGui::StyleColorsDark();
 
 	P_Arr = PalletteLoadAll();
-	for (unsigned int i = 0; i < P_Arr->numOfEntries; ++i) {
-		printf("Loaded Palette: %s...\n", P_Arr->entries[i]->name);
+	if (P_Arr != NULL) {
+		for (unsigned int i = 0; i < P_Arr->numOfEntries; ++i) {
+			log_info("Loaded Palette: %s...", P_Arr->entries[i]->name);
+		}
+	} else {
+		log_error("cannot load all palettes, loading a single one!");
+		P_Arr = (palette_arr_t*) malloc(sizeof(palette_arr_t));
+		P_Arr->entries = (palette_t**) malloc(1 * sizeof(palette_t*));
+		P_Arr->entries[0] = LoadCsvPalette((const char*)assets_get("data/palettes/cc-29.csv", NULL));
+		P_Arr->numOfEntries = 1;
 	}
 
 	ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
@@ -358,7 +366,7 @@ int main(int argc, char** argv) {
 					}
 
 					if (ImGui::BeginMenu("Palette")) {
-						for (int i = 0; i < P_Arr->numOfEntries; ++i) {
+						for (unsigned int i = 0; i < P_Arr->numOfEntries; ++i) {
 							if (ImGui::MenuItem(P_Arr->entries[i]->name, NULL)) {
 								PaletteIndex = i;
 							}
