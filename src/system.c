@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "system.h"
+
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif
@@ -40,24 +42,29 @@ int sys_list_dir(const char *dirpath, int (*callback)(const char *dirpath, const
 	return i;
 }
 
-int sys_make_dir(const char *path) {
-	char tmp[PATH_MAX];
-	char *p;
-	strcpy(tmp, path);
-	for (p = tmp + 1; *p; p++) {
-		if (*p != '/') continue;
-		*p = '\0';
-#if defined(_WIN32) || defined(WIN32) // On Windows mkdir only takes path
-		if (mkdir(tmp) != 0) {
+// On Windows Mkdir Only Takes Path So We Don't Pass Path
+#if defined(_WIN32) || defined(WIN32)
+	#define _mkdir_custom(path, perms) mkdir(path)
 #else
-		if (mkdir(tmp, S_IRWXU) != 0) {
+	#define _mkdir_custom(path, perms) mkdir(path, perms)
 #endif
-			if (errno != EEXIST) {
-				return -1;
-			}
+
+int sys_make_dir(const char *dir) {
+	char tmp[PATH_MAX];
+	char *p = NULL;
+	size_t len;
+
+	snprintf(tmp, sizeof(tmp), "%s", dir);
+	len = strlen(tmp);
+
+	if (tmp[len - 1] == SYS_PATH_SEP)
+		tmp[len - 1] = 0;
+	for (p = tmp + 1; *p; p++)
+		if (*p == SYS_PATH_SEP) {
+			*p = 0;
+			_mkdir_custom(tmp, S_IRWXU);
+			*p = SYS_PATH_SEP;
 		}
-		*p = '/';
-	}
+	_mkdir_custom(tmp, S_IRWXU);
 	return 0;
 }
-
