@@ -182,16 +182,10 @@ static char* getPaletteDirPath() {
 		if (configdir == NULL) {
 			log_error("cannot get the config directory!");
 			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "palettes");
-			struct stat st = {0};
-			if (stat(configPath, &st) == -1) {
-				sys_make_dir(configPath);
-			}
+			sys_make_dir(configPath);
 		} else {
-			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "%s/csprite/palettes", configdir);
-			struct stat st = {0};
-			if (stat(configPath, &st) == -1) {
-				sys_make_dir(configPath);
-			}
+			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "%s%ccsprite%cpalettes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
+			sys_make_dir(configPath);
 		}
 	}
 
