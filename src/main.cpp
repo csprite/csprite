@@ -126,6 +126,7 @@ static double GetScale(void) {
 }
 
 int main(int argc, char** argv) {
+	atexit(FreeEverything);
 #ifdef IS_DEBUG
 	LogFilePtr = fopen("csprite.log", "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
