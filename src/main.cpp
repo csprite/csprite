@@ -10,6 +10,7 @@
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
 #include "log/log.h"
+#include "downloader/downloader.h"
 #include "tinyfiledialogs.h"
 
 #include "main.h"
@@ -69,7 +70,7 @@ bool ShowCloseWithoutSaveWindow = false;
 bool CanvasFreeze = false;
 bool ImgDidChange = false;
 bool MouseInBounds = false;
-bool CurlIsAvailable = false;
+bool DownloaderAvailable = false;
 bool FileHasChanged = false;
 
 enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE, CIRCLE_TOOL, RECT_SELECT };
@@ -142,18 +143,7 @@ static void _FreeNSaveHistory() {
 
 // Simple Function Checks for available programs
 void _CheckDeps() {
-	{
-#if defined(WIN32) || defined(_WIN32)
-		int curlversion_cmd = system("curl --version >nul 2>nul");
-#else
-		int curlversion_cmd = system("curl --version > /dev/null 2>&1");
-#endif
-		if (curlversion_cmd == 0) {
-			CurlIsAvailable = true;
-		} else {
-			log_error("curl not available: %s", strerror(errno));
-		}
-	}
+	DownloaderAvailable = DownloaderCheckBackends() == 0;
 }
 
 int main(int argc, char** argv) {
