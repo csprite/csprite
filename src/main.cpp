@@ -183,6 +183,20 @@ void Redo() {
 	}
 }
 
+static inline ImVec4 color_lighten(ImVec4 c, float k) {
+	c.x *= k;
+	c.y *= k;
+	c.z *= k;
+	return c;
+}
+
+static inline ImVec4 color_darken(ImVec4 c, float k) {
+	c.x /= k;
+	c.y /= k;
+	c.z /= k;
+	return c;
+}
+
 int main(int argc, char** argv) {
 	atexit(FreeEverything);
 #ifdef IS_DEBUG
@@ -299,6 +313,7 @@ int main(int argc, char** argv) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiStyle& style = ImGui::GetStyle();
 	io.IniFilename = NULL;
 
 	const void* defaultUiFont = NULL;
@@ -362,6 +377,7 @@ int main(int argc, char** argv) {
 
 		SDL_UpdateTexture(CanvasTex, NULL, CanvasData, CanvasDims[0] * sizeof(Uint32));
 
+		_GuiSetColors(style);
 		ImGui_ImplSDLRenderer_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
@@ -406,6 +422,37 @@ int main(int argc, char** argv) {
 	}
 
 	return 0;
+}
+
+static void _GuiSetColors(ImGuiStyle& style) {
+	#define Blue ImVec4((float)42/255, (float)103/255, (float)195/255, 1.0)
+	#define White ImVec4((float)200/255, (float)200/255, (float)200/255, 1.0)
+	#define WinBG ImVec4((float)0/255, (float)0/255, (float)0/255, 1.0)
+	#define PopupBG ImVec4((float)33/255, (float)33/255, (float)33/255, 1.0)
+	#define FrameBg ImVec4(0.05f, 0.05f, 0.05f, 1.00f)
+
+	style.Colors[ImGuiCol_PopupBg] = PopupBG; // Used of Popups
+	style.Colors[ImGuiCol_WindowBg] = WinBG; // Used For Windows
+
+	style.Colors[ImGuiCol_Header] = color_darken(Blue, 1.5); // used for MenuItem etc
+	style.Colors[ImGuiCol_HeaderHovered] = color_lighten(Blue, 1.5); // Used for MenuItem etc
+
+	style.Colors[ImGuiCol_Text] = White;
+	style.Colors[ImGuiCol_TextDisabled] = color_darken(White, 1.2); // Used for disabled text and shortcut key texts in menu
+
+	style.Colors[ImGuiCol_Button] = Blue;
+	style.Colors[ImGuiCol_ButtonHovered] = color_lighten(Blue, 1.2);
+
+	style.Colors[ImGuiCol_FrameBg] = color_lighten(FrameBg, 1.5);
+	style.Colors[ImGuiCol_FrameBgHovered] = color_lighten(FrameBg, 2.0);
+
+	style.Colors[ImGuiCol_TitleBg] = Blue;
+	style.Colors[ImGuiCol_TitleBgActive] = Blue; // Is Shown On Active Titlebars
+
+	style.Colors[ImGuiCol_Border] = Blue;
+	style.Colors[ImGuiCol_MenuBarBg] = Blue;
+	style.Colors[ImGuiCol_CheckMark] = color_lighten(Blue, 1.5); // Used For Checkmarks in Checkboxes & Etc
+	style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0, 0.0, 0.0, 0.3);
 }
 
 static int _EventWatcher(void* data, SDL_Event* event) {

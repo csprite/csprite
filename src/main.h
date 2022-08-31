@@ -19,6 +19,7 @@ static int _EventWatcher(void* data, SDL_Event* event);
 void ProcessEvents();
 void UpdateCanvasRect();
 void AdjustZoom(bool increase);
+static void _GuiSetColors(ImGuiStyle& style);
 
 void GenCanvasBgTex(void); // Generates a SDL_Texture and generates a checkerboard pattern for it
 void GenCanvasBuff(void); // Just Allocates Memory For CanvasData & frees old memory
