@@ -127,10 +127,10 @@ static inline void _GuiMenuWindow() {
 		}
 		if (ImGui::BeginMenu("Edit")) {
 			if (ImGui::MenuItem("Undo", "Ctrl+Z", nullptr, CurrentState->prev != NULL)) {
-				HISTORY_UNDO(CurrentState, CANVAS_SIZE_B, CanvasData);
+				Undo();
 			}
 			if (ImGui::MenuItem("Redo", "Ctrl+Y", nullptr, CurrentState->next != NULL)) {
-				HISTORY_REDO(CurrentState, CANVAS_SIZE_B, CanvasData);
+				Redo();
 			}
 			if (ImGui::MenuItem("Preferences")) {
 				ShowSettingsWindow = true;
@@ -307,6 +307,9 @@ static inline void _GuiTextWindow() {
 				break;
 			case CIRCLE_TOOL:
 				selectedToolText = "Circle - (Border Size: " + std::to_string(BrushSize) + ")";
+				break;
+			case SELECTION_MOVE:
+				selectedToolText = "Move Selection";
 				break;
 			}
 
