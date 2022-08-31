@@ -772,6 +772,7 @@ static void FreeEverything(void) {
 	if (P_Arr != NULL) { FreePaletteArr(P_Arr); P_Arr = NULL; }
 	if (LogFilePtr != NULL) { fclose(LogFilePtr); LogFilePtr = NULL; }
 	if (CanvasData != NULL) { free(CanvasData); CanvasData = NULL; }
+	if (SelectedData != NULL) { free(SelectedData); SelectedData = NULL; }
 	if (AppSettings != NULL) { free(AppSettings); AppSettings = NULL; }
 	if (CanvasTex != NULL) { SDL_DestroyTexture(CanvasTex); CanvasTex = NULL; }
 	if (CanvasBgTex != NULL) { SDL_DestroyTexture(CanvasBgTex); CanvasBgTex = NULL; }
