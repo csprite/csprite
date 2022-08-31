@@ -1,5 +1,7 @@
 #ifdef CSPRITE_MAIN_CPP // Ensures that it's only included by main.cpp
 
+#include "helpers.h"
+
 /*
 	File: _GuiImpl.h
 		- These Are The Inline functions for gui.
@@ -9,6 +11,49 @@
 		- it is separated to a file for "clean" code.
 		- it is recommended to not create a global variable in this file itself
 */
+
+static inline void _GuiLoSpecPaletteImporter() {
+	if (ImGui::BeginPopupModal(
+			"LoSpec Palette Importer###ShowLoSpecPaletteImporter",
+			NULL,
+			ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_NoResize   |
+			ImGuiWindowFlags_NoMove
+	)) {
+		static char PaletteName[512] = "";
+		ImGui::Text("Enter LoSpec Palette Name From URL");
+		ImGui::InputText("###PaletteName", PaletteName, 512);
+
+		ImGui::PushFont(BB_Mini_small);
+		ImGui::Text("\nprogram might freeze, it's not a crash\n");
+		ImGui::PopFont();
+
+		if (ImGui::Button("Import")) {
+			char palettePath[2048] = "";
+			char paletteURL[2048] = "";
+			char* paletteDirPath = getPaletteDirPath();
+
+			snprintf(palettePath, 2048, "%s/%s.csv", paletteDirPath, PaletteName);
+			snprintf(paletteURL, 2048, "https://lospec.com/palette-list/%s.csv", PaletteName);
+
+			DownloadFileFrom(paletteURL, palettePath);
+			FreePaletteArr(P_Arr);
+			P_Arr = PalletteLoadAll(); // XX - Do Error Checking & Stuff
+
+			CanvasFreeze = false;
+			ShowLoSpecPaletteImporter = false;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel")) {
+			memset(PaletteName, 0, 512);
+			CanvasFreeze = false;
+			ShowLoSpecPaletteImporter = false;
+		}
+		ImGui::EndPopup();
+	} else {
+		ImGui::OpenPopup("LoSpec Palette Importer###ShowLoSpecPaletteImporter");
+	}
+}
 
 static inline void _GuiCloseWithoutSave() {
 	if (ImGui::BeginPopupModal(
@@ -89,6 +134,11 @@ static inline void _GuiMenuWindow() {
 			}
 			if (ImGui::MenuItem("Preferences")) {
 				ShowSettingsWindow = true;
+				CanvasFreeze = true;
+			}
+
+			if (ImGui::MenuItem("Import From LoSpec", nullptr, nullptr, CurlIsAvailable)) {
+				ShowLoSpecPaletteImporter = true;
 				CanvasFreeze = true;
 			}
 
