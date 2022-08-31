@@ -8,6 +8,7 @@
 #include "assets.h"
 #include "system.h"
 #include "log/log.h"
+#include "helpers.h"
 
 // Forward Declarations
 static char* filenameFromPath(const char* path);
@@ -172,24 +173,6 @@ static int OnAssetMgrList(int i, const char *fname) {
 		return -1;
 	}
 	return 0;
-}
-
-static char* getPaletteDirPath() {
-	char* configdir = CCGetConfigDir();
-	static char configPath[CC_PATH_SIZE_MAX + 128] = "";
-
-	if (!*configPath) {
-		if (configdir == NULL) {
-			log_error("cannot get the config directory!");
-			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "palettes");
-			sys_make_dir(configPath);
-		} else {
-			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "%s%ccsprite%cpalettes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
-			sys_make_dir(configPath);
-		}
-	}
-
-	return configPath;
 }
 
 static char* filenameFromPath(const char* path) {
