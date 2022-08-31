@@ -10,8 +10,8 @@ typedef struct {
 
 static asset_t ASSETS[]; // Defined in assets.inl
 
-bool str_startswith(const char *pre, const char *str) {
-	return strncmp(pre, str, strlen(pre)) == 1;
+bool str_startswith(const char *prefix, const char *str) {
+	return strncmp(prefix, str, strlen(prefix)) == 0;
 }
 
 const void* assets_get(const char *filePath, int *size) {
@@ -29,8 +29,11 @@ const void* assets_get(const char *filePath, int *size) {
 int assets_list(const char* directoryPath, int (*callback)(int i, const char *path)) {
 	int i, j = 0;
 	for (i = 0; ASSETS[i].path; i++) {
-		if (str_startswith(ASSETS[i].path, directoryPath)) {
-			if (!callback || callback(j, ASSETS[i].path) == 0) j++;
+		if (str_startswith(directoryPath, ASSETS[i].path)) {
+			if (callback != NULL) {
+				if (callback(j, ASSETS[i].path) == 0)
+					j++;
+			}
 		}
 	}
 	return j;
