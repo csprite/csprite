@@ -10,6 +10,32 @@
 		- it is recommended to not create a global variable in this file itself
 */
 
+static inline void _GuiCloseWithoutSave() {
+	if (ImGui::BeginPopupModal(
+			"Unsaved Changes###CloseWithoutSave",
+			NULL,
+			ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_NoResize   |
+			ImGuiWindowFlags_NoMove
+	)) {
+		ImGui::Text("you have unsaved changes, are you sure you want to quit?");
+
+		if (ImGui::Button("Quit")) {
+			AppCloseRequested = true;
+			CanvasFreeze = false;
+			ShowCloseWithoutSaveWindow = false;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel")) {
+			CanvasFreeze = false;
+			ShowCloseWithoutSaveWindow = false;
+		}
+		ImGui::EndPopup();
+	} else {
+		ImGui::OpenPopup("Unsaved Changes###CloseWithoutSave");
+	}
+}
+
 static inline void _GuiMenuWindow() {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
@@ -55,10 +81,10 @@ static inline void _GuiMenuWindow() {
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Edit")) {
-			if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
+			if (ImGui::MenuItem("Undo", "Ctrl+Z", nullptr, CurrentState->prev != NULL)) {
 				HISTORY_UNDO(CurrentState, CANVAS_SIZE_B, CanvasData);
 			}
-			if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
+			if (ImGui::MenuItem("Redo", "Ctrl+Y", nullptr, CurrentState->next != NULL)) {
 				HISTORY_REDO(CurrentState, CANVAS_SIZE_B, CanvasData);
 			}
 			if (ImGui::MenuItem("Preferences")) {

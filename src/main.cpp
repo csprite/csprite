@@ -64,9 +64,11 @@ bool IsLMBDown = false;
 bool AppCloseRequested = false;
 bool ShowNewCanvasWindow = false;
 bool ShowSettingsWindow = false;
+bool ShowCloseWithoutSaveWindow = false;
 bool CanvasFreeze = false;
 bool ImgDidChange = false;
 bool MouseInBounds = false;
+bool FileHasChanged = false;
 
 enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE, CIRCLE_TOOL, RECT_SELECT };
 enum mode_e { SQUARE, CIRCLE };
@@ -321,6 +323,7 @@ int main(int argc, char** argv) {
 
 			if (ShowSettingsWindow) _GuiSettingsWindow();
 			if (ShowNewCanvasWindow) _GuiNewCanvasWindow();
+			if (ShowCloseWithoutSaveWindow) _GuiCloseWithoutSave();
 			if (GuiErrorOccured != 0) return GuiErrorOccured; // To Be Checked At Last
 		}
 
@@ -404,11 +407,22 @@ void ProcessEvents() {
 		ImGui_ImplSDL2_ProcessEvent(&event);
 		switch (event.type) {
 		case SDL_QUIT:
-			AppCloseRequested = true;
+			if (FileHasChanged == true) {
+				ShowCloseWithoutSaveWindow = true;
+				CanvasFreeze = true;
+			} else {
+				AppCloseRequested = true;
+			}
 			break;
 		case SDL_WINDOWEVENT:
-			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-				AppCloseRequested = true;
+			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)) {
+				if (FileHasChanged == true) {
+					ShowCloseWithoutSaveWindow = true;
+					CanvasFreeze = true;
+				} else {
+					AppCloseRequested = true;
+				}
+			}
 			break;
 		case SDL_KEYDOWN:
 			if (event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT) {
@@ -627,6 +641,8 @@ void ProcessEvents() {
 			}
 		}
 	}
+
+	FileHasChanged = CurrentState->prev != NULL; // If we have something in our undo buffer it means file has changed
 }
 
 /*
