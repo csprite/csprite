@@ -230,14 +230,17 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 	SDL_RenderSetScale(renderer, AppScale, AppScale);
-	SDL_RendererInfo rendererInfo;
-	SDL_GetRendererInfo(renderer, &rendererInfo);
 
-	if (strncmp(rendererInfo.name, AppSettings->renderer, 128) == 0) {
-		log_info("initialized app with %s renderer!", AppSettings->renderer);
-	} else {
-		log_info("failed to initialize app with %s renderer! using %s renderer instead.", AppSettings->renderer, rendererInfo.name);
-		strncpy(AppSettings->renderer, rendererInfo.name, 128);
+	{
+		SDL_RendererInfo rendererInfo;
+		SDL_GetRendererInfo(renderer, &rendererInfo);
+
+		if (strncmp(rendererInfo.name, AppSettings->renderer, 128) == 0) {
+			log_info("initialized app with %s renderer!", AppSettings->renderer);
+		} else {
+			log_info("failed to initialize app with %s renderer! using %s renderer instead.", AppSettings->renderer, rendererInfo.name);
+			strncpy(AppSettings->renderer, rendererInfo.name, 128);
+		}
 	}
 
 	if (AppSettings->CustomCursor == true)
