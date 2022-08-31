@@ -40,11 +40,6 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: cpp
-
     - uses: actions/download-artifact@v2
       with:
         name: src-assets
@@ -64,9 +59,6 @@ jobs:
 
     - name: Build
       run: make release
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
 
     - name: Strip
       run: strip ./csprite
@@ -100,7 +92,7 @@ jobs:
         path: csprite-x86_64.AppImage
         if-no-files-found: error
 
-  linux_i686:
+  linux-i686:
     needs: [generate-assets]
     runs-on: ubuntu-latest
     steps:
@@ -306,3 +298,19 @@ jobs:
         name: osx_binary
         path: ./csprite-osx.zip
         if-no-files-found: error
+
+  CodeQL-Analysis:
+    needs: [linux-x86_64, linux-i686, windows-x86_64, windows-i686,osx_x86_64]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: cpp
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
