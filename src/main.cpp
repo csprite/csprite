@@ -50,6 +50,7 @@ palette_arr_t* P_Arr = NULL;
 #define SelectedColor P->entries[ColorIndex]
 
 Uint32* CanvasData = NULL;
+Uint32* SelectedData = NULL; // Holds canvas data which is selected
 SDL_Texture* CanvasTex = NULL;
 SDL_Texture* CanvasBgTex = NULL;
 
@@ -58,6 +59,7 @@ SDL_Renderer* renderer = NULL;
 #define CANVAS_SIZE_B (CanvasDims[0] * CanvasDims[1] * sizeof(Uint32))
 SDL_Rect CanvasContRect = {}; // Rectangle In Which Our Canvas Will Be Placed
 SDL_Rect SelectionRect = {}; // Rectangle Which Represents Our Selection
+SDL_Rect SelectionRectNew = {}; // Rectangle Which Represents Our Selection But Moved To new Place
 
 bool IsCtrlDown = false;
 bool IsShiftDown = false;
@@ -73,7 +75,7 @@ bool MouseInBounds = false;
 bool DownloaderAvailable = false;
 bool FileHasChanged = false;
 
-enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE, CIRCLE_TOOL, RECT_SELECT };
+enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE, CIRCLE_TOOL, RECT_SELECT, SELECTION_MOVE };
 enum mode_e { SQUARE, CIRCLE };
 
 // Currently & last selected tool
@@ -144,6 +146,41 @@ static void _FreeNSaveHistory() {
 // Simple Function Checks for available programs
 void _CheckDeps() {
 	DownloaderAvailable = DownloaderCheckBackends() == 0;
+}
+
+void SaveSelectedData() {
+	if (SelectionRect.w == 0 || SelectionRect.h == 0) return;
+
+	if (SelectedData != NULL) {
+		free(SelectedData);
+		SelectedData = NULL;
+	}
+
+	int sel_w = SelectionRect.w / ZoomLevel;
+	int sel_h = SelectionRect.h / ZoomLevel;
+	SelectedData = (Uint32*) malloc(sel_w * sel_h * sizeof(Uint32));
+
+	for (int x = 0; x < sel_w; ++x) {
+		for (int y = 0; y < sel_h; ++y) {
+			Uint32* pixel = GetPixel(
+				x + (SelectionRect.x - CanvasContRect.x) / ZoomLevel,
+				y + (SelectionRect.y - CanvasContRect.y) / ZoomLevel
+			);
+			if (pixel != NULL) SelectedData[(y * sel_w + x)] = *pixel;
+		}
+	}
+}
+
+void Undo() {
+	if (SelectionRect.w == 0 && SelectionRect.h == 0) {
+		HISTORY_UNDO(CurrentState, CANVAS_SIZE_B, CanvasData);
+	}
+}
+
+void Redo() {
+	if (SelectionRect.w == 0 && SelectionRect.h == 0) {
+		HISTORY_REDO(CurrentState, CANVAS_SIZE_B, CanvasData);
+	}
 }
 
 int main(int argc, char** argv) {
@@ -353,9 +390,9 @@ int main(int argc, char** argv) {
 		SDL_RenderCopy(renderer, CanvasBgTex, NULL, &CanvasContRect);
 		SDL_RenderCopy(renderer, CanvasTex, NULL, &CanvasContRect);
 
-		if (SelectionRect.w != 0 && SelectionRect.h != 0) {
+		if (SelectionRectNew.w != 0 && SelectionRectNew.h != 0) {
 			SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0xff, 0xff);
-			SDL_RenderDrawRect(renderer, &SelectionRect);
+			SDL_RenderDrawRect(renderer, &SelectionRectNew);
 		}
 
 		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
@@ -461,6 +498,8 @@ void ProcessEvents() {
 				Tool = CIRCLE_TOOL;
 			} else if (event.key.keysym.sym == SDLK_s && !CanvasFreeze) {
 				Tool = RECT_SELECT;
+			} else if (event.key.keysym.sym == SDLK_g && !CanvasFreeze) {
+				Tool = SELECTION_MOVE;
 			} else if (event.key.keysym.sym == SDLK_EQUALS && !CanvasFreeze) {
 				if (IsCtrlDown == true) {
 					AdjustZoom(true);
@@ -510,9 +549,9 @@ void ProcessEvents() {
 			else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze) {
 				Tool = LastTool;
 			} else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze) {
-				HISTORY_UNDO(CurrentState, CANVAS_SIZE_B, CanvasData);
+				Undo();
 			} else if (event.key.keysym.sym == SDLK_y && IsCtrlDown && !CanvasFreeze) {
-				HISTORY_REDO(CurrentState, CANVAS_SIZE_B, CanvasData);
+				Redo();
 			}
 			break;
 		case SDL_MOUSEWHEEL:
@@ -527,6 +566,7 @@ void ProcessEvents() {
 				IsLMBDown = false;
 				ImgDidChange = ImgDidChange || (Tool == LINE || Tool == RECTANGLE || Tool == CIRCLE_TOOL);
 				if (ImgDidChange == true) {
+					SaveSelectedData();
 					SaveHistory(&CurrentState, CANVAS_SIZE_B, CanvasData);
 					ImgDidChange = false;
 				}
@@ -618,7 +658,7 @@ void ProcessEvents() {
 		MousePosRel.Y >= 0 && MousePosRel.Y < CanvasDims[1] &&
 		IsLMBDown == true
 	) {
-		if (Tool == LINE || Tool == RECTANGLE || Tool == CIRCLE_TOOL) {
+		if (Tool == LINE || Tool == RECTANGLE || Tool == CIRCLE_TOOL || Tool == SELECTION_MOVE) {
 			if (CurrentState->prev != NULL) {
 				memcpy(CanvasData, CurrentState->pixels, CANVAS_SIZE_B);
 			} else {
@@ -638,21 +678,77 @@ void ProcessEvents() {
 						(MousePosRel.Y - MousePosRel.DownY) * (MousePosRel.Y - MousePosRel.DownY)
 					)
 				);
+			} else if (Tool == SELECTION_MOVE) {
+				if (IsLMBDown == true && SelectionRect.w != 0 && SelectionRect.h != 0) {
+					SaveSelectedData();
+
+					SelectionRectNew.x = ((MousePosRel.X - (SelectionRectNew.w / ZoomLevel) / 2) * ZoomLevel) + CanvasContRect.x;
+					SelectionRectNew.y = ((MousePosRel.Y - (SelectionRectNew.h / ZoomLevel) / 2) * ZoomLevel) + CanvasContRect.y;
+
+					int sel_w = SelectionRectNew.w / ZoomLevel;
+					int sel_h = SelectionRectNew.h / ZoomLevel;
+
+					// First Erase Everything From The Canvas At The Selected Area
+					for (int y = 0; y < sel_h; ++y) {
+						for (int x = 0; x < sel_w; ++x) {
+							Uint32* pixel = GetPixel(
+								x + (SelectionRect.x - CanvasContRect.x) / ZoomLevel,
+								y + (SelectionRect.y - CanvasContRect.y) / ZoomLevel,
+								NULL
+							);
+							if (pixel != NULL) {
+								*pixel = 0x00000000;
+							}
+						}
+					}
+
+					// Write The Copied Buffer From Selected Area To Canvas
+					for (int y = 0; y < sel_h; ++y) {
+						for (int x = 0; x < sel_w; ++x) {
+							Uint32* pixel = GetPixel(
+								x + (SelectionRectNew.x - CanvasContRect.x) / ZoomLevel,
+								y + (SelectionRectNew.y - CanvasContRect.y) / ZoomLevel,
+								NULL
+							);
+
+							if (pixel != NULL) {
+								*pixel = SelectedData[(y * sel_w + x)];
+							}
+						}
+					}
+				}
 			}
 		} else if (Tool == RECT_SELECT) {
-			SelectionRect.x = (CanvasContRect.x + (MousePosRel.DownX * ZoomLevel));
-			SelectionRect.y = (CanvasContRect.y + (MousePosRel.DownY * ZoomLevel));
-			SelectionRect.w = MousePosRel.X - MousePosRel.DownX;
-			SelectionRect.h = MousePosRel.Y - MousePosRel.DownY;
+			SelectionRectNew.x = (CanvasContRect.x + (MousePosRel.DownX * ZoomLevel));
+			SelectionRectNew.y = (CanvasContRect.y + (MousePosRel.DownY * ZoomLevel));
+
+			SelectionRectNew.w = MousePosRel.X - MousePosRel.DownX;
+			SelectionRectNew.h = MousePosRel.Y - MousePosRel.DownY;
 
 			// Basically it resets the selection by checking if height & width is 0 else it sets the selection's offset
-			if (SelectionRect.w == 0 && SelectionRect.h == 0) {
+			if (SelectionRectNew.w == 0 && SelectionRectNew.h == 0) {
+				SelectionRectNew.w = 0;
+				SelectionRectNew.h = 0;
 				SelectionRect.w = 0;
 				SelectionRect.h = 0;
+
+				if (SelectedData != NULL) {
+					free(SelectedData);
+					SelectedData = NULL;
+				}
 			} else {
-				SelectionRect.w = (SelectionRect.w + 1) * ZoomLevel;
-				SelectionRect.h = (SelectionRect.h + 1) * ZoomLevel;
+				SelectionRectNew.w = (SelectionRectNew.w + 1) * ZoomLevel;
+				SelectionRectNew.h = (SelectionRectNew.h + 1) * ZoomLevel;
 			}
+			if (SelectedData != NULL) {
+				free(SelectedData);
+				SelectedData = NULL;
+			}
+
+			SelectionRect.x = SelectionRectNew.x;
+			SelectionRect.y = SelectionRectNew.y;
+			SelectionRect.h = SelectionRectNew.h;
+			SelectionRect.w = SelectionRectNew.w;
 		}
 	}
 
