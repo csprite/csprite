@@ -40,6 +40,11 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: cpp
+
     - uses: actions/download-artifact@v2
       with:
         name: src-assets
@@ -59,6 +64,9 @@ jobs:
 
     - name: Build
       run: make release
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
 
     - name: Strip
       run: strip ./csprite
