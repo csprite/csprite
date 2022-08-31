@@ -263,8 +263,7 @@ static inline void _GuiPaletteWindow() {
 			if (ImGui::ColorButton(ColorIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)((P->entries[i] >> 24) & 0xFF)/255, (float)((P->entries[i] >> 16) & 0xFF)/255, (float)((P->entries[i] >> 8) & 0xFF)/255, (float)(P->entries[i] & 0xFF)/255}))
 				ColorIndex = i;
 
-			if (ColorIndex == i)
-				ImGuiDrawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), 0xFFFFFFFF, 0, 0, 1);
+			ImGuiDrawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ColorIndex == i ? 0xFFFFFFFF : 0x000000FF, 0, 0, 1);
 		};
 		ImGui::End();
 	}
