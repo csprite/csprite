@@ -3,7 +3,6 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 
 [![Stable Release](https://github.com/pegvin/csprite/actions/workflows/stable.yml/badge.svg)](https://github.com/pegvin/csprite/releases)
 [![Nightly Release](https://github.com/pegvin/csprite/actions/workflows/nightly.yml/badge.svg)](https://github.com/pegvin/csprite/actions/workflows/nightly.yml)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpegvin%2Fcsprite.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpegvin%2Fcsprite?ref=badge_shield)
 
 [![Open Issues](https://img.shields.io/github/issues/pegvin/csprite)](https://github.com/pegvin/csprite/issues)
 [![Total Downloads](https://img.shields.io/github/downloads/pegvin/csprite/total)](https://github.com/pegvin/csprite/releases)
@@ -67,7 +66,3 @@ CSprite Uses [BB Mini](https://www.dafont.com/bm-mini.font) Font Designed By [Bi
 ---
 
 ### Thanks
-
-
-## License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpegvin%2Fcsprite.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpegvin%2Fcsprite?ref=badge_large)
