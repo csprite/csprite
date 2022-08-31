@@ -54,7 +54,7 @@ SDL_Texture* CanvasBgTex = NULL;
 
 SDL_Renderer* renderer = NULL;
 
-#define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * sizeof(Uint32)
+#define CANVAS_SIZE_B (Uint32)(CanvasDims[0] * CanvasDims[1] * sizeof(Uint32))
 SDL_Rect CanvasContRect = {}; // Rectangle In Which Our Canvas Will Be Placed
 SDL_Rect SelectionRect = {}; // Rectangle Which Represents Our Selection
 
