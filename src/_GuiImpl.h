@@ -137,7 +137,7 @@ static inline void _GuiMenuWindow() {
 				CanvasFreeze = true;
 			}
 
-			if (ImGui::MenuItem("Import From LoSpec", nullptr, nullptr, CurlIsAvailable)) {
+			if (ImGui::MenuItem("Import From LoSpec", nullptr, nullptr, DownloaderAvailable)) {
 				ShowLoSpecPaletteImporter = true;
 				CanvasFreeze = true;
 			}
