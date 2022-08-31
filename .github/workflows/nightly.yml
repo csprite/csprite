@@ -57,8 +57,16 @@ jobs:
     - name: Build & Install SDL2
       run: ./tools/BuildNInstall.sh
 
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: cpp
+
     - name: Build
       run: make release
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
 
     - name: Strip
       run: strip ./csprite
@@ -298,19 +306,3 @@ jobs:
         name: osx_binary
         path: ./csprite-osx.zip
         if-no-files-found: error
-
-  CodeQL-Analysis:
-    needs: [linux-x86_64, linux-i686, windows-x86_64, windows-i686,osx_x86_64]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
-      with:
-        languages: cpp
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
