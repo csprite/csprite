@@ -144,8 +144,15 @@ static inline void _GuiMenuWindow() {
 
 			if (ImGui::BeginMenu("Palette")) {
 				for (unsigned int i = 0; i < P_Arr->numOfEntries; ++i) {
+					unsigned int _palidx = PaletteIndex;
+
 					if (ImGui::MenuItem(P_Arr->entries[i]->name, NULL)) {
 						PaletteIndex = i;
+					}
+
+					if (_palidx == i) {
+						ImGui::SameLine();
+						ImGui::Text("<");
 					}
 				}
 				ImGui::EndMenu();
