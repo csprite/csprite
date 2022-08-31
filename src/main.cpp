@@ -64,10 +64,12 @@ bool IsLMBDown = false;
 bool AppCloseRequested = false;
 bool ShowNewCanvasWindow = false;
 bool ShowSettingsWindow = false;
+bool ShowLoSpecPaletteImporter = false;
 bool ShowCloseWithoutSaveWindow = false;
 bool CanvasFreeze = false;
 bool ImgDidChange = false;
 bool MouseInBounds = false;
+bool CurlIsAvailable = false;
 bool FileHasChanged = false;
 
 enum tool_e { BRUSH, ERASER, PAN, FILL, INK_DROPPER, LINE, RECTANGLE, CIRCLE_TOOL, RECT_SELECT };
@@ -96,6 +98,7 @@ settings_t* AppSettings = NULL;
 float AppScale = 1.0f;
 
 ImDrawList* ImGuiDrawList = NULL;
+ImFont* BB_Mini_small = NULL;
 
 int GuiErrorOccured = 0;
 
@@ -137,12 +140,30 @@ static void _FreeNSaveHistory() {
 
 #include "_GuiImpl.h"
 
+// Simple Function Checks for available programs
+void _CheckDeps() {
+	{
+#if defined(WIN32) || defined(_WIN32)
+		int curlversion_cmd = system("curl --version >nul 2>nul");
+#else
+		int curlversion_cmd = system("curl --version > /dev/null 2>&1");
+#endif
+		if (curlversion_cmd == 0) {
+			CurlIsAvailable = true;
+		} else {
+			log_error("curl not available: %s", strerror(errno));
+		}
+	}
+}
+
 int main(int argc, char** argv) {
 	atexit(FreeEverything);
 #ifdef IS_DEBUG
 	LogFilePtr = fopen("csprite.log", "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
 #endif
+
+	_CheckDeps();
 
 	AppSettings = LoadSettings();
 	if (AppSettings == NULL) {
@@ -257,6 +278,8 @@ int main(int argc, char** argv) {
 	int defaultUiFontSize = 0;
 	defaultUiFont = assets_get("data/fonts/bm-mini.ttf", &defaultUiFontSize);
 	io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 16.0f);
+	BB_Mini_small = io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 12.0f);
+
 	ImGui::StyleColorsDark();
 
 	P_Arr = PalletteLoadAll();
@@ -324,6 +347,7 @@ int main(int argc, char** argv) {
 			if (ShowSettingsWindow) _GuiSettingsWindow();
 			if (ShowNewCanvasWindow) _GuiNewCanvasWindow();
 			if (ShowCloseWithoutSaveWindow) _GuiCloseWithoutSave();
+			if (ShowLoSpecPaletteImporter) _GuiLoSpecPaletteImporter();
 			if (GuiErrorOccured != 0) return GuiErrorOccured; // To Be Checked At Last
 		}
 
