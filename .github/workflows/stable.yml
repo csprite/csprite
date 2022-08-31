@@ -108,7 +108,7 @@ jobs:
         path: csprite-x86_64.AppImage
         if-no-files-found: error
 
-  linux_i686:
+  linux-i686:
     needs: [generate-assets]
     runs-on: ubuntu-latest
     steps:
@@ -309,7 +309,7 @@ jobs:
         if-no-files-found: error
 
   Create-Release:
-    needs: [linux-x86_64, windows-x86_64, windows-i686,osx_x86_64]
+    needs: [linux-x86_64, linux-i686, windows-x86_64, windows-i686,osx_x86_64]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
