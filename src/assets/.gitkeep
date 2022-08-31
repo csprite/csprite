@@ -1,0 +1,4 @@
+the content of this directory are generated via the following python scripts:
+ - tools/create_icons.py
+ - tools/create_assets.py
+
