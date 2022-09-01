@@ -7,8 +7,9 @@
 extern "C" {
 #endif
 
-int sys_list_dir(const char *dir, int (*callback)(const char *dir, const char *name, void* data), void* data);
-int sys_make_dir(const char *path);
+int SysListDir(const char *dir, int (*callback)(const char *dir, const char *name, void* data), void* data);
+int SysMakeDir(const char *path);
+char* SysGetPaletteDir();
 long int fsize(FILE* f);
 
 #if defined(_WIN32) || defined(WIN32)
