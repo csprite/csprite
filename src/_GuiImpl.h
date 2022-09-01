@@ -1,6 +1,6 @@
 #ifdef CSPRITE_MAIN_CPP // Ensures that it's only included by main.cpp
 
-#include "helpers.h"
+#include "system.h"
 
 /*
 	File: _GuiImpl.h
@@ -31,7 +31,7 @@ static inline void _GuiLoSpecPaletteImporter() {
 		if (ImGui::Button("Import")) {
 			char palettePath[2048] = "";
 			char paletteURL[2048] = "";
-			char* paletteDirPath = getPaletteDirPath();
+			char* paletteDirPath = SysGetPaletteDir();
 
 			snprintf(palettePath, 2048, "%s/%s.csv", paletteDirPath, PaletteName);
 			snprintf(paletteURL, 2048, "https://lospec.com/palette-list/%s.csv", PaletteName);
