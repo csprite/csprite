@@ -5,7 +5,9 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "log/log.h"
 #include "system.h"
+#include "cconfig.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
@@ -17,6 +19,9 @@
 
 #include <stdio.h>
 
+/*
+	Returns File Size Using A FILE*
+*/
 long int fsize(FILE* fp) {
 	fseek(fp, 0, SEEK_END);
 	long int size = ftell(fp);
@@ -24,7 +29,10 @@ long int fsize(FILE* fp) {
 	return size;
 }
 
-int sys_list_dir(const char *dirpath, int (*callback)(const char *dirpath, const char *name, void* data), void* data) {
+/*
+	Lists Contents Of A Directory
+*/
+int SysListDir(const char *dirpath, int (*callback)(const char *dirpath, const char *name, void* data), void* data) {
 	int i = 0;
 	DIR *dir;
 	struct dirent *dirent;
@@ -49,7 +57,10 @@ int sys_list_dir(const char *dirpath, int (*callback)(const char *dirpath, const
 	#define _mkdir_custom(path, perms) mkdir(path, perms)
 #endif
 
-int sys_make_dir(const char *dir) {
+/*
+	Recursively Creates Directories
+*/
+int SysMakeDir(const char *dir) {
 	char tmp[PATH_MAX];
 	char *p = NULL;
 	size_t len;
@@ -67,4 +78,25 @@ int sys_make_dir(const char *dir) {
 		}
 	_mkdir_custom(tmp, S_IRWXU);
 	return 0;
+}
+
+/*
+	Returns Palette Directory: $CSPRITE_CONFIG/palettes
+*/
+char* SysGetPaletteDir() {
+	char* configdir = CCGetConfigDir();
+	static char configPath[CC_PATH_SIZE_MAX + 128] = "";
+
+	if (!*configPath) {
+		if (configdir == NULL) {
+			log_error("cannot get the config directory!");
+			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "palettes");
+			SysMakeDir(configPath);
+		} else {
+			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "%s%ccsprite%cpalettes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
+			SysMakeDir(configPath);
+		}
+	}
+
+	return configPath;
 }

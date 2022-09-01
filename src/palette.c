@@ -8,11 +8,9 @@
 #include "assets.h"
 #include "system.h"
 #include "log/log.h"
-#include "helpers.h"
 
 // Forward Declarations
 static char* filenameFromPath(const char* path);
-static char* getPaletteDirPath();
 static int OnSysDirList(const char *dir, const char *fname, void* data);
 static int OnAssetMgrList(int i, const char *fname);
 
@@ -104,17 +102,17 @@ palette_t* LoadCsvPalette(const char* csvText) {
 }
 
 palette_arr_t* PalletteLoadAll() {
-	char* pallete_dir_path = getPaletteDirPath();
+	char* pallete_dir_path = SysGetPaletteDir();
 	char dir[CC_PATH_SIZE_MAX + 128] = "";
 	strncpy(dir, pallete_dir_path, CC_PATH_SIZE_MAX);
 
-	int numOfPalettes = sys_list_dir((const char*)dir, NULL, NULL);
+	int numOfPalettes = SysListDir((const char*)dir, NULL, NULL);
 	if (numOfPalettes <= 0) {
-		sys_make_dir(dir);
+		SysMakeDir(dir);
 		assets_list("data/palettes/", OnAssetMgrList);
 	}
 
-	numOfPalettes = sys_list_dir((const char*)dir, NULL, NULL);
+	numOfPalettes = SysListDir((const char*)dir, NULL, NULL);
 	if (numOfPalettes <= 0) {
 		log_error("cannot extract the palettes!");
 		return NULL;
@@ -128,7 +126,7 @@ palette_arr_t* PalletteLoadAll() {
 		pArr->entries[i] = NULL;
 	}
 
-	sys_list_dir((const char*)dir, OnSysDirList, pArr);
+	SysListDir((const char*)dir, OnSysDirList, pArr);
 
 	return pArr;
 }
@@ -159,7 +157,7 @@ static int OnSysDirList(const char *dir, const char *fname, void* data) {
 static int OnAssetMgrList(int i, const char *fname) {
 	FILE* file = NULL;
 	const char* data = NULL;
-	char* pallete_dir_path = getPaletteDirPath();
+	char* pallete_dir_path = SysGetPaletteDir();
 	char dir[CC_PATH_SIZE_MAX + 128] = "";
 	snprintf(dir, CC_PATH_SIZE_MAX + 128, "%s/%s", pallete_dir_path, filenameFromPath(fname));
 
