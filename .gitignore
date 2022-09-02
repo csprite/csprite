@@ -1,6 +1,6 @@
 *.o
 *.rc
-*.ini
+./*.ini
 *.exe
 *.swp
 *.out
