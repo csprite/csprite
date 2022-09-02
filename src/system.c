@@ -100,3 +100,24 @@ char* SysGetPaletteDir() {
 
 	return configPath;
 }
+
+/*
+	Returns Theme Directory: $CSPRITE_CONFIG/themes
+*/
+char* SysGetThemesDir() {
+	char* configdir = CCGetConfigDir();
+	static char configPath[CC_PATH_SIZE_MAX + 128] = "";
+
+	if (!*configPath) {
+		if (configdir == NULL) {
+			log_error("cannot get the themes directory!");
+			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "themes");
+			SysMakeDir(configPath);
+		} else {
+			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "%s%ccsprite%cthemes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
+			SysMakeDir(configPath);
+		}
+	}
+
+	return configPath;
+}
