@@ -1,3 +1,6 @@
+#ifndef PALETTE_H
+#define PALETTE_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -36,3 +39,5 @@ palette_arr_t* PalletteLoadAll();
 #ifdef __cplusplus
 }
 #endif
+
+#endif // PALETTE_H
