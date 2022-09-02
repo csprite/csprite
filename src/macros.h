@@ -1,9 +1,11 @@
-#if defined(__linux__) || defined(__FreeBSD__)
-#elif defined(__APPLE__)
-#elif defined(_WIN32)
-	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
-	#include <windows.h>
-	#include <shellapi.h>
+#ifdef __cplusplus
+	#if defined(__linux__) || defined(__FreeBSD__)
+	#elif defined(__APPLE__)
+	#elif defined(_WIN32)
+		#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+		#include <windows.h>
+		#include <shellapi.h>
+	#endif
 #endif
 
 /*
@@ -24,6 +26,8 @@
 	Description: Opens The Given URL in default browser, if no implementation found logs a msg in console
 	Notes: I could've made it a simple function but i saw macro was a little fast
 */
+
+#ifdef __cplusplus
 #if defined(__linux__) || defined(__FreeBSD__)
 	#define OpenURL(URL) \
 		system((std::string("xdg-open \"") + URL + "\"").c_str())
@@ -36,6 +40,7 @@
 #else
 	#define OpenURL(URL) \
 		printf("cannot open url: %s, because no function implementation found!", URL.c_str())
+#endif
 #endif
 
 // Clamps The Given Integer A Between min & max
