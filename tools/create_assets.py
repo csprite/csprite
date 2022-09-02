@@ -43,7 +43,7 @@ for argument in sys.argv:
 GROUPS = [
 	'fonts', 'icons',
 	'palettes', 'shaders',
-	'cursors'
+	'cursors', 'themes'
 ]
 
 TEMPLATE = '{{\n\t.path = "{path}",\n\t.size = {size},\n\t.data = {data}\n}},\n\n'
