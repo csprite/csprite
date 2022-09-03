@@ -121,3 +121,24 @@ char* SysGetThemesDir() {
 
 	return configPath;
 }
+
+char* SysFnameFromPath(const char* path) {
+	if (path == NULL) return NULL;
+
+	int pathLen = strlen(path);
+	int lastSepIndex = 0;
+
+	for (int i = 0; i < pathLen; ++i) {
+		if (path[i] == '\\' || path[i] == '/') {
+			lastSepIndex = i;
+		}
+	}
+	lastSepIndex++;
+
+	int fnameLen = pathLen - lastSepIndex;
+	char* fileName = malloc((fnameLen + 1) * sizeof(char));
+	memset(fileName, '\0', fnameLen + 1);
+	strncpy(fileName, path + lastSepIndex, pathLen - lastSepIndex);
+
+	return fileName;
+}

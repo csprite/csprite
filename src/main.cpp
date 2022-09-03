@@ -41,12 +41,15 @@ int BrushSize = 5;
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 
 unsigned int PaletteIndex = 0;
+unsigned int ThemeIndex = 0;
 
 unsigned int LastColorIndex = 0;
 unsigned int ColorIndex = 0;
 
 palette_arr_t* P_Arr = NULL;
+theme_arr_t* T_Arr = NULL;
 
+#define T T_Arr->entries[ThemeIndex]
 #define P P_Arr->entries[PaletteIndex]
 #define SelectedColor P->entries[ColorIndex]
 
@@ -98,7 +101,6 @@ mousepos_t MousePos = { 0 };
 mousepos_t MousePosRel = { 0 };
 cvstate_t* CurrentState = NULL;
 settings_t* AppSettings = NULL;
-theme_t* AppTheme = NULL;
 
 float AppScale = 1.0f;
 
@@ -209,11 +211,13 @@ int main(int argc, char** argv) {
 	_CheckDeps();
 
 	{
-		const char* themeIni = (const char*)assets_get("data/themes/blueblue.ini", NULL);
-		printf("%s\n", themeIni);
-		AppTheme = LoadTheme(themeIni);
-		if (AppTheme == NULL) {
-			log_error("failed to load app theme!");
+		T_Arr = ThemeLoadAll();
+		if (T_Arr == NULL || T_Arr->numOfEntries <= 0 || T_Arr->entries == NULL) {
+			log_error("failed to load app themes!");
+			if (T_Arr != NULL) {
+				FreeThemeArr(T_Arr);
+				T_Arr = NULL;
+			}
 		}
 	}
 
@@ -445,29 +449,29 @@ int main(int argc, char** argv) {
 	)
 
 static void _GuiSetColors(ImGuiStyle& style) {
-	if (AppTheme != NULL) {
-		style.Colors[ImGuiCol_PopupBg] = _U32TOIV4(AppTheme->PopupBG);
-		style.Colors[ImGuiCol_WindowBg] = _U32TOIV4(AppTheme->WindowBG);
+	if (T != NULL) {
+		style.Colors[ImGuiCol_PopupBg] = _U32TOIV4(T->PopupBG);
+		style.Colors[ImGuiCol_WindowBg] = _U32TOIV4(T->WindowBG);
 
-		style.Colors[ImGuiCol_Header] = _U32TOIV4(AppTheme->Header); // used for MenuItem etc
-		style.Colors[ImGuiCol_HeaderHovered] = _U32TOIV4(AppTheme->Header_Hovered); // Used for MenuItem etc
+		style.Colors[ImGuiCol_Header] = _U32TOIV4(T->Header); // used for MenuItem etc
+		style.Colors[ImGuiCol_HeaderHovered] = _U32TOIV4(T->Header_Hovered); // Used for MenuItem etc
 
-		style.Colors[ImGuiCol_Text] = _U32TOIV4(AppTheme->Text);
-		style.Colors[ImGuiCol_TextDisabled] = _U32TOIV4(AppTheme->Text_Disabled); // Used for disabled text and shortcut key texts in menu
+		style.Colors[ImGuiCol_Text] = _U32TOIV4(T->Text);
+		style.Colors[ImGuiCol_TextDisabled] = _U32TOIV4(T->Text_Disabled); // Used for disabled text and shortcut key texts in menu
 
-		style.Colors[ImGuiCol_Button] = _U32TOIV4(AppTheme->Button);
-		style.Colors[ImGuiCol_ButtonHovered] = _U32TOIV4(AppTheme->Button_Hovered);
+		style.Colors[ImGuiCol_Button] = _U32TOIV4(T->Button);
+		style.Colors[ImGuiCol_ButtonHovered] = _U32TOIV4(T->Button_Hovered);
 
-		style.Colors[ImGuiCol_FrameBg] = _U32TOIV4(AppTheme->FrameBG);
-		style.Colors[ImGuiCol_FrameBgHovered] = _U32TOIV4(AppTheme->FrameBG_Hovered);
+		style.Colors[ImGuiCol_FrameBg] = _U32TOIV4(T->FrameBG);
+		style.Colors[ImGuiCol_FrameBgHovered] = _U32TOIV4(T->FrameBG_Hovered);
 
-		style.Colors[ImGuiCol_TitleBg] = _U32TOIV4(AppTheme->TitlebarBG);
-		style.Colors[ImGuiCol_TitleBgActive] = _U32TOIV4(AppTheme->TitlebarBG_Active); // Is Shown On Active Titlebars
+		style.Colors[ImGuiCol_TitleBg] = _U32TOIV4(T->TitlebarBG);
+		style.Colors[ImGuiCol_TitleBgActive] = _U32TOIV4(T->TitlebarBG_Active); // Is Shown On Active Titlebars
 
-		style.Colors[ImGuiCol_Border] = _U32TOIV4(AppTheme->Border);
-		style.Colors[ImGuiCol_MenuBarBg] = _U32TOIV4(AppTheme->MenuBarBG);
-		style.Colors[ImGuiCol_CheckMark] = _U32TOIV4(AppTheme->Checkmark); // Used For Checkmarks in Checkboxes & Etc
-		style.Colors[ImGuiCol_ModalWindowDimBg] = _U32TOIV4(AppTheme->ModalDimming);
+		style.Colors[ImGuiCol_Border] = _U32TOIV4(T->Border);
+		style.Colors[ImGuiCol_MenuBarBg] = _U32TOIV4(T->MenuBarBG);
+		style.Colors[ImGuiCol_CheckMark] = _U32TOIV4(T->Checkmark); // Used For Checkmarks in Checkboxes & Etc
+		style.Colors[ImGuiCol_ModalWindowDimBg] = _U32TOIV4(T->ModalDimming);
 	}
 }
 
@@ -833,11 +837,11 @@ static void FreeEverything(void) {
 	FreeHistory(&CurrentState);
 
 	if (P_Arr != NULL) { FreePaletteArr(P_Arr); P_Arr = NULL; }
+	if (T_Arr != NULL) { FreeThemeArr(T_Arr); T_Arr = NULL; }
 	if (LogFilePtr != NULL) { fclose(LogFilePtr); LogFilePtr = NULL; }
 	if (CanvasData != NULL) { free(CanvasData); CanvasData = NULL; }
 	if (SelectedData != NULL) { free(SelectedData); SelectedData = NULL; }
 	if (AppSettings != NULL) { free(AppSettings); AppSettings = NULL; }
-	if (AppTheme != NULL) { free(AppTheme); AppTheme = NULL; }
 	if (CanvasTex != NULL) { SDL_DestroyTexture(CanvasTex); CanvasTex = NULL; }
 	if (CanvasBgTex != NULL) { SDL_DestroyTexture(CanvasBgTex); CanvasBgTex = NULL; }
 	if (renderer != NULL) { SDL_DestroyRenderer(renderer); renderer = NULL; }

@@ -10,7 +10,6 @@
 #include "log/log.h"
 
 // Forward Declarations
-static char* filenameFromPath(const char* path);
 static int OnSysDirList(const char *dir, const char *fname, void* data);
 static int OnAssetMgrList(int i, const char *fname);
 
@@ -159,7 +158,11 @@ static int OnAssetMgrList(int i, const char *fname) {
 	const char* data = NULL;
 	char* pallete_dir_path = SysGetPaletteDir();
 	char dir[CC_PATH_SIZE_MAX + 128] = "";
-	snprintf(dir, CC_PATH_SIZE_MAX + 128, "%s/%s", pallete_dir_path, filenameFromPath(fname));
+	char* fileName = SysFnameFromPath(fname);
+	snprintf(dir, CC_PATH_SIZE_MAX + 128, "%s/%s", pallete_dir_path, fileName);
+
+	free(fileName);
+	fileName = NULL;
 
 	data = assets_get(fname, NULL);
 	file = fopen(dir, "wb");
@@ -171,21 +174,4 @@ static int OnAssetMgrList(int i, const char *fname) {
 		return -1;
 	}
 	return 0;
-}
-
-static char* filenameFromPath(const char* path) {
-	static char fileName[1024] = "";
-	int pathLen = strlen(path);
-	int lastSepIndex = 0;
-
-	for (int i = 0; i < pathLen; ++i) {
-		if (path[i] == '\\' || path[i] == '/') {
-			lastSepIndex = i;
-		}
-	}
-
-	lastSepIndex++;
-	strncpy(fileName, path + lastSepIndex, pathLen - lastSepIndex);
-
-	return fileName;
 }
