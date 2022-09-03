@@ -27,7 +27,15 @@ typedef struct {
 	Uint32 ModalDimming;
 } theme_t;
 
+typedef struct {
+	int numOfEntries;
+	theme_t** entries;
+} theme_arr_t;
+
+int FreeTheme(theme_t* theme);
+int FreeThemeArr(theme_arr_t* theme);
 theme_t* LoadTheme(const char* themeIni);
+theme_arr_t* ThemeLoadAll();
 
 #ifdef __cplusplus
 }

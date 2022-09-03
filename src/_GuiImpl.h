@@ -158,6 +158,22 @@ static inline void _GuiMenuWindow() {
 				ImGui::EndMenu();
 			}
 
+			if (ImGui::BeginMenu("Theme")) {
+				for (unsigned int i = 0; i < T_Arr->numOfEntries; ++i) {
+					unsigned int _palidx = ThemeIndex;
+
+					if (ImGui::MenuItem(T_Arr->entries[i]->name, NULL)) {
+						ThemeIndex = i;
+					}
+
+					if (_palidx == i) {
+						ImGui::SameLine();
+						ImGui::Text("<");
+					}
+				}
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Help")) {
