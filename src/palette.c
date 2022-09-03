@@ -141,8 +141,9 @@ static int OnSysDirList(const char *dir, const char *fname, void* data) {
 
 			FILE* fp = fopen(fullPath, "r");
 			long int size = fsize(fp); // XX - Do Error (-1) Checking
-			char* csvtxt = (char*) malloc(size * sizeof(char) + 1);
-			fgets(csvtxt, size + 1, fp);
+			char* csvtxt = (char*) malloc((size + 1) * sizeof(char));
+			memset(csvtxt, '\0', size + 1);
+			fread(csvtxt, size + 1, 1, fp);
 			pArr->entries[i] = LoadCsvPalette(csvtxt);
 
 			free(csvtxt);
