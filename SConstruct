@@ -6,7 +6,6 @@ import subprocess
 vars = Variables('settings.py')
 vars.AddVariables(
 	EnumVariable('mode', 'Build mode', 'debug', allowed_values=('debug', 'release')),
-	BoolVariable('werror', 'Warnings as error', True)
 )
 
 target_os = str(Platform())
@@ -82,7 +81,7 @@ if env['mode'] == 'release':
 
 if env['mode'] == 'debug':
 	env.Append(
-		CCFLAGS=['-O0', '-g'],
+		CCFLAGS=['-O0', '-g', '-Werror', '-Wno-unused-function'],
 		CDEFINES=['IS_DEBUG', 'SHOW_FRAME_TIME', 'SHOW_HISTORY_LOGS'],
 		CPPDEFINES=['IS_DEBUG', 'SHOW_FRAME_TIME', 'SHOW_HISTORY_LOGS']
 	)
