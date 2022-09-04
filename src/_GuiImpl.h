@@ -91,7 +91,7 @@ static inline void _GuiMenuWindow() {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
 				if (filePath != NULL) {
-					if (LoadImageToCanvas(filePath, &CanvasDims[0], &CanvasDims[1], &CanvasData) == 0) {
+					if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims[0], &CurrWS->CanvasDims[1], &CurrWS->CanvasData) == 0) {
 						_FreeNSaveHistory();
 						if (UpdateTextures() != 0)
 							GuiErrorOccured = -1;
@@ -108,8 +108,8 @@ static inline void _GuiMenuWindow() {
 					FilePath = FixFileExtension(FilePath);
 					SaveImageFromCanvas(FilePath);
 					SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-					FreeHistory(&CurrentState);
-					SaveHistory(&CurrentState, CANVAS_SIZE_B, CanvasData);
+					FreeHistory(&CurrWS->CurrentState);
+					SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 				}
 				if (ImGui::MenuItem("Save As", "Alt+S")) {
 					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
@@ -117,8 +117,8 @@ static inline void _GuiMenuWindow() {
 						FilePath = FixFileExtension(std::string(filePath));
 						SaveImageFromCanvas(FilePath);
 						SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-						FreeHistory(&CurrentState);
-						SaveHistory(&CurrentState, CANVAS_SIZE_B, CanvasData);
+						FreeHistory(&CurrWS->CurrentState);
+						SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 					}
 				}
 				ImGui::EndMenu();
@@ -126,10 +126,10 @@ static inline void _GuiMenuWindow() {
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Edit")) {
-			if (ImGui::MenuItem("Undo", "Ctrl+Z", nullptr, CurrentState->prev != NULL)) {
+			if (ImGui::MenuItem("Undo", "Ctrl+Z", nullptr, CurrWS->CurrentState->prev != NULL)) {
 				Undo();
 			}
-			if (ImGui::MenuItem("Redo", "Ctrl+Y", nullptr, CurrentState->next != NULL)) {
+			if (ImGui::MenuItem("Redo", "Ctrl+Y", nullptr, CurrWS->CurrentState->next != NULL)) {
 				Redo();
 			}
 			if (ImGui::MenuItem("Preferences")) {
@@ -245,14 +245,14 @@ static inline void _GuiNewCanvasWindow() {
 		ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
 		if (ImGui::Button("Ok")) {
-			FreeHistory(&CurrentState);
-			CanvasDims[0] = NEW_DIMS[0];
-			CanvasDims[1] = NEW_DIMS[1];
+			FreeHistory(&CurrWS->CurrentState);
+			CurrWS->CanvasDims[0] = NEW_DIMS[0];
+			CurrWS->CanvasDims[1] = NEW_DIMS[1];
 			GenCanvasBuff();
 			GenCanvasBgTex();
 			UpdateTextures();
 			UpdateCanvasRect();
-			SaveHistory(&CurrentState, CANVAS_SIZE_B, CanvasData);
+			SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 			CanvasFreeze = false;
 			ShowNewCanvasWindow = false;
 		}
@@ -276,10 +276,10 @@ static inline void _GuiPaletteWindow() {
 			if (i != 0 && i % 2 != 0)
 				ImGui::SameLine();
 
-			if (ImGui::ColorButton(ColorIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)((P->entries[i] >> 24) & 0xFF)/255, (float)((P->entries[i] >> 16) & 0xFF)/255, (float)((P->entries[i] >> 8) & 0xFF)/255, (float)(P->entries[i] & 0xFF)/255}))
-				ColorIndex = i;
+			if (ImGui::ColorButton(CurrWS->ColorIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)((P->entries[i] >> 24) & 0xFF)/255, (float)((P->entries[i] >> 16) & 0xFF)/255, (float)((P->entries[i] >> 8) & 0xFF)/255, (float)(P->entries[i] & 0xFF)/255}))
+				CurrWS->ColorIndex = i;
 
-			ImGuiDrawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), ColorIndex == i ? 0xFFFFFFFF : 0x000000FF, 0, 0, 1);
+			ImGuiDrawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), CurrWS->ColorIndex == i ? 0xFFFFFFFF : 0x000000FF, 0, 0, 1);
 		};
 		ImGui::End();
 	}
