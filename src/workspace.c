@@ -4,6 +4,10 @@ workspace_t* InitWorkspace(int WindowDims[2]) {
 	workspace_t* w = (workspace_t*) malloc(sizeof(workspace_t));
 	if (w == NULL) return NULL;
 
+	w->FilePath = (char*) malloc(13 * sizeof(char));
+	memset(w->FilePath, '\0', 13);
+	strncpy(w->FilePath, "untitled.png", 13);
+
 	w->FileHasChanged = false;
 	w->ZoomLevel = 8;
 	w->CanvasDims[0] = 60;
@@ -56,6 +60,10 @@ int FreeWorkspace(workspace_t* w) {
 	}
 	if (w->CurrentState != NULL) {
 		FreeHistory(&w->CurrentState);
+	}
+	if (w->FilePath != NULL) {
+		free(w->FilePath);
+		w->FilePath = NULL;
 	}
 
 	free(w);

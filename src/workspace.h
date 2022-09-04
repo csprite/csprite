@@ -16,6 +16,7 @@ typedef struct {
 	unsigned int PaletteIndex;
 	unsigned int ColorIndex;
 	unsigned int LastColorIndex;
+	char* FilePath;
 	Uint32* CanvasData;   // Holds canvas data being displayed on screen
 	Uint32* SelectedData; // Holds canvas data which is selected
 	SDL_Texture* CanvasTex;

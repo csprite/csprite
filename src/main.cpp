@@ -25,7 +25,6 @@
 #include "theme.h"
 #include "workspace.h"
 
-std::string FilePath = "untitled.png"; // Default Output Filename
 char const* FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
 unsigned int NumOfFilterPatterns = 3;
 
@@ -197,6 +196,7 @@ int main(int argc, char** argv) {
 #endif
 
 	_CheckDeps();
+	CurrWS = InitWorkspace(WindowDims);
 
 	{
 		T_Arr = ThemeLoadAll();
@@ -345,7 +345,6 @@ int main(int argc, char** argv) {
 
 	ImVec4 EditorBG = ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
 
-	CurrWS = InitWorkspace(WindowDims);
 	CurrWS->CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CurrWS->CanvasDims[0], CurrWS->CanvasDims[1]);
 	GenCanvasBuff();
 	GenCanvasBgTex();
@@ -496,7 +495,9 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 
 					GenCanvasBgTex();
 					UpdateCanvasRect();
-					FilePath = std::string(filePath);
+
+					if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
+					CurrWS->FilePath = strdup((const char*)filePath);
 					SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
 				}
 				SDL_free(filePath);
