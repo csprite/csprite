@@ -28,7 +28,7 @@ typedef struct {
 } theme_t;
 
 typedef struct {
-	int numOfEntries;
+	unsigned int numOfEntries;
 	theme_t** entries;
 } theme_arr_t;
 
