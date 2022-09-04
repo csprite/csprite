@@ -98,15 +98,17 @@ static inline void _GuiMenuWindow() {
 
 						GenCanvasBgTex();
 						UpdateCanvasRect();
-						FilePath = std::string(filePath);
+
+						if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
+						CurrWS->FilePath = strdup((const char*)filePath);
 						SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
 					}
 				}
 			}
 			if (ImGui::BeginMenu("Save")) {
 				if (ImGui::MenuItem("Save", "Ctrl+S")) {
-					FilePath = FixFileExtension(FilePath);
-					SaveImageFromCanvas(FilePath);
+					CurrWS->FilePath = strdup((FixFileExtension(std::string(CurrWS->FilePath))).c_str());
+					SaveImageFromCanvas(std::string(CurrWS->FilePath));
 					SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
 					FreeHistory(&CurrWS->CurrentState);
 					SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
@@ -114,8 +116,10 @@ static inline void _GuiMenuWindow() {
 				if (ImGui::MenuItem("Save As", "Alt+S")) {
 					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
 					if (filePath != NULL) {
-						FilePath = FixFileExtension(std::string(filePath));
-						SaveImageFromCanvas(FilePath);
+						if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
+						CurrWS->FilePath = strdup((const char*)filePath);
+						CurrWS->FilePath = strdup((FixFileExtension(std::string(CurrWS->FilePath))).c_str());
+						SaveImageFromCanvas(std::string(CurrWS->FilePath));
 						SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
 						FreeHistory(&CurrWS->CurrentState);
 						SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);

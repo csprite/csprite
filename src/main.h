@@ -8,6 +8,10 @@
 
 enum export_format_e { PNG, JPG };
 
+#if defined(_MSC_VER) || defined(_WIN32) || defined(WIN32)
+#define strdup(p) _strdup(p)
+#endif
+
 // Little Helpers
 Uint32* GetPixel(int x, int y, Uint32* data = NULL);
 
@@ -70,8 +74,8 @@ void SaveImageFromCanvas(std::string filepath);
 						"-" + CS_BUILD_TYPE
 
 #define WINDOW_TITLE_CSTR (\
-		FilePath.substr(FilePath.find_last_of("/\\") + 1)\
-		+ " - csprite " + VERSION_STR\
+		std::string(CurrWS->FilePath).substr(std::string(CurrWS->FilePath).find_last_of("/\\") + 1) \
+		+ " - csprite " + VERSION_STR                                                               \
 	).c_str()
 
 #endif // end MAIN_H
