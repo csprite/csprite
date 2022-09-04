@@ -1,8 +1,6 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#define SDL_MAIN_HANDLED
-#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <limits.h>
 #include <stdint.h>
