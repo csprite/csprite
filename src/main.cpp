@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 
+#include "sdl2_wrapper.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
@@ -22,10 +23,6 @@
 #include "vmouse.h"
 #include "history.h"
 #include "theme.h"
-
-#if !SDL_VERSION_ATLEAST(2,0,17)
-#error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
-#endif
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const* FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };

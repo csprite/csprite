@@ -1,8 +1,7 @@
 #ifndef V_MOUSE_H
 #define V_MOUSE_H
 
-#define SDL_MAIN_HANDLED
-#include <SDL2/SDL.h>
+#include "sdl2_wrapper.h"
 
 #ifdef __cplusplus
 extern "C" {
