@@ -804,8 +804,8 @@ void ProcessEvents() {
 					SelectedData = NULL;
 				}
 			} else {
-				SelectionRectNew.w = (SelectionRectNew.w + 1) * ZoomLevel;
-				SelectionRectNew.h = (SelectionRectNew.h + 1) * ZoomLevel;
+				SelectionRectNew.w = (SelectionRectNew.w + (SelectionRectNew.w < 0 ? 0 : 1)) * ZoomLevel;
+				SelectionRectNew.h = (SelectionRectNew.h + (SelectionRectNew.h < 0 ? 0 : 1)) * ZoomLevel;
 			}
 			if (SelectedData != NULL) {
 				free(SelectedData);
