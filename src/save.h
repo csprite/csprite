@@ -11,7 +11,7 @@
 #include "stb/stb_image_write.h"
 
 // Loads a image to canvas and automatically calls FreeHistory to reset undo/redo
-int LoadImageToCanvas(const char* filepath, int* cvWidth, int* cvHeight, Uint32** canvas_data) {
+int LoadImageToCanvas(const char* filepath, int (*cvDim)[2], Uint32** canvas_data) {
 	int imgWidth, imgHeight, channels;
 	unsigned char* image_data = stbi_load(filepath, &imgWidth, &imgHeight, &channels, 0);
 	if (image_data == NULL) {
@@ -19,11 +19,8 @@ int LoadImageToCanvas(const char* filepath, int* cvWidth, int* cvHeight, Uint32*
 		return -1;
 	}
 
-	*cvWidth = imgWidth;
-	*cvHeight = imgHeight;
-
-	if (*canvas_data != NULL)
-		free(*canvas_data);
+	(*cvDim)[0] = imgWidth;
+	(*cvDim)[1] = imgHeight;
 
 	*canvas_data = (Uint32*)malloc(imgWidth * imgHeight * 4 * sizeof(Uint32));
 	memset(*canvas_data, 0, imgWidth * imgHeight * 4 * sizeof(Uint32));
@@ -33,7 +30,9 @@ int LoadImageToCanvas(const char* filepath, int* cvWidth, int* cvHeight, Uint32*
 	unsigned char* iptr;
 	for (y = 0; y < imgHeight; y++) {
 		for (x = 0; x < imgWidth; x++) {
-			ptr = GetPixel(x, y, NULL); // XX - Check For NULL
+			ptr = GetPixel(x, y, NULL);
+			if (ptr == NULL) continue;
+
 			if (channels == 3) {
 				iptr = image_data + ((y * imgWidth + x) * 3); // Gets Pixel At x, y in image_data
 				*ptr = RGBA2UINT32(*(iptr+0), *(iptr+1), *(iptr+2), 255);
