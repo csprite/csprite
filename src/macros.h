@@ -1,3 +1,6 @@
+#ifndef MACROS_H
+#define MACROS_H
+
 #ifdef __cplusplus
 	#if defined(__linux__) || defined(__FreeBSD__)
 	#elif defined(__APPLE__)
@@ -21,13 +24,14 @@
 #define RGBA2UINT32(r, g, b, a) \
 	((r & 0xff) << 24) + ((g & 0xff) << 16) + ((b & 0xff) << 8) + (a & 0xff)
 
+#ifdef __cplusplus // C++ Only Macros
+
 /*
 	Macro: OpenURL(std::string URL)
 	Description: Opens The Given URL in default browser, if no implementation found logs a msg in console
 	Notes: I could've made it a simple function but i saw macro was a little fast
 */
 
-#ifdef __cplusplus
 #if defined(__linux__) || defined(__FreeBSD__)
 	#define OpenURL(URL) \
 		system((std::string("xdg-open \"") + URL + "\"").c_str())
@@ -41,8 +45,21 @@
 	#define OpenURL(URL) \
 		printf("cannot open url: %s, because no function implementation found!", URL.c_str())
 #endif
+
+
+// ImGui::ColorConvertU32ToFloat4 but in RGBA format
+#define _U32TOIV4(in)                          \
+	ImVec4(                                    \
+		((in >> 24) & 0xFF) * (1.0f / 255.0f), \
+		((in >> 16) & 0xFF) * (1.0f / 255.0f), \
+		((in >> 8) & 0xFF)  * (1.0f / 255.0f), \
+		((in >> 0) & 0xFF)  * (1.0f / 255.0f)  \
+	)
+
 #endif
 
 // Clamps The Given Integer A Between min & max
 #define CLAMP_INT(a, min, max) \
 	(a < min ? min : a) > max ? max : (a < min ? min : a)
+
+#endif // MACROS_H
