@@ -17,6 +17,7 @@ typedef struct {
 	Uint32 Text_Disabled;
 	Uint32 Button;
 	Uint32 Button_Hovered;
+	Uint32 Button_Active;
 	Uint32 FrameBG;
 	Uint32 FrameBG_Hovered;
 	Uint32 TitlebarBG;
