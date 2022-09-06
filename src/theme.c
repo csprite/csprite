@@ -76,6 +76,7 @@ theme_t* LoadTheme(const char* themeIni) {
 	t->Text_Disabled = str2rgbaint(ini_get(config, "theme", "Text_Disabled"));
 	t->Button = str2rgbaint(ini_get(config, "theme", "Button"));
 	t->Button_Hovered = str2rgbaint(ini_get(config, "theme", "Button_Hovered"));
+	t->Button_Active = str2rgbaint(ini_get(config, "theme", "Button_Active"));
 	t->FrameBG = str2rgbaint(ini_get(config, "theme", "FrameBG"));
 	t->FrameBG_Hovered = str2rgbaint(ini_get(config, "theme", "FrameBG_Hovered"));
 	t->TitlebarBG = str2rgbaint(ini_get(config, "theme", "TitlebarBG"));
