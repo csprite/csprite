@@ -31,7 +31,7 @@ unsigned int NumOfFilterPatterns = 3;
 FILE* LogFilePtr = NULL;
 SDL_Window* window = NULL;
 
-#define WORKSPACE_LEN 10
+#define WORKSPACE_LEN 250
 workspace_t* WorkspaceArr[WORKSPACE_LEN] = { NULL };
 int CurrentWorkspace = 0;
 
@@ -389,6 +389,7 @@ int main(int argc, char** argv) {
 			_GuiMenuWindow();
 			_GuiTextWindow();
 			_GuiPaletteWindow();
+			_GuiTabWindow();
 
 			if (ShowSettingsWindow) _GuiSettingsWindow();
 			if (ShowNewCanvasWindow) _GuiNewCanvasWindow();
@@ -427,15 +428,6 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-// ImGui::ColorConvertU32ToFloat4 but in RGBA format
-#define _U32TOIV4(in)                          \
-	ImVec4(                                    \
-		((in >> 24) & 0xFF) * (1.0f / 255.0f), \
-		((in >> 16) & 0xFF) * (1.0f / 255.0f), \
-		((in >> 8) & 0xFF)  * (1.0f / 255.0f), \
-		((in >> 0) & 0xFF)  * (1.0f / 255.0f)  \
-	)
-
 static void _GuiSetColors(ImGuiStyle& style) {
 	if (T != NULL) {
 		style.Colors[ImGuiCol_PopupBg] = _U32TOIV4(T->PopupBG);
@@ -449,6 +441,7 @@ static void _GuiSetColors(ImGuiStyle& style) {
 
 		style.Colors[ImGuiCol_Button] = _U32TOIV4(T->Button);
 		style.Colors[ImGuiCol_ButtonHovered] = _U32TOIV4(T->Button_Hovered);
+		style.Colors[ImGuiCol_ButtonActive] = _U32TOIV4(T->Button_Active);
 
 		style.Colors[ImGuiCol_FrameBg] = _U32TOIV4(T->FrameBG);
 		style.Colors[ImGuiCol_FrameBgHovered] = _U32TOIV4(T->FrameBG_Hovered);
@@ -488,8 +481,17 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 			char* filePath = event->drop.file;
 			if (filePath != NULL) {
 				log_info("file dropped: %s", filePath);
-				if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims[0], &CurrWS->CanvasDims[1], &CurrWS->CanvasData) == 0) {
-					_FreeNSaveHistory();
+
+				int lastWs = CurrentWorkspace;
+				for (int i = 0; i < WORKSPACE_LEN; ++i) {
+					if (WorkspaceArr[i] == NULL) {
+						CurrentWorkspace = i;
+						CurrWS = InitWorkspace(WindowDims);
+						break;
+					}
+				}
+
+				if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims, &CurrWS->CanvasData) == 0) {
 					if (UpdateTextures() != 0)
 						return -1;
 
@@ -499,6 +501,13 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 					if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
 					CurrWS->FilePath = strdup((const char*)filePath);
 					SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+					SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
+				} else {
+					if (CurrWS != NULL) {
+						FreeWorkspace(CurrWS);
+						CurrWS = NULL;
+						CurrentWorkspace = lastWs;
+					}
 				}
 				SDL_free(filePath);
 			}
