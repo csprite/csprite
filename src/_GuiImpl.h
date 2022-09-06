@@ -14,7 +14,7 @@
 
 static inline void _GuiTabWindow() {
 	ImGui::Begin("###GuiTabWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-	ImGui::SetWindowSize({ WindowDims[0], 50.0f });
+	ImGui::SetWindowSize({ (float)WindowDims[0], 50.0f });
 	ImGui::SetWindowPos({ -5.0f, 20.0f });
 	for (int i = 0; i < WORKSPACE_LEN; ++i) {
 		if (WorkspaceArr[i] != NULL) {
