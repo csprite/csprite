@@ -12,6 +12,30 @@
 		- it is recommended to not create a global variable in this file itself
 */
 
+static inline void _GuiTabWindow() {
+	ImGui::Begin("###GuiTabWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+	ImGui::SetWindowSize({ WindowDims[0], 50.0f });
+	ImGui::SetWindowPos({ -5.0f, 20.0f });
+	for (int i = 0; i < WORKSPACE_LEN; ++i) {
+		if (WorkspaceArr[i] != NULL) {
+			int lastWs = CurrentWorkspace;
+			if (i == CurrentWorkspace)
+				ImGui::PushStyleColor(ImGuiCol_Button, _U32TOIV4(T->Button_Active));
+
+			if (ImGui::Button((std::string(WorkspaceArr[i]->FilePath).substr(std::string(WorkspaceArr[i]->FilePath).find_last_of("/\\") + 1) + "###" + std::to_string(i)).c_str())) {
+				CurrentWorkspace = i;
+				SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+			}
+
+			if (i == lastWs)
+				ImGui::PopStyleColor();
+
+			if (i != WORKSPACE_LEN - 1) ImGui::SameLine();
+		}
+	}
+	ImGui::End();
+}
+
 static inline void _GuiLoSpecPaletteImporter() {
 	if (ImGui::BeginPopupModal(
 			"LoSpec Palette Importer###ShowLoSpecPaletteImporter",
@@ -91,8 +115,16 @@ static inline void _GuiMenuWindow() {
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
 				if (filePath != NULL) {
-					if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims[0], &CurrWS->CanvasDims[1], &CurrWS->CanvasData) == 0) {
-						_FreeNSaveHistory();
+					int lastWs = CurrentWorkspace;
+					for (int i = 0; i < WORKSPACE_LEN; ++i) {
+						if (WorkspaceArr[i] == NULL) {
+							CurrentWorkspace = i;
+							CurrWS = InitWorkspace(WindowDims);
+							break;
+						}
+					}
+
+					if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims, &CurrWS->CanvasData) == 0) {
 						if (UpdateTextures() != 0)
 							GuiErrorOccured = -1;
 
@@ -102,6 +134,13 @@ static inline void _GuiMenuWindow() {
 						if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
 						CurrWS->FilePath = strdup((const char*)filePath);
 						SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+						SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
+					} else {
+						if (CurrWS != NULL) {
+							FreeWorkspace(CurrWS);
+							CurrWS = NULL;
+							CurrentWorkspace = lastWs;
+						}
 					}
 				}
 			}
@@ -249,7 +288,14 @@ static inline void _GuiNewCanvasWindow() {
 		ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
 		if (ImGui::Button("Ok")) {
-			FreeHistory(&CurrWS->CurrentState);
+			for (int i = 0; i < WORKSPACE_LEN; ++i) {
+				if (WorkspaceArr[i] == NULL) {
+					CurrentWorkspace = i;
+					CurrWS = InitWorkspace(WindowDims);
+					break;
+				}
+			}
+
 			CurrWS->CanvasDims[0] = NEW_DIMS[0];
 			CurrWS->CanvasDims[1] = NEW_DIMS[1];
 			GenCanvasBuff();
@@ -274,7 +320,7 @@ static inline void _GuiNewCanvasWindow() {
 static inline void _GuiPaletteWindow() {
 	if (ImGui::Begin("PWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({70.0f, (float)WindowDims[1]});
-		ImGui::SetWindowPos({0.0f, 25.0f});
+		ImGui::SetWindowPos({0.0f, 55.0f});
 		for (unsigned int i = 0; i < P->numOfEntries; i++) {
 			ImGuiDrawList = ImGui::GetWindowDrawList();
 			if (i != 0 && i % 2 != 0)
