@@ -24,7 +24,7 @@ typedef struct {
 	SDL_Rect CanvasContRect;   // Rectangle In Which Our Canvas Will Be Placed
 	SDL_Rect SelectionRect;    // Rectangle Which Represents Our Selection
 	SDL_Rect SelectionRectNew; // Rectangle Which Represents Our Selection But Moved To new Place
-	cvstate_t* CurrentState;   // Undo-Redo State
+	history_t* CurrentState;   // Undo-Redo State
 } workspace_t;
 
 workspace_t* InitWorkspace(int WindowDims[2]);
