@@ -13,9 +13,11 @@
 */
 
 static inline void _GuiTabWindow() {
-	ImGui::Begin("###GuiTabWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-	ImGui::SetWindowSize({ (float)WindowDims[0], 50.0f });
-	ImGui::SetWindowPos({ -5.0f, 20.0f });
+	ImGui::PushStyleColor(ImGuiCol_WindowBg, _U32TOIV4(T->TabBarBG));
+	ImGui::PushStyleColor(ImGuiCol_Border, _U32TOIV4(T->TabBar_Border));
+	ImGui::Begin("###GuiTabWindow", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+	ImGui::SetWindowSize({ (float)WindowDims[0], 38.0f });
+	ImGui::SetWindowPos({ 0.0f, 20.0f });
 	for (int i = 0; i < WORKSPACE_LEN; ++i) {
 		if (WorkspaceArr[i] != NULL) {
 			int lastWs = CurrentWorkspace;
@@ -34,6 +36,7 @@ static inline void _GuiTabWindow() {
 		}
 	}
 	ImGui::End();
+	ImGui::PopStyleColor(2); // TabBarBG & TabBar_Border
 }
 
 static inline void _GuiLoSpecPaletteImporter() {

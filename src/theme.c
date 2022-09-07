@@ -85,6 +85,8 @@ theme_t* LoadTheme(const char* themeIni) {
 	t->MenuBarBG = str2rgbaint(ini_get(config, "theme", "MenuBarBG"));
 	t->Checkmark = str2rgbaint(ini_get(config, "theme", "Checkmark"));
 	t->ModalDimming = str2rgbaint(ini_get(config, "theme", "ModalDimming"));
+	t->TabBarBG = str2rgbaint(ini_get(config, "theme", "TabBarBG"));
+	t->TabBar_Border = str2rgbaint(ini_get(config, "theme", "TabBar_Border"));
 
 	ini_free(config);
 	config = NULL;
@@ -98,7 +100,6 @@ theme_arr_t* ThemeLoadAll() {
 	strncpy(dir, themesDirPath, CC_PATH_SIZE_MAX);
 
 	int numOfThemes = SysListDir((const char*)dir, NULL, NULL);
-	printf("%d\n", numOfThemes);
 	if (numOfThemes <= 0) {
 		SysMakeDir(dir);
 		assets_list("data/themes/", OnAssetMgrList);

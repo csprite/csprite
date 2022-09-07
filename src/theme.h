@@ -26,6 +26,8 @@ typedef struct {
 	Uint32 MenuBarBG;
 	Uint32 Checkmark;
 	Uint32 ModalDimming;
+	Uint32 TabBarBG;
+	Uint32 TabBar_Border;
 } theme_t;
 
 typedef struct {
