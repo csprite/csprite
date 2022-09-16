@@ -1,7 +1,3 @@
-#ifndef CSPRITE_MAIN_CPP
-#define CSPRITE_MAIN_CPP
-#endif
-
 // For Converting Strings To LowerCase in FixFileExtension function
 #include <algorithm>
 #include <cctype>
