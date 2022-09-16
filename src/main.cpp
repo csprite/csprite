@@ -27,7 +27,7 @@ unsigned int NumOfFilterPatterns = 3;
 FILE* LogFilePtr = NULL;
 SDL_Window* window = NULL;
 
-#define WORKSPACE_LEN 250
+#define WORKSPACE_LEN 300
 workspace_t* WorkspaceArr[WORKSPACE_LEN] = { NULL };
 int CurrentWorkspace = 0;
 
