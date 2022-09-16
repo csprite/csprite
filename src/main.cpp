@@ -117,7 +117,9 @@ static void _FreeNSaveHistory() {
 	SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData); // Create New History Buffer
 }
 
+#define CSPRITE_MAIN_CPP 1
 #include "_GuiImpl.h"
+#undef CSPRITE_MAIN_CPP
 
 // Simple Function Checks for available programs
 void _CheckDeps() {
