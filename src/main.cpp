@@ -92,17 +92,6 @@ ImFont* BB_Mini_small = NULL;
 
 int GuiErrorOccured = 0;
 
-// #define MAX_DEF_SDL_RENDERER_SIZE 128
-// #if defined(__APPLE__)
-// 	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "metal";
-// #elif defined(__linux__) || defined(__unix__)
-// 	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "opengl";
-// #elif defined(_WIN32) || defined(WIN32)
-// 	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "direct3d";
-// #else
-// 	char DefaultSdlRenderer[MAX_DEF_SDL_RENDERER_SIZE] = "Software";
-// #endif
-
 #define UpdateCanvasRect()                                                                                \
 	CurrWS->CanvasContRect = {                                                                     \
 		.x = (int)(WindowDims[0] / 2) - (CurrWS->CanvasDims[0] * CurrWS->ZoomLevel / 2),    \
