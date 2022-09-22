@@ -19,6 +19,7 @@
 #include "vmouse.h"
 #include "history.h"
 #include "theme.h"
+#include "logger.h"
 #include "workspace.h"
 
 char const* FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
@@ -90,6 +91,8 @@ float AppScale = 1.0f;
 ImDrawList* ImGuiDrawList = NULL;
 ImFont* BB_Mini_small = NULL;
 
+Logger LoggerInstance;
+
 int GuiErrorOccured = 0;
 
 #define UpdateCanvasRect()                                                                                \
@@ -106,7 +109,7 @@ static double GetScale(void) {
 		return hdpi / 96.0f;
 		// return 2.302083; // Test DPI i got from a tester
 	} else {
-		log_error("error getting DPI: %s", SDL_GetError());
+		Logger_Error(LoggerInstance, "error getting DPI: %s", SDL_GetError());
 		return 1.0;
 		// return 2.302083;
 	}
@@ -188,7 +191,7 @@ int main(int argc, char** argv) {
 	{
 		T_Arr = ThemeLoadAll();
 		if (T_Arr == NULL || T_Arr->numOfEntries <= 0 || T_Arr->entries == NULL) {
-			log_error("failed to load app themes!");
+			Logger_Error(LoggerInstance, "failed to load app themes!");
 			if (T_Arr != NULL) {
 				FreeThemeArr(T_Arr);
 				T_Arr = NULL;
@@ -198,10 +201,10 @@ int main(int argc, char** argv) {
 
 	AppSettings = LoadSettings();
 	if (AppSettings == NULL) {
-		log_error("failed to load settings!");
+		Logger_Error(LoggerInstance, "failed to load settings!");
 		return -1;
 	} else {
-		log_info(
+		Logger_Info(LoggerInstance,
 			"settings loaded successfully!\n - vsync: %s\n - renderer: %s\n - hardware acceleration: %s\n - custom cursor: %s",
 			AppSettings->vsync == true ? "enabled" : "disabled",
 			AppSettings->renderer,
@@ -217,7 +220,7 @@ int main(int argc, char** argv) {
 	if (AppSettings->accelerated) sdl_renderer_flags |= SDL_RENDERER_ACCELERATED;
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
-		log_error("failed to initialize SDL2: %s", SDL_GetError());
+		Logger_Error(LoggerInstance, "failed to initialize SDL2: %s", SDL_GetError());
 		return -1;
 	}
 
@@ -227,8 +230,8 @@ int main(int argc, char** argv) {
 
 		SDL_VERSION(&compiled);
 		SDL_GetVersion(&linked);
-		log_info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
-		log_info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
+		Logger_Info(LoggerInstance, "Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
+		Logger_Info(LoggerInstance, "Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
 	}
 
 	{
@@ -247,7 +250,7 @@ int main(int argc, char** argv) {
 
 	AppScale = GetScale();
 
-	log_info("detected scale: %f", AppScale);
+	Logger_Info(LoggerInstance, "detected scale: %f", AppScale);
 
 	SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 	SDL_EnableScreenSaver();
@@ -273,9 +276,9 @@ int main(int argc, char** argv) {
 #endif
 
 	if (SDL_SetHint(SDL_HINT_RENDER_DRIVER, AppSettings->renderer) == SDL_TRUE) {
-		log_info("requested to use %s renderer.", AppSettings->renderer);
+		Logger_Info(LoggerInstance, "requested to use %s renderer.", AppSettings->renderer);
 	} else {
-		log_error("request failed to use %s renderer!", AppSettings->renderer);
+		Logger_Error(LoggerInstance, "request failed to use %s renderer!", AppSettings->renderer);
 	}
 
 	renderer = SDL_CreateRenderer(window, -1, sdl_renderer_flags);
@@ -290,9 +293,9 @@ int main(int argc, char** argv) {
 		SDL_GetRendererInfo(renderer, &rendererInfo);
 
 		if (strncmp(rendererInfo.name, AppSettings->renderer, 128) == 0) {
-			log_info("initialized app with %s renderer!", AppSettings->renderer);
+			Logger_Info(LoggerInstance, "initialized app with %s renderer!", AppSettings->renderer);
 		} else {
-			log_info("failed to initialize app with %s renderer! using %s renderer instead.", AppSettings->renderer, rendererInfo.name);
+			Logger_Info(LoggerInstance, "failed to initialize app with %s renderer! using %s renderer instead.", AppSettings->renderer, rendererInfo.name);
 			strncpy(AppSettings->renderer, rendererInfo.name, 128);
 		}
 	}
@@ -317,10 +320,10 @@ int main(int argc, char** argv) {
 	P_Arr = PalletteLoadAll();
 	if (P_Arr != NULL) {
 		for (unsigned int i = 0; i < P_Arr->numOfEntries; ++i) {
-			log_info("Loaded Palette: %s...", P_Arr->entries[i]->name);
+			Logger_Info(LoggerInstance, "Loaded Palette: %s...", P_Arr->entries[i]->name);
 		}
 	} else {
-		log_error("cannot load all palettes, loading a single one!");
+		Logger_Error(LoggerInstance, "cannot load all palettes, loading a single one!");
 		P_Arr = (palette_arr_t*) malloc(sizeof(palette_arr_t));
 		P_Arr->entries = (palette_t**) malloc(1 * sizeof(palette_t*));
 		P_Arr->entries[0] = LoadCsvPalette((const char*)assets_get("data/palettes/cc-29.csv", NULL));
@@ -349,6 +352,7 @@ int main(int argc, char** argv) {
 
 	SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 	SDL_ShowWindow(window);
+	LoggerInstance.Hide();
 
 	while (!AppCloseRequested) {
 		ProcessEvents();
@@ -384,6 +388,8 @@ int main(int argc, char** argv) {
 			if (ShowLoSpecPaletteImporter) _GuiLoSpecPaletteImporter();
 			if (GuiErrorOccured != 0) return GuiErrorOccured; // To Be Checked At Last
 		}
+
+		LoggerInstance.Draw("CSprite Logs");
 
 		ImGui::Render();
 		SDL_SetRenderDrawColor(renderer, (Uint8)(EditorBG.x * 255), (Uint8)(EditorBG.y * 255), (Uint8)(EditorBG.z * 255), (Uint8)(EditorBG.w * 255));
@@ -467,7 +473,7 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 		case SDL_DROPFILE: {
 			char* filePath = event->drop.file;
 			if (filePath != NULL) {
-				log_info("file dropped: %s", filePath);
+				Logger_Info(LoggerInstance, "file dropped: %s", filePath);
 
 				int lastWs = CurrentWorkspace;
 				for (int i = 0; i < WORKSPACE_LEN; ++i) {
@@ -851,7 +857,7 @@ static void InitWindowIcon(void) {
 		0xff000000
 	);
 	if (surface == NULL) {
-		log_error("failed to set window icon: %s", SDL_GetError());
+		Logger_Error(LoggerInstance, "failed to set window icon: %s", SDL_GetError());
 		return;
 	}
 	SDL_SetWindowIcon(window, surface);
@@ -872,25 +878,25 @@ int UpdateTextures(void) {
 	CurrWS->CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CurrWS->CanvasDims[0], CurrWS->CanvasDims[1]);
 
 	if (CurrWS->CanvasTex == NULL) {
-		log_error("failed to create main canvas texture: %s", SDL_GetError());
+		Logger_Error(LoggerInstance, "failed to create main canvas texture: %s", SDL_GetError());
 		return -1;
 	}
 
 	GenCanvasBgTex();
 
 	if (CurrWS->CanvasBgTex == NULL) {
-		log_error("failed to create main canvas background texture: %s", SDL_GetError());
+		Logger_Error(LoggerInstance, "failed to create main canvas background texture: %s", SDL_GetError());
 		return -1;
 	}
 
 	if (SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND) != 0) {
-		log_error("failed to set blend mode: %s", SDL_GetError());
+		Logger_Error(LoggerInstance, "failed to set blend mode: %s", SDL_GetError());
 	}
 	if (SDL_SetTextureBlendMode(CurrWS->CanvasTex, SDL_BLENDMODE_BLEND) != 0) {;
-		log_error("failed to set texture blend mode: %s", SDL_GetError());
+		Logger_Error(LoggerInstance, "failed to set texture blend mode: %s", SDL_GetError());
 	}
 	if (SDL_SetTextureBlendMode(CurrWS->CanvasBgTex, SDL_BLENDMODE_BLEND) != 0) {;
-		log_error("failed to set texture blend mode: %s", SDL_GetError());
+		Logger_Error(LoggerInstance, "failed to set texture blend mode: %s", SDL_GetError());
 	}
 	return 0;
 }
