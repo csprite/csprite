@@ -308,12 +308,13 @@ int main(int argc, char** argv) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGuiStyle& style = ImGui::GetStyle();
 	io.IniFilename = NULL;
+	io.FontGlobalScale = AppScale;
 
 	const void* defaultUiFont = NULL;
 	int defaultUiFontSize = 0;
 	defaultUiFont = assets_get("data/fonts/bm-mini.ttf", &defaultUiFontSize);
-	io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 16.0f / AppScale);
-	BB_Mini_small = io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 12.0f / AppScale);
+	io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 16.0f);
+	BB_Mini_small = io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 12.0f);
 
 	ImGui::StyleColorsDark();
 
