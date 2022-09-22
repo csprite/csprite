@@ -178,6 +178,17 @@ static inline void _GuiMenuWindow() {
 			if (ImGui::MenuItem("Redo", "Ctrl+Y", nullptr, CurrWS->CurrentState->next != NULL)) {
 				Redo();
 			}
+
+			if (ImGui::BeginMenu("Logger")) {
+				if (ImGui::MenuItem("Show", NULL))
+					LoggerInstance.Show();
+
+				if (ImGui::MenuItem("Hide", NULL))
+					LoggerInstance.Hide();
+
+				ImGui::EndMenu();
+			}
+
 			if (ImGui::MenuItem("Preferences")) {
 				ShowSettingsWindow = true;
 				CanvasFreeze = true;
