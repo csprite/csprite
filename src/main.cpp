@@ -95,13 +95,15 @@ Logger LoggerInstance;
 
 int GuiErrorOccured = 0;
 
-#define UpdateCanvasRect()                                                                 \
-	CurrWS->CanvasContRect = {                                                             \
-		.x = (int)(WindowDims[0] / 2) - (CurrWS->CanvasDims[0] * CurrWS->ZoomLevel / 2),   \
-		.y = (int)(WindowDims[1] / 2) - (CurrWS->CanvasDims[1] * CurrWS->ZoomLevel / 2),   \
-		.w = (int)CurrWS->CanvasDims[0] * CurrWS->ZoomLevel,                               \
-		.h = (int)CurrWS->CanvasDims[1] * CurrWS->ZoomLevel                                \
-	}                                                                                      \
+#define UpdateCanvasRect()                                                                     \
+	if (CurrWS) {                                                                              \
+		CurrWS->CanvasContRect = {                                                         \
+			.x = (int)(WindowDims[0] / 2) - (CurrWS->CanvasDims[0] * CurrWS->ZoomLevel / 2),   \
+			.y = (int)(WindowDims[1] / 2) - (CurrWS->CanvasDims[1] * CurrWS->ZoomLevel / 2),   \
+			.w = (int)CurrWS->CanvasDims[0] * CurrWS->ZoomLevel,                               \
+			.h = (int)CurrWS->CanvasDims[1] * CurrWS->ZoomLevel                                \
+		};                                                                                     \
+	}                                                                                          \
 
 static double GetScale(void) {
 	float ddpi, hdpi, vdpi;
@@ -151,12 +153,14 @@ void SaveSelectedData() {
 }
 
 void Undo() {
+	if (!CurrWS) return;
 	if (CurrWS->SelectionRect.w == 0 && CurrWS->SelectionRect.h == 0) {
 		HISTORY_UNDO(CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 	}
 }
 
 void Redo() {
+	if (!CurrWS) return;
 	if (CurrWS->SelectionRect.w == 0 && CurrWS->SelectionRect.h == 0) {
 		HISTORY_REDO(CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 	}
@@ -184,7 +188,7 @@ int main(int argc, char** argv) {
 #endif
 
 	_CheckDeps();
-	CurrWS = InitWorkspace(WindowDims);
+	// CurrWS = InitWorkspace(WindowDims);
 
 	{
 		T_Arr = ThemeLoadAll();
@@ -334,14 +338,18 @@ int main(int argc, char** argv) {
 
 	ImVec4 EditorBG = ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
 
-	CurrWS->CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CurrWS->CanvasDims[0], CurrWS->CanvasDims[1]);
+	if (CurrWS) CurrWS->CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CurrWS->CanvasDims[0], CurrWS->CanvasDims[1]);
 	GenCanvasBuff();
 	GenCanvasBgTex();
 	UpdateCanvasRect();
 
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-	SDL_SetTextureBlendMode(CurrWS->CanvasTex, SDL_BLENDMODE_BLEND);
-	SDL_SetTextureBlendMode(CurrWS->CanvasBgTex, SDL_BLENDMODE_BLEND);
+
+	if (CurrWS) {
+		SDL_SetTextureBlendMode(CurrWS->CanvasTex, SDL_BLENDMODE_BLEND);
+		SDL_SetTextureBlendMode(CurrWS->CanvasBgTex, SDL_BLENDMODE_BLEND);
+		SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
+	}
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
@@ -349,7 +357,6 @@ int main(int argc, char** argv) {
 	window_flags |= ImGuiWindowFlags_NoResize;
 	window_flags |= ImGuiWindowFlags_NoMove;
 
-	SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 	SDL_ShowWindow(window);
 	LoggerInstance.Hide();
 
@@ -368,7 +375,7 @@ int main(int argc, char** argv) {
 			VirtualMouseUpdate();
 		}
 
-		SDL_UpdateTexture(CurrWS->CanvasTex, NULL, CurrWS->CanvasData, CurrWS->CanvasDims[0] * sizeof(Uint32));
+		if (CurrWS) SDL_UpdateTexture(CurrWS->CanvasTex, NULL, CurrWS->CanvasData, CurrWS->CanvasDims[0] * sizeof(Uint32));
 
 		_GuiSetColors(style);
 		ImGui_ImplSDLRenderer_NewFrame();
@@ -395,16 +402,18 @@ int main(int argc, char** argv) {
 
 		SDL_RenderClear(renderer); // Render ImGui Stuff To Screen
 
-		/*
-			We Render The Textures To The Screen Here.
-			Note The Order Of Rendering Matters.
-		*/
-		SDL_RenderCopy(renderer, CurrWS->CanvasBgTex, NULL, &CurrWS->CanvasContRect);
-		SDL_RenderCopy(renderer, CurrWS->CanvasTex, NULL, &CurrWS->CanvasContRect);
+		if (CurrWS) {
+			/*
+				We Render The Textures To The Screen Here.
+				Note The Order Of Rendering Matters.
+			*/
+			SDL_RenderCopy(renderer, CurrWS->CanvasBgTex, NULL, &CurrWS->CanvasContRect);
+			SDL_RenderCopy(renderer, CurrWS->CanvasTex, NULL, &CurrWS->CanvasContRect);
 
-		if (CurrWS->SelectionRectNew.w != 0 && CurrWS->SelectionRectNew.h != 0) {
-			SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0xff, 0xff);
-			SDL_RenderDrawRect(renderer, &CurrWS->SelectionRectNew);
+			if (CurrWS->SelectionRectNew.w != 0 && CurrWS->SelectionRectNew.h != 0) {
+				SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0xff, 0xff);
+				SDL_RenderDrawRect(renderer, &CurrWS->SelectionRectNew);
+			}
 		}
 
 		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
@@ -516,7 +525,7 @@ void ProcessEvents() {
 		ImGui_ImplSDL2_ProcessEvent(&event);
 		switch (event.type) {
 		case SDL_QUIT:
-			if (CurrWS->FileHasChanged == true) {
+			if (CurrWS && CurrWS->FileHasChanged == true) {
 				ShowCloseWithoutSaveWindow = true;
 				CanvasFreeze = true;
 			} else {
@@ -524,7 +533,7 @@ void ProcessEvents() {
 			}
 			break;
 		case SDL_WINDOWEVENT:
-			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)) {
+			if (CurrWS && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)) {
 				if (CurrWS->FileHasChanged == true) {
 					ShowCloseWithoutSaveWindow = true;
 					CanvasFreeze = true;
@@ -581,7 +590,7 @@ void ProcessEvents() {
 					LastTool = Tool;
 					Tool = INK_DROPPER;
 				}
-			} else if (event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze) {
+			} else if (CurrWS && event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze) {
 				if (CurrWS->ColorIndex != 0) {
 					CurrWS->LastColorIndex = CurrWS->ColorIndex;
 					CurrWS->ColorIndex--;
@@ -589,7 +598,7 @@ void ProcessEvents() {
 					CurrWS->LastColorIndex = CurrWS->ColorIndex;
 					CurrWS->ColorIndex = P->numOfEntries - 1;
 				}
-			} else if (event.key.keysym.sym == SDLK_RIGHTBRACKET && !CanvasFreeze) {
+			} else if (CurrWS && event.key.keysym.sym == SDLK_RIGHTBRACKET && !CanvasFreeze) {
 				if (CurrWS->ColorIndex < P->numOfEntries - 1) {
 					CurrWS->LastColorIndex = CurrWS->ColorIndex;
 					CurrWS->ColorIndex++;
@@ -623,20 +632,22 @@ void ProcessEvents() {
 			if (event.button.button == SDL_BUTTON_LEFT) {
 				IsLMBDown = false;
 				ImgDidChange = ImgDidChange || (Tool == LINE || Tool == RECTANGLE || Tool == CIRCLE_TOOL);
-				if (ImgDidChange == true) {
-					SaveSelectedData();
-					SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
-					ImgDidChange = false;
-				}
-				if (Tool == INK_DROPPER) {
-					Uint32* color = GetPixel(MousePosRel.X, MousePosRel.Y);
-					if (color != NULL) {
-						for (unsigned int i = 0; i < P->numOfEntries; i++) {
-							if (P->entries[i] == *color) {
-								CurrWS->LastColorIndex = CurrWS->ColorIndex;
-								CurrWS->ColorIndex = i;
-								Tool = LastTool;
-								break;
+				if (CurrWS) {
+					if (ImgDidChange == true) {
+						SaveSelectedData();
+						SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
+						ImgDidChange = false;
+					}
+					if (Tool == INK_DROPPER) {
+						Uint32* color = GetPixel(MousePosRel.X, MousePosRel.Y);
+						if (color != NULL) {
+							for (unsigned int i = 0; i < P->numOfEntries; i++) {
+								if (P->entries[i] == *color) {
+									CurrWS->LastColorIndex = CurrWS->ColorIndex;
+									CurrWS->ColorIndex = i;
+									Tool = LastTool;
+									break;
+								}
 							}
 						}
 					}
@@ -653,9 +664,10 @@ void ProcessEvents() {
 				MousePosRel.DownY = MousePosRel.Y;
 
 				if (
-					MousePosRel.X >= 0                           &&
-					MousePosRel.X < CurrWS->CanvasDims[0] &&
-					MousePosRel.Y >= 0                           &&
+					CurrWS                                 &&
+					MousePosRel.X >= 0                     &&
+					MousePosRel.X < CurrWS->CanvasDims[0]  &&
+					MousePosRel.Y >= 0                     &&
 					MousePosRel.Y < CurrWS->CanvasDims[1]
 				) {
 					if (Tool == BRUSH || Tool == ERASER) {
@@ -677,13 +689,15 @@ void ProcessEvents() {
 
 			MousePosRel.LastX = MousePosRel.X;
 			MousePosRel.LastY = MousePosRel.Y;
-			MousePosRel.X = (event.motion.x - CurrWS->CanvasContRect.x) / CurrWS->ZoomLevel;
-			MousePosRel.Y = (event.motion.y - CurrWS->CanvasContRect.y) / CurrWS->ZoomLevel;
+			if (CurrWS) {
+				MousePosRel.X = (event.motion.x - CurrWS->CanvasContRect.x) / CurrWS->ZoomLevel;
+				MousePosRel.Y = (event.motion.y - CurrWS->CanvasContRect.y) / CurrWS->ZoomLevel;
+			}
 
-			if (Tool == PAN && !CanvasFreeze) {
+			if (Tool == PAN && CurrWS && !CanvasFreeze) {
 				CurrWS->CanvasContRect.x = CurrWS->CanvasContRect.x + (MousePos.X - MousePos.LastX);
 				CurrWS->CanvasContRect.y = CurrWS->CanvasContRect.y + (MousePos.Y - MousePos.LastY);
-			} else if (IsLMBDown == true && !CanvasFreeze) {
+			} else if (IsLMBDown == true && CurrWS && !CanvasFreeze) {
 				if (MousePosRel.X >= 0 && MousePosRel.X < CurrWS->CanvasDims[0] && MousePosRel.Y >= 0 && MousePosRel.Y < CurrWS->CanvasDims[1]) {
 					if (Tool == BRUSH || Tool == ERASER) {
 						draw(MousePosRel.X, MousePosRel.Y);
@@ -712,6 +726,7 @@ void ProcessEvents() {
 	}
 
 	if (
+		CurrWS &&
 		MousePosRel.X >= 0 && MousePosRel.X < CurrWS->CanvasDims[0] &&
 		MousePosRel.Y >= 0 && MousePosRel.Y < CurrWS->CanvasDims[1] &&
 		IsLMBDown == true
@@ -810,7 +825,7 @@ void ProcessEvents() {
 		}
 	}
 
-	CurrWS->FileHasChanged = CurrWS->CurrentState->prev != NULL; // If we have something in our undo buffer it means file has changed
+	if (CurrWS) CurrWS->FileHasChanged = CurrWS->CurrentState->prev != NULL; // If we have something in our undo buffer it means file has changed
 }
 
 /*
@@ -825,7 +840,7 @@ static void FreeEverything(void) {
 	ImGui::DestroyContext();
 
 	VirtualMouseFree();
-	FreeHistory(&CurrWS->CurrentState);
+	if (CurrWS) FreeHistory(&CurrWS->CurrentState);
 
 	for (int i = 0; i < WORKSPACE_LEN; ++i) {
 		if (WorkspaceArr[i] != NULL) {
@@ -909,6 +924,7 @@ int UpdateTextures(void) {
 		- Stores The Generated Texture in Global Variable
 */
 void GenCanvasBgTex(void) {
+	if (!CurrWS) return;
 	if (CurrWS->CanvasBgTex != NULL) {
 		SDL_DestroyTexture(CurrWS->CanvasBgTex);
 		CurrWS->CanvasBgTex = NULL;
@@ -929,6 +945,7 @@ void GenCanvasBgTex(void) {
 
 // Just Allocates Memory For CanvasData & frees old memory
 void GenCanvasBuff(void) {
+	if (!CurrWS) return;
 	if (CurrWS->CanvasData != NULL) { free(CurrWS->CanvasData); CurrWS->CanvasData = NULL; }
 	CurrWS->CanvasData = (Uint32*)malloc(CANVAS_SIZE_B);
 	memset(CurrWS->CanvasData, 0, CANVAS_SIZE_B);
@@ -942,6 +959,7 @@ Uint32* GetPixel(int x, int y, Uint32* data) {
 }
 
 void AdjustZoom(bool increase) {
+	if (!CurrWS) return;
 	if (increase == true) {
 		if (CurrWS->ZoomLevel < INT_MAX) { // Max Value Of Unsigned int
 			CurrWS->ZoomLevel++;
