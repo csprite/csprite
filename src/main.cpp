@@ -27,12 +27,8 @@ unsigned int NumOfFilterPatterns = 3;
 
 FILE* LogFilePtr = NULL;
 SDL_Window* window = NULL;
+workspace_t* CurrWS = NULL;
 
-#define WORKSPACE_LEN 300
-workspace_t* WorkspaceArr[WORKSPACE_LEN] = { NULL };
-int CurrentWorkspace = 0;
-
-#define CurrWS WorkspaceArr[CurrentWorkspace]
 #define CANVAS_SIZE_B (CurrWS->CanvasDims[0] * CurrWS->CanvasDims[1] * sizeof(Uint32))
 
 int WindowDims[2] = { 700, 500 };
@@ -95,23 +91,23 @@ Logger LoggerInstance;
 
 int GuiErrorOccured = 0;
 
-#define UpdateCanvasRect()                                                                     \
-	if (CurrWS) {                                                                              \
-		CurrWS->CanvasContRect = {                                                         \
-			.x = (int)(WindowDims[0] / 2) - (CurrWS->CanvasDims[0] * CurrWS->ZoomLevel / 2),   \
-			.y = (int)(WindowDims[1] / 2) - (CurrWS->CanvasDims[1] * CurrWS->ZoomLevel / 2),   \
-			.w = (int)CurrWS->CanvasDims[0] * CurrWS->ZoomLevel,                               \
-			.h = (int)CurrWS->CanvasDims[1] * CurrWS->ZoomLevel                                \
-		};                                                                                     \
-	}                                                                                          \
+#define UpdateCanvasRect()                                                                 \
+	CurrWS->CanvasContRect = {                                                             \
+		.x = (int)(WindowDims[0] / 2) - (CurrWS->CanvasDims[0] * CurrWS->ZoomLevel / 2),   \
+		.y = (int)(WindowDims[1] / 2) - (CurrWS->CanvasDims[1] * CurrWS->ZoomLevel / 2),   \
+		.w = (int)CurrWS->CanvasDims[0] * CurrWS->ZoomLevel,                               \
+		.h = (int)CurrWS->CanvasDims[1] * CurrWS->ZoomLevel                                \
+	}                                                                                      \
 
 static double GetScale(void) {
 	float ddpi, hdpi, vdpi;
 	if (SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi) == 0) {
 		return hdpi / 96.0f;
+		// return 2.302083; // Test DPI i got from a tester
 	} else {
 		Logger_Error(LoggerInstance, "error getting DPI: %s", SDL_GetError());
 		return 1.0;
+		// return 2.302083;
 	}
 }
 
@@ -153,14 +149,12 @@ void SaveSelectedData() {
 }
 
 void Undo() {
-	if (!CurrWS) return;
 	if (CurrWS->SelectionRect.w == 0 && CurrWS->SelectionRect.h == 0) {
 		HISTORY_UNDO(CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 	}
 }
 
 void Redo() {
-	if (!CurrWS) return;
 	if (CurrWS->SelectionRect.w == 0 && CurrWS->SelectionRect.h == 0) {
 		HISTORY_REDO(CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 	}
@@ -188,7 +182,7 @@ int main(int argc, char** argv) {
 #endif
 
 	_CheckDeps();
-	// CurrWS = InitWorkspace(WindowDims);
+	CurrWS = InitWorkspace(WindowDims);
 
 	{
 		T_Arr = ThemeLoadAll();
@@ -338,18 +332,14 @@ int main(int argc, char** argv) {
 
 	ImVec4 EditorBG = ImVec4(0.05f, 0.05f, 0.05f, 1.00f);
 
-	if (CurrWS) CurrWS->CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CurrWS->CanvasDims[0], CurrWS->CanvasDims[1]);
+	CurrWS->CanvasTex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CurrWS->CanvasDims[0], CurrWS->CanvasDims[1]);
 	GenCanvasBuff();
 	GenCanvasBgTex();
 	UpdateCanvasRect();
 
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-	if (CurrWS) {
-		SDL_SetTextureBlendMode(CurrWS->CanvasTex, SDL_BLENDMODE_BLEND);
-		SDL_SetTextureBlendMode(CurrWS->CanvasBgTex, SDL_BLENDMODE_BLEND);
-		SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
-	}
+	SDL_SetTextureBlendMode(CurrWS->CanvasTex, SDL_BLENDMODE_BLEND);
+	SDL_SetTextureBlendMode(CurrWS->CanvasBgTex, SDL_BLENDMODE_BLEND);
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
@@ -357,6 +347,7 @@ int main(int argc, char** argv) {
 	window_flags |= ImGuiWindowFlags_NoResize;
 	window_flags |= ImGuiWindowFlags_NoMove;
 
+	SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
 	SDL_ShowWindow(window);
 	LoggerInstance.Hide();
 
@@ -367,7 +358,7 @@ int main(int argc, char** argv) {
 			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 
 			// Mouse is being hovered over a ImGui Element Change Cursor To Default
-			if (io.WantCaptureMouse == true) {
+			if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				VirtualMouseSet(DEFAULT);
 			}
 
@@ -375,7 +366,7 @@ int main(int argc, char** argv) {
 			VirtualMouseUpdate();
 		}
 
-		if (CurrWS) SDL_UpdateTexture(CurrWS->CanvasTex, NULL, CurrWS->CanvasData, CurrWS->CanvasDims[0] * sizeof(Uint32));
+		SDL_UpdateTexture(CurrWS->CanvasTex, NULL, CurrWS->CanvasData, CurrWS->CanvasDims[0] * sizeof(Uint32));
 
 		_GuiSetColors(style);
 		ImGui_ImplSDLRenderer_NewFrame();
@@ -386,7 +377,6 @@ int main(int argc, char** argv) {
 			_GuiMenuWindow();
 			_GuiTextWindow();
 			_GuiPaletteWindow();
-			_GuiTabWindow();
 
 			if (ShowSettingsWindow) _GuiSettingsWindow();
 			if (ShowNewCanvasWindow) _GuiNewCanvasWindow();
@@ -402,18 +392,16 @@ int main(int argc, char** argv) {
 
 		SDL_RenderClear(renderer); // Render ImGui Stuff To Screen
 
-		if (CurrWS) {
-			/*
-				We Render The Textures To The Screen Here.
-				Note The Order Of Rendering Matters.
-			*/
-			SDL_RenderCopy(renderer, CurrWS->CanvasBgTex, NULL, &CurrWS->CanvasContRect);
-			SDL_RenderCopy(renderer, CurrWS->CanvasTex, NULL, &CurrWS->CanvasContRect);
+		/*
+			We Render The Textures To The Screen Here.
+			Note The Order Of Rendering Matters.
+		*/
+		SDL_RenderCopy(renderer, CurrWS->CanvasBgTex, NULL, &CurrWS->CanvasContRect);
+		SDL_RenderCopy(renderer, CurrWS->CanvasTex, NULL, &CurrWS->CanvasContRect);
 
-			if (CurrWS->SelectionRectNew.w != 0 && CurrWS->SelectionRectNew.h != 0) {
-				SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0xff, 0xff);
-				SDL_RenderDrawRect(renderer, &CurrWS->SelectionRectNew);
-			}
+		if (CurrWS->SelectionRectNew.w != 0 && CurrWS->SelectionRectNew.h != 0) {
+			SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0xff, 0xff);
+			SDL_RenderDrawRect(renderer, &CurrWS->SelectionRectNew);
 		}
 
 		ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
@@ -483,33 +471,8 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 			if (filePath != NULL) {
 				Logger_Info(LoggerInstance, "file dropped: %s", filePath);
 
-				int lastWs = CurrentWorkspace;
-				for (int i = 0; i < WORKSPACE_LEN; ++i) {
-					if (WorkspaceArr[i] == NULL) {
-						CurrentWorkspace = i;
-						CurrWS = InitWorkspace(WindowDims);
-						break;
-					}
-				}
+				OpenFileFromPath(filePath);
 
-				if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims, &CurrWS->CanvasData) == 0) {
-					if (UpdateTextures() != 0)
-						return -1;
-
-					GenCanvasBgTex();
-					UpdateCanvasRect();
-
-					if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
-					CurrWS->FilePath = strdup((const char*)filePath);
-					SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-					SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
-				} else {
-					if (CurrWS != NULL) {
-						FreeWorkspace(CurrWS);
-						CurrWS = NULL;
-						CurrentWorkspace = lastWs;
-					}
-				}
 				SDL_free(filePath);
 			}
 
@@ -525,7 +488,7 @@ void ProcessEvents() {
 		ImGui_ImplSDL2_ProcessEvent(&event);
 		switch (event.type) {
 		case SDL_QUIT:
-			if (CurrWS && CurrWS->FileHasChanged == true) {
+			if (CurrWS->FileHasChanged == true) {
 				ShowCloseWithoutSaveWindow = true;
 				CanvasFreeze = true;
 			} else {
@@ -533,7 +496,7 @@ void ProcessEvents() {
 			}
 			break;
 		case SDL_WINDOWEVENT:
-			if (CurrWS && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)) {
+			if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)) {
 				if (CurrWS->FileHasChanged == true) {
 					ShowCloseWithoutSaveWindow = true;
 					CanvasFreeze = true;
@@ -585,12 +548,12 @@ void ProcessEvents() {
 					LastTool = Tool;
 					Tool = PAN;
 				}
-			} else if (event.key.keysym.sym == SDLK_i && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_i && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				if (Tool != INK_DROPPER) {
 					LastTool = Tool;
 					Tool = INK_DROPPER;
 				}
-			} else if (CurrWS && event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				if (CurrWS->ColorIndex != 0) {
 					CurrWS->LastColorIndex = CurrWS->ColorIndex;
 					CurrWS->ColorIndex--;
@@ -598,7 +561,7 @@ void ProcessEvents() {
 					CurrWS->LastColorIndex = CurrWS->ColorIndex;
 					CurrWS->ColorIndex = P->numOfEntries - 1;
 				}
-			} else if (CurrWS && event.key.keysym.sym == SDLK_RIGHTBRACKET && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_RIGHTBRACKET && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				if (CurrWS->ColorIndex < P->numOfEntries - 1) {
 					CurrWS->LastColorIndex = CurrWS->ColorIndex;
 					CurrWS->ColorIndex++;
@@ -615,9 +578,9 @@ void ProcessEvents() {
 				IsCtrlDown = false;
 			else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze) {
 				Tool = LastTool;
-			} else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				Undo();
-			} else if (event.key.keysym.sym == SDLK_y && IsCtrlDown && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_y && IsCtrlDown && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				Redo();
 			}
 			break;
@@ -632,22 +595,20 @@ void ProcessEvents() {
 			if (event.button.button == SDL_BUTTON_LEFT) {
 				IsLMBDown = false;
 				ImgDidChange = ImgDidChange || (Tool == LINE || Tool == RECTANGLE || Tool == CIRCLE_TOOL);
-				if (CurrWS) {
-					if (ImgDidChange == true) {
-						SaveSelectedData();
-						SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
-						ImgDidChange = false;
-					}
-					if (Tool == INK_DROPPER) {
-						Uint32* color = GetPixel(MousePosRel.X, MousePosRel.Y);
-						if (color != NULL) {
-							for (unsigned int i = 0; i < P->numOfEntries; i++) {
-								if (P->entries[i] == *color) {
-									CurrWS->LastColorIndex = CurrWS->ColorIndex;
-									CurrWS->ColorIndex = i;
-									Tool = LastTool;
-									break;
-								}
+				if (ImgDidChange == true) {
+					SaveSelectedData();
+					SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
+					ImgDidChange = false;
+				}
+				if (Tool == INK_DROPPER) {
+					Uint32* color = GetPixel(MousePosRel.X, MousePosRel.Y);
+					if (color != NULL) {
+						for (unsigned int i = 0; i < P->numOfEntries; i++) {
+							if (P->entries[i] == *color) {
+								CurrWS->LastColorIndex = CurrWS->ColorIndex;
+								CurrWS->ColorIndex = i;
+								Tool = LastTool;
+								break;
 							}
 						}
 					}
@@ -655,7 +616,7 @@ void ProcessEvents() {
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			if (event.button.button == SDL_BUTTON_LEFT && !CanvasFreeze) {
+			if (event.button.button == SDL_BUTTON_LEFT && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				IsLMBDown = true;
 				MousePos.DownX = MousePos.X;
 				MousePos.DownY = MousePos.Y;
@@ -664,10 +625,9 @@ void ProcessEvents() {
 				MousePosRel.DownY = MousePosRel.Y;
 
 				if (
-					CurrWS                                 &&
-					MousePosRel.X >= 0                     &&
-					MousePosRel.X < CurrWS->CanvasDims[0]  &&
-					MousePosRel.Y >= 0                     &&
+					MousePosRel.X >= 0                           &&
+					MousePosRel.X < CurrWS->CanvasDims[0] &&
+					MousePosRel.Y >= 0                           &&
 					MousePosRel.Y < CurrWS->CanvasDims[1]
 				) {
 					if (Tool == BRUSH || Tool == ERASER) {
@@ -689,15 +649,13 @@ void ProcessEvents() {
 
 			MousePosRel.LastX = MousePosRel.X;
 			MousePosRel.LastY = MousePosRel.Y;
-			if (CurrWS) {
-				MousePosRel.X = (event.motion.x - CurrWS->CanvasContRect.x) / CurrWS->ZoomLevel;
-				MousePosRel.Y = (event.motion.y - CurrWS->CanvasContRect.y) / CurrWS->ZoomLevel;
-			}
+			MousePosRel.X = (event.motion.x - CurrWS->CanvasContRect.x) / CurrWS->ZoomLevel;
+			MousePosRel.Y = (event.motion.y - CurrWS->CanvasContRect.y) / CurrWS->ZoomLevel;
 
-			if (Tool == PAN && CurrWS && !CanvasFreeze) {
+			if (Tool == PAN && !CanvasFreeze) {
 				CurrWS->CanvasContRect.x = CurrWS->CanvasContRect.x + (MousePos.X - MousePos.LastX);
 				CurrWS->CanvasContRect.y = CurrWS->CanvasContRect.y + (MousePos.Y - MousePos.LastY);
-			} else if (IsLMBDown == true && CurrWS && !CanvasFreeze) {
+			} else if (IsLMBDown == true && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				if (MousePosRel.X >= 0 && MousePosRel.X < CurrWS->CanvasDims[0] && MousePosRel.Y >= 0 && MousePosRel.Y < CurrWS->CanvasDims[1]) {
 					if (Tool == BRUSH || Tool == ERASER) {
 						draw(MousePosRel.X, MousePosRel.Y);
@@ -726,7 +684,6 @@ void ProcessEvents() {
 	}
 
 	if (
-		CurrWS &&
 		MousePosRel.X >= 0 && MousePosRel.X < CurrWS->CanvasDims[0] &&
 		MousePosRel.Y >= 0 && MousePosRel.Y < CurrWS->CanvasDims[1] &&
 		IsLMBDown == true
@@ -825,7 +782,55 @@ void ProcessEvents() {
 		}
 	}
 
-	if (CurrWS) CurrWS->FileHasChanged = CurrWS->CurrentState->prev != NULL; // If we have something in our undo buffer it means file has changed
+	CurrWS->FileHasChanged = CurrWS->CurrentState->prev != NULL; // If we have something in our undo buffer it means file has changed
+}
+
+/*
+	Function: OpenFileFromPath
+	Description:
+		Just Like "LoadImageToCanvas()" function except it checks for unsaved changes,
+		and asks the user if they want to save the changes or not.
+*/
+void OpenFileFromPath(const char* filePath) {
+	int retVal = 1;
+	if (CurrWS->FileHasChanged) {
+		retVal = tinyfd_messageBox(
+			"Unsaved Changes", "you have unsaved changes, are you sure you want to open another file?",
+			"yesno", "warning", 0 /* Default Button: No */
+		);
+	}
+
+	switch (retVal) {
+		case 1: { // Ok/Yes
+			workspace_t* oldWs = CurrWS;
+			CurrWS = InitWorkspace(WindowDims);
+
+			if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims, &CurrWS->CanvasData) == 0) {
+				if (UpdateTextures() != 0) {
+					if (CurrWS != NULL) FreeWorkspace(CurrWS);
+					CurrWS = oldWs;
+				}
+
+				GenCanvasBgTex();
+				UpdateCanvasRect();
+
+				if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
+				CurrWS->FilePath = strdup((const char*)filePath);
+				SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+				SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
+			} else {
+				if (CurrWS != NULL) FreeWorkspace(CurrWS);
+				CurrWS = oldWs;
+			}
+			break;
+		}
+		case 0:    // Cancel/No
+		case 2: {  // No in yesnocancel
+			break;
+		}
+		default:
+			break;
+	}
 }
 
 /*
@@ -840,13 +845,11 @@ static void FreeEverything(void) {
 	ImGui::DestroyContext();
 
 	VirtualMouseFree();
-	if (CurrWS) FreeHistory(&CurrWS->CurrentState);
+	FreeHistory(&CurrWS->CurrentState);
 
-	for (int i = 0; i < WORKSPACE_LEN; ++i) {
-		if (WorkspaceArr[i] != NULL) {
-			FreeWorkspace(WorkspaceArr[i]);
-			WorkspaceArr[i] = NULL;
-		}
+	if (CurrWS != NULL) {
+		FreeWorkspace(CurrWS);
+		CurrWS = NULL;
 	}
 
 	if (P_Arr != NULL) { FreePaletteArr(P_Arr); P_Arr = NULL; }
@@ -924,7 +927,6 @@ int UpdateTextures(void) {
 		- Stores The Generated Texture in Global Variable
 */
 void GenCanvasBgTex(void) {
-	if (!CurrWS) return;
 	if (CurrWS->CanvasBgTex != NULL) {
 		SDL_DestroyTexture(CurrWS->CanvasBgTex);
 		CurrWS->CanvasBgTex = NULL;
@@ -945,7 +947,6 @@ void GenCanvasBgTex(void) {
 
 // Just Allocates Memory For CanvasData & frees old memory
 void GenCanvasBuff(void) {
-	if (!CurrWS) return;
 	if (CurrWS->CanvasData != NULL) { free(CurrWS->CanvasData); CurrWS->CanvasData = NULL; }
 	CurrWS->CanvasData = (Uint32*)malloc(CANVAS_SIZE_B);
 	memset(CurrWS->CanvasData, 0, CANVAS_SIZE_B);
@@ -959,7 +960,6 @@ Uint32* GetPixel(int x, int y, Uint32* data) {
 }
 
 void AdjustZoom(bool increase) {
-	if (!CurrWS) return;
 	if (increase == true) {
 		if (CurrWS->ZoomLevel < INT_MAX) { // Max Value Of Unsigned int
 			CurrWS->ZoomLevel++;
@@ -1013,6 +1013,7 @@ void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
 }
 
 void draw(int st_x, int st_y) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	// dirY = direction Y
 	// dirX = direction X
 
@@ -1034,6 +1035,7 @@ void draw(int st_x, int st_y) {
 
 // Fill Tool, Fills The Whole Canvas Using Recursion
 void fill(int x, int y, Uint32 old_color) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	if (!(x >= 0 && x < CurrWS->CanvasDims[0] && y >= 0 && y < CurrWS->CanvasDims[1]))
 		return;
 
@@ -1051,6 +1053,7 @@ void fill(int x, int y, Uint32 old_color) {
 
 // Bresenham's line algorithm
 void drawLine(int x0, int y0, int x1, int y1) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	int dx =  abs (x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int dy = -abs (y1 - y0), sy = y0 < y1 ? 1 : -1;
 	int err = dx + dy, e2; /* error value e_xy */
@@ -1085,6 +1088,7 @@ void drawLine(int x0, int y0, int x1, int y1) {
 */
 
 void drawRect(int x0, int y0, int x1, int y1) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	drawLine(x0, y0, x1, y0);
 	drawLine(x1, y0, x1, y1);
 	drawLine(x1, y1, x0, y1);
@@ -1093,6 +1097,7 @@ void drawRect(int x0, int y0, int x1, int y1) {
 
 // Mid Point Circle Drawing Algorithm
 void drawCircle(int centreX, int centreY, int radius) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	const int diameter = (radius * 2);
 
 	int32_t x = (radius - 1);
