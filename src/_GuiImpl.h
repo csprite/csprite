@@ -169,21 +169,6 @@ static inline void _GuiMenuWindow() {
 				}
 				ImGui::EndMenu();
 			}
-
-			if (ImGui::MenuItem("Close", "Ctrl+W")) {
-				FreeWorkspace(CurrWS);
-				CurrWS = NULL;
-				CurrentWorkspace = 0;
-				for (int i = 0; i < WORKSPACE_LEN; ++i) {
-					if (WorkspaceArr[i] != NULL) {
-						CurrWS = WorkspaceArr[i];
-						CurrentWorkspace = i;
-					}
-				}
-				if (!CurrWS) CurrentWorkspace = 0;
-				SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-			}
-
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Edit")) {
@@ -347,7 +332,7 @@ static inline void _GuiNewCanvasWindow() {
 }
 
 static inline void _GuiPaletteWindow() {
-	if (CurrWS && ImGui::Begin("PWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+	if (ImGui::Begin("PWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({70.0f, (float)WindowDims[1]});
 		ImGui::SetWindowPos({0.0f, 55.0f});
 		for (unsigned int i = 0; i < P->numOfEntries; i++) {
@@ -365,7 +350,7 @@ static inline void _GuiPaletteWindow() {
 }
 
 static inline void _GuiTextWindow() {
-	if (CurrWS && ImGui::Begin("ToolAndZoomWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
+	if (ImGui::Begin("ToolAndZoomWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
 		ImGui::SetWindowPos({0.0f, (float)(WindowDims[1] - 55)});
 		std::string selectedToolText;
 
