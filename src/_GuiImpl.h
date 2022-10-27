@@ -66,13 +66,12 @@ static inline void _GuiCloseWithoutSave() {
 		ImGui::Text("you have unsaved changes, are you sure you want to quit?");
 
 		if (ImGui::Button("Quit")) {
-			CanCloseCurrWs = true;
+			AppCloseRequested = true;
 			CanvasFreeze = false;
 			ShowCloseWithoutSaveWindow = false;
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel")) {
-			CanCloseCurrWs = false;
 			CanvasFreeze = false;
 			ShowCloseWithoutSaveWindow = false;
 		}
@@ -91,34 +90,7 @@ static inline void _GuiMenuWindow() {
 			}
 			if (ImGui::MenuItem("Open", "Ctrl+O")) {
 				char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
-				if (filePath != NULL) {
-					// int lastWs = CurrentWorkspace;
-					// for (int i = 0; i < WORKSPACE_LEN; ++i) {
-					// 	if (WorkspaceArr[i] == NULL) {
-					// 		CurrentWorkspace = i;
-					// 		CurrWS = InitWorkspace(WindowDims);
-					// 		break;
-					// 	}
-					// }
-
-					if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims, &CurrWS->CanvasData) == 0) {
-						if (UpdateTextures() != 0)
-							GuiErrorOccured = -1;
-
-						GenCanvasBgTex();
-						UpdateCanvasRect();
-
-						if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
-						CurrWS->FilePath = strdup((const char*)filePath);
-						SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-						SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
-					} else {
-						if (CurrWS != NULL) {
-							FreeWorkspace(CurrWS);
-							CurrWS = NULL;
-						}
-					}
-				}
+				if (filePath != NULL) OpenFileFromPath(filePath);
 			}
 			if (ImGui::BeginMenu("Save")) {
 				if (ImGui::MenuItem("Save", "Ctrl+S")) {
@@ -275,21 +247,32 @@ static inline void _GuiNewCanvasWindow() {
 		ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
 		if (ImGui::Button("Ok")) {
-			// for (int i = 0; i < WORKSPACE_LEN; ++i) {
-			// 	if (WorkspaceArr[i] == NULL) {
-			// 		CurrentWorkspace = i;
-			// 		CurrWS = InitWorkspace(WindowDims);
-			// 		break;
-			// 	}
-			// }
+			int retVal = 1;
+			if (CurrWS->FileHasChanged) {
+				retVal = tinyfd_messageBox(
+					"Unsaved Changes", "you have unsaved changes, are you sure you want to create a new file?",
+					"yesno", "warning", 0 /* Default Button: No */
+				);
+			}
 
-			CurrWS->CanvasDims[0] = NEW_DIMS[0];
-			CurrWS->CanvasDims[1] = NEW_DIMS[1];
-			GenCanvasBuff();
-			GenCanvasBgTex();
-			UpdateTextures();
-			UpdateCanvasRect();
-			SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
+			switch (retVal) {
+				case 1: { // Ok/Yes
+					CurrWS->CanvasDims[0] = NEW_DIMS[0];
+					CurrWS->CanvasDims[1] = NEW_DIMS[1];
+					GenCanvasBuff();
+					GenCanvasBgTex();
+					UpdateTextures();
+					UpdateCanvasRect();
+					SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
+				}
+				case 0:    // Cancel/No
+				case 2: {  // No in yesnocancel
+					break;
+				}
+				default:
+					break;
+			}
+
 			CanvasFreeze = false;
 			ShowNewCanvasWindow = false;
 		}
