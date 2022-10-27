@@ -333,7 +333,6 @@ static inline void _GuiNewCanvasWindow() {
 
 static inline void _GuiPaletteWindow() {
 	if (ImGui::Begin("PWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
-		ImGui::SetWindowSize({70.0f, (float)WindowDims[1]});
 		ImGui::SetWindowPos({0.0f, 55.0f});
 		for (unsigned int i = 0; i < P->numOfEntries; i++) {
 			ImGuiDrawList = ImGui::GetWindowDrawList();
