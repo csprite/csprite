@@ -27,12 +27,8 @@ unsigned int NumOfFilterPatterns = 3;
 
 FILE* LogFilePtr = NULL;
 SDL_Window* window = NULL;
+workspace_t* CurrWS = NULL;
 
-#define WORKSPACE_LEN 300
-workspace_t* WorkspaceArr[WORKSPACE_LEN] = { NULL };
-int CurrentWorkspace = 0;
-
-#define CurrWS WorkspaceArr[CurrentWorkspace]
 #define CANVAS_SIZE_B (CurrWS->CanvasDims[0] * CurrWS->CanvasDims[1] * sizeof(Uint32))
 
 int WindowDims[2] = { 700, 500 };
@@ -54,6 +50,7 @@ SDL_Renderer* renderer = NULL;
 bool IsCtrlDown = false;
 bool IsShiftDown = false;
 bool IsLMBDown = false;
+bool CanCloseCurrWs = false;
 bool AppCloseRequested = false;
 bool ShowNewCanvasWindow = false;
 bool ShowSettingsWindow = false;
@@ -381,7 +378,6 @@ int main(int argc, char** argv) {
 			_GuiMenuWindow();
 			_GuiTextWindow();
 			_GuiPaletteWindow();
-			_GuiTabWindow();
 
 			if (ShowSettingsWindow) _GuiSettingsWindow();
 			if (ShowNewCanvasWindow) _GuiNewCanvasWindow();
@@ -476,14 +472,14 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 			if (filePath != NULL) {
 				Logger_Info(LoggerInstance, "file dropped: %s", filePath);
 
-				int lastWs = CurrentWorkspace;
-				for (int i = 0; i < WORKSPACE_LEN; ++i) {
-					if (WorkspaceArr[i] == NULL) {
-						CurrentWorkspace = i;
-						CurrWS = InitWorkspace(WindowDims);
-						break;
-					}
-				}
+				// int lastWs = CurrentWorkspace;
+				// for (int i = 0; i < WORKSPACE_LEN; ++i) {
+				// 	if (WorkspaceArr[i] == NULL) {
+				// 		CurrentWorkspace = i;
+				// 		CurrWS = InitWorkspace(WindowDims);
+				// 		break;
+				// 	}
+				// }
 
 				if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims, &CurrWS->CanvasData) == 0) {
 					if (UpdateTextures() != 0)
@@ -500,7 +496,6 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 					if (CurrWS != NULL) {
 						FreeWorkspace(CurrWS);
 						CurrWS = NULL;
-						CurrentWorkspace = lastWs;
 					}
 				}
 				SDL_free(filePath);
@@ -829,11 +824,9 @@ static void FreeEverything(void) {
 	VirtualMouseFree();
 	FreeHistory(&CurrWS->CurrentState);
 
-	for (int i = 0; i < WORKSPACE_LEN; ++i) {
-		if (WorkspaceArr[i] != NULL) {
-			FreeWorkspace(WorkspaceArr[i]);
-			WorkspaceArr[i] = NULL;
-		}
+	if (CurrWS != NULL) {
+		FreeWorkspace(CurrWS);
+		CurrWS = NULL;
 	}
 
 	if (P_Arr != NULL) { FreePaletteArr(P_Arr); P_Arr = NULL; }
