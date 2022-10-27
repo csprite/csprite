@@ -362,7 +362,7 @@ int main(int argc, char** argv) {
 			ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 
 			// Mouse is being hovered over a ImGui Element Change Cursor To Default
-			if (io.WantCaptureMouse == true) {
+			if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				VirtualMouseSet(DEFAULT);
 			}
 
@@ -578,12 +578,12 @@ void ProcessEvents() {
 					LastTool = Tool;
 					Tool = PAN;
 				}
-			} else if (event.key.keysym.sym == SDLK_i && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_i && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				if (Tool != INK_DROPPER) {
 					LastTool = Tool;
 					Tool = INK_DROPPER;
 				}
-			} else if (event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_LEFTBRACKET && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				if (CurrWS->ColorIndex != 0) {
 					CurrWS->LastColorIndex = CurrWS->ColorIndex;
 					CurrWS->ColorIndex--;
@@ -591,7 +591,7 @@ void ProcessEvents() {
 					CurrWS->LastColorIndex = CurrWS->ColorIndex;
 					CurrWS->ColorIndex = P->numOfEntries - 1;
 				}
-			} else if (event.key.keysym.sym == SDLK_RIGHTBRACKET && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_RIGHTBRACKET && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				if (CurrWS->ColorIndex < P->numOfEntries - 1) {
 					CurrWS->LastColorIndex = CurrWS->ColorIndex;
 					CurrWS->ColorIndex++;
@@ -608,9 +608,9 @@ void ProcessEvents() {
 				IsCtrlDown = false;
 			else if (event.key.keysym.sym == SDLK_SPACE && !CanvasFreeze) {
 				Tool = LastTool;
-			} else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_z && IsCtrlDown && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				Undo();
-			} else if (event.key.keysym.sym == SDLK_y && IsCtrlDown && !CanvasFreeze) {
+			} else if (event.key.keysym.sym == SDLK_y && IsCtrlDown && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				Redo();
 			}
 			break;
@@ -646,7 +646,7 @@ void ProcessEvents() {
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			if (event.button.button == SDL_BUTTON_LEFT && !CanvasFreeze) {
+			if (event.button.button == SDL_BUTTON_LEFT && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				IsLMBDown = true;
 				MousePos.DownX = MousePos.X;
 				MousePos.DownY = MousePos.Y;
@@ -685,7 +685,7 @@ void ProcessEvents() {
 			if (Tool == PAN && !CanvasFreeze) {
 				CurrWS->CanvasContRect.x = CurrWS->CanvasContRect.x + (MousePos.X - MousePos.LastX);
 				CurrWS->CanvasContRect.y = CurrWS->CanvasContRect.y + (MousePos.Y - MousePos.LastY);
-			} else if (IsLMBDown == true && !CanvasFreeze) {
+			} else if (IsLMBDown == true && !CanvasFreeze && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
 				if (MousePosRel.X >= 0 && MousePosRel.X < CurrWS->CanvasDims[0] && MousePosRel.Y >= 0 && MousePosRel.Y < CurrWS->CanvasDims[1]) {
 					if (Tool == BRUSH || Tool == ERASER) {
 						draw(MousePosRel.X, MousePosRel.Y);
@@ -997,6 +997,7 @@ void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
 }
 
 void draw(int st_x, int st_y) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	// dirY = direction Y
 	// dirX = direction X
 
@@ -1018,6 +1019,7 @@ void draw(int st_x, int st_y) {
 
 // Fill Tool, Fills The Whole Canvas Using Recursion
 void fill(int x, int y, Uint32 old_color) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	if (!(x >= 0 && x < CurrWS->CanvasDims[0] && y >= 0 && y < CurrWS->CanvasDims[1]))
 		return;
 
@@ -1035,6 +1037,7 @@ void fill(int x, int y, Uint32 old_color) {
 
 // Bresenham's line algorithm
 void drawLine(int x0, int y0, int x1, int y1) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	int dx =  abs (x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int dy = -abs (y1 - y0), sy = y0 < y1 ? 1 : -1;
 	int err = dx + dy, e2; /* error value e_xy */
@@ -1069,6 +1072,7 @@ void drawLine(int x0, int y0, int x1, int y1) {
 */
 
 void drawRect(int x0, int y0, int x1, int y1) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	drawLine(x0, y0, x1, y0);
 	drawLine(x1, y0, x1, y1);
 	drawLine(x1, y1, x0, y1);
@@ -1077,6 +1081,7 @@ void drawRect(int x0, int y0, int x1, int y1) {
 
 // Mid Point Circle Drawing Algorithm
 void drawCircle(int centreX, int centreY, int radius) {
+	if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) return;
 	const int diameter = (radius * 2);
 
 	int32_t x = (radius - 1);
