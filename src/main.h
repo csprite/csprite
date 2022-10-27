@@ -74,9 +74,11 @@ void OpenFileFromPath(const char* filePath);
 						"." + std::to_string(CS_VERSION_PATCH) + \
 						"-" + CS_BUILD_TYPE
 
-#define WINDOW_TITLE_CSTR (\
-		std::string(CurrWS->FilePath).substr(std::string(CurrWS->FilePath).find_last_of("/\\") + 1) \
-		+ " - csprite " + VERSION_STR                                                               \
+#define WINDOW_TITLE_CSTR (                                                                             \
+		CurrWS == NULL ?                                                                                \
+			std::string("csprite ") + VERSION_STR :                                                     \
+			std::string(CurrWS->FilePath).substr(std::string(CurrWS->FilePath).find_last_of("/\\") + 1) \
+			+ " - csprite " + VERSION_STR                                                               \
 	).c_str()
 
 #endif // end MAIN_H
