@@ -10,17 +10,27 @@ The project follows [Semantic Versioning v2.0.0](https://semver.org/spec/v2.0.0.
 	- New Tool Line Tool (<kbd>L</kbd> or <kbd>Shift</kbd> + <kbd>L</kbd>)
 	- New Tool Rectangle Tool (<kbd>R</kbd> or <kbd>Shift</kbd> + <kbd>R</kbd>)
 	- New Tool Circle Tool (<kbd>C</kbd>)
+	- New Tool Select Tool (<kbd>S</kbd>)
+	- New Tool Move Tool (<kbd>G</kbd>)
 	- New Configuration System
 		- You Can Edit CSprite's Configuration By Going into Edit -> Preferences
 
 	- New Palette System
 		- CSprite Provides 3 Palettes By Default.
-		- Palettes Can Be Changed Via Edit -> Palette
 		- New Palettes Can Be Added By Going into Palette Directory Inside CSprite's Config Directory
+		- Palettes Can Be Changed Via Edit -> Palette
 
 	- New Custom Cursors
 		- CSprite Provides New Custom Cursor Icons Which are enabled by default
 		- If you are having performance problems you can disable that in Edit -> Preferences
+
+	- New Theme System
+		- Csprite Provides 1 Theme By Default Which Can Be Modified.
+		- New Themes Can Be Added By Going into Themes Directory Inside CSprite's Config Directory
+		- Themes Can Be Changed Via Edit -> Theme
+
+	- New Logger GUI
+		- Now CSprite Console Logs Can Be Viewed Inside The Software Itself, Edit -> Logger
 
 - **[v0.1.0](https://github.com/pegvin/csprite/releases/tag/v0.1.0)**
 	- Re-Format The Code
