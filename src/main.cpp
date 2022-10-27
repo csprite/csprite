@@ -95,6 +95,7 @@ Logger LoggerInstance;
 
 int GuiErrorOccured = 0;
 
+<<<<<<< HEAD
 #define UpdateCanvasRect()                                                                     \
 	if (CurrWS) {                                                                              \
 		CurrWS->CanvasContRect = {                                                         \
@@ -104,14 +105,25 @@ int GuiErrorOccured = 0;
 			.h = (int)CurrWS->CanvasDims[1] * CurrWS->ZoomLevel                                \
 		};                                                                                     \
 	}                                                                                          \
+=======
+#define UpdateCanvasRect()                                                                                \
+	CurrWS->CanvasContRect = {                                                                     \
+		.x = (int)(WindowDims[0] / 2) - (CurrWS->CanvasDims[0] * CurrWS->ZoomLevel / 2),    \
+		.y = (int)(WindowDims[1] / 2) - (CurrWS->CanvasDims[1] * CurrWS->ZoomLevel / 2),    \
+		.w = (int)CurrWS->CanvasDims[0] * CurrWS->ZoomLevel,                                \
+		.h = (int)CurrWS->CanvasDims[1] * CurrWS->ZoomLevel                                 \
+	}                                                                                                     \
+>>>>>>> parent of c114167 (Format Code)
 
 static double GetScale(void) {
 	float ddpi, hdpi, vdpi;
 	if (SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi) == 0) {
 		return hdpi / 96.0f;
+		// return 2.302083; // Test DPI i got from a tester
 	} else {
 		Logger_Error(LoggerInstance, "error getting DPI: %s", SDL_GetError());
 		return 1.0;
+		// return 2.302083;
 	}
 }
 
