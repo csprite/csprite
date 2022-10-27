@@ -104,15 +104,6 @@ int GuiErrorOccured = 0;
 			.h = (int)CurrWS->CanvasDims[1] * CurrWS->ZoomLevel                                \
 		};                                                                                     \
 	}                                                                                          \
-=======
-#define UpdateCanvasRect()                                                                                \
-	CurrWS->CanvasContRect = {                                                                     \
-		.x = (int)(WindowDims[0] / 2) - (CurrWS->CanvasDims[0] * CurrWS->ZoomLevel / 2),    \
-		.y = (int)(WindowDims[1] / 2) - (CurrWS->CanvasDims[1] * CurrWS->ZoomLevel / 2),    \
-		.w = (int)CurrWS->CanvasDims[0] * CurrWS->ZoomLevel,                                \
-		.h = (int)CurrWS->CanvasDims[1] * CurrWS->ZoomLevel                                 \
-	}                                                                                                     \
->>>>>>> parent of c114167 (Format Code)
 
 static double GetScale(void) {
 	float ddpi, hdpi, vdpi;
