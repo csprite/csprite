@@ -306,7 +306,7 @@ static inline void _GuiPaletteWindow() {
 
 static inline void _GuiTextWindow() {
 	if (ImGui::Begin("ToolAndZoomWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
-		ImGui::SetWindowPos({0.0f, (float)(WindowDims[1] - 55)});
+		ImGui::SetWindowPos({0.0f, (float)(WindowDims[1] - 110)});
 		std::string selectedToolText;
 
 		switch (Tool) {
