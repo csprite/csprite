@@ -95,7 +95,6 @@ Logger LoggerInstance;
 
 int GuiErrorOccured = 0;
 
-<<<<<<< HEAD
 #define UpdateCanvasRect()                                                                     \
 	if (CurrWS) {                                                                              \
 		CurrWS->CanvasContRect = {                                                         \
