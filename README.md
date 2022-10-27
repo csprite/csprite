@@ -56,6 +56,8 @@ Using CSprite isn't rocket science and infact you can learn how to use it in 5 m
 | Shift + E                    | Square Eraser                |
 | F                            | Fill                         |
 | I                            | Ink Dropper                  |
+| S                            | Rectangle Select Tool        |
+| G                            | Selection Move Tool          |
 | Space + Mouse Move           | Pan                          |
 | Left Mouse                   | Draw/Erase/Fill/Ink Dropper  |
 | Ctrl + Plus / Scroll Up      | Zoom In                      |
