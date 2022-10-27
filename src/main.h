@@ -43,6 +43,7 @@ void Undo();
 
 std::string FixFileExtension(std::string filepath);
 void SaveImageFromCanvas(std::string filepath);
+void OpenFileFromPath(const char* filePath);
 
 // Versions & Stuff
 

@@ -50,7 +50,6 @@ SDL_Renderer* renderer = NULL;
 bool IsCtrlDown = false;
 bool IsShiftDown = false;
 bool IsLMBDown = false;
-bool CanCloseCurrWs = false;
 bool AppCloseRequested = false;
 bool ShowNewCanvasWindow = false;
 bool ShowSettingsWindow = false;
@@ -472,32 +471,8 @@ static int _EventWatcher(void* data, SDL_Event* event) {
 			if (filePath != NULL) {
 				Logger_Info(LoggerInstance, "file dropped: %s", filePath);
 
-				// int lastWs = CurrentWorkspace;
-				// for (int i = 0; i < WORKSPACE_LEN; ++i) {
-				// 	if (WorkspaceArr[i] == NULL) {
-				// 		CurrentWorkspace = i;
-				// 		CurrWS = InitWorkspace(WindowDims);
-				// 		break;
-				// 	}
-				// }
+				OpenFileFromPath(filePath);
 
-				if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims, &CurrWS->CanvasData) == 0) {
-					if (UpdateTextures() != 0)
-						return -1;
-
-					GenCanvasBgTex();
-					UpdateCanvasRect();
-
-					if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
-					CurrWS->FilePath = strdup((const char*)filePath);
-					SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-					SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
-				} else {
-					if (CurrWS != NULL) {
-						FreeWorkspace(CurrWS);
-						CurrWS = NULL;
-					}
-				}
 				SDL_free(filePath);
 			}
 
@@ -808,6 +783,54 @@ void ProcessEvents() {
 	}
 
 	CurrWS->FileHasChanged = CurrWS->CurrentState->prev != NULL; // If we have something in our undo buffer it means file has changed
+}
+
+/*
+	Function: OpenFileFromPath
+	Description:
+		Just Like "LoadImageToCanvas()" function except it checks for unsaved changes,
+		and asks the user if they want to save the changes or not.
+*/
+void OpenFileFromPath(const char* filePath) {
+	int retVal = 1;
+	if (CurrWS->FileHasChanged) {
+		retVal = tinyfd_messageBox(
+			"Unsaved Changes", "you have unsaved changes, are you sure you want to open another file?",
+			"yesno", "warning", 0 /* Default Button: No */
+		);
+	}
+
+	switch (retVal) {
+		case 1: { // Ok/Yes
+			workspace_t* oldWs = CurrWS;
+			CurrWS = InitWorkspace(WindowDims);
+
+			if (LoadImageToCanvas(filePath, &CurrWS->CanvasDims, &CurrWS->CanvasData) == 0) {
+				if (UpdateTextures() != 0) {
+					if (CurrWS != NULL) FreeWorkspace(CurrWS);
+					CurrWS = oldWs;
+				}
+
+				GenCanvasBgTex();
+				UpdateCanvasRect();
+
+				if (CurrWS->FilePath != NULL) free(CurrWS->FilePath);
+				CurrWS->FilePath = strdup((const char*)filePath);
+				SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+				SaveHistory(&CurrWS->CurrentState, CANVAS_SIZE_B, CurrWS->CanvasData);
+			} else {
+				if (CurrWS != NULL) FreeWorkspace(CurrWS);
+				CurrWS = oldWs;
+			}
+			break;
+		}
+		case 0:    // Cancel/No
+		case 2: {  // No in yesnocancel
+			break;
+		}
+		default:
+			break;
+	}
 }
 
 /*
