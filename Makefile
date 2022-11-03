@@ -63,7 +63,7 @@ all: $(bin)
 	$(CXX) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
 
 $(bin): $(OBJS_C) $(OBJS_CPP)
-	$(CXX) $(LFLAGS) $(OBJS_C) $(OBJS_CPP) -o $@
+	$(CXX) $(OBJS_C) $(OBJS_CPP) $(LFLAGS) -o $@
 
 .PHONY: run
 .PHONY: clean
