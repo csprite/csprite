@@ -288,8 +288,8 @@ static inline void _GuiNewCanvasWindow() {
 }
 
 static inline void _GuiPaletteWindow() {
-	if (ImGui::Begin("PWindow", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
-		ImGui::SetWindowPos({0.0f, 30.0f});
+	if (ImGui::Begin("Palettes", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
+		ImGui::SetWindowPos({3.0f, 30.0f});
 		for (unsigned int i = 0; i < P->numOfEntries; i++) {
 			ImGuiDrawList = ImGui::GetWindowDrawList();
 			if (i != 0 && i % 2 != 0)
@@ -300,6 +300,7 @@ static inline void _GuiPaletteWindow() {
 
 			ImGuiDrawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), CurrWS->ColorIndex == i ? 0xFFFFFFFF : 0x000000FF, 0, 0, 1);
 		};
+		ImGui::SetWindowSize({0.0f, 0.0f}); // This Will Make the window adjust size according to children
 		ImGui::End();
 	}
 }
