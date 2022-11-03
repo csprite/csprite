@@ -63,7 +63,7 @@ jobs:
         languages: cpp
 
     - name: Build
-      run: make release
+      run: make all -j4 Stable=1
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
@@ -126,7 +126,7 @@ jobs:
           apt-get install -y pkg-config git libgtk-3-dev scons clang
           git clone https://github.com/libsdl-org/SDL -b release-2.24.0
           ./tools/BuildNInstall.sh
-          CC=clang make release
+          make all -j4 Stable=1 CC=clang CXX=clang++
 
     - name: Exit if file not exists
       run: |
@@ -181,7 +181,7 @@ jobs:
 
       - name: Build & Rename
         run: |
-          CC=clang make release
+          make all -j4 Stable=1 CC=clang CXX=clang++
           mv csprite.exe csprite-x86_64.exe
 
       - name: Upload Artifacts
@@ -224,7 +224,7 @@ jobs:
 
       - name: Build & Rename
         run: |
-          PATH=/mingw32/bin/:$PATH CC=clang make release
+          PATH=/mingw32/bin/:$PATH make all -j4 Stable=1 CC=clang CXX=clang++
           mv csprite.exe csprite-i686.exe
 
       - name: Upload Artifacts
@@ -242,9 +242,9 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install scons, dylibbundler & SDL2
+    - name: Install dylibbundler & SDL2
       run: |
-        brew install scons dylibbundler sdl2
+        brew install dylibbundler sdl2
 
     - uses: actions/download-artifact@v2
       with:
@@ -257,7 +257,7 @@ jobs:
         path: ./data/
 
     - name: Build
-      run: make release
+      run: make all -j4 Stable=1
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
