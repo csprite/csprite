@@ -20,7 +20,7 @@ OBJS_C:=$(SRCS_C:.c=.o)
 OBJS_CPP+=$(SRCS_CPP:.cpp=.o)
 
 ifeq ($(Stable),0)
-	CCFLAGS+=-O0 -g -Werror -Wno-unused-function
+	CCFLAGS+=-O0 -g -Wno-unused-function
 	CCFLAGS+=$(addprefix -D, IS_DEBUG SHOW_FRAME_TIME SHOW_HISTORY_LOGS)
 else
 	CCFLAGS+=-Os -DENABLE_WIN_ICON
@@ -36,8 +36,10 @@ else
 
 	# On POSX Use Address Sanitizers in Debug Mode
 	ifeq ($(Stable),0)
-		CCFLAGS+=-fsanitize=address -fsanitize=undefined
-		LFLAGS+=-fsanitize=address -fsanitize=undefined -lasan -lubsan
+		ifeq ($(CXX),g++)
+			CCFLAGS+=-fsanitize=address -fsanitize=undefined
+			LFLAGS+=-fsanitize=address -fsanitize=undefined -lasan -lubsan
+		endif
 	endif
 
 	ifeq ($(UNAME_S),Linux)
@@ -60,7 +62,7 @@ all: $(bin)
 	$(CXX) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
 
 $(bin): $(OBJS_C) $(OBJS_CPP)
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(CCFLAGS) $(LFLAGS) $(OBJS_C) $(OBJS_CPP) -o $@
+	$(CXX) $(CCFLAGS) $(LFLAGS) $(OBJS_C) $(OBJS_CPP) -o $@
 
 .PHONY: run
 .PHONY: clean
