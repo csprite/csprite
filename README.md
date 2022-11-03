@@ -19,7 +19,7 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 - :moneybag: Free & Open Source
 
 ### Requirements
-- Any PC With OpenGL 3.0 or higher Support.
+- Any PC (You Can Make Use Of Your Graphics Card For Rendering, Just Make sure you have OpenGL 3.0+/Vulkan/Metal).
 
 ### Todo
 - [ ] ReFactor Code
