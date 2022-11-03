@@ -8,7 +8,7 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 [![Total Downloads](https://img.shields.io/github/downloads/pegvin/csprite/total)](https://github.com/pegvin/csprite/releases)
 [![Discord Icon](https://discordapp.com/api/guilds/1027457407732957206/embed.png)](https://discord.gg/ZKs8sm2CPA)
 
-![image](https://user-images.githubusercontent.com/75035219/170718904-9e3c0b00-4a1c-4d48-8876-5dd43d5f4d7b.png)
+![image](https://user-images.githubusercontent.com/75035219/199698417-bcb5a600-3f94-41ab-adba-ac582cda33cb.png)
 
 ---
 ### Features
