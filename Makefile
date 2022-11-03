@@ -27,9 +27,10 @@ else
 endif
 
 ifeq ($(OS),Windows_NT)
-	_libs:=SDL2main SDL2 mingw32 opengl32 comdlg32 imagehlp dinput8 dxguid dxerr8 user32 gdi32 winmm imm32 ole32 oleaut32 shell32 version uuid setupapi
-	LFLAGS+=$(addprefix -l,$(_libs)) -mwindows --static
-	bin+=.exe
+	CCFLAGS+=-DSDL_MAIN_HANDLED
+	LFLAGS+=$(addprefix -l,SDL2main SDL2 mingw32 opengl32 comdlg32 imagehlp dinput8 dxguid dxerr8 user32 gdi32 winmm imm32 ole32 oleaut32 shell32 version uuid setupapi)
+	LFLAGS+=-mwindows --static
+	bin=csprite.exe
 else
 	UNAME_S:=$(shell uname -s)
 	_libs:=SDL2 m
@@ -47,7 +48,7 @@ else
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		_libs+=objc
-		LFLAGS+=$(addprefix -framework, OpenGL Cocoa)
+		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
 	endif
 
 	LFLAGS+=$(addprefix -l,$(_libs))
@@ -62,7 +63,7 @@ all: $(bin)
 	$(CXX) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
 
 $(bin): $(OBJS_C) $(OBJS_CPP)
-	$(CXX) $(CCFLAGS) $(LFLAGS) $(OBJS_C) $(OBJS_CPP) -o $@
+	$(CXX) $(LFLAGS) $(OBJS_C) $(OBJS_CPP) -o $@
 
 .PHONY: run
 .PHONY: clean
