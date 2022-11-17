@@ -1,9 +1,0 @@
-[submodule "lib/imgui"]
-	path = lib/imgui
-	url = https://github.com/pegvin/imgui-187
-[submodule "lib/stb"]
-	path = lib/stb
-	url = https://github.com/nothings/stb
-[submodule "lib/tfd"]
-	path = lib/tfd
-	url = https://github.com/pegvin/TinyFileDialogs
