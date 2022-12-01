@@ -68,10 +68,10 @@ uint32_t SelectedLayerIndex = 0;
 CanvasLayer_T* CanvasLayers[MAX_CANVAS_LAYERS] = { NULL };
 #define CURR_CANVAS_LAYER CanvasLayers[SelectedLayerIndex]
 
-enum tool_e { BRUSH, ERASER, FILL, PAN };
+enum tool_e { BRUSH_COLOR, BRUSH_ERASER, SHAPE_LINE, SHAPE_RECT, SHAPE_CIRCLE, TOOL_FLOODFILL, TOOL_PAN };
 enum tool_shape_e { CIRCLE, SQUARE };
-enum tool_e Tool = BRUSH;
-enum tool_e LastTool = BRUSH;
+enum tool_e Tool = BRUSH_COLOR;
+enum tool_e LastTool = BRUSH_COLOR;
 enum tool_shape_e ToolShape = CIRCLE;
 
 float CurrViewportZoom = 1.0f;
@@ -85,6 +85,7 @@ uint16_t PaletteIndex = 0;
 uint16_t ThemeIndex = 0;
 uint16_t PaletteColorIndex = 2;
 uchar_t EraseColor[4] = { 0, 0, 0, 0 };
+uchar_t SelectedColor[4] = { 255, 255, 255, 255 };
 
 #define MAX_SELECTEDTOOLTEXT_SIZE 512
 char SelectedToolText[MAX_SELECTEDTOOLTEXT_SIZE] = "";
@@ -136,7 +137,6 @@ static inline bool CanMutateCanvas();
 void MutateCanvas(bool LmbJustReleased);
 
 #define GetSelectedPalette() PaletteArr->Palettes[PaletteIndex]
-#define GetSelectedColor() GetSelectedPalette()->Colors[PaletteColorIndex]
 
 #define UNDO() \
 	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels)
@@ -260,6 +260,12 @@ int main(int argc, char** argv) {
 
 	Logger_Hide();
 	SDL_ShowWindow(window);
+
+	SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
+	SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
+	SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
+	SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
+
 	bool ShowPreferencesWindow = false;
 	bool ShowLayerRenameWindow = false;
 	bool ShowNewCanvasWindow = false;
@@ -268,13 +274,20 @@ int main(int argc, char** argv) {
 		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
 
 		switch (Tool) {
-		case BRUSH:
-		case ERASER:
-			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Size: %d)", ToolShape == SQUARE ? "Square" : "Circle", Tool == BRUSH ? "Brush" : "Eraser", Tools_GetBrushSize());
+		case BRUSH_COLOR:
+		case BRUSH_ERASER:
+			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Size: %d)", ToolShape == SQUARE ? "Square" : "Circle", Tool == BRUSH_COLOR ? "Brush" : "Eraser", Tools_GetBrushSize());
 			break;
-		case FILL:
-		case PAN:
-			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s", Tool == FILL ? "Flood Fill" : "Panning");
+		case SHAPE_RECT:
+		case SHAPE_LINE:
+			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Width: %d)", ToolShape == SQUARE ? "Square" : "Rounded", Tool == SHAPE_LINE ? "Line" : "Rectangle", Tools_GetBrushSize());
+			break;
+		case SHAPE_CIRCLE:
+			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "Circle (Boundary Width: %d)", Tools_GetBrushSize());
+			break;
+		case TOOL_FLOODFILL:
+		case TOOL_PAN:
+			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s", Tool == TOOL_FLOODFILL ? "Flood Fill" : "Panning");
 			break;
 		}
 
@@ -300,7 +313,7 @@ int main(int argc, char** argv) {
 									CanvasLayers[i] = NULL;
 								}
 							}
-							if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+							if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
 								ResizeCanvas(w, h);
 								CanvasDims[0] = w;
 								CanvasDims[1] = h;
@@ -409,6 +422,10 @@ int main(int argc, char** argv) {
 					((float)(GetSelectedPalette()->Colors[i][3]) / 255)
 				})) {
 					PaletteColorIndex = i;
+					SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
+					SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
+					SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
+					SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
 				}
 
 				ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), PaletteColorIndex == i ? 0xFFFFFFFF : 0x000000FF, 0, 0, 1);
@@ -708,22 +725,56 @@ static inline bool CanMutateCanvas() {
 void MutateCanvas(bool LmbJustReleased) {
 	if (CanMutateCanvas() && (LmbJustReleased || IsLMBDown)) {
 		switch (Tool) {
-			case BRUSH:
-			case ERASER: {
-				bool didChange = Tool_Brush(CURR_CANVAS_LAYER->pixels, Tool == BRUSH ? GetSelectedColor() : EraseColor, ToolShape == CIRCLE, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
+			case BRUSH_COLOR:
+			case BRUSH_ERASER: {
+				bool didChange = Tool_Brush(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, ToolShape == CIRCLE, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
 				CanvasDidMutate = CanvasDidMutate || didChange;
 				break;
 			}
-			case PAN: {
+			case SHAPE_RECT:
+			case SHAPE_CIRCLE:
+			case SHAPE_LINE: {
+				if (LmbJustReleased) {
+					CanvasDidMutate = CanvasDidMutate || (Tool == SHAPE_LINE || Tool == SHAPE_RECT || Tool == SHAPE_CIRCLE);
+					if (CanvasDidMutate == true) {
+						SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+						CanvasDidMutate = false;
+					}
+				} else if (IsLMBDown) {
+					if (CURR_CANVAS_LAYER->history->prev != NULL) {
+						memcpy(CURR_CANVAS_LAYER->pixels, CURR_CANVAS_LAYER->history->pixels, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
+					} else {
+						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
+					}
+					if (Tool == SHAPE_RECT) {
+						Tool_Rect(CURR_CANVAS_LAYER->pixels, SelectedColor, ToolShape == CIRCLE, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
+					} else if (Tool == SHAPE_LINE) {
+						Tool_Line(CURR_CANVAS_LAYER->pixels, SelectedColor, ToolShape == CIRCLE, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
+					} else if (Tool == SHAPE_CIRCLE) {
+						Tool_Circle(
+							CURR_CANVAS_LAYER->pixels,
+							SelectedColor,
+							MousePosDownRel[0], MousePosDownRel[1],
+							(int)sqrt( // Calculates Distance Between 2 x, y points
+								(MousePosRel[0] - MousePosDownRel[0]) * (MousePosRel[0] - MousePosDownRel[0]) +
+								(MousePosRel[1] - MousePosDownRel[1]) * (MousePosRel[1] - MousePosDownRel[1])
+							),
+							CanvasDims[0], CanvasDims[1]
+						);
+					}
+				}
 				break;
 			}
-			case FILL: {
+			case TOOL_PAN: {
+				break;
+			}
+			case TOOL_FLOODFILL: {
 				if (LmbJustReleased) {
 					unsigned char* pixel = GetCharData(CURR_CANVAS_LAYER->pixels, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
 					unsigned char OldColor[4] = { *(pixel + 0), *(pixel + 1), *(pixel + 2), *(pixel + 3) };
 					CanvasDidMutate = CanvasDidMutate || Tool_FloodFill(
 						CURR_CANVAS_LAYER->pixels,
-						OldColor, GetSelectedColor(),
+						OldColor, SelectedColor,
 						MousePosRel[0], MousePosRel[1],
 						CanvasDims[0], CanvasDims[1]
 					);
@@ -741,15 +792,26 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 			CanvasMutable = true;
 			break;
 		case SDLK_f:
-			Tool = FILL;
+			Tool = TOOL_FLOODFILL;
 			break;
 		case SDLK_e:
-			Tool = ERASER;
+			Tool = BRUSH_ERASER;
 			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
 			break;
 		case SDLK_b:
-			Tool = BRUSH;
+			Tool = BRUSH_COLOR;
 			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			break;
+		case SDLK_l:
+			Tool = SHAPE_LINE;
+			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			break;
+		case SDLK_r:
+			Tool = SHAPE_RECT;
+			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			break;
+		case SDLK_c:
+			Tool = SHAPE_CIRCLE;
 			break;
 		case SDLK_s:
 			if (IsCtrlDown == true && ShouldSave == false) ShouldSave = true;
@@ -768,9 +830,9 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 static inline void OnEvent_KeyDown(SDL_Event* e) {
 	switch(e->key.keysym.sym) {
 		case SDLK_SPACE:
-			if (Tool != PAN) {
+			if (Tool != TOOL_PAN) {
 				LastTool = Tool;
-				Tool = PAN;
+				Tool = TOOL_PAN;
 				CanvasMutable = false;
 			}
 			break;
@@ -826,7 +888,7 @@ static inline void OnEvent_MouseMotion(SDL_Event* e) {
 	MousePosRel[0] = (e->motion.x - ViewportPos[0]) / CurrViewportZoom;
 	MousePosRel[1] = ((e->motion.y + ViewportPos[1]) - (WindowDims[1] - ViewportSize[1])) / CurrViewportZoom;
 
-	if (Tool == PAN) {
+	if (Tool == TOOL_PAN) {
 		ViewportPos[0] -= MousePosLast[0] - MousePos[0];
 		ViewportPos[1] += MousePosLast[1] - MousePos[1];
 	}
