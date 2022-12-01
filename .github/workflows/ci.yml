@@ -53,11 +53,11 @@ jobs:
     - name: Build & Install SDL2
       run: ./tools/BuildNInstall.sh
 
-    - name: Install LibFuse
+    - name: Install LibFuse2
       run: |
         sudo apt-get update
         sudo apt-get upgrade
-        sudo apt-get install libfuse2 libfuse3
+        sudo apt-get install libfuse2
 
     - name: Build
       run: make all -j4 Stable=1
