@@ -59,6 +59,22 @@ jobs:
     - name: Strip
       run: strip ./csprite
 
+    - name: Install AppImage Builder
+      run: |
+        wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.0.0-beta.1/appimage-builder-1.0.0-677acbd-x86_64.AppImage
+        chmod +x appimage-builder-x86_64.AppImage
+        sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
+
+    - name: Build AppImage
+      run: make appimage
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux-x86_64-appimage
+        path: csprite-x86_64.AppImage
+        if-no-files-found: error
+
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
