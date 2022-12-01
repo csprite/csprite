@@ -1488,6 +1488,7 @@ inline notify::notify(std::string const &title,
                       std::string const &message,
                       icon _icon /* = icon::info */)
 {
+#if 0 // Manually Disable The Function Cause It Causes Compile Issues On Windows And Since I Don't And Won't Use This Function It's Better To Disable It
     if (_icon == icon::question) // Not supported by notifications
         _icon = icon::info;
 
@@ -1589,6 +1590,7 @@ inline notify::notify(std::string const &title,
 
     m_async->start_process(command);
 #endif
+#endif // #if 0
 }
 
 // message implementation
