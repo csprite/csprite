@@ -66,7 +66,9 @@ jobs:
         sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
 
     - name: Build AppImage
-      run: make appimage
+      run: |
+        make appimage
+        mv ./csprite-*.AppImage ./csprite-x86_64.AppImage
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
