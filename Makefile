@@ -89,3 +89,7 @@ gen-rc:
 gen-assets:
 	python3 tools/create_icons.py
 	python3 tools/create_assets.py
+
+# make appimage
+appimage:
+	CSPRITE_VERSION=$(MajVer).$(MinVer).$(PatVer) appimage-builder --skip-test --recipe=AppImage-Builder.yml
