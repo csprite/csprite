@@ -50,7 +50,10 @@ Using CSprite isn't rocket science and infact you can learn how to use it in 5 m
 | Shift + B                    | Square Brush                                 |
 | E                            | Circle Eraser                                |
 | Shift + E                    | Square Eraser                                |
-| F                            | Fill                                         |
+| R                            | Rounded Rectangle                            |
+| Shift + R                    | Square Rectangle                             |
+| C                            | Circle                                       |
+| F                            | Flood Fill                                   |
 | I                            | Ink Dropper (To Be Re-Implemented)           |
 | S                            | Rectangle Select Tool (To Be Re-Implemented) |
 | G                            | Selection Move Tool (To Be Re-Implemented)   |
