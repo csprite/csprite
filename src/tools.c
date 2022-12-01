@@ -126,7 +126,8 @@ bool Tool_FloodFill(
 	bool didChange = false;
 	if (
 		x >= 0 && y >= 0 && x < w && y < h &&
-		Pixels != NULL && OldColor != NULL && NewColor != NULL
+		Pixels != NULL && OldColor != NULL && NewColor != NULL &&
+		!COLOR_EQUAL(NewColor, OldColor)
 	) {
 		uchar_t* pixel = GetCharData(Pixels, x, y, w, h);
 
