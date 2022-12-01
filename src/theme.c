@@ -5,10 +5,9 @@
 #include "ini/ini.h"
 #include "system.h"
 #include "macros.h"
-#include "cconfig.h"
-#include "log/log.h"
-#include "assets.h"
 #include "system.h"
+#include "logger.h"
+#include "assets.h"
 
 static int OnSysDirList(const char *dir, const char *fname, void* data);
 static int OnAssetMgrList(int i, const char *fname);
@@ -37,7 +36,7 @@ int FreeTheme(theme_t* theme) {
 
 int FreeThemeArr(theme_arr_t* tArr) {
 	if (tArr == NULL) {
-		log_error("Theme Array Pointer is NULL!");
+		Logger_Error("Theme Array Pointer is NULL!\n");
 		return -1;
 	}
 
@@ -63,10 +62,12 @@ theme_t* LoadTheme(const char* themeIni) {
 	ini_t *config = ini_load_txt(themeIni);
 
 	const char* name = ini_get(config, "theme", "name");
-	if (name != NULL)
-		strncpy(t->name, name, 512);
-	else
-		strncpy(t->name, "theme", 512);
+	if (name != NULL) strncpy(t->name, name, THEME_NAME_SIZE_MAX);
+	else strncpy(t->name, "theme", 6);
+
+	const char* author = ini_get(config, "theme", "author");
+	memset(t->author, 0, THEME_AUTHOR_SIZE_MAX);
+	snprintf(t->author, THEME_AUTHOR_SIZE_MAX, "Awesome Theme By %s", author == NULL ? "Unknown" : author);
 
 	t->PopupBG = str2rgbaint(ini_get(config, "theme", "PopupBG"));
 	t->WindowBG = str2rgbaint(ini_get(config, "theme", "WindowBG"));
@@ -93,21 +94,38 @@ theme_t* LoadTheme(const char* themeIni) {
 	return t;
 }
 
+char* SysGetThemesDir() {
+	char* configdir = Sys_GetConfigDir();
+	static char configPath[SYS_PATH_MAX_SIZE + 128] = "";
+
+	if (!*configPath) {
+		if (configdir == NULL) {
+			Logger_Error("cannot get the themes directory!\n");
+			snprintf(configPath, SYS_PATH_MAX_SIZE + 128, "themes");
+			Sys_MakeDirRecursive(configPath);
+		} else {
+			snprintf(configPath, SYS_PATH_MAX_SIZE + 128, "%s%ccsprite%cthemes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
+			Sys_MakeDirRecursive(configPath);
+		}
+	}
+
+	return configPath;
+}
 
 theme_arr_t* ThemeLoadAll() {
 	char* themesDirPath = SysGetThemesDir();
-	char dir[CC_PATH_SIZE_MAX + 128] = "";
-	strncpy(dir, themesDirPath, CC_PATH_SIZE_MAX);
+	char dir[SYS_PATH_MAX_SIZE + 128] = "";
+	strncpy(dir, themesDirPath, SYS_PATH_MAX_SIZE);
 
-	int numOfThemes = SysListDir((const char*)dir, NULL, NULL);
+	int numOfThemes = Sys_ListDirContents((const char*)dir, NULL, NULL);
 	if (numOfThemes <= 0) {
-		SysMakeDir(dir);
-		assets_list("data/themes/", OnAssetMgrList);
+		Sys_MakeDirRecursive(dir);
+		Assets_List("data/themes/", OnAssetMgrList);
 	}
 
-	numOfThemes = SysListDir((const char*)dir, NULL, NULL);
+	numOfThemes = Sys_ListDirContents((const char*)dir, NULL, NULL);
 	if (numOfThemes <= 0) {
-		log_error("cannot extract the Themes!");
+		Logger_Error("cannot extract the Themes!\n");
 		return NULL;
 	}
 
@@ -119,7 +137,7 @@ theme_arr_t* ThemeLoadAll() {
 		tArr->entries[i] = NULL;
 	}
 
-	SysListDir((const char*)dir, OnSysDirList, tArr);
+	Sys_ListDirContents((const char*)dir, OnSysDirList, tArr);
 
 	return tArr;
 }
@@ -134,7 +152,7 @@ static int OnSysDirList(const char *dir, const char *fname, void* data) {
 			snprintf(fullPath, 2048, "%s/%s", dir, fname);
 
 			FILE* fp = fopen(fullPath, "r");
-			long int size = fsize(fp); // XX - Do Error (-1) Checking
+			long int size = Sys_GetFileSize(fp); // XX - Do Error (-1) Checking
 			char* iniTxt = (char*) malloc((size + 1) * sizeof(char));
 			memset(iniTxt, '\0', size + 1);
 			fread(iniTxt, size + 1, 1, fp);
@@ -152,21 +170,21 @@ static int OnAssetMgrList(int i, const char *fname) {
 	FILE* file = NULL;
 	const char* data = NULL;
 	char* themesDirPath = SysGetThemesDir();
-	char dir[CC_PATH_SIZE_MAX + 128] = "";
-	char* fileName = SysFnameFromPath(fname);
-	snprintf(dir, CC_PATH_SIZE_MAX + 128, "%s/%s", themesDirPath, fileName);
+	char dir[SYS_PATH_MAX_SIZE + 128] = "";
+	char* fileName = Sys_GetBasename(fname);
+	snprintf(dir, SYS_PATH_MAX_SIZE + 128, "%s/%s", themesDirPath, fileName);
 
 	free(fileName);
 	fileName = NULL;
 
-	data = assets_get(fname, NULL);
+	data = Assets_Get(fname, NULL);
 	file = fopen(dir, "wb");
 	if (file) {
 		fprintf(file, "%s", data);
 		fclose(file);
 		file = NULL;
 	} else {
-		log_error("cannot open file to write");
+		Logger_Error("cannot open file to write\n");
 		return -1;
 	}
 	return 0;
