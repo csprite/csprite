@@ -9,7 +9,7 @@ CFLAGS:=-std=c99
 CXXFLAGS:=-std=c++17
 LFLAGS:=
 
-CCFLAGS:=-Isrc/ -Iinclude/ -Ilib/ -Ilib/tfd/src -Wall
+CCFLAGS:=-Isrc/ -Iinclude/ -Ilib/ -Ilib/tfd/src -Wall -MMD -MP
 CCFLAGS+=-DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DCS_BUILD_STABLE=$(Stable)
 CCFLAGS+=-DLOG_USE_COLOR
 
@@ -18,6 +18,8 @@ SRCS_C:=$(wildcard src/*.c) $(wildcard lib/imgui/*.c) $(wildcard lib/log/*.c) $(
 SRCS_CPP+=$(wildcard src/*.cpp) $(wildcard lib/imgui/*.cpp) $(wildcard lib/log/*.cpp) $(wildcard lib/ini/*.cpp) $(wildcard lib/tfd/src/*.cpp) $(wildcard lib/downloader/*.cpp)
 OBJS_C:=$(SRCS_C:.c=.o)
 OBJS_CPP+=$(SRCS_CPP:.cpp=.o)
+
+DEPENDS:=$(patsubst %.c,%.d,$(SRCS_C)) $(patsubst %.cpp,%.d,$(SRCS_CPP))
 
 ifeq ($(Stable),0)
 	CCFLAGS+=-O0 -g -Wno-unused-function
@@ -56,6 +58,8 @@ endif
 
 all: $(bin)
 
+-include $(DEPENDS)
+
 %.o: %.c
 	$(CC) $(CFLAGS) $(CCFLAGS) -c $< -o $@
 
@@ -72,7 +76,7 @@ run: $(all)
 	./$(bin)
 
 clean:
-	$(RM) $(bin) $(OBJS_C) $(OBJS_CPP) data/icon.ico src/assets/*.inl tools/font2inl.out windows.o
+	$(RM) $(bin) $(OBJS_C) $(OBJS_CPP) $(DEPENDS) data/icon.ico src/assets/*.inl tools/font2inl.out windows.o
 	$(RM) -r data/icons
 
 targz:
