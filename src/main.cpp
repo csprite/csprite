@@ -9,12 +9,11 @@
 #include <glad/glad.h>
 #include <SDL2/SDL.h>
 
+#include "pfd.h"
 #include "imgui.h"
 #include "imgui_extension.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
-
-#include "tinyfiledialogs.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -167,6 +166,52 @@ static void InitWindowIcon(SDL_Window* window) {
 	SDL_FreeSurface(surface);
 }
 
+static void OpenNewFile(SDL_Window* window) {
+	auto selection = pfd::open_file(
+		"Select a file", ".",
+		{
+			"Image Files", "*.png *.jpg *.jpeg *.bmp",
+			"All Files", "*"
+		},
+		pfd::opt::none
+	).result();
+	const char* _fName = selection.empty() ? NULL : selection[0].c_str();
+
+	if (_fName != NULL) {
+		int w = 0, h = 0, channels = 0;
+		uchar_t* _data = stbi_load(_fName, &w, &h, &channels, 4);
+		if (w > 0 && h > 0) {
+			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+				if (CanvasLayers[i] != NULL) {
+					DestroyCanvasLayer(CanvasLayers[i]);
+					CanvasLayers[i] = NULL;
+				}
+			}
+			if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+				ResizeCanvas(w, h);
+				CanvasDims[0] = w;
+				CanvasDims[1] = h;
+				CurrViewportZoom = 1.0f;
+				UpdateViewportSize();
+				UpdateViewportPos();
+			}
+
+			SelectedLayerIndex = 0;
+			CURR_CANVAS_LAYER = CreateCanvasLayer();
+			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
+			FreeHistory(&CURR_CANVAS_LAYER->history);
+			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+
+			snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fName);
+			char* filePathBasename = Sys_GetBasename(_fName);
+			snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
+			free(filePathBasename);
+			stbi_image_free(_data);
+			SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+		}
+	}
+}
+
 int main(int argc, char** argv) {
 	FILE* LogFilePtr = fopen("csprite.log", "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
@@ -301,41 +346,7 @@ int main(int argc, char** argv) {
 					ShowNewCanvasWindow = true;
 				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					char const* lFilterPatterns[2] = {"*.png", "*.jpg"};
-					const char* _fName = tinyfd_openFileDialog("Open A File", NULL, 2, lFilterPatterns, "image files", 0);
-					if (_fName != NULL) {
-						int w = 0, h = 0, channels = 0;
-						uchar_t* _data = stbi_load(_fName, &w, &h, &channels, 4);
-						if (w > 0 && h > 0) {
-							for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-								if (CanvasLayers[i] != NULL) {
-									DestroyCanvasLayer(CanvasLayers[i]);
-									CanvasLayers[i] = NULL;
-								}
-							}
-							if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-								ResizeCanvas(w, h);
-								CanvasDims[0] = w;
-								CanvasDims[1] = h;
-								CurrViewportZoom = 1.0f;
-								UpdateViewportSize();
-								UpdateViewportPos();
-							}
-
-							SelectedLayerIndex = 0;
-							CURR_CANVAS_LAYER = CreateCanvasLayer();
-							memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
-							FreeHistory(&CURR_CANVAS_LAYER->history);
-							SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
-
-							snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fName);
-							char* filePathBasename = Sys_GetBasename(_fName);
-							snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
-							free(filePathBasename);
-							stbi_image_free(_data);
-							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-						}
-					}
+					OpenNewFile(window);
 				}
 				if (ImGui::BeginMenu("Save")) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
@@ -349,6 +360,12 @@ int main(int argc, char** argv) {
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Edit")) {
+				if (ImGui::MenuItem("Undo", "Ctrl+Z", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->prev != NULL))) {
+					UNDO();
+				}
+				if (ImGui::MenuItem("Redo", "Ctrl+Y", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->next != NULL))) {
+					REDO();
+				}
 				if (ImGui::BeginMenu("Palette")) {
 					for (unsigned int i = 0; i < PaletteArr->numOfEntries; ++i) {
 						unsigned int _palidx = PaletteIndex;
@@ -619,8 +636,8 @@ IncrementAndCreateLayer__:
 				// If Viewport Size is as same as the image size then read the pixels and save them
 				if (CurrViewportZoom == 1.0f) {
 					if (ShouldSaveAs == true) {
-						char const* lFilterPatterns[1] = { "*.png" };
-						char* _fPath = tinyfd_saveFileDialog("Save As", NULL, 1, lFilterPatterns, "image files");
+						auto destination = pfd::save_file("Select a file", ".", { "Image Files", "*.png" }, pfd::opt::none).result();
+						const char* _fPath = destination.empty() ? NULL : destination.c_str();
 						if (_fPath != NULL) {
 							snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fPath);
 							char* _fName = Sys_GetBasename(_fPath);
@@ -815,6 +832,9 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 			break;
 		case SDLK_s:
 			if (IsCtrlDown == true && ShouldSave == false) ShouldSave = true;
+			break;
+		case SDLK_o:
+			if (IsCtrlDown == true) OpenNewFile(SDL_GetWindowFromID(e->window.windowID));
 			break;
 		case SDLK_LCTRL:
 		case SDLK_RCTRL:
