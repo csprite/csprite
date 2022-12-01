@@ -53,6 +53,12 @@ jobs:
     - name: Build & Install SDL2
       run: ./tools/BuildNInstall.sh
 
+    - name: Install LibFuse
+      run: |
+        sudo apt-get update
+        sudo apt-get upgrade
+        sudo apt-get install libfuse2 libfuse3
+
     - name: Build
       run: make all -j4 Stable=1
 
@@ -139,7 +145,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
-          update: false
+          update: true
           install: mingw-w64-x86_64-clang mingw-w64-x86_64-SDL2 mingw-w64-x86_64-python make git
 
       - uses: actions/download-artifact@v2
@@ -178,7 +184,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW32
-          update: false
+          update: true
           install: mingw-w64-i686-binutils mingw-w64-i686-clang mingw-w64-i686-SDL2 mingw-w64-i686-python make git
 
       - uses: actions/download-artifact@v2
