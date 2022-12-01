@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "history.h"
 
 /*
@@ -10,11 +6,11 @@
 		- Frees All Of The Nodes Before It
 		- Frees All Of The Nodes After It
 */
-void FreeHistory(history_t** CurrentState) {
+void FreeHistory(History_T** CurrentState) {
 	if (CurrentState == NULL || (*CurrentState) == NULL) return;
 
-	history_t* tmp;
-	history_t* head = (*CurrentState)->prev;
+	History_T* tmp;
+	History_T* head = (*CurrentState)->prev;
 
 	while (head != NULL) {
 		tmp = head;
@@ -47,11 +43,11 @@ void FreeHistory(history_t** CurrentState) {
 	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
 	Removes The Elements in a range from "History" if "IsDirty" is true
 */
-void SaveHistory(history_t** CurrentState, Uint32 dataSizeBytes, Uint32* data) {
+void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, uchar_t* data) {
 	// Runs When We Did Undo And Tried To Modify The Canvas
 	if (CurrentState != NULL && (*CurrentState != NULL) && (*CurrentState)->next != NULL) {
-		history_t* tmp;
-		history_t* head = (*CurrentState)->next; // we start freeing from the next node of current node
+		History_T* tmp;
+		History_T* head = (*CurrentState)->next; // we start freeing from the next node of current node
 
 		while (head != NULL) {
 			tmp = head;
@@ -63,8 +59,8 @@ void SaveHistory(history_t** CurrentState, Uint32 dataSizeBytes, Uint32* data) {
 		}
 	}
 
-	history_t* NewState = (history_t*) malloc(sizeof(history_t));
-	NewState->pixels = (Uint32*) malloc(dataSizeBytes);
+	History_T* NewState = (History_T*) malloc(sizeof(History_T));
+	NewState->pixels = (uchar_t*) malloc(dataSizeBytes);
 
 	if ((*CurrentState) == NULL) {
 		(*CurrentState) = NewState;

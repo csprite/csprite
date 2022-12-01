@@ -2,96 +2,94 @@ MajVer:=1
 MinVer:=0
 PatVer:=0
 Stable:=0
+Arch:=x86_64 # Used By gen-rc task
+Windres_Target:=pe-x86-64 # or pe-i686 for 32 bit system
 
-CC:=gcc
 CXX:=g++
-CFLAGS:=-std=c99
-CXXFLAGS:=-std=c++17
+CC:=gcc
+STD:=c99
+CXX_STD:=c++17
+CFLAGS:=
+CCFLAGS+=-Iinclude/ -Ilibs/imgui/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DCS_BUILD_STABLE=$(Stable) -DSDL_MAIN_HANDLED=1 -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 LFLAGS:=
 
-CCFLAGS:=-Isrc/ -Iinclude/ -Ilib/ -Ilib/tfd/src -Wall -MMD -MP
-CCFLAGS+=-DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DCS_BUILD_STABLE=$(Stable)
-CCFLAGS+=-DLOG_USE_COLOR
-
-bin:=csprite
-SRCS_C:=$(wildcard src/*.c) $(wildcard lib/imgui/*.c) $(wildcard lib/log/*.c) $(wildcard lib/ini/*.c) $(wildcard lib/tfd/src/*.c) $(wildcard lib/downloader/*.c)
-SRCS_CPP+=$(wildcard src/*.cpp) $(wildcard lib/imgui/*.cpp) $(wildcard lib/log/*.cpp) $(wildcard lib/ini/*.cpp) $(wildcard lib/tfd/src/*.cpp) $(wildcard lib/downloader/*.cpp)
+SRCS_C:=$(wildcard src/*.c) $(wildcard libs/ini/*.c) $(wildcard libs/log/*.c) $(wildcard libs/tfd/*.c)
+SRCS_CPP:=$(wildcard src/*.cpp) $(wildcard libs/imgui/*.cpp)
 OBJS_C:=$(SRCS_C:.c=.o)
-OBJS_CPP+=$(SRCS_CPP:.cpp=.o)
-
+OBJS_CPP:=$(SRCS_CPP:.cpp=.o)
 DEPENDS:=$(patsubst %.c,%.d,$(SRCS_C)) $(patsubst %.cpp,%.d,$(SRCS_CPP))
+bin:=csprite
 
 ifeq ($(Stable),0)
-	CCFLAGS+=-O0 -g -Wno-unused-function
-	CCFLAGS+=$(addprefix -D, IS_DEBUG SHOW_FRAME_TIME SHOW_HISTORY_LOGS)
+	CCFLAGS+=-O0 -g
 else
-	CCFLAGS+=-Os -DENABLE_WIN_ICON
+	CCFLAGS+=-O2
 endif
 
 ifeq ($(OS),Windows_NT)
-	CCFLAGS+=-DSDL_MAIN_HANDLED
 	LFLAGS+=$(addprefix -l,SDL2main SDL2 mingw32 opengl32 comdlg32 imagehlp dinput8 dxguid dxerr8 user32 gdi32 winmm imm32 ole32 oleaut32 shell32 version uuid setupapi)
 	LFLAGS+=-mwindows --static
+	SRCS_C+=windows.rc
+	OBJS_C+=windows.o
 	bin=csprite.exe
 else
 	UNAME_S:=$(shell uname -s)
 	_libs:=SDL2 m
 
-	# On POSX Use Address Sanitizers in Debug Mode
-	ifeq ($(Stable),0)
-		ifeq ($(CXX),g++)
-			CCFLAGS+=-fsanitize=address -fsanitize=undefined
-			LFLAGS+=-fsanitize=address -fsanitize=undefined -lasan -lubsan
-		endif
-	endif
-
 	ifeq ($(UNAME_S),Linux)
 		_libs+=dl
+		# On POSX Use Address Sanitizers in Debug Mode
+		ifeq ($(CC),gcc)
+			ifeq ($(Stable),0)
+				CCFLAGS+=-fsanitize=address -fsanitize=undefined
+				LFLAGS+=-fsanitize=address -fsanitize=undefined -lasan -lubsan
+			endif
+		endif
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		_libs+=objc
 		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
 	endif
 
 	LFLAGS+=$(addprefix -l,$(_libs))
 endif
 
+# make all Windres_Target=pe-x86-64(or pe-i386, Windres_Target is only needed on windows builds, this also requires make gen-rc)
 all: $(bin)
 
 -include $(DEPENDS)
 
+%.o: %.rc
+	windres.exe -O COFF -F $(Windres_Target) -i $< -o $@
+
 %.o: %.c
-	$(CC) $(CFLAGS) $(CCFLAGS) -c $< -o $@
+	$(CC) --std=$(STD) $(CFLAGS) $(CCFLAGS) -c $< -o $@
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
+	$(CXX) --std=$(CXX_STD) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
 
 $(bin): $(OBJS_C) $(OBJS_CPP)
-	$(CXX) $(OBJS_C) $(OBJS_CPP) $(LFLAGS) -o $@
+	$(CXX) --std=$(CXX_STD) $(OBJS_C) $(OBJS_CPP) $(LFLAGS) -o $@
 
 .PHONY: run
 .PHONY: clean
 
+# make run
 run: $(all)
 	./$(bin)
 
+# make clean
 clean:
-	$(RM) $(bin) $(OBJS_C) $(OBJS_CPP) $(DEPENDS) data/icon.ico src/assets/*.inl tools/font2inl.out windows.o
-	$(RM) -r data/icons
+	$(RM) $(bin) $(OBJS_C) $(OBJS_CPP) $(DEPENDS) ./csprite.exe.manifest windows.rc tools/font2inl.out data/*.ico data/icons/*.png src/assets/*.inl
 
-targz:
-	bash tools/build_targz.sh $(MajVer).$(MinVer).$(PatVer)
+# make gen-rc Arch=x86_64(or i686)
+gen-rc:
+	python3 tools/create_rc.py --arch=$(Arch) --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
 
-version:
-	@echo $(MajVer).$(MinVer).$(PatVer)
-
-appimage:
-	CSPRITE_VERSION=$(MajVer).$(MinVer).$(PatVer) appimage-builder --skip-test --recipe=AppImage-Builder.yml
-
+# make gen-assets
 gen-assets:
 	python3 tools/create_icons.py
 	python3 tools/create_assets.py
 
-# For Windows RC
-gen-rc:
-	python3 tools/create_rc.py --arch=x86_64 --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
+# make appimage
+appimage:
+	CSPRITE_VERSION=$(MajVer).$(MinVer).$(PatVer) appimage-builder --skip-test --recipe=AppImage-Builder.yml

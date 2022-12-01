@@ -32,6 +32,10 @@ The project follows [Semantic Versioning v2.0.0](https://semver.org/spec/v2.0.0.
 	- New Logger GUI
 		- Now CSprite Console Logs Can Be Viewed Inside The Software Itself, Edit -> Logger
 
+	- Switch To OpenGL 3.3 For Rendering
+	- Added Layers Support
+	- Added Preview Window
+
 - **[v0.1.0](https://github.com/pegvin/csprite/releases/tag/v0.1.0)**
 	- Re-Format The Code
 		- Define Include Directories
