@@ -1,4 +1,4 @@
-name: nightly
+name: ci
 on:
   push:
     branches: [ master ]
