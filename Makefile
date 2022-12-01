@@ -10,10 +10,10 @@ CC:=gcc
 STD:=c99
 CXX_STD:=c++17
 CFLAGS:=
-CCFLAGS+=-Iinclude/ -Ilibs/imgui/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DCS_BUILD_STABLE=$(Stable) -DSDL_MAIN_HANDLED=1 -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
+CCFLAGS+=-Iinclude/ -Ilibs/imgui/ -Ilibs/tfd/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DCS_BUILD_STABLE=$(Stable) -DSDL_MAIN_HANDLED=1 -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 LFLAGS:=
 
-SRCS_C:=$(wildcard src/*.c) $(wildcard libs/ini/*.c) $(wildcard libs/log/*.c)
+SRCS_C:=$(wildcard src/*.c) $(wildcard libs/ini/*.c) $(wildcard libs/log/*.c) $(wildcard libs/tfd/*.c)
 SRCS_CPP:=$(wildcard src/*.cpp) $(wildcard libs/imgui/*.cpp)
 OBJS_C:=$(SRCS_C:.c=.o)
 OBJS_CPP:=$(SRCS_CPP:.cpp=.o)

@@ -14,6 +14,8 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_opengl3.h"
 
+#include "tinyfiledialogs.h"
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
@@ -33,6 +35,7 @@
 #include "theme.h"
 #include "palette.h"
 #include "history.h"
+#include "system.h"
 #include "ogl_wrapper.h"
 
 typedef unsigned char uchar_t;
@@ -52,11 +55,13 @@ bool IsLMBDown = false;
 bool IsCtrlDown = false;
 bool IsShiftDown = false;
 bool ShouldSave = false;
+bool ShouldSaveAs = false;
 bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
 bool CanvasLocked = false;  // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
 
-const char* FILE_NAME = "test.png";
+char FilePath[SYS_PATH_MAX_SIZE] = "";
+char FileName[SYS_PATH_MAX_SIZE] = "";
 
 #define MAX_CANVAS_LAYERS 100
 uint32_t SelectedLayerIndex = 0;
@@ -115,7 +120,11 @@ theme_arr_t* ThemeArr = NULL;
 						"." + std::to_string(CS_VERSION_PATCH) + \
 						"-" + CS_BUILD_TYPE
 
-#define WINDOW_TITLE_CSTR (std::string("csprite - ") + VERSION_STR).c_str()
+#define WINDOW_TITLE_CSTR ( \
+	FileName[0] != 0 ? \
+		FileName + std::string(" - csprite ") + VERSION_STR : \
+		std::string("csprite - ") + VERSION_STR \
+	).c_str()
 
 static inline void ProcessEvents(SDL_Window* window);
 static void _GuiSetColors(ImGuiStyle& style);
@@ -178,6 +187,9 @@ int main(int argc, char** argv) {
 
 	Logger_Info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
 	Logger_Info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
+
+	snprintf(FilePath, SYS_PATH_MAX_SIZE, "untitled.png");
+	snprintf(FileName, SYS_PATH_MAX_SIZE, "untitled.png");
 
 	SDL_DisplayMode dm;
 	SDL_GetCurrentDisplayMode(0, &dm);
@@ -275,9 +287,49 @@ int main(int argc, char** argv) {
 				if (ImGui::MenuItem("New")) {
 					ShowNewCanvasWindow = true;
 				}
+				if (ImGui::MenuItem("Open", "Ctrl+O")) {
+					char const* lFilterPatterns[2] = {"*.png", "*.jpg"};
+					const char* _fName = tinyfd_openFileDialog("Open A File", NULL, 2, lFilterPatterns, "image files", 0);
+					if (_fName != NULL) {
+						int w = 0, h = 0, channels = 0;
+						uchar_t* _data = stbi_load(_fName, &w, &h, &channels, 4);
+						if (w > 0 && h > 0) {
+							for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+								if (CanvasLayers[i] != NULL) {
+									DestroyCanvasLayer(CanvasLayers[i]);
+									CanvasLayers[i] = NULL;
+								}
+							}
+							if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+								ResizeCanvas(w, h);
+								CanvasDims[0] = w;
+								CanvasDims[1] = h;
+								CurrViewportZoom = 1.0f;
+								UpdateViewportSize();
+								UpdateViewportPos();
+							}
+
+							SelectedLayerIndex = 0;
+							CURR_CANVAS_LAYER = CreateCanvasLayer();
+							memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
+							FreeHistory(&CURR_CANVAS_LAYER->history);
+							SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+
+							snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fName);
+							char* filePathBasename = Sys_GetBasename(_fName);
+							snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
+							free(filePathBasename);
+							stbi_image_free(_data);
+							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+						}
+					}
+				}
 				if (ImGui::BeginMenu("Save")) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
 						ShouldSave = true;
+					}
+					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
+						ShouldSaveAs = true;
 					}
 					ImGui::EndMenu();
 				}
@@ -538,7 +590,7 @@ IncrementAndCreateLayer__:
 		if (CURR_CANVAS_LAYER == NULL) {
 			glBindFramebuffer(GL_FRAMEBUFFER, 0); // Ensure Our Default Framebuffer is Selected
 		} else {
-			StartCanvas(ShouldSave == false);
+			StartCanvas(ShouldSave == false && ShouldSaveAs == false);
 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
 					DrawLayer(CanvasLayers[i], SelectedLayerIndex == i);
@@ -546,16 +598,34 @@ IncrementAndCreateLayer__:
 			}
 			EndCanvas(ViewportPos[0], ViewportPos[1], ViewportSize[0], ViewportSize[1]); // This Is When Canvas Is Rendered To Screen
 
-			if (ShouldSave == true) {
+			if (ShouldSave == true || ShouldSaveAs == true) {
 				// If Viewport Size is as same as the image size then read the pixels and save them
 				if (CurrViewportZoom == 1.0f) {
-					unsigned char* data = (unsigned char*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-					glBindFramebuffer(GL_FRAMEBUFFER, CanvasGetFBO()); // Select Our Canvas Framebuffer
-					glReadPixels(0, 0, CanvasDims[0], CanvasDims[1], GL_RGBA, GL_UNSIGNED_BYTE, data); // Read Data From Currently Selected Buffer
-					stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
-					stbi_write_png(FILE_NAME, CanvasDims[0], CanvasDims[1], 4, data, 0); // Write The Data
-					free(data);
-					ShouldSave = false;
+					if (ShouldSaveAs == true) {
+						char const* lFilterPatterns[1] = { "*.png" };
+						char* _fPath = tinyfd_saveFileDialog("Save As", NULL, 1, lFilterPatterns, "image files");
+						if (_fPath != NULL) {
+							snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fPath);
+							char* _fName = Sys_GetBasename(_fPath);
+							snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", _fName);
+							free(_fName);
+							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+						} else {
+							ShouldSaveAs = false;
+						}
+					}
+
+					// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
+					if (ShouldSave == true || ShouldSaveAs == true) {
+						unsigned char* data = (unsigned char*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+						glBindFramebuffer(GL_FRAMEBUFFER, CanvasGetFBO()); // Select Our Canvas Framebuffer
+						glReadPixels(0, 0, CanvasDims[0], CanvasDims[1], GL_RGBA, GL_UNSIGNED_BYTE, data); // Read Data From Currently Selected Buffer
+						stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
+						stbi_write_png(FilePath, CanvasDims[0], CanvasDims[1], 4, data, 0); // Write The Data
+						free(data);
+						ShouldSave = false;
+						ShouldSaveAs = false;
+					}
 					CurrViewportZoom = LastViewportZoom;
 					UpdateViewportSize();
 				} else { // If Viewport Size is not same as the image size then save the current viewport size, update the opengl viewport render everything again
