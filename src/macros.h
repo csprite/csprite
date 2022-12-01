@@ -1,5 +1,4 @@
-#ifndef MACROS_H
-#define MACROS_H
+#pragma once
 
 #ifdef __cplusplus
 	#if defined(__linux__) || defined(__FreeBSD__)
@@ -16,7 +15,9 @@
 	Description: Checks if 2 Colors RGBA are Equal
 */
 #define COLOR_EQUAL(a, b)          \
-	( *(a + 0) == *(b + 0)   &&    \
+	( a != NULL              &&    \
+	  b != NULL              &&    \
+	  *(a + 0) == *(b + 0)   &&    \
 	  *(a + 1) == *(b + 1)   &&    \
 	  *(a + 2) == *(b + 2)   &&    \
 	  *(a + 3) == *(b + 3) )
@@ -31,7 +32,6 @@
 	Description: Opens The Given URL in default browser, if no implementation found logs a msg in console
 	Notes: I could've made it a simple function but i saw macro was a little fast
 */
-
 #if defined(__linux__) || defined(__FreeBSD__)
 	#define OpenURL(URL) \
 		system((std::string("xdg-open \"") + URL + "\"").c_str())
@@ -45,7 +45,6 @@
 	#define OpenURL(URL) \
 		printf("cannot open url: %s, because no function implementation found!", URL.c_str())
 #endif
-
 
 // ImGui::ColorConvertU32ToFloat4 but in RGBA format
 #define _U32TOIV4(in)                          \
@@ -62,4 +61,3 @@
 #define CLAMP_INT(a, min, max) \
 	(a < min ? min : a) > max ? max : (a < min ? min : a)
 
-#endif // MACROS_H

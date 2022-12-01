@@ -1,8 +1,7 @@
 # csprite
 A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
 
-[![Stable Release](https://github.com/pegvin/csprite/actions/workflows/stable.yml/badge.svg)](https://github.com/pegvin/csprite/releases)
-[![Nightly Release](https://github.com/pegvin/csprite/actions/workflows/nightly.yml/badge.svg)](https://github.com/pegvin/csprite/actions/workflows/nightly.yml)
+[![Continous Integration](https://github.com/pegvin/csprite/actions/workflows/ci.yml/badge.svg)](https://github.com/pegvin/csprite/actions/)
 
 [![Open Issues](https://img.shields.io/github/issues/pegvin/csprite)](https://github.com/pegvin/csprite/issues)
 [![Total Downloads](https://img.shields.io/github/downloads/pegvin/csprite/total)](https://github.com/pegvin/csprite/releases)
@@ -19,12 +18,11 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 - :moneybag: Free & Open Source
 
 ### Requirements
-- Any PC (You Can Make Use Of Your Graphics Card For Rendering, Just Make sure you have OpenGL 3.0+/Vulkan/Metal).
+- Any PC With OpenGL 3.3 Or Higher Support.
 
 ### Todo
-- [ ] ReFactor Code
-- [ ] Re-Implement Undo/Redo System
-- [ ] Add Layers Support
+- [x] ReFactor Code
+- [x] Add Layers Support
 - [ ] "Custom" File Format
 - [ ] New Icon
 - [x] Undo Redo
@@ -40,35 +38,38 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 ### Installation
 You can download the latest stable build of CSprite from [GitHub Release](https://github.com/pegvin/csprite/releases).
 
-If you want the latest unreleased build of csprite you can either [Build it from source](https://github.com/pegvin/csprite/wiki/Building-From-Source) or you can goto the [nightly.yml - GitHub Actions](https://github.com/pegvin/csprite/actions/workflows/nightly.yml) page, click on the latest run with green tick, scroll-down a little and download your desired build.
+If you want the latest unreleased build of csprite you can either [Build it from source](https://github.com/pegvin/csprite/wiki/Building-From-Source) or you can goto the [nightly.yml - GitHub Actions](https://github.com/pegvin/csprite/actions/workflows/ci.yml) page, click on the latest run with green tick, scroll-down a little and download your desired build.
 
 ### How To Use csprite
 Using CSprite isn't rocket science and infact you can learn how to use it in 5 minutes, [Read More...](https://github.com/pegvin/CSprite/wiki)
 
-**NOTE**: the shortcuts below work with the latest stable release of csprite, and may or may not work with older or latest unreleased build of csprite.
-
 ### Controls
-| Key                          | Description                  |
-|------------------------------|------------------------------|
-| B                            | Circle Brush                 |
-| Shift + B                    | Square Brush                 |
-| E                            | Circle Eraser                |
-| Shift + E                    | Square Eraser                |
-| F                            | Fill                         |
-| I                            | Ink Dropper                  |
-| S                            | Rectangle Select Tool        |
-| G                            | Selection Move Tool          |
-| Space + Mouse Move           | Pan                          |
-| Left Mouse                   | Draw/Erase/Fill/Ink Dropper  |
-| Ctrl + Plus / Scroll Up      | Zoom In                      |
-| Ctrl + Minus / Scroll Down   | Zoom Out                     |
-| Ctrl + Z                     | Undo                         |
-| Ctrl + Y                     | Redo                         |
+| Key                          | Description                                  |
+|------------------------------|----------------------------------------------|
+| B                            | Circle Brush                                 |
+| Shift + B                    | Square Brush                                 |
+| E                            | Circle Eraser                                |
+| Shift + E                    | Square Eraser                                |
+| R                            | Rounded Rectangle                            |
+| Shift + R                    | Square Rectangle                             |
+| C                            | Circle                                       |
+| F                            | Flood Fill                                   |
+| I                            | Ink Dropper                                  |
+| S                            | Rectangle Select Tool (To Be Re-Implemented) |
+| G                            | Selection Move Tool (To Be Re-Implemented)   |
+| Space + Mouse Move           | Pan                                          |
+| Left Mouse                   | Draw/Erase/Fill/Ink Dropper                  |
+| Scroll Up                    | Brush Size Increase                          |
+| Scroll Down                  | Brush Size Decrease                          |
+| Ctrl + Scroll Up             | Zoom In                                      |
+| Ctrl + Scroll Down           | Zoom Out                                     |
+| Ctrl + Z                     | Undo                                         |
+| Ctrl + Y                     | Redo                                         |
 
 ---
 ### Credits
 
-CSprite Uses [BB Mini](https://www.dafont.com/bm-mini.font) Font Designed By [Bitmap Mania](https://www.dafont.com/bitmapmania.d283)
+CSprite Uses [BM Mini](https://www.dafont.com/bm-mini.font) Font Designed By [Bitmap Mania](https://www.dafont.com/bitmapmania.d283)
 
 ---
 
