@@ -54,7 +54,7 @@ Using CSprite isn't rocket science and infact you can learn how to use it in 5 m
 | Shift + R                    | Square Rectangle                             |
 | C                            | Circle                                       |
 | F                            | Flood Fill                                   |
-| I                            | Ink Dropper (To Be Re-Implemented)           |
+| I                            | Ink Dropper                                  |
 | S                            | Rectangle Select Tool (To Be Re-Implemented) |
 | G                            | Selection Move Tool (To Be Re-Implemented)   |
 | Space + Mouse Move           | Pan                                          |
