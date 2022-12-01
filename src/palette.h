@@ -6,31 +6,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "macros.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define PaletteNameSize 512
+#define PaletteAuthorSize 512 + 17 // The Extra 19 Are For "Awesome Palette By ", so the actual name starts after 19 Characters
 
-typedef unsigned int palette_entry_t;
+typedef unsigned char palette_entry_t[4];
 
 typedef struct {
 	char             name[PaletteNameSize];
+	char             author[PaletteAuthorSize];
 	unsigned int     numOfEntries;
-	palette_entry_t* entries;
-} palette_t;
+	palette_entry_t*  Colors;
+} Palette_T;
 
 typedef struct {
-	unsigned int  numOfEntries;
-	palette_t**    entries;
-} palette_arr_t;
+	unsigned int   numOfEntries;
+	Palette_T**    Palettes;
+} PaletteArr_T;
 
-int FreePalette(palette_t* palette);
-int FreePaletteArr(palette_arr_t* pArr);
-palette_t* LoadCsvPalette(const char* csvText);
-palette_arr_t* PalletteLoadAll();
+int FreePalette(Palette_T* palette);
+int FreePaletteArr(PaletteArr_T* pArr);
+Palette_T* LoadCsvPalette(const char* csvText);
+PaletteArr_T* PaletteLoadAll();
 
 #ifdef __cplusplus
 }

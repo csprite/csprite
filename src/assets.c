@@ -1,22 +1,18 @@
 #include "assets.h"
-#include "palette.h"
+#include "utils.h"
 #include <stdio.h>
 
 typedef struct {
-	const char      *path;
+	const char*     path;
 	int             size;
-	const void      *data __attribute__((aligned(4)));
+	const void*     data __attribute__((aligned(4)));
 } asset_t;
 
 static asset_t ASSETS[]; // Defined in assets.inl
 
-bool str_startswith(const char *prefix, const char *str) {
-	return strncmp(prefix, str, strlen(prefix)) == 0;
-}
-
-const void* assets_get(const char *filePath, int *size) {
+const void* Assets_Get(const char *filePath, int *size) {
 	int i;
-	if (str_startswith("asset://", filePath) == true) filePath += 8; // Skip asset://
+	if (StringStartsWith("asset://", filePath) == true) filePath += 8; // Skip asset://
 	for (i = 0; ASSETS[i].path; i++) {
 		if (strcmp(ASSETS[i].path, filePath) == 0) {
 			if (size) *size = ASSETS[i].size;
@@ -26,10 +22,10 @@ const void* assets_get(const char *filePath, int *size) {
 	return NULL;
 }
 
-int assets_list(const char* directoryPath, int (*callback)(int i, const char *path)) {
+int Assets_List(const char* directoryPath, int (*callback)(int i, const char *path)) {
 	int i, j = 0;
 	for (i = 0; ASSETS[i].path; i++) {
-		if (str_startswith(directoryPath, ASSETS[i].path)) {
+		if (StringStartsWith(directoryPath, ASSETS[i].path)) {
 			if (callback != NULL) {
 				if (callback(j, ASSETS[i].path) == 0)
 					j++;
@@ -40,10 +36,10 @@ int assets_list(const char* directoryPath, int (*callback)(int i, const char *pa
 }
 
 static asset_t ASSETS[] = {
+	#include "assets/palettes.inl"
+	#include "assets/shaders.inl"
+	#include "assets/themes.inl"
 	#include "assets/fonts.inl"
 	#include "assets/icons.inl"
-	#include "assets/palettes.inl"
-	#include "assets/cursors.inl"
-	#include "assets/themes.inl"
-{}, // NULL asset at the end of the list.
+	{ NULL, 0, NULL } // NULL asset at the end of the list.
 };
