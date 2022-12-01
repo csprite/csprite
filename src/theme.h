@@ -1,5 +1,4 @@
-#ifndef THEME_H
-#define THEME_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -7,8 +6,12 @@ extern "C" {
 
 typedef unsigned int Uint32;
 
+#define THEME_NAME_SIZE_MAX 512
+#define THEME_AUTHOR_SIZE_MAX 512 + 17 // The Extra 17 Are For "Awesome Theme By ", so the actual name starts after 17 Characters
+
 typedef struct {
-	char name[512];
+	char name[THEME_NAME_SIZE_MAX];
+	char author[THEME_AUTHOR_SIZE_MAX];
 	Uint32 PopupBG;
 	Uint32 WindowBG;
 	Uint32 Header;
@@ -43,5 +46,3 @@ theme_arr_t* ThemeLoadAll();
 #ifdef __cplusplus
 }
 #endif
-
-#endif // THEME_H

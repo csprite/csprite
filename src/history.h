@@ -1,21 +1,21 @@
-#ifndef HISTORY_H
-#define HISTORY_H
+#pragma once
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef enum {
-	CANVAS_DATA_CHANGE
-} command_t;
-
-typedef unsigned int Uint32;
+typedef unsigned char uchar_t;
 
 typedef struct history {
-	Uint32* pixels;
-	struct history* next;
-	struct history* prev;
-} history_t;
+	uchar_t*         pixels;
+	struct history*  next;
+	struct history*  prev;
+} History_T;
 
 /*
 	Function: FreeHistory
@@ -24,7 +24,7 @@ typedef struct history {
 		- It's safe to pass NULL as argument
 		- It's not recommended to pass NULL or invalid pointers
 */
-void FreeHistory(history_t** CurrentState);
+void FreeHistory(History_T** CurrentState);
 
 /*
 	Function: SaveHistory
@@ -32,25 +32,23 @@ void FreeHistory(history_t** CurrentState);
 	Remarks:
 		- It's safe to pass the un-initialized buffer, it allocated the memory for it
 */
-void SaveHistory(history_t** CurrentState, Uint32 dataSizeBytes, Uint32* data);
+void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, uchar_t* data);
 
-// HISTORY_UNDO(history_t* state, unsigned int size, Uint32* data)
+// HISTORY_UNDO(History_T* state, unsigned int size, uchar_t* data)
 #define HISTORY_UNDO(state, size, data)         \
 	if (state->prev != NULL) {                  \
 		state = state->prev;                    \
 		memcpy(data, state->pixels, size);      \
 	}
 
-// HISTORY_REDO(history_t* state, unsigned int size, Uint32* data)
+// HISTORY_REDO(History_T* state, unsigned int size, uchar_t* data)
 #define HISTORY_REDO(state, size, data)        \
 	if (state->next != NULL) {                 \
 		state = state->next;                   \
 		memcpy(data, state->pixels, size);     \
 	}
 
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif // HISTORY_H
