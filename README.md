@@ -22,9 +22,8 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 - Any PC (You Can Make Use Of Your Graphics Card For Rendering, Just Make sure you have OpenGL 3.0+/Vulkan/Metal).
 
 ### Todo
-- [ ] ReFactor Code
-- [ ] Re-Implement Undo/Redo System
-- [ ] Add Layers Support
+- [x] ReFactor Code
+- [x] Add Layers Support
 - [ ] "Custom" File Format
 - [ ] New Icon
 - [x] Undo Redo
