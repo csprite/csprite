@@ -67,7 +67,7 @@ uint32_t SelectedLayerIndex = 0;
 CanvasLayer_T* CanvasLayers[MAX_CANVAS_LAYERS] = { NULL };
 #define CURR_CANVAS_LAYER CanvasLayers[SelectedLayerIndex]
 
-enum tool_e { BRUSH_COLOR, BRUSH_ERASER, SHAPE_LINE, SHAPE_RECT, SHAPE_CIRCLE, TOOL_FLOODFILL, TOOL_PAN };
+enum tool_e { BRUSH_COLOR, BRUSH_ERASER, SHAPE_LINE, SHAPE_RECT, SHAPE_CIRCLE, TOOL_INKDROPPER, TOOL_FLOODFILL, TOOL_PAN };
 enum tool_shape_e { CIRCLE, SQUARE };
 enum tool_e Tool = BRUSH_COLOR;
 enum tool_e LastTool = BRUSH_COLOR;
@@ -333,6 +333,8 @@ int main(int argc, char** argv) {
 		case TOOL_FLOODFILL:
 		case TOOL_PAN:
 			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s", Tool == TOOL_FLOODFILL ? "Flood Fill" : "Panning");
+		case TOOL_INKDROPPER:
+			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "Ink Dropper");
 			break;
 		}
 
@@ -428,6 +430,7 @@ int main(int argc, char** argv) {
 			ImGui::EndMainMenuBar();
 		}
 
+		ImVec2 PalWinSize;
 		if (ImGui::Begin("Palettes", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
 			ImGui::SetWindowPos({ 3.0f, 30.0f });
 			for (unsigned int i = 0; i < GetSelectedPalette()->numOfEntries; i++) {
@@ -445,12 +448,29 @@ int main(int argc, char** argv) {
 					SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
 				}
 
-				ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), PaletteColorIndex == i ? 0xFFFFFFFF : 0x000000FF, 0, 0, 1);
+				ImGui::GetWindowDrawList()->AddRect(
+					ImGui::GetItemRectMin(),
+					ImGui::GetItemRectMax(),
+					(PaletteColorIndex == i && COLOR_EQUAL(SelectedColor, GetSelectedPalette()->Colors[i])) ? 0xFFFFFFFF : 0x000000FF,
+					0, 0, 1
+				);
 			};
+
 			ImGui::SetWindowSize({0.0f, 0.0f}); // This Will Make the window adjust size according to children
+			PalWinSize = ImGui::GetWindowSize();
 			ImGui::End();
 		}
 
+/*		if (ImGui::Begin("###ColorPickerWindow", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
+			ImGui::SetWindowPos({ 3.0f, PalWinSize.y + 30.0f });
+			ImGui::SetWindowSize({ 200, 200 });
+			static float ImColPicker[4] = { (float)(SelectedColor[0]) / 255, (float)(SelectedColor[1]) / 255, (float)(SelectedColor[2]) / 255, (float)(SelectedColor[3]) / 255 };
+			ImGui::Ext_ColorPicker4(
+				(float*)&ImColPicker
+			);
+			ImGui::End();
+		}
+*/
 		if (ImGui::Begin(
 			"Debug Window", NULL,
 			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize
@@ -798,6 +818,33 @@ void MutateCanvas(bool LmbJustReleased) {
 				}
 				break;
 			}
+			case TOOL_INKDROPPER: {
+				if (LmbJustReleased) {
+					uchar_t* pixel = GetPixel(MousePosRel[0], MousePosRel[1]);
+					if (pixel != NULL && *(pixel + 3) != 0) {
+						bool foundEntry = false;
+						for (unsigned int i = 0; i < GetSelectedPalette()->numOfEntries; i++) {
+							if (COLOR_EQUAL(GetSelectedPalette()->Colors[i], pixel)) {
+								PaletteColorIndex = i;
+								SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
+								SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
+								SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
+								SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
+								foundEntry = true;
+								break;
+							}
+						}
+						if (!foundEntry) {
+							SelectedColor[0] = *(pixel + 0);
+							SelectedColor[1] = *(pixel + 1);
+							SelectedColor[2] = *(pixel + 2);
+							SelectedColor[3] = *(pixel + 3);
+						}
+						Tool = LastTool;
+					}
+				}
+				break;
+			}
 		}
 	}
 }
@@ -872,6 +919,12 @@ static inline void OnEvent_KeyDown(SDL_Event* e) {
 		case SDLK_y:
 			if (IsCtrlDown && CURR_CANVAS_LAYER != NULL) {
 				REDO();
+			}
+			break;
+		case SDLK_i:
+			if (Tool != TOOL_INKDROPPER) {
+				LastTool = Tool;
+				Tool = TOOL_INKDROPPER;
 			}
 			break;
 	}
