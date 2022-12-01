@@ -1,3 +1,5 @@
+#include "system.h"
+
 #include <dirent.h>
 #include <string.h>
 #include <sys/types.h>
@@ -5,34 +7,97 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "log/log.h"
-#include "system.h"
-#include "cconfig.h"
-
-#ifndef PATH_MAX
-#define PATH_MAX 1024
-#endif
-
-#if defined(__unix__) && !defined(ANDROID)
+#if defined(__unix__) || defined(__linux__)
+	#include <unistd.h>
 	#include <pwd.h>
 #endif
 
-#include <stdio.h>
+// On Windows Mkdir Only Takes Path So We Don't Pass Path
+#if defined(_WIN32) || defined(WIN32)
+	#define _mkdir_custom(path, perms) mkdir(path)
+#else
+	#define _mkdir_custom(path, perms) mkdir(path, perms)
+#endif
 
 /*
 	Returns File Size Using A FILE*
 */
-long int fsize(FILE* fp) {
+size_t Sys_GetFileSize(FILE* fp) {
+	if (fp == NULL) return 0;
+	size_t CurrPos = ftell(fp);
 	fseek(fp, 0, SEEK_END);
-	long int size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
+	size_t size = ftell(fp);
+	fseek(fp, CurrPos, SEEK_SET); // Seek To Previous Position
 	return size;
 }
 
-/*
-	Lists Contents Of A Directory
-*/
-int SysListDir(const char *dirpath, int (*callback)(const char *dirpath, const char *name, void* data), void* data) {
+char* Sys_GetConfigDir(void) {
+	static char fullPath[SYS_PATH_MAX_SIZE] = "";
+
+#if defined(__unix__) || defined(__linux__)
+	const char* configHome = NULL;
+	configHome = getenv("XDG_CONFIG_HOME");
+	if (!configHome) {
+		configHome = getenv("HOME");
+		if (!configHome) {
+			configHome = getpwuid(getuid())->pw_dir;
+			if (!configHome) return NULL;
+		}
+		snprintf(fullPath, SYS_PATH_MAX_SIZE, "%s/.config", configHome);
+	} else {
+		snprintf(fullPath, SYS_PATH_MAX_SIZE, "%s", configHome);
+	}
+#elif defined(_WIN32) || defined(WIN32)
+	const char* appdata = getenv("APPDATA");
+	strncpy(fullPath, appdata, SYS_PATH_MAX_SIZE);
+#elif defined(__APPLE__) || defined(__MACH__)
+	const char* home = getenv("HOME");
+	snprintf(fullPath, SYS_PATH_MAX_SIZE, "%s/Library/Application Support", home);
+#endif
+
+	return fullPath;
+}
+
+void Sys_MakeDirRecursive(const char* dir) {
+	char tmp[SYS_PATH_MAX_SIZE];
+	char* p = NULL;
+	size_t len;
+
+	snprintf(tmp, sizeof(tmp), "%s", dir);
+	len = strlen(tmp);
+
+	if (tmp[len - 1] == SYS_PATH_SEP) tmp[len - 1] = 0;
+	for (p = tmp + 1; *p; p++) {
+		if (*p == SYS_PATH_SEP) {
+			*p = 0;
+			_mkdir_custom(tmp, S_IRWXU);
+			*p = SYS_PATH_SEP;
+		}
+	}
+
+	_mkdir_custom(tmp, S_IRWXU);
+}
+
+char* Sys_GetBasename(const char* path) {
+	if (path == NULL) return NULL;
+
+	int pathLen = strlen(path);
+	int lastSepIndex = 0;
+
+	for (int i = 0; i < pathLen; ++i) {
+		if (path[i] == '\\' || path[i] == '/') lastSepIndex = i;
+	}
+	lastSepIndex++;
+
+	int fnameLen = pathLen - lastSepIndex;
+	char* fileName = malloc((fnameLen + 1) * sizeof(char));
+	memset(fileName, '\0', fnameLen + 1);
+	strncpy(fileName, path + lastSepIndex, pathLen - lastSepIndex);
+
+	return fileName;
+}
+
+int Sys_ListDirContents(const char* dirpath, int (*callback)(const char *dirpath, const char *name, void* data), void* data) {
 	int i = 0;
 	DIR *dir;
 	struct dirent *dirent;
@@ -48,97 +113,4 @@ int SysListDir(const char *dirpath, int (*callback)(const char *dirpath, const c
 	}
 	closedir(dir);
 	return i;
-}
-
-// On Windows Mkdir Only Takes Path So We Don't Pass Path
-#if defined(_WIN32) || defined(WIN32)
-	#define _mkdir_custom(path, perms) mkdir(path)
-#else
-	#define _mkdir_custom(path, perms) mkdir(path, perms)
-#endif
-
-/*
-	Recursively Creates Directories
-*/
-int SysMakeDir(const char *dir) {
-	char tmp[PATH_MAX];
-	char *p = NULL;
-	size_t len;
-
-	snprintf(tmp, sizeof(tmp), "%s", dir);
-	len = strlen(tmp);
-
-	if (tmp[len - 1] == SYS_PATH_SEP)
-		tmp[len - 1] = 0;
-	for (p = tmp + 1; *p; p++)
-		if (*p == SYS_PATH_SEP) {
-			*p = 0;
-			_mkdir_custom(tmp, S_IRWXU);
-			*p = SYS_PATH_SEP;
-		}
-	_mkdir_custom(tmp, S_IRWXU);
-	return 0;
-}
-
-/*
-	Returns Palette Directory: $CSPRITE_CONFIG/palettes
-*/
-char* SysGetPaletteDir() {
-	char* configdir = CCGetConfigDir();
-	static char configPath[CC_PATH_SIZE_MAX + 128] = "";
-
-	if (!*configPath) {
-		if (configdir == NULL) {
-			log_error("cannot get the config directory!");
-			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "palettes");
-			SysMakeDir(configPath);
-		} else {
-			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "%s%ccsprite%cpalettes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
-			SysMakeDir(configPath);
-		}
-	}
-
-	return configPath;
-}
-
-/*
-	Returns Theme Directory: $CSPRITE_CONFIG/themes
-*/
-char* SysGetThemesDir() {
-	char* configdir = CCGetConfigDir();
-	static char configPath[CC_PATH_SIZE_MAX + 128] = "";
-
-	if (!*configPath) {
-		if (configdir == NULL) {
-			log_error("cannot get the themes directory!");
-			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "themes");
-			SysMakeDir(configPath);
-		} else {
-			snprintf(configPath, CC_PATH_SIZE_MAX + 128, "%s%ccsprite%cthemes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
-			SysMakeDir(configPath);
-		}
-	}
-
-	return configPath;
-}
-
-char* SysFnameFromPath(const char* path) {
-	if (path == NULL) return NULL;
-
-	int pathLen = strlen(path);
-	int lastSepIndex = 0;
-
-	for (int i = 0; i < pathLen; ++i) {
-		if (path[i] == '\\' || path[i] == '/') {
-			lastSepIndex = i;
-		}
-	}
-	lastSepIndex++;
-
-	int fnameLen = pathLen - lastSepIndex;
-	char* fileName = malloc((fnameLen + 1) * sizeof(char));
-	memset(fileName, '\0', fnameLen + 1);
-	strncpy(fileName, path + lastSepIndex, pathLen - lastSepIndex);
-
-	return fileName;
 }

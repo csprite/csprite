@@ -1,6 +1,16 @@
 #include "logger.h"
 #include "log/log.h"
 
+Logger Logger::s_Instance;
+
+Logger& Logger::Log() {
+	return s_Instance;
+}
+
+Logger& GetLogger() {
+	return Logger::Log();
+}
+
 Logger::Logger() {
 	AutoScroll = true;
 	Clear();
@@ -12,6 +22,20 @@ void Logger::Clear() {
 	Buf.clear();
 	LineOffsets.clear();
 	LineOffsets.push_back(0);
+}
+
+// For C-API Of The Logger
+void Logger::AddLog(int level, const char* file, int line, const char* fmt, va_list args) {
+	int old_size = Buf.size();
+
+	Buf.appendf("%-5s %s:%d: ", log_level_string(level), file, line);
+	Buf.appendfv(fmt, args);
+	Buf.append("\n");
+
+	for (int new_size = Buf.size(); old_size < new_size; old_size++) {
+		if (Buf[old_size] == '\n')
+			LineOffsets.push_back(old_size + 1);
+	}
 }
 
 void Logger::AddLog(int level, const char* file, int line, const char* fmt, ...) {
@@ -38,13 +62,21 @@ void Logger::Hide() {
 	Visible = false;
 }
 
+bool Logger::IsHidden() {
+	return !Visible;
+}
+
 void Logger::Draw(const char* title) {
 	if (!Visible) return;
 
-	if (!ImGui::Begin(title, NULL)) {
+	if (!ImGui::Begin(title, NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
 		ImGui::End();
 		return;
 	}
+
+	ImVec2 WinSize = { 450, 300 };
+	ImGui::SetWindowPos({ ImGui::GetIO().DisplaySize.x - WinSize.x - 5, 30 }, ImGuiCond_FirstUseEver);
+	ImGui::SetWindowSize(WinSize, ImGuiCond_FirstUseEver);
 
 	// Options menu
 	if (ImGui::BeginPopup("Options")) {
@@ -102,4 +134,11 @@ void Logger::Draw(const char* title) {
 
 	ImGui::EndChild();
 	ImGui::End();
+}
+
+extern "C" void Logger_AddLog(int level, const char* file, int line, const char* fmt, ...) {
+	va_list args;
+	va_start(args, fmt);
+	GetLogger().AddLog(level, file, line, fmt, args);
+	va_end(args);
 }
