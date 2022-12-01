@@ -47,22 +47,24 @@ Using CSprite isn't rocket science and infact you can learn how to use it in 5 m
 **NOTE**: the shortcuts below work with the latest stable release of csprite, and may or may not work with older or latest unreleased build of csprite.
 
 ### Controls
-| Key                          | Description                  |
-|------------------------------|------------------------------|
-| B                            | Circle Brush                 |
-| Shift + B                    | Square Brush                 |
-| E                            | Circle Eraser                |
-| Shift + E                    | Square Eraser                |
-| F                            | Fill                         |
-| I                            | Ink Dropper                  |
-| S                            | Rectangle Select Tool        |
-| G                            | Selection Move Tool          |
-| Space + Mouse Move           | Pan                          |
-| Left Mouse                   | Draw/Erase/Fill/Ink Dropper  |
-| Ctrl + Plus / Scroll Up      | Zoom In                      |
-| Ctrl + Minus / Scroll Down   | Zoom Out                     |
-| Ctrl + Z                     | Undo                         |
-| Ctrl + Y                     | Redo                         |
+| Key                          | Description                                  |
+|------------------------------|----------------------------------------------|
+| B                            | Circle Brush                                 |
+| Shift + B                    | Square Brush                                 |
+| E                            | Circle Eraser                                |
+| Shift + E                    | Square Eraser                                |
+| F                            | Fill                                         |
+| I                            | Ink Dropper (To Be Re-Implemented)           |
+| S                            | Rectangle Select Tool (To Be Re-Implemented) |
+| G                            | Selection Move Tool (To Be Re-Implemented)   |
+| Space + Mouse Move           | Pan                                          |
+| Left Mouse                   | Draw/Erase/Fill/Ink Dropper                  |
+| Scroll Up                    | Brush Size Increase                          |
+| Scroll Down                  | Brush Size Decrease                          |
+| Ctrl + Scroll Up             | Zoom In                                      |
+| Ctrl + Scroll Down           | Zoom Out                                     |
+| Ctrl + Z                     | Undo                                         |
+| Ctrl + Y                     | Redo                                         |
 
 ---
 ### Credits
