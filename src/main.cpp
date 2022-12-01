@@ -316,7 +316,7 @@ int main(int argc, char** argv) {
 	bool ShowNewCanvasWindow = false;
 	while (!ShouldClose) {
 		ProcessEvents(window);
-		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
+		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
 
 		switch (Tool) {
 		case BRUSH_COLOR:
@@ -461,16 +461,26 @@ int main(int argc, char** argv) {
 			ImGui::End();
 		}
 
-/*		if (ImGui::Begin("###ColorPickerWindow", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
-			ImGui::SetWindowPos({ 3.0f, PalWinSize.y + 30.0f });
-			ImGui::SetWindowSize({ 200, 200 });
-			static float ImColPicker[4] = { (float)(SelectedColor[0]) / 255, (float)(SelectedColor[1]) / 255, (float)(SelectedColor[2]) / 255, (float)(SelectedColor[3]) / 255 };
-			ImGui::Ext_ColorPicker4(
-				(float*)&ImColPicker
+		if (ImGui::Begin("###ColorPickerWindow", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground)) {
+			ImGui::SetWindowPos({ 0, PalWinSize.y + 40.0f });
+			float ImColPicker[4] = { (float)(SelectedColor[0]) / 255, (float)(SelectedColor[1]) / 255, (float)(SelectedColor[2]) / 255, (float)(SelectedColor[3]) / 255 };
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
+			ImGui::ColorEdit4(
+				"##ColorPickerWidget", (float*)&ImColPicker,
+				ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel
 			);
+			ImGui::PopStyleVar();
+
+			SelectedColor[0] = ImColPicker[0] * 255;
+			SelectedColor[1] = ImColPicker[1] * 255;
+			SelectedColor[2] = ImColPicker[2] * 255;
+			SelectedColor[3] = ImColPicker[3] * 255;
+
+			ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), 0xFFFFFFFF, 0, 0, 1);
+			ImGui::SetWindowSize({ 0, 0 });
 			ImGui::End();
 		}
-*/
+
 		if (ImGui::Begin(
 			"Debug Window", NULL,
 			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize
