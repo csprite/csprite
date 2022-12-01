@@ -13,7 +13,7 @@ void Tools_SetBrushSize(int32_t NewBrushSize) {
 	BrushSize = NewBrushSize;
 }
 
-bool Tool_Brush(unsigned char* Pixels, unsigned char* Color, bool IsCircle, uint32_t st_x, uint32_t st_y, uint32_t w, uint32_t h) {
+bool Tool_Brush(uchar_t* Pixels, uchar_t* Color, bool IsCircle, uint32_t st_x, uint32_t st_y, uint32_t w, uint32_t h) {
 	bool didChange = false;
 	// dirY = direction Y
 	// dirX = direction X
@@ -27,7 +27,7 @@ bool Tool_Brush(unsigned char* Pixels, unsigned char* Color, bool IsCircle, uint
 			if (IsCircle == true && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
-			unsigned char* pixel = GetCharData(Pixels, st_x + dirX, st_y + dirY, w, h);
+			uchar_t* pixel = GetCharData(Pixels, st_x + dirX, st_y + dirY, w, h);
 			if (pixel != NULL) {
 				*(pixel + 0) = Color[0];
 				*(pixel + 1) = Color[1];
@@ -40,10 +40,86 @@ bool Tool_Brush(unsigned char* Pixels, unsigned char* Color, bool IsCircle, uint
 	return didChange;
 }
 
+bool Tool_Line(uchar_t* Pixels, uchar_t* Color, bool IsCircle, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
+	int dx =  abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	int err = dx + dy, e2; /* error value e_xy */
+	bool didChange = false;
+
+	for (;;) {
+		didChange = Tool_Brush(Pixels, Color, IsCircle, x0, y0, w, h) || didChange;
+		if (x0 == x1 && y0 == y1) break;
+		e2 = 2 * err;
+		if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
+		if (e2 <= dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
+	}
+	return didChange;
+}
+
+/*
+ In Simplest form a rectangle is made up of 4 lines,
+ this is how we make our rectangle using 2 x, y co-ords.
+ Since we're using the drawLine Function for making our,
+ rectangle we don't need to worry about round edges.
+ x0, y0           x1, y0
+   .------->--------.
+   |                |
+   |                |
+   ^                v
+   |                |
+   |                |
+   .-------<--------.
+ x0, y1           x1, y1
+*/
+
+bool Tool_Rect(uchar_t* Pixels, uchar_t* Color, bool IsCircle, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
+	bool didChange = false;
+	didChange = Tool_Line(Pixels, Color, IsCircle, x0, y0, x1, y0, w, h) || didChange;
+	didChange = Tool_Line(Pixels, Color, IsCircle, x1, y0, x1, y1, w, h) || didChange;
+	didChange = Tool_Line(Pixels, Color, IsCircle, x1, y1, x0, y1, w, h) || didChange;
+	didChange = Tool_Line(Pixels, Color, IsCircle, x0, y1, x0, y0, w, h) || didChange;
+	return didChange;
+}
+
+bool Tool_Circle(uchar_t* Pixels, uchar_t* Color, int centreX, int centreY, int radius, uint32_t w, uint32_t h) {
+	const int diameter = (radius * 2);
+
+	int32_t x = (radius - 1);
+	int32_t y = 0;
+	int32_t tx = 1;
+	int32_t ty = 1;
+	int32_t error = (tx - diameter);
+	bool didChange = false;
+
+	while (x >= y) {
+		// Each of the following renders an octant of the circle
+		didChange = Tool_Brush(Pixels, Color, true, centreX + x, centreY - y, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, true, centreX + x, centreY + y, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, true, centreX - x, centreY - y, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, true, centreX - x, centreY + y, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, true, centreX + y, centreY - x, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, true, centreX + y, centreY + x, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, true, centreX - y, centreY - x, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, true, centreX - y, centreY + x, w, h) || didChange;
+
+		if (error <= 0) {
+			++y;
+			error += ty;
+			ty += 2;
+		}
+		if (error > 0) {
+			--x;
+			tx += 2;
+			error += (tx - diameter);
+		}
+	}
+	return didChange;
+}
+
 bool Tool_FloodFill(
-	unsigned char* Pixels,
-	unsigned char* OldColor,
-	unsigned char* NewColor,
+	uchar_t* Pixels,
+	uchar_t* OldColor,
+	uchar_t* NewColor,
 	uint32_t x, uint32_t y,
 	uint32_t w, uint32_t h
 ) {
@@ -52,7 +128,7 @@ bool Tool_FloodFill(
 		x >= 0 && y >= 0 && x < w && y < h &&
 		Pixels != NULL && OldColor != NULL && NewColor != NULL
 	) {
-		unsigned char* pixel = GetCharData(Pixels, x, y, w, h);
+		uchar_t* pixel = GetCharData(Pixels, x, y, w, h);
 
 		if (pixel != NULL) {
 			if (COLOR_EQUAL(pixel, OldColor) == 1) {
