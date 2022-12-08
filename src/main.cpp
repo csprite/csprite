@@ -376,7 +376,7 @@ int main(int argc, char** argv) {
 							PaletteIndex = i;
 						}
 						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-							ImGui::SetTooltip(PaletteArr->Palettes[i]->author);
+							ImGui::SetTooltip("%s", PaletteArr->Palettes[i]->author);
 						}
 						if (_palidx == i) {
 							ImGui::SameLine();
@@ -394,7 +394,7 @@ int main(int argc, char** argv) {
 							_GuiSetColors(style);
 						}
 						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-							ImGui::SetTooltip(ThemeArr->entries[i]->author);
+							ImGui::SetTooltip("%s", ThemeArr->entries[i]->author);
 						}
 
 						if (_palidx == i) {
@@ -490,7 +490,7 @@ int main(int argc, char** argv) {
 		)) {
 			ImVec2 WinSize = ImGui::GetWindowSize();
 			ImGui::SetWindowPos({ 5, io.DisplaySize.y - WinSize.y - 10 });
-			ImGui::Text(SelectedToolText);
+			ImGui::Text("%s", SelectedToolText);
 #if(CS_BUILD_STABLE == 0)
 			ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			if (ImGui::Button("Clear Undo/Redo Buffers")) {
