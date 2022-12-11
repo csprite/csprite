@@ -73,6 +73,7 @@ enum tool_e Tool = BRUSH_COLOR;
 enum tool_e LastTool = BRUSH_COLOR;
 enum tool_shape_e ToolShape = CIRCLE;
 
+float PreviewWindowZoom = 1.0f;
 float CurrViewportZoom = 1.0f;
 float LastViewportZoom = CurrViewportZoom;
 
@@ -314,6 +315,7 @@ int main(int argc, char** argv) {
 	bool ShowPreferencesWindow = false;
 	bool ShowLayerRenameWindow = false;
 	bool ShowNewCanvasWindow = false;
+
 	while (!ShouldClose) {
 		ProcessEvents(window);
 		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
@@ -385,6 +387,7 @@ int main(int argc, char** argv) {
 					}
 					ImGui::EndMenu();
 				}
+
 				if (ImGui::BeginMenu("Theme")) {
 					for (unsigned int i = 0; i < ThemeArr->numOfEntries; ++i) {
 						unsigned int _palidx = ThemeIndex;
@@ -505,16 +508,35 @@ int main(int argc, char** argv) {
 			ImGui::End();
 		}
 
-		if (ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
-			ImVec2 WinSize = { (float)(CanvasDims[0] * 6), (float)(CanvasDims[1] * 7) };
+		static bool ResetPreviewWindowSize = true;
+		static bool ResetPreviewWindowPos = true;
+
+		if (ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoCollapse)) {
+			if (ImGui::BeginPopupContextItem()) {
+				if (ImGui::MenuItem("Reset Size")) {
+					ResetPreviewWindowSize = true;
+				}
+				if (ImGui::MenuItem("Reset Position")) {
+					ResetPreviewWindowPos = true;
+				}
+				ImGui::EndPopup();
+			}
+			static ImVec2 WinSize = { 192.0f, 168.0f };
 			// XX - Use "SetNextWindowPos" & "SetNextWindowSize" If The Window Is Movable Or Else The Children Won't Be Able To Move
-			ImGui::SetWindowPos({ io.DisplaySize.x - WinSize.x - 20, io.DisplaySize.y - WinSize.y - 20, }); // Move Window To Bottom Right With 20 pixel padding
-			ImGui::SetWindowSize(WinSize);
+			if (ResetPreviewWindowPos == true) {
+				ImGui::SetWindowPos({ io.DisplaySize.x - WinSize.x - 20, io.DisplaySize.y - WinSize.y - 20, }); // Move Window To Bottom Right With 20 pixel padding
+				ResetPreviewWindowPos = false;
+			}
+			if (ResetPreviewWindowSize == true) {
+				ImGui::SetWindowSize({ 192.0f, 168.0f });
+				ResetPreviewWindowSize = false;
+			}
 			ImGui::Image(
 				(ImTextureID)CanvasGetFBOTex(), // FBO Texture
 				{ WinSize.x - 15, CanvasDims[1] * (WinSize.x - 15) / CanvasDims[0] },
 				ImVec2(0,1), ImVec2(1,0) // UV
 			);
+			WinSize = ImGui::GetWindowSize();
 			ImGui::End();
 		}
 
