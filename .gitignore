@@ -21,13 +21,6 @@ xcuserdata/
 todo
 .vimrc
 .SRCINFO
-
-
-# These can be generated via tools/create_icons.py
-
 data/icons/
-
-# Icon For Windows
 data/icon.ico
-
-csprite-*.manifest
+*.manifest
