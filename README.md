@@ -24,7 +24,7 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 - [x] ReFactor Code
 - [x] Add Layers Support
 - [ ] "Custom" File Format
-- [ ] New Icon
+- [x] New Icon
 - [x] Undo Redo
 - [x] Ink Dropper Tool.
 - [x] Square/Circle in Brush/Eraser.
