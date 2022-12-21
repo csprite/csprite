@@ -32,6 +32,8 @@ size_t Sys_GetFileSize(FILE* fp); // Get File Size From A FILE*
 void Sys_MakeDirRecursive(const char* dir); // Create Directories Recursively
 char* Sys_GetBasename(const char* path); // Get Basename from a path
 int Sys_ListDirContents(const char* dirpath, int (*callback)(const char *dirpath, const char *name, void* data), void* data); // Data is a pointer that will be passed to the callback function
+int Sys_IsRegularFile(const char* filePath);
+int Sys_IsRegularDir(const char* dirPath);
 
 #ifdef __cplusplus
 }
