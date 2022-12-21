@@ -31,6 +31,26 @@ size_t Sys_GetFileSize(FILE* fp) {
 	return size;
 }
 
+// Checks if a file path is a normal readable file or not, returns 1 if regular, 0 if not, -1 on error (with errno set)
+int Sys_IsRegularFile(const char* filePath) {
+	struct stat st;
+
+	if (stat(filePath, &st) < 0)
+		return -1;
+
+	return S_ISREG(st.st_mode);
+}
+
+// Checks if a directory path is a normal openable path or not, returns 1 if regular, 0 if not, -1 on error (with errno set)
+int Sys_IsRegularDir(const char* dirPath) {
+	struct stat st;
+
+	if (stat(dirPath, &st) < 0)
+		return -1;
+
+	return S_ISDIR(st.st_mode);
+}
+
 char* Sys_GetConfigDir(void) {
 	static char fullPath[SYS_PATH_MAX_SIZE] = "";
 
