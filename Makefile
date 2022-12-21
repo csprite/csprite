@@ -13,6 +13,8 @@ CFLAGS:=
 CCFLAGS+=-Iinclude/ -Ilibs/imgui/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DCS_BUILD_STABLE=$(Stable) -DSDL_MAIN_HANDLED=1 -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 LFLAGS:=
 
+SDL2_STATIC_LINK:=1
+
 SRCS_C:=$(wildcard src/*.c) $(wildcard libs/ini/*.c) $(wildcard libs/log/*.c) $(wildcard libs/tfd/*.c)
 SRCS_CPP:=$(wildcard src/*.cpp) $(wildcard libs/imgui/*.cpp)
 OBJS_C:=$(SRCS_C:.c=.o)
@@ -27,8 +29,13 @@ else
 endif
 
 ifeq ($(OS),Windows_NT)
-	LFLAGS+=$(addprefix -l,SDL2main SDL2 opengl32 winmm imm32 ole32 oleaut32 shell32 version uuid setupapi)
-	LFLAGS+=-mwindows --static
+	ifeq ($(SDL2_STATIC_LINK),1)
+		LFLAGS+=-Wl,-Bstatic -lSDL2main -lSDL2 -Wl,-Bdynamic
+	else
+		LFLAGS+=-lSDL2main -lSDL2
+	endif
+	LFLAGS+=$(addprefix -l,opengl32 winmm imm32 ole32 oleaut32 shell32 version uuid setupapi)
+	LFLAGS+=-mwindows
 	SRCS_C+=windows.rc
 	OBJS_C+=windows.o
 	bin=csprite.exe
@@ -37,20 +44,10 @@ else
 	_libs:=m pthread
 
 	ifeq ($(UNAME_S),Linux)
-		LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lX11 -lXext
-
-		# Basically Check If This Library Is Available, If So Link With It, Mainly Because X11 & Xext work fine on latest distributions while Xi, Xfixes, Xrandr & Xcursor is required on older distros like ubuntu 18 which we'll be building on for 32 bit builds
-		ifneq ($(shell ldconfig -p | grep libXi),)
-			LFLAGS+=-lXi
-		endif
-		ifneq ($(shell ldconfig -p | grep libXfixes),)
-			LFLAGS+=-lXfixes
-		endif
-		ifneq ($(shell ldconfig -p | grep libXrandr),)
-			LFLAGS+=-lXrandr
-		endif
-		ifneq ($(shell ldconfig -p | grep libXcursor),)
-			LFLAGS+=-lXcursor
+		ifeq ($(SDL2_STATIC_LINK),1)
+			LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lX11 -lXext -lXi -lXfixes -lXrandr -lXcursor
+		else
+			LFLAGS+=-lSDL2
 		endif
 
 		_libs+=dl
