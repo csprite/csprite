@@ -27,7 +27,7 @@ else
 endif
 
 ifeq ($(OS),Windows_NT)
-	LFLAGS+=$(addprefix -l,SDL2main SDL2 mingw32 opengl32 comdlg32 imagehlp dinput8 dxguid dxerr8 user32 gdi32 winmm imm32 ole32 oleaut32 shell32 version uuid setupapi)
+	LFLAGS+=$(addprefix -l,SDL2main SDL2 opengl32 winmm imm32 ole32 oleaut32 shell32 version uuid setupapi)
 	LFLAGS+=-mwindows --static
 	SRCS_C+=windows.rc
 	OBJS_C+=windows.o
