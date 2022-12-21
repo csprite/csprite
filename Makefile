@@ -37,7 +37,22 @@ else
 	_libs:=m pthread
 
 	ifeq ($(UNAME_S),Linux)
-		LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lX11 -lXi -lXext -lXfixes -lXrandr -lXcursor
+		LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lX11 -lXext -lXi -lXfixes -lXrandr -lXcursor
+
+		# Basically Check If This Library Is Available, If So Link With It, Mainly Because X11 & Xext work fine on latest distributions while Xi, Xfixes, Xrandr & Xcursor is required on older distros like ubuntu 18 which we'll be building on for 32 bit builds
+		ifneq ($(shell ldconfig -p | grep libXi),)
+			LFLAGS+=:=-lXi
+		endif
+		ifneq ($(shell ldconfig -p | grep libXfixes),)
+			LFLAGS+=:=-lXfixes
+		endif
+		ifneq ($(shell ldconfig -p | grep libXrandr),)
+			LFLAGS+=:=-lXrandr
+		endif
+		ifneq ($(shell ldconfig -p | grep libXcursor),)
+			LFLAGS+=:=-lXcursor
+		endif
+
 		_libs+=dl
 		# On POSX Use Address Sanitizers in Debug Mode
 		ifeq ($(CC),gcc)
