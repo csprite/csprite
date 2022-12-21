@@ -59,8 +59,8 @@ bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
 bool CanvasLocked = false;  // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
 
-char FilePath[SYS_PATH_MAX_SIZE] = "";
-char FileName[SYS_PATH_MAX_SIZE] = "";
+char FilePath[SYS_PATH_MAX_SIZE] = "untitled.png";
+char FileName[SYS_PATH_MAX_SIZE] = "untitled.png";
 
 #define MAX_CANVAS_LAYERS 100
 uint32_t SelectedLayerIndex = 0;
@@ -233,9 +233,6 @@ int main(int argc, char* argv[]) {
 
 	Logger_Info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
 	Logger_Info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
-
-	snprintf(FilePath, SYS_PATH_MAX_SIZE, "untitled.png");
-	snprintf(FileName, SYS_PATH_MAX_SIZE, "untitled.png");
 
 	SDL_DisplayMode dm;
 	SDL_GetCurrentDisplayMode(0, &dm);
