@@ -37,6 +37,7 @@ else
 	_libs:=SDL2 m
 
 	ifeq ($(UNAME_S),Linux)
+		LFLAGS+=--static
 		_libs+=dl
 		# On POSX Use Address Sanitizers in Debug Mode
 		ifeq ($(CC),gcc)
