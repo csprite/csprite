@@ -34,10 +34,9 @@ ifeq ($(OS),Windows_NT)
 	bin=csprite.exe
 else
 	UNAME_S:=$(shell uname -s)
-	_libs:=SDL2 m
+	_libs:=m pthread
 
 	ifeq ($(UNAME_S),Linux)
-		LFLAGS+=--static
 		_libs+=dl
 		# On POSX Use Address Sanitizers in Debug Mode
 		ifeq ($(CC),gcc)
@@ -48,10 +47,13 @@ else
 		endif
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
+		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -lSDL2
 	endif
 
 	LFLAGS+=$(addprefix -l,$(_libs))
+	ifeq ($(UNAME_S),Linux)
+		LFLAGS+=--static -lSDL2
+	endif
 endif
 
 # make all Windres_Target=pe-x86-64(or pe-i386, Windres_Target is only needed on windows builds, this also requires make gen-rc)
