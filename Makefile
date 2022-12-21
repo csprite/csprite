@@ -37,7 +37,7 @@ else
 	_libs:=m pthread
 
 	ifeq ($(UNAME_S),Linux)
-		LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lXext -lX11
+		LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lX11 -lXi -lXext -lXfixes -lXrandr -lXcursor
 		_libs+=dl
 		# On POSX Use Address Sanitizers in Debug Mode
 		ifeq ($(CC),gcc)
