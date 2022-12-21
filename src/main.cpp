@@ -213,7 +213,7 @@ static void OpenNewFile(SDL_Window* window) {
 	}
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
 	FILE* LogFilePtr = fopen("csprite.log", "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
 
@@ -286,6 +286,47 @@ int main(int argc, char** argv) {
 
 	CURR_CANVAS_LAYER = CreateCanvasLayer();
 	if (CURR_CANVAS_LAYER == NULL) return EXIT_FAILURE;
+
+	if (argc > 1) {
+		int result = Sys_IsRegularFile(argv[1]);
+		if (result < 0) {
+			Logger_Error("Error Trying To Valid File Path: %s", strerror(errno));
+		} else if (result == 0) {
+			Logger_Error("Cannot Open The File in argv[1]");
+		} else {
+			int w = 0, h = 0, channels = 0;
+			uchar_t* _data = stbi_load(argv[1], &w, &h, &channels, 4);
+			if (w > 0 && h > 0) {
+				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+					if (CanvasLayers[i] != NULL) {
+						DestroyCanvasLayer(CanvasLayers[i]);
+						CanvasLayers[i] = NULL;
+					}
+				}
+				if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+					ResizeCanvas(w, h);
+					CanvasDims[0] = w;
+					CanvasDims[1] = h;
+					CurrViewportZoom = 1.0f;
+					UpdateViewportSize();
+					UpdateViewportPos();
+				}
+
+				SelectedLayerIndex = 0;
+				CURR_CANVAS_LAYER = CreateCanvasLayer();
+				memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
+				FreeHistory(&CURR_CANVAS_LAYER->history);
+				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+
+				snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", argv[1]);
+				char* filePathBasename = Sys_GetBasename(argv[1]);
+				snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
+				free(filePathBasename);
+				stbi_image_free(_data);
+				SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+			}
+		}
+	}
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
