@@ -60,7 +60,7 @@ jobs:
         sudo apt-get install libfuse2
 
     - name: Build
-      run: make all -j4 Stable=1
+      run: make all -j4 Stable=1 SDL2_STATIC_LINK=0
 
     - name: Strip
       run: strip ./csprite
