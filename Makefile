@@ -52,7 +52,7 @@ else
 
 	LFLAGS+=$(addprefix -l,$(_libs))
 	ifeq ($(UNAME_S),Linux)
-		LFLAGS+=--static -lSDL2
+		LFLAGS+=-lX11 --static -lSDL2
 	endif
 endif
 
