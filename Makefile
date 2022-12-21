@@ -37,6 +37,7 @@ else
 	_libs:=m pthread
 
 	ifeq ($(UNAME_S),Linux)
+		LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lX11
 		_libs+=dl
 		# On POSX Use Address Sanitizers in Debug Mode
 		ifeq ($(CC),gcc)
@@ -51,9 +52,6 @@ else
 	endif
 
 	LFLAGS+=$(addprefix -l,$(_libs))
-	ifeq ($(UNAME_S),Linux)
-		LFLAGS+=-lX11 --static -lSDL2
-	endif
 endif
 
 # make all Windres_Target=pe-x86-64(or pe-i386, Windres_Target is only needed on windows builds, this also requires make gen-rc)
