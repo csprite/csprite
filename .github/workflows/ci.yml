@@ -173,9 +173,21 @@ jobs:
           path: csprite.exe
           if-no-files-found: error
 
+      - name: Clean
+        run: make clean
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: src-assets
+          path: ./src/assets/
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: data
+          path: ./data/
+
       - name: Build (Archive)
         run: |
-          make clean
           make gen-rc Arch=x86_64
           make all -j4 Stable=1 SDL2_STATIC_LINK=0 Windres_Target=pe-x86-64 CC=clang CXX=clang++
           cp /mingw64/bin/SDL2.dll ./
@@ -232,9 +244,21 @@ jobs:
           path: csprite.exe
           if-no-files-found: error
 
+      - name: Clean
+        run: make clean
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: src-assets
+          path: ./src/assets/
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: data
+          path: ./data/
+
       - name: Build (Archive)
         run: |
-          make clean
           make gen-rc Arch=i686
           make all -j4 Stable=1 SDL2_STATIC_LINK=0 Windres_Target=pe-i386 CC=clang CXX=clang++
           cp /mingw32/bin/SDL2.dll ./
