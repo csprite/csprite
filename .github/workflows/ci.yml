@@ -161,7 +161,7 @@ jobs:
       - name: Build & Install SDL2
         run: bash ./tools/BuildNInstall_Windows.sh mingw64
 
-      - name: Build & Rename
+      - name: Build (Portable)
         run: |
           make gen-rc Arch=x86_64
           make all -j4 Stable=1 Windres_Target=pe-x86-64 CC=clang CXX=clang++
@@ -169,8 +169,25 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: win-x86_64
+          name: portable-win-x86_64
           path: csprite.exe
+          if-no-files-found: error
+
+      - name: Build (Archive)
+        run: |
+          make clean
+          make gen-rc Arch=x86_64
+          make all -j4 Stable=1 SDL2_STATIC_LINK=0 Windres_Target=pe-x86-64 CC=clang CXX=clang++
+          cp /mingw64/bin/SDL2.dll ./
+          cp /mingw64/bin/libstdc++-*.dll ./
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: archive-win-x86_64
+          path: |
+            csprite.exe
+            *.dll
           if-no-files-found: error
 
   windows-i686:
@@ -203,7 +220,7 @@ jobs:
       - name: Build & Install SDL2
         run: bash ./tools/BuildNInstall_Windows.sh mingw32
 
-      - name: Build & Rename
+      - name: Build (Portable)
         run: |
           make gen-rc Arch=i686
           make all -j4 Stable=1 Windres_Target=pe-i386 CC=clang CXX=clang++
@@ -211,8 +228,25 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: win-i686
+          name: portable-win-i686
           path: csprite.exe
+          if-no-files-found: error
+
+      - name: Build (Archive)
+        run: |
+          make clean
+          make gen-rc Arch=i686
+          make all -j4 Stable=1 SDL2_STATIC_LINK=0 Windres_Target=pe-i386 CC=clang CXX=clang++
+          cp /mingw32/bin/SDL2.dll ./
+          cp /mingw32/bin/libstdc++-*.dll ./
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: archive-win-i686
+          path: |
+            csprite.exe
+            *.dll
           if-no-files-found: error
 
   osx_x86_64:
