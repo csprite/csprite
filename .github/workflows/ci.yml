@@ -53,23 +53,18 @@ jobs:
     - name: Build & Install SDL2
       run: bash ./tools/BuildNInstall_Linux.sh
 
-    - name: Install LibFuse2
+    - name: Install LibFuse2 & AppImage-Builder
       run: |
         sudo apt-get update
-        sudo apt-get upgrade
         sudo apt-get install libfuse2
-
-    - name: Build
-      run: make all -j4 Stable=1 SDL2_STATIC_LINK=0
-
-    - name: Strip
-      run: strip ./csprite
-
-    - name: Install AppImage Builder
-      run: |
         wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.0.0-beta.1/appimage-builder-1.0.0-677acbd-x86_64.AppImage
         chmod +x appimage-builder-x86_64.AppImage
         sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
+
+    - name: Build & Strip (Static Linking=False;)
+      run: |
+        make all -j4 Stable=1 SDL2_STATIC_LINK=0
+        strip ./csprite
 
     - name: Build AppImage
       run: |
@@ -108,7 +103,7 @@ jobs:
         name: data
         path: ./data/
 
-    - name: Setup Ubuntu 18.04 x86
+    - name: Build (Setup Ubuntu 18.04 x86) (Build & Install SDL2) (Compiler = Clang;)
       uses: paulproteus/ubuntu-18.04-x86@0.1
       with:
         command: |
@@ -161,7 +156,7 @@ jobs:
       - name: Build & Install SDL2
         run: bash ./tools/BuildNInstall_Windows.sh mingw64
 
-      - name: Build (Portable)
+      - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
           make gen-rc Arch=x86_64
           make all -j4 Stable=1 Windres_Target=pe-x86-64 CC=clang CXX=clang++
@@ -169,37 +164,8 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: portable-win-x86_64
+          name: win-x86_64
           path: csprite.exe
-          if-no-files-found: error
-
-      - name: Clean
-        run: make clean
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: src-assets
-          path: ./src/assets/
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: data
-          path: ./data/
-
-      - name: Build (Archive)
-        run: |
-          make gen-rc Arch=x86_64
-          make all -j4 Stable=1 SDL2_STATIC_LINK=0 Windres_Target=pe-x86-64 CC=clang CXX=clang++
-          cp /mingw64/bin/SDL2.dll ./
-          cp /mingw64/bin/libstdc++-*.dll ./
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: archive-win-x86_64
-          path: |
-            csprite.exe
-            *.dll
           if-no-files-found: error
 
   windows-i686:
@@ -232,7 +198,7 @@ jobs:
       - name: Build & Install SDL2
         run: bash ./tools/BuildNInstall_Windows.sh mingw32
 
-      - name: Build (Portable)
+      - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
           make gen-rc Arch=i686
           make all -j4 Stable=1 Windres_Target=pe-i386 CC=clang CXX=clang++
@@ -240,37 +206,8 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: portable-win-i686
+          name: win-i686
           path: csprite.exe
-          if-no-files-found: error
-
-      - name: Clean
-        run: make clean
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: src-assets
-          path: ./src/assets/
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: data
-          path: ./data/
-
-      - name: Build (Archive)
-        run: |
-          make gen-rc Arch=i686
-          make all -j4 Stable=1 SDL2_STATIC_LINK=0 Windres_Target=pe-i386 CC=clang CXX=clang++
-          cp /mingw32/bin/SDL2.dll ./
-          cp /mingw32/bin/libstdc++-*.dll ./
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: archive-win-i686
-          path: |
-            csprite.exe
-            *.dll
           if-no-files-found: error
 
   osx_x86_64:
