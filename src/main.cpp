@@ -6,8 +6,11 @@
 #include <string.h>
 #include <limits.h>
 
+#include <chrono>
+
 #include <glad/glad.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_Thread.h>
 
 #include "pfd.h"
 #include "imgui.h"
@@ -58,6 +61,7 @@ bool ShouldSaveAs = false;
 bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
 bool CanvasLocked = false;  // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
+bool LockAllEvents = true;
 
 char FilePath[SYS_PATH_MAX_SIZE] = "untitled.png";
 char FileName[SYS_PATH_MAX_SIZE] = "untitled.png";
@@ -135,6 +139,9 @@ void UpdateViewportSize();
 void UpdateViewportPos();
 static inline bool CanMutateCanvas();
 void MutateCanvas(bool LmbJustReleased);
+uchar_t* GetPixel(int x, int y);
+static void InitWindowIcon(SDL_Window* window);
+static void OpenNewFile(SDL_Window* window);
 
 #define GetSelectedPalette() PaletteArr->Palettes[PaletteIndex]
 
@@ -144,116 +151,9 @@ void MutateCanvas(bool LmbJustReleased);
 #define REDO() \
 	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels)
 
-uchar_t* GetPixel(int x, int y) {
-	if (CURR_CANVAS_LAYER == NULL) return NULL;
-	return CURR_CANVAS_LAYER->pixels + ((y * CanvasDims[0] + x) * 4);
-}
-
-static void InitWindowIcon(SDL_Window* window) {
-	uchar_t* winIcon = (uchar_t*)Assets_Get("data/icons/icon-48.png", NULL);
-	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
-		winIcon,
-		48, 48, 32, 48 * 4,
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-	);
-	if (surface == NULL) {
-		Logger_Error("Failed to set window icon: %s", SDL_GetError());
-		return;
-	}
-	SDL_SetWindowIcon(window, surface);
-	SDL_FreeSurface(surface);
-}
-
-static void OpenNewFile(SDL_Window* window) {
-	auto selection = pfd::open_file(
-		"Select a file", ".",
-		{
-			"Image Files", "*.png *.jpg *.jpeg *.bmp",
-			"All Files", "*"
-		},
-		pfd::opt::none
-	).result();
-	const char* _fName = selection.empty() ? NULL : selection[0].c_str();
-
-	if (_fName != NULL) {
-		int w = 0, h = 0, channels = 0;
-		uchar_t* _data = stbi_load(_fName, &w, &h, &channels, 4);
-		if (w > 0 && h > 0) {
-			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-				if (CanvasLayers[i] != NULL) {
-					DestroyCanvasLayer(CanvasLayers[i]);
-					CanvasLayers[i] = NULL;
-				}
-			}
-			if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-				ResizeCanvas(w, h);
-				CanvasDims[0] = w;
-				CanvasDims[1] = h;
-				CurrViewportZoom = 1.0f;
-				UpdateViewportSize();
-				UpdateViewportPos();
-			}
-
-			SelectedLayerIndex = 0;
-			CURR_CANVAS_LAYER = CreateCanvasLayer();
-			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
-			FreeHistory(&CURR_CANVAS_LAYER->history);
-			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
-
-			snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fName);
-			char* filePathBasename = Sys_GetBasename(_fName);
-			snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
-			free(filePathBasename);
-			stbi_image_free(_data);
-			SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-		}
-	}
-}
-
-int main(int argc, char* argv[]) {
-	FILE* LogFilePtr = fopen("csprite.log", "w");
-	log_add_fp(LogFilePtr, LOG_TRACE);
-
-	AppConfig = LoadConfig();
-	PaletteArr = PaletteLoadAll();
-	ThemeArr = ThemeLoadAll();
-
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
-		Logger_Error("failed to initialize SDL2: %s", SDL_GetError());
-		return EXIT_FAILURE;
-	}
-
-	SDL_version compiled;
-	SDL_version linked;
-	SDL_VERSION(&compiled);
-	SDL_GetVersion(&linked);
-
-	Logger_Info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
-	Logger_Info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
-
-	SDL_DisplayMode dm;
-	SDL_GetCurrentDisplayMode(0, &dm);
-	WindowDims[0] = dm.w * 0.7;
-	WindowDims[1] = dm.h * 0.8;
-
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
-	SDL_Window* window = SDL_CreateWindow(
-		WINDOW_TITLE_CSTR,
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		WindowDims[0], WindowDims[1],
-		SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL
-	);
-
-	InitWindowIcon(window);
+int RendererThreadFunc(void* _window) {
+	if (_window == NULL) return -1;
+	SDL_Window* window = (SDL_Window*)_window;
 
 	SDL_GLContext glContext;
 	glContext = SDL_GL_CreateContext(window);
@@ -284,46 +184,47 @@ int main(int argc, char* argv[]) {
 	CURR_CANVAS_LAYER = CreateCanvasLayer();
 	if (CURR_CANVAS_LAYER == NULL) return EXIT_FAILURE;
 
-	if (argc > 1) {
-		int result = Sys_IsRegularFile(argv[1]);
-		if (result < 0) {
-			Logger_Error("Error Trying To Valid File Path: %s", strerror(errno));
-		} else if (result == 0) {
-			Logger_Error("Cannot Open The File in argv[1]");
-		} else {
-			int w = 0, h = 0, channels = 0;
-			uchar_t* _data = stbi_load(argv[1], &w, &h, &channels, 4);
-			if (w > 0 && h > 0) {
-				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-					if (CanvasLayers[i] != NULL) {
-						DestroyCanvasLayer(CanvasLayers[i]);
-						CanvasLayers[i] = NULL;
-					}
-				}
-				if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-					ResizeCanvas(w, h);
-					CanvasDims[0] = w;
-					CanvasDims[1] = h;
-					CurrViewportZoom = 1.0f;
-					UpdateViewportSize();
-					UpdateViewportPos();
-				}
+	// if (_filePath != NULL) {
+	// 	const char* filePath = (const char*)_filePath;
+	// 	int result = Sys_IsRegularFile(filePath);
+	// 	if (result < 0) {
+	// 		Logger_Error("Error Trying To Valid File Path: %s", strerror(errno));
+	// 	} else if (result == 0) {
+	// 		Logger_Error("Cannot Open The File in filePath");
+	// 	} else {
+	// 		int w = 0, h = 0, channels = 0;
+	// 		uchar_t* _data = stbi_load(filePath, &w, &h, &channels, 4);
+	// 		if (w > 0 && h > 0) {
+	// 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+	// 				if (CanvasLayers[i] != NULL) {
+	// 					DestroyCanvasLayer(CanvasLayers[i]);
+	// 					CanvasLayers[i] = NULL;
+	// 				}
+	// 			}
+	// 			if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+	// 				ResizeCanvas(w, h);
+	// 				CanvasDims[0] = w;
+	// 				CanvasDims[1] = h;
+	// 				CurrViewportZoom = 1.0f;
+	// 				UpdateViewportSize();
+	// 				UpdateViewportPos();
+	// 			}
 
-				SelectedLayerIndex = 0;
-				CURR_CANVAS_LAYER = CreateCanvasLayer();
-				memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
-				FreeHistory(&CURR_CANVAS_LAYER->history);
-				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+	// 			SelectedLayerIndex = 0;
+	// 			CURR_CANVAS_LAYER = CreateCanvasLayer();
+	// 			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
+	// 			FreeHistory(&CURR_CANVAS_LAYER->history);
+	// 			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
 
-				snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", argv[1]);
-				char* filePathBasename = Sys_GetBasename(argv[1]);
-				snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
-				free(filePathBasename);
-				stbi_image_free(_data);
-				SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-			}
-		}
-	}
+	// 			snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", filePath);
+	// 			char* filePathBasename = Sys_GetBasename(filePath);
+	// 			snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
+	// 			free(filePathBasename);
+	// 			stbi_image_free(_data);
+	// 			SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+	// 		}
+	// 	}
+	// }
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -342,9 +243,6 @@ int main(int argc, char* argv[]) {
 		if (defaultUiFont) io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 16.0f);
 	}
 
-	Logger_Hide();
-	SDL_ShowWindow(window);
-
 	SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
 	SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
 	SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
@@ -354,8 +252,14 @@ int main(int argc, char* argv[]) {
 	bool ShowLayerRenameWindow = false;
 	bool ShowNewCanvasWindow = false;
 
+	Logger_Hide();
+	LockAllEvents = false;
+
+	unsigned int frameStart, frameTime;
+	const unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
+
 	while (!ShouldClose) {
-		ProcessEvents(window);
+		frameStart = SDL_GetTicks();
 		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
 
 		switch (Tool) {
@@ -663,12 +567,23 @@ IncrementAndCreateLayer__:
 		if (ShowPreferencesWindow) {
 			if (ImGui::BeginPopupModal("Preferences###PreferencesWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
 				ImGui::Text("VSync (%s)", AppConfig->vsync ? "Enabled" : "Disabled");
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Vertical Sync - Synchronize App's FPS To Your Monitor's FPS");
 				ImGui::SameLine();
 				ImGui::Ext_ToggleButton("VSync_Toggle", &AppConfig->vsync);
+
+				ImGui::InputInt("FPS", &AppConfig->FramesUpdateRate, 1, 5, AppConfig->vsync == true ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Frames Per Second");
+
+				ImGui::InputInt("EPS", &AppConfig->EventsUpdateRate, 1, 5);
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Events Per Second");
+
+				AppConfig->EventsUpdateRate = AppConfig->EventsUpdateRate < 5 ? 5 : AppConfig->EventsUpdateRate;
+				AppConfig->FramesUpdateRate = AppConfig->FramesUpdateRate < 5 ? 5 : AppConfig->FramesUpdateRate;
 				if (ImGui::Button("Save")) {
 					WriteConfig(AppConfig);
 					ShowPreferencesWindow = false;
 				}
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("please restart the app after saving");
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
 					ShowPreferencesWindow = false;
@@ -762,6 +677,12 @@ IncrementAndCreateLayer__:
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		SDL_GL_SwapWindow(window); // Swap Front & Back Buffers
+
+		if (!AppConfig->vsync) {
+			frameTime = SDL_GetTicks() - frameStart;
+			if (frameDelay > frameTime) SDL_Delay(frameDelay - frameTime);
+			frameStart = SDL_GetTicks();
+		}
 	}
 
 	DeInitCanvas();
@@ -778,6 +699,69 @@ IncrementAndCreateLayer__:
 	ImGui::DestroyContext();
 
 	SDL_GL_DeleteContext(glContext);
+	return 0;
+}
+
+int main(int argc, char* argv[]) {
+	FILE* LogFilePtr = fopen("csprite.log", "w");
+	log_add_fp(LogFilePtr, LOG_TRACE);
+
+	AppConfig = LoadConfig();
+	PaletteArr = PaletteLoadAll();
+	ThemeArr = ThemeLoadAll();
+
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
+		Logger_Error("failed to initialize SDL2: %s", SDL_GetError());
+		return EXIT_FAILURE;
+	}
+
+	SDL_version compiled;
+	SDL_version linked;
+	SDL_VERSION(&compiled);
+	SDL_GetVersion(&linked);
+
+	Logger_Info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
+	Logger_Info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
+
+	SDL_DisplayMode dm;
+	SDL_GetCurrentDisplayMode(0, &dm);
+	WindowDims[0] = dm.w * 0.7;
+	WindowDims[1] = dm.h * 0.8;
+
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+	SDL_Window* window = SDL_CreateWindow(
+		WINDOW_TITLE_CSTR,
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		WindowDims[0], WindowDims[1],
+		SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL
+	);
+
+	InitWindowIcon(window);
+	SDL_ShowWindow(window);
+
+	SDL_Thread* _RenderThread = SDL_CreateThread(RendererThreadFunc, "Renderer Thread", window);
+
+	unsigned int frameStart, frameTime;
+	const unsigned int frameDelay = 1000 / AppConfig->EventsUpdateRate;
+	while (!ShouldClose) {
+		frameStart = SDL_GetTicks();
+
+		if (!LockAllEvents) {
+			ProcessEvents(window);
+		}
+
+		frameTime = SDL_GetTicks() - frameStart;
+		if (frameDelay > frameTime) SDL_Delay(frameDelay - frameTime);
+		frameStart = SDL_GetTicks();
+	}
+
+	SDL_WaitThread(_RenderThread, NULL);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 
@@ -1132,3 +1116,73 @@ void ZoomOpenGlViewport(int increase) {
 	ViewportPos[1] -= NewRectCenter[1] - CurrRectCenter[1];
 	UpdateViewportSize();
 }
+
+uchar_t* GetPixel(int x, int y) {
+	if (CURR_CANVAS_LAYER == NULL) return NULL;
+	return CURR_CANVAS_LAYER->pixels + ((y * CanvasDims[0] + x) * 4);
+}
+
+static void InitWindowIcon(SDL_Window* window) {
+	uchar_t* winIcon = (uchar_t*)Assets_Get("data/icons/icon-48.png", NULL);
+	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
+		winIcon,
+		48, 48, 32, 48 * 4,
+		0x000000ff,
+		0x0000ff00,
+		0x00ff0000,
+		0xff000000
+	);
+	if (surface == NULL) {
+		Logger_Error("Failed to set window icon: %s", SDL_GetError());
+		return;
+	}
+	SDL_SetWindowIcon(window, surface);
+	SDL_FreeSurface(surface);
+}
+
+static void OpenNewFile(SDL_Window* window) {
+	// auto selection = pfd::open_file(
+	// 	"Select a file", ".",
+	// 	{
+	// 		"Image Files", "*.png *.jpg *.jpeg *.bmp",
+	// 		"All Files", "*"
+	// 	},
+	// 	pfd::opt::none
+	// ).result();
+	// const char* _fName = selection.empty() ? NULL : selection[0].c_str();
+
+	// if (_fName != NULL) {
+	// 	int w = 0, h = 0, channels = 0;
+	// 	uchar_t* _data = stbi_load(_fName, &w, &h, &channels, 4);
+	// 	if (w > 0 && h > 0) {
+	// 		for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+	// 			if (CanvasLayers[i] != NULL) {
+	// 				DestroyCanvasLayer(CanvasLayers[i]);
+	// 				CanvasLayers[i] = NULL;
+	// 			}
+	// 		}
+	// 		if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+	// 			ResizeCanvas(w, h);
+	// 			CanvasDims[0] = w;
+	// 			CanvasDims[1] = h;
+	// 			CurrViewportZoom = 1.0f;
+	// 			UpdateViewportSize();
+	// 			UpdateViewportPos();
+	// 		}
+
+	// 		SelectedLayerIndex = 0;
+	// 		CURR_CANVAS_LAYER = CreateCanvasLayer();
+	// 		memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
+	// 		FreeHistory(&CURR_CANVAS_LAYER->history);
+	// 		SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+
+	// 		snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fName);
+	// 		char* filePathBasename = Sys_GetBasename(_fName);
+	// 		snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
+	// 		free(filePathBasename);
+	// 		stbi_image_free(_data);
+	// 		SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+	// 	}
+	// }
+}
+
