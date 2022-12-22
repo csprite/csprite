@@ -30,12 +30,16 @@ endif
 
 ifeq ($(OS),Windows_NT)
 	ifeq ($(SDL2_STATIC_LINK),1)
-		LFLAGS+=-Wl,-Bstatic -lSDL2main -lSDL2 -Wl,-Bdynamic
+		LFLAGS+=-static-libstdc++ -Wl,-Bstatic -lSDL2main -lSDL2 -Wl,-Bdynamic
 	else
 		LFLAGS+=-lSDL2main -lSDL2
 	endif
 	LFLAGS+=$(addprefix -l,opengl32 winmm imm32 ole32 oleaut32 shell32 version uuid setupapi)
-	LFLAGS+=-mwindows
+	ifeq ($(Stable),0)
+		LFLAGS+=-mconsole
+	else
+		LFLAGS+=-mwindows
+	endif
 	SRCS_C+=windows.rc
 	OBJS_C+=windows.o
 	bin=csprite.exe
