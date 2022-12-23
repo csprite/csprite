@@ -62,6 +62,7 @@ bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
 bool CanvasLocked = false;  // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
 bool LockAllEvents = true;
+bool UpdateWindowTitle = false;
 
 char FilePath[SYS_PATH_MAX_SIZE] = "untitled.png";
 char FileName[SYS_PATH_MAX_SIZE] = "untitled.png";
@@ -151,9 +152,25 @@ static void OpenNewFile(SDL_Window* window);
 #define REDO() \
 	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels)
 
-int RendererThreadFunc(void* _window) {
-	if (_window == NULL) return -1;
-	SDL_Window* window = (SDL_Window*)_window;
+struct sdl_thread_arg {
+	SDL_Window* win;
+	int argc;
+	char** argv;
+};
+
+/*
+	This Function Handles All The Rendering Stuff,
+	Changing Anything Of Window Like Title And Stuff
+	Should Be Done In THe Event Thread Where The Window Was Initialized.
+	void* args = struct sdl_thread_arg* args;
+*/
+int RendererThreadFunc(void* _args) {
+	if (_args == NULL) return -1;
+	struct sdl_thread_arg* args = (struct sdl_thread_arg*)_args;
+	int argc = args->argc;
+	char** argv = args->argv;
+	SDL_Window* window = args->win;
+	if (window == NULL) return -1;
 
 	SDL_GLContext glContext;
 	glContext = SDL_GL_CreateContext(window);
@@ -184,47 +201,47 @@ int RendererThreadFunc(void* _window) {
 	CURR_CANVAS_LAYER = CreateCanvasLayer();
 	if (CURR_CANVAS_LAYER == NULL) return EXIT_FAILURE;
 
-	// if (_filePath != NULL) {
-	// 	const char* filePath = (const char*)_filePath;
-	// 	int result = Sys_IsRegularFile(filePath);
-	// 	if (result < 0) {
-	// 		Logger_Error("Error Trying To Valid File Path: %s", strerror(errno));
-	// 	} else if (result == 0) {
-	// 		Logger_Error("Cannot Open The File in filePath");
-	// 	} else {
-	// 		int w = 0, h = 0, channels = 0;
-	// 		uchar_t* _data = stbi_load(filePath, &w, &h, &channels, 4);
-	// 		if (w > 0 && h > 0) {
-	// 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-	// 				if (CanvasLayers[i] != NULL) {
-	// 					DestroyCanvasLayer(CanvasLayers[i]);
-	// 					CanvasLayers[i] = NULL;
-	// 				}
-	// 			}
-	// 			if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-	// 				ResizeCanvas(w, h);
-	// 				CanvasDims[0] = w;
-	// 				CanvasDims[1] = h;
-	// 				CurrViewportZoom = 1.0f;
-	// 				UpdateViewportSize();
-	// 				UpdateViewportPos();
-	// 			}
+	if (argc > 1) {
+		const char* filePath = (const char*)argv[1];
+		int result = Sys_IsRegularFile(filePath);
+		if (result < 0) {
+			Logger_Error("Error Trying To Valid File Path: %s", strerror(errno));
+		} else if (result == 0) {
+			Logger_Error("Cannot Open The File in filePath");
+		} else {
+			int w = 0, h = 0, channels = 0;
+			uchar_t* _data = stbi_load(filePath, &w, &h, &channels, 4);
+			if (w > 0 && h > 0) {
+				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+					if (CanvasLayers[i] != NULL) {
+						DestroyCanvasLayer(CanvasLayers[i]);
+						CanvasLayers[i] = NULL;
+					}
+				}
+				if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+					ResizeCanvas(w, h);
+					CanvasDims[0] = w;
+					CanvasDims[1] = h;
+					CurrViewportZoom = 1.0f;
+					UpdateViewportSize();
+					UpdateViewportPos();
+				}
 
-	// 			SelectedLayerIndex = 0;
-	// 			CURR_CANVAS_LAYER = CreateCanvasLayer();
-	// 			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
-	// 			FreeHistory(&CURR_CANVAS_LAYER->history);
-	// 			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+				SelectedLayerIndex = 0;
+				CURR_CANVAS_LAYER = CreateCanvasLayer();
+				memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
+				FreeHistory(&CURR_CANVAS_LAYER->history);
+				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
 
-	// 			snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", filePath);
-	// 			char* filePathBasename = Sys_GetBasename(filePath);
-	// 			snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
-	// 			free(filePathBasename);
-	// 			stbi_image_free(_data);
-	// 			SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-	// 		}
-	// 	}
-	// }
+				snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", filePath);
+				char* filePathBasename = Sys_GetBasename(filePath);
+				snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
+				free(filePathBasename);
+				stbi_image_free(_data);
+				UpdateWindowTitle = true;
+			}
+		}
+	}
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -648,7 +665,7 @@ IncrementAndCreateLayer__:
 							char* _fName = Sys_GetBasename(_fPath);
 							snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", _fName);
 							free(_fName);
-							SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+							UpdateWindowTitle = true;
 						} else {
 							ShouldSaveAs = false;
 						}
@@ -745,7 +762,11 @@ int main(int argc, char* argv[]) {
 	InitWindowIcon(window);
 	SDL_ShowWindow(window);
 
-	SDL_Thread* _RenderThread = SDL_CreateThread(RendererThreadFunc, "Renderer Thread", window);
+	struct sdl_thread_arg* renderer_args = (struct sdl_thread_arg*)malloc(sizeof(struct sdl_thread_arg));
+	renderer_args->argc = argc;
+	renderer_args->argv = argv;
+	renderer_args->win = window;
+	SDL_Thread* _RenderThread = SDL_CreateThread(RendererThreadFunc, "Renderer Thread", renderer_args);
 
 	unsigned int frameStart, frameTime;
 	const unsigned int frameDelay = 1000 / AppConfig->EventsUpdateRate;
@@ -754,6 +775,10 @@ int main(int argc, char* argv[]) {
 
 		if (!LockAllEvents) {
 			ProcessEvents(window);
+			if (UpdateWindowTitle) {
+				SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+				UpdateWindowTitle = false;
+			}
 		}
 
 		frameTime = SDL_GetTicks() - frameStart;
@@ -768,6 +793,8 @@ int main(int argc, char* argv[]) {
 	FreePaletteArr(PaletteArr);
 	PaletteArr = NULL;
 
+	free(renderer_args);
+	renderer_args = NULL;
 	return EXIT_SUCCESS;
 }
 
@@ -1141,48 +1168,48 @@ static void InitWindowIcon(SDL_Window* window) {
 }
 
 static void OpenNewFile(SDL_Window* window) {
-	// auto selection = pfd::open_file(
-	// 	"Select a file", ".",
-	// 	{
-	// 		"Image Files", "*.png *.jpg *.jpeg *.bmp",
-	// 		"All Files", "*"
-	// 	},
-	// 	pfd::opt::none
-	// ).result();
-	// const char* _fName = selection.empty() ? NULL : selection[0].c_str();
+	auto selection = pfd::open_file(
+		"Select a file", ".",
+		{
+			"Image Files", "*.png *.jpg *.jpeg *.bmp",
+			"All Files", "*"
+		},
+		pfd::opt::none
+	).result();
+	const char* _fName = selection.empty() ? NULL : selection[0].c_str();
 
-	// if (_fName != NULL) {
-	// 	int w = 0, h = 0, channels = 0;
-	// 	uchar_t* _data = stbi_load(_fName, &w, &h, &channels, 4);
-	// 	if (w > 0 && h > 0) {
-	// 		for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-	// 			if (CanvasLayers[i] != NULL) {
-	// 				DestroyCanvasLayer(CanvasLayers[i]);
-	// 				CanvasLayers[i] = NULL;
-	// 			}
-	// 		}
-	// 		if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-	// 			ResizeCanvas(w, h);
-	// 			CanvasDims[0] = w;
-	// 			CanvasDims[1] = h;
-	// 			CurrViewportZoom = 1.0f;
-	// 			UpdateViewportSize();
-	// 			UpdateViewportPos();
-	// 		}
+	if (_fName != NULL) {
+		int w = 0, h = 0, channels = 0;
+		uchar_t* _data = stbi_load(_fName, &w, &h, &channels, 4);
+		if (w > 0 && h > 0) {
+			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+				if (CanvasLayers[i] != NULL) {
+					DestroyCanvasLayer(CanvasLayers[i]);
+					CanvasLayers[i] = NULL;
+				}
+			}
+			if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+				ResizeCanvas(w, h);
+				CanvasDims[0] = w;
+				CanvasDims[1] = h;
+				CurrViewportZoom = 1.0f;
+				UpdateViewportSize();
+				UpdateViewportPos();
+			}
 
-	// 		SelectedLayerIndex = 0;
-	// 		CURR_CANVAS_LAYER = CreateCanvasLayer();
-	// 		memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
-	// 		FreeHistory(&CURR_CANVAS_LAYER->history);
-	// 		SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+			SelectedLayerIndex = 0;
+			CURR_CANVAS_LAYER = CreateCanvasLayer();
+			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
+			FreeHistory(&CURR_CANVAS_LAYER->history);
+			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
 
-	// 		snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fName);
-	// 		char* filePathBasename = Sys_GetBasename(_fName);
-	// 		snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
-	// 		free(filePathBasename);
-	// 		stbi_image_free(_data);
-	// 		SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
-	// 	}
-	// }
+			snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fName);
+			char* filePathBasename = Sys_GetBasename(_fName);
+			snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
+			free(filePathBasename);
+			stbi_image_free(_data);
+			UpdateWindowTitle = true;
+		}
+	}
 }
 
