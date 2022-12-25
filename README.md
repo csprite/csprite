@@ -20,7 +20,7 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 - Any PC With OpenGL 3.3 Or Higher Support.
 
 ### Download
-- You can get csprite from https://csprite.github.io/downloads/
+- You can get csprite from [downloads page](https://csprite.github.io/downloads/) or you can build it from source from the instructions [here](https://csprite.github.io/wiki/latest-git/building-from-source.html).
 
 ---
 ### Todo
