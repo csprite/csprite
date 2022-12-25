@@ -42,7 +42,7 @@
 
 typedef unsigned char uchar_t;
 
-uint32_t WindowDims[2] = { 700, 500 };
+int32_t WindowDims[2] = { 700, 500 };
 uint32_t CanvasDims[2] = { 32, 24 };
 
 uint32_t MousePos[2] = { 0, 0 };
@@ -756,8 +756,10 @@ int main(int argc, char* argv[]) {
 		WINDOW_TITLE_CSTR,
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		WindowDims[0], WindowDims[1],
-		SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL
+		SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED
 	);
+	SDL_GetWindowSize(window, &WindowDims[0], &WindowDims[1]);
+	UpdateViewportPos();
 
 	InitWindowIcon(window);
 	SDL_ShowWindow(window);
