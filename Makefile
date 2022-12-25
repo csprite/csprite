@@ -86,20 +86,20 @@ all: $(bin)
 -include $(DEPENDS)
 
 %.o: %.rc
-	@windres.exe -O COFF -F $(WINDRES_TARGET) -i $< -o $@
 	@echo "WR  -" $<
+	@windres.exe -O COFF -F $(WINDRES_TARGET) -i $< -o $@
 
 %.o: %.c
-	@$(CC) --std=$(STD) $(CFLAGS) $(CCFLAGS) -c $< -o $@
 	@echo "CC  -" $<
+	@$(CC) --std=$(STD) $(CFLAGS) $(CCFLAGS) -c $< -o $@
 
 %.o: %.cpp
-	@$(CXX) --std=$(CXX_STD) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
 	@echo "CXX -" $<
+	@$(CXX) --std=$(CXX_STD) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
 
 $(bin): $(OBJS_C) $(OBJS_CPP)
-	@$(CXX) --std=$(CXX_STD) $(OBJS_C) $(OBJS_CPP) $(LFLAGS) -o $@
 	@echo Linking $@
+	@$(CXX) --std=$(CXX_STD) $(OBJS_C) $(OBJS_CPP) $(LFLAGS) -o $@
 
 .PHONY: run
 .PHONY: clean
