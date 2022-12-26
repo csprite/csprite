@@ -26,7 +26,7 @@ $(error Invalid Build Target: "$(BUILD_TARGET)")
 endif
 
 SRCS_C:=$(wildcard src/*.c) $(wildcard libs/ini/*.c) $(wildcard libs/log/*.c) $(wildcard libs/tfd/*.c)
-SRCS_CPP:=$(wildcard src/*.cpp) $(wildcard libs/imgui/*.cpp)
+SRCS_CPP:=$(wildcard src/*.cpp) $(wildcard libs/imgui/*.cpp) $(wildcard libs/imgooeystyles/*.cpp)
 OBJS_C:=$(SRCS_C:.c=.o)
 OBJS_CPP:=$(SRCS_CPP:.cpp=.o)
 DEPENDS:=$(patsubst %.c,%.d,$(SRCS_C)) $(patsubst %.cpp,%.d,$(SRCS_CPP))
