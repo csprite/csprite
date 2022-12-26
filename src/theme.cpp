@@ -8,24 +8,10 @@
 #include "system.h"
 #include "logger.h"
 #include "assets.h"
+#include "imgooeystyles/imgui_styles.h"
 
 static int OnSysDirList(const char *dir, const char *fname, void* data);
 static int OnAssetMgrList(int i, const char *fname);
-
-static Uint32 str2rgbaint(const char* str) {
-	if (str == NULL) {
-		printf("str in NULL!\n");
-		return 0xFF0000FF;
-	}
-
-	unsigned int r = 0, g = 0, b = 0, a = 0;
-	sscanf(str, "%02x%02x%02x%02x", &r, &g, &b, &a);
-	return RGBA2UINT32(r, g, b, a);
-}
-
-void _PrintColor_T(Uint32 col) {
-	printf("Color: %08x\n", col);
-}
 
 int FreeTheme(theme_t* theme) {
 	if (theme == NULL) return -1;
@@ -53,12 +39,12 @@ int FreeThemeArr(theme_arr_t* tArr) {
 	return 0;
 };
 
-theme_t* LoadTheme(const char* themeIni) {
+theme_t* LoadTheme(const char* themeIni, const char* fileName) {
 	if (themeIni == NULL) {
 		return NULL;
 	}
 
-	theme_t* t = malloc(sizeof(theme_t));
+	theme_t* t = (theme_t*)malloc(sizeof(theme_t));
 	ini_t *config = ini_load_txt(themeIni);
 
 	const char* name = ini_get(config, "theme", "name");
@@ -69,25 +55,7 @@ theme_t* LoadTheme(const char* themeIni) {
 	memset(t->author, 0, THEME_AUTHOR_SIZE_MAX);
 	snprintf(t->author, THEME_AUTHOR_SIZE_MAX, "Awesome Theme By %s", author == NULL ? "Unknown" : author);
 
-	t->PopupBG = str2rgbaint(ini_get(config, "theme", "PopupBG"));
-	t->WindowBG = str2rgbaint(ini_get(config, "theme", "WindowBG"));
-	t->Header = str2rgbaint(ini_get(config, "theme", "Header"));
-	t->Header_Hovered = str2rgbaint(ini_get(config, "theme", "Header_Hovered"));
-	t->Text = str2rgbaint(ini_get(config, "theme", "Text"));
-	t->Text_Disabled = str2rgbaint(ini_get(config, "theme", "Text_Disabled"));
-	t->Button = str2rgbaint(ini_get(config, "theme", "Button"));
-	t->Button_Hovered = str2rgbaint(ini_get(config, "theme", "Button_Hovered"));
-	t->Button_Active = str2rgbaint(ini_get(config, "theme", "Button_Active"));
-	t->FrameBG = str2rgbaint(ini_get(config, "theme", "FrameBG"));
-	t->FrameBG_Hovered = str2rgbaint(ini_get(config, "theme", "FrameBG_Hovered"));
-	t->TitlebarBG = str2rgbaint(ini_get(config, "theme", "TitlebarBG"));
-	t->TitlebarBG_Active = str2rgbaint(ini_get(config, "theme", "TitlebarBG_Active"));
-	t->Border = str2rgbaint(ini_get(config, "theme", "Border"));
-	t->MenuBarBG = str2rgbaint(ini_get(config, "theme", "MenuBarBG"));
-	t->Checkmark = str2rgbaint(ini_get(config, "theme", "Checkmark"));
-	t->ModalDimming = str2rgbaint(ini_get(config, "theme", "ModalDimming"));
-	t->TabBarBG = str2rgbaint(ini_get(config, "theme", "TabBarBG"));
-	t->TabBar_Border = str2rgbaint(ini_get(config, "theme", "TabBar_Border"));
+	ImGui::LoadStyleFrom(fileName, t->style);
 
 	ini_free(config);
 	config = NULL;
@@ -129,9 +97,10 @@ theme_arr_t* ThemeLoadAll() {
 		return NULL;
 	}
 
-	theme_arr_t* tArr = malloc(sizeof(theme_arr_t));
+	theme_arr_t* tArr = (theme_arr_t*)malloc(sizeof(theme_arr_t));
 	tArr->numOfEntries = numOfThemes;
-	tArr->entries = malloc(numOfThemes * sizeof(theme_t*));
+	tArr->entries = (theme_t**)malloc(numOfThemes * sizeof(theme_t*));
+	tArr->originalStyle = ImGui::GetStyle();
 
 	for (int i = 0; i < numOfThemes; ++i) {
 		tArr->entries[i] = NULL;
@@ -156,7 +125,7 @@ static int OnSysDirList(const char *dir, const char *fname, void* data) {
 			char* iniTxt = (char*) malloc((size + 1) * sizeof(char));
 			memset(iniTxt, '\0', size + 1);
 			fread(iniTxt, size + 1, 1, fp);
-			tArr->entries[i] = LoadTheme(iniTxt);
+			tArr->entries[i] = LoadTheme(iniTxt, fullPath);
 
 			free(iniTxt);
 			fclose(fp);
@@ -177,7 +146,7 @@ static int OnAssetMgrList(int i, const char *fname) {
 	free(fileName);
 	fileName = NULL;
 
-	data = Assets_Get(fname, NULL);
+	data = (const char*)Assets_Get(fname, NULL);
 	file = fopen(dir, "wb");
 	if (file) {
 		fprintf(file, "%s", data);
