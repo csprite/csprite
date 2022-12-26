@@ -250,6 +250,7 @@ int RendererThreadFunc(void* _args) {
 	io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
 	ImGui::StyleColorsDark();
+	ThemeArr = ThemeLoadAll();
 	ImGui_ImplSDL2_InitForOpenGL(window, glContext);
 	ImGui_ImplOpenGL3_Init("#version 330");
 	_GuiSetColors(style);
@@ -725,7 +726,6 @@ int main(int argc, char* argv[]) {
 
 	AppConfig = LoadConfig();
 	PaletteArr = PaletteLoadAll();
-	ThemeArr = ThemeLoadAll();
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
 		Logger_Error("failed to initialize SDL2: %s", SDL_GetError());
@@ -803,29 +803,7 @@ int main(int argc, char* argv[]) {
 static void _GuiSetColors(ImGuiStyle& style) {
 	if (ThemeArr != NULL && ThemeArr->entries[ThemeIndex] != NULL) {
 		theme_t* t = ThemeArr->entries[ThemeIndex];
-		style.Colors[ImGuiCol_PopupBg] = _U32TOIV4(t->PopupBG);
-		style.Colors[ImGuiCol_WindowBg] = _U32TOIV4(t->WindowBG);
-
-		style.Colors[ImGuiCol_Header] = _U32TOIV4(t->Header); // used for MenuItem etc
-		style.Colors[ImGuiCol_HeaderHovered] = _U32TOIV4(t->Header_Hovered); // Used for MenuItem etc
-
-		style.Colors[ImGuiCol_Text] = _U32TOIV4(t->Text);
-		style.Colors[ImGuiCol_TextDisabled] = _U32TOIV4(t->Text_Disabled); // Used for disabled text and shortcut key texts in menu
-
-		style.Colors[ImGuiCol_Button] = _U32TOIV4(t->Button);
-		style.Colors[ImGuiCol_ButtonHovered] = _U32TOIV4(t->Button_Hovered);
-		style.Colors[ImGuiCol_ButtonActive] = _U32TOIV4(t->Button_Active);
-
-		style.Colors[ImGuiCol_FrameBg] = _U32TOIV4(t->FrameBG);
-		style.Colors[ImGuiCol_FrameBgHovered] = _U32TOIV4(t->FrameBG_Hovered);
-
-		style.Colors[ImGuiCol_TitleBg] = _U32TOIV4(t->TitlebarBG);
-		style.Colors[ImGuiCol_TitleBgActive] = _U32TOIV4(t->TitlebarBG_Active); // Is Shown On Active Titlebars
-
-		style.Colors[ImGuiCol_Border] = _U32TOIV4(t->Border);
-		style.Colors[ImGuiCol_MenuBarBg] = _U32TOIV4(t->MenuBarBG);
-		style.Colors[ImGuiCol_CheckMark] = _U32TOIV4(t->Checkmark); // Used For Checkmarks in Checkboxes & Etc
-		style.Colors[ImGuiCol_ModalWindowDimBg] = _U32TOIV4(t->ModalDimming);
+		style = t->style;
 	}
 }
 
