@@ -184,12 +184,11 @@ IMGUI_API void ImGui::LoadStyleFrom(const char* fileName, ImGuiStyle& style) {
 	LOAD_BOOLEANS(AntiAliasedFill);
 
 	#define MAX_BEFORE_COMMA_SIZE 512
-	char* CommaOffset = NULL;
 	char BeforeComma[MAX_BEFORE_COMMA_SIZE] = "";
 
 	#define LOAD_IMVEC2s(var_imvec2, name) { \
 		const char* str = ini_get(ini_style, "ImGuiStyles", #name); \
-		CommaOffset = str == NULL ? NULL : strchr(str, ','); \
+		const char* CommaOffset = str == NULL ? NULL : strchr(str, ','); \
 		if (CommaOffset != NULL && CommaOffset - str > 0) { \
 			strncpy(BeforeComma, str, CommaOffset - str); \
 			BeforeComma[(CommaOffset - str) + 1] = '\0'; \
@@ -197,7 +196,6 @@ IMGUI_API void ImGui::LoadStyleFrom(const char* fileName, ImGuiStyle& style) {
 			var_imvec2.y = atof(CommaOffset + 1); \
 		} \
 		BeforeComma[0] = '\0'; \
-		CommaOffset = NULL; \
 	}
 
 	// ImVec2s
