@@ -56,7 +56,7 @@ bool ShouldSaveAs = false;
 bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
 bool CanvasLocked = false;  // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
-bool LockAllEvents = true;
+bool EventsLocked = true;
 bool UpdateWindowTitle = false;
 
 char FilePath[SYS_PATH_MAX_SIZE] = "untitled.png";
@@ -266,7 +266,7 @@ int RendererThreadFunc(void* _args) {
 	bool ShowNewCanvasWindow = false;
 
 	Logger_Hide();
-	LockAllEvents = false;
+	EventsLocked = false;
 
 	unsigned int frameStart, frameTime;
 	const unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
@@ -770,7 +770,7 @@ int main(int argc, char* argv[]) {
 	while (!ShouldClose) {
 		frameStart = SDL_GetTicks();
 
-		if (!LockAllEvents) {
+		if (!EventsLocked) {
 			ProcessEvents(window);
 			if (UpdateWindowTitle) {
 				SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
