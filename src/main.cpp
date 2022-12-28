@@ -481,7 +481,7 @@ int RendererThreadFunc(void* _args) {
 
 		if (ImGui::Begin("Layer", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
 			ImVec2 WinSize = { 200, 300 };
-			ImGui::SetWindowPos({ io.DisplaySize.x - WinSize.x - 10, 40, }, ImGuiCond_FirstUseEver); // Move Window To Bottom Right With 20 pixel padding
+			ImGui::SetWindowPos({ io.DisplaySize.x - WinSize.x - 10, 40, }); // Move Window To Bottom Right With 20 pixel padding
 			ImGui::SetWindowSize(WinSize, ImGuiCond_FirstUseEver);
 
 			if (ImGui::Button("+")) {
