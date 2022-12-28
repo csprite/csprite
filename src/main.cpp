@@ -129,6 +129,7 @@ theme_arr_t* ThemeArr = NULL;
 
 static inline void ProcessEvents(SDL_Window* window);
 static void _GuiSetColors(ImGuiStyle& style);
+static void _GuiSetToolText();
 void ZoomOpenGlViewport(int increase);
 void fill(uint32_t x, uint32_t y, unsigned char *old_colour);
 void UpdateViewportSize();
@@ -741,6 +742,7 @@ int main(int argc, char* argv[]) {
 
 	InitWindowIcon(window);
 	SDL_ShowWindow(window);
+	_GuiSetToolText();
 
 	struct sdl_thread_arg* renderer_args = (struct sdl_thread_arg*)malloc(sizeof(struct sdl_thread_arg));
 	renderer_args->argc = argc;
