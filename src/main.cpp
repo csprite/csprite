@@ -275,26 +275,6 @@ int RendererThreadFunc(void* _args) {
 		frameStart = SDL_GetTicks();
 		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
 
-		switch (Tool) {
-		case BRUSH_COLOR:
-		case BRUSH_ERASER:
-			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Size: %d)", ToolShape == SQUARE ? "Square" : "Circle", Tool == BRUSH_COLOR ? "Brush" : "Eraser", Tools_GetBrushSize());
-			break;
-		case SHAPE_RECT:
-		case SHAPE_LINE:
-			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Width: %d)", ToolShape == SQUARE ? "Square" : "Rounded", Tool == SHAPE_LINE ? "Line" : "Rectangle", Tools_GetBrushSize());
-			break;
-		case SHAPE_CIRCLE:
-			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "Circle (Boundary Width: %d)", Tools_GetBrushSize());
-			break;
-		case TOOL_FLOODFILL:
-		case TOOL_PAN:
-			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s", Tool == TOOL_FLOODFILL ? "Flood Fill" : "Panning");
-		case TOOL_INKDROPPER:
-			snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "Ink Dropper");
-			break;
-		}
-
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
@@ -769,7 +749,6 @@ int main(int argc, char* argv[]) {
 	const unsigned int frameDelay = 1000 / AppConfig->EventsUpdateRate;
 	while (!ShouldClose) {
 		frameStart = SDL_GetTicks();
-
 		if (!EventsLocked) {
 			ProcessEvents(window);
 			if (UpdateWindowTitle) {
@@ -777,7 +756,6 @@ int main(int argc, char* argv[]) {
 				UpdateWindowTitle = false;
 			}
 		}
-
 		frameTime = SDL_GetTicks() - frameStart;
 		if (frameDelay > frameTime) SDL_Delay(frameDelay - frameTime);
 		frameStart = SDL_GetTicks();
@@ -793,6 +771,29 @@ int main(int argc, char* argv[]) {
 	free(renderer_args);
 	renderer_args = NULL;
 	return EXIT_SUCCESS;
+}
+
+static void _GuiSetToolText() {
+	switch (Tool) {
+	case BRUSH_COLOR:
+	case BRUSH_ERASER:
+		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Size: %d)", ToolShape == SQUARE ? "Square" : "Circle", Tool == BRUSH_COLOR ? "Brush" : "Eraser", Tools_GetBrushSize());
+		break;
+	case SHAPE_RECT:
+	case SHAPE_LINE:
+		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Width: %d)", ToolShape == SQUARE ? "Square" : "Rounded", Tool == SHAPE_LINE ? "Line" : "Rectangle", Tools_GetBrushSize());
+		break;
+	case SHAPE_CIRCLE:
+		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "Circle (Boundary Width: %d)", Tools_GetBrushSize());
+		break;
+	case TOOL_FLOODFILL:
+	case TOOL_PAN:
+		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s", Tool == TOOL_FLOODFILL ? "Flood Fill" : "Panning");
+		break;
+	case TOOL_INKDROPPER:
+		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "Ink Dropper");
+		break;
+	}
 }
 
 static void _GuiSetColors(ImGuiStyle& style) {
@@ -897,6 +898,7 @@ void MutateCanvas(bool LmbJustReleased) {
 							SelectedColor[3] = *(pixel + 3);
 						}
 						Tool = LastTool;
+						_GuiSetToolText();
 					}
 				}
 				break;
@@ -910,28 +912,35 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 		case SDLK_SPACE:
 			Tool = LastTool;
 			CanvasMutable = true;
+			_GuiSetToolText();
 			break;
 		case SDLK_f:
 			Tool = TOOL_FLOODFILL;
+			_GuiSetToolText();
 			break;
 		case SDLK_e:
 			Tool = BRUSH_ERASER;
 			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			_GuiSetToolText();
 			break;
 		case SDLK_b:
 			Tool = BRUSH_COLOR;
 			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			_GuiSetToolText();
 			break;
 		case SDLK_l:
 			Tool = SHAPE_LINE;
 			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			_GuiSetToolText();
 			break;
 		case SDLK_r:
 			Tool = SHAPE_RECT;
 			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			_GuiSetToolText();
 			break;
 		case SDLK_c:
 			Tool = SHAPE_CIRCLE;
+			_GuiSetToolText();
 			break;
 		case SDLK_s:
 			if (IsCtrlDown == true && ShouldSave == false) ShouldSave = true;
@@ -957,6 +966,7 @@ static inline void OnEvent_KeyDown(SDL_Event* e) {
 				LastTool = Tool;
 				Tool = TOOL_PAN;
 				CanvasMutable = false;
+				_GuiSetToolText();
 			}
 			break;
 		case SDLK_LCTRL:
@@ -981,6 +991,7 @@ static inline void OnEvent_KeyDown(SDL_Event* e) {
 			if (Tool != TOOL_INKDROPPER) {
 				LastTool = Tool;
 				Tool = TOOL_INKDROPPER;
+				_GuiSetToolText();
 			}
 			break;
 	}
@@ -1003,6 +1014,7 @@ static inline void OnEvent_MouseWheel(SDL_Event* e) {
 			}
 		}
 		Tools_SetBrushSize(BrushSize);
+		_GuiSetToolText();
 	}
 }
 
