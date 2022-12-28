@@ -357,11 +357,14 @@ int RendererThreadFunc(void* _args) {
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Help")) {
+				if (ImGui::MenuItem("Wiki")) {
+					OpenURL("https://csprite.github.io/wiki/");
+				}
 				if (ImGui::MenuItem("About")) {
-					OpenURL("https://github.com/pegvin/CSprite/wiki/About-CSprite");
+					OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
 				}
 				if (ImGui::MenuItem("GitHub")) {
-					OpenURL("https://github.com/pegvin/CSprite");
+					OpenURL("https://github.com/pegvin/csprite");
 				}
 				ImGui::EndMenu();
 			}
