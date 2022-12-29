@@ -63,7 +63,7 @@ jobs:
 
     - name: Build & Strip (Static Linking=False;)
       run: |
-        make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=0
+        make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=0 CC=clang CXX=clang++
         strip ./csprite
 
     - name: Build AppImage
