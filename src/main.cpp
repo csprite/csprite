@@ -1096,10 +1096,10 @@ uchar_t* GetPixel(int x, int y) {
 }
 
 static void InitWindowIcon(SDL_Window* window) {
-	uchar_t* winIcon = (uchar_t*)Assets_Get("data/icons/icon-48.png", NULL);
+	uchar_t* winIcon = (uchar_t*)Assets_Get("data/icons/icon-24.png", NULL);
 	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
 		winIcon,
-		48, 48, 32, 48 * 4,
+		24, 24, 32, 24 * 4,
 		0x000000ff,
 		0x0000ff00,
 		0x00ff0000,

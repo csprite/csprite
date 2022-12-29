@@ -122,7 +122,7 @@ def encode_img(imgPath):
 
 	# We Don't Generate Icons For Sizes more than 48 because of file sizes
 	if not imgPath.startswith("data/cursors"):
-		if not width == 48 or not height == 48:
+		if not width == 24 or not height == 24:
 			return False
 
 	pixelArr = []
