@@ -5,7 +5,7 @@
 
 #include "assets.h"
 #include "canvas.h"
-#include "ogl_wrapper.h"
+#include "renderer/ogl_wrapper.h"
 #include "utils.h"
 #include "logger.h"
 
