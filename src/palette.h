@@ -23,7 +23,7 @@ typedef struct {
 } Palette_T;
 
 typedef struct {
-	unsigned int   numOfEntries;
+	int32_t        numOfEntries;
 	Palette_T**    Palettes;
 } PaletteArr_T;
 
