@@ -19,7 +19,7 @@ int FreePaletteArr(PaletteArr_T* pArr) {
 	}
 
 	if (pArr->Palettes != NULL) {
-		for (int i = 0; i < pArr->numOfEntries; ++i) {
+		for (int32_t i = 0; i < pArr->numOfEntries; ++i) {
 			FreePalette(pArr->Palettes[i]);
 			pArr->Palettes[i] = NULL;
 		}
