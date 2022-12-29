@@ -1,16 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <SDL2/SDL.h>
-#include <glad/glad.h>
-
-#include "assets.h"
-#include "canvas.h"
-#include "renderer/ogl_wrapper.h"
-#include "utils.h"
-#include "logger.h"
+#include "./canvas.h"
+#include "./ogl_wrapper.h"
+#include "../logger.h"
+#include "../assets.h"
 
 // Static For No Name Collisions
-
+static int32_t CanvasDims[2] = { 0, 0 };
 static GLuint vbo = 0; // Stores The Vertices.
 static GLuint ebo = 0; // Stores The Indices.
 static GLuint vao = 0; // Stores Pointer To Our Vertices And Indices.
@@ -25,7 +19,6 @@ static uchar_t bgData[2 * 2 * 4] = {
 	0xC0, 0xC0, 0xC0, 0xFF,
 	0x80, 0x80, 0x80, 0xFF
 };
-static uint32_t CanvasDims[2] = { 0, 0 };
 
 static GLfloat QuadVertices[] = {
 //    X      Y      Z      R     G     B      U     V
@@ -38,28 +31,7 @@ static GLuint QuadIndices[] = { 0, 1, 3, 1, 2, 3 };
 
 GLuint CreateTextureShader();
 
-GLuint CanvasGetFBO() {
-	return fboId;
-}
-
-GLuint CanvasGetFBOTex() {
-	return fboTexId;
-}
-
-void ResizeCanvas(uint32_t w, uint32_t h) {
-	CanvasDims[0] = w;
-	CanvasDims[1] = h;
-	glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-	DestroyCanvasTexture(&fboTexId);
-	fboTexId = CreateCanvasTexture(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, NULL, CanvasDims[0], CanvasDims[1]);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexId, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glViewport(0, 0, CanvasDims[0], CanvasDims[1]);
-	glClearColor(0.0, 0.0, 0.0, 0.0);
-	glClear(GL_COLOR_BUFFER_BIT);
-}
-
-int InitCanvas(uint32_t w, uint32_t h) {
+int Canvas_Init(int32_t w, int32_t h) {
 	CanvasDims[0] = w;
 	CanvasDims[1] = h;
 
@@ -67,11 +39,11 @@ int InitCanvas(uint32_t w, uint32_t h) {
 	GenerateBuffers(&vao, &vbo, &ebo);
 	glBindVertexArray(vao);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo); // Select The VBO
-	glBufferData(GL_ARRAY_BUFFER, sizeof(QuadVertices), QuadVertices, GL_STATIC_DRAW); // Upload The Vertices To GPU
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(QuadVertices), QuadVertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo); // Select The EBO
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(QuadIndices), QuadIndices, GL_STATIC_DRAW); // Upload The Indices To GPU.
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(QuadIndices), QuadIndices, GL_STATIC_DRAW);
 
 	// Tell OpenGL To Treat The First 3 Vertice As "position" (Used In Vertex Shader)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) 0);
@@ -113,7 +85,7 @@ int InitCanvas(uint32_t w, uint32_t h) {
 	return EXIT_SUCCESS;
 }
 
-void DeInitCanvas() {
+void Canvas_Destroy(void) {
 	// Delete All The Buffers, Textures & Shader Programs
 	glDeleteBuffers(1, &vbo);
 	glDeleteBuffers(1, &ebo);
@@ -126,15 +98,14 @@ void DeInitCanvas() {
 	vbo = ebo = vao = fboId = fboTexId = textureShaderId = bgTexture = CanvasDims[0] = CanvasDims[1] = 0;
 }
 
-void StartCanvas(bool DrawCheckerboardBg) {
-	// Bind The Custom FBO & Clear All Of It Content
+void Canvas_NewFrame(bool DrawCheckerboardBg) {
 	glBindFramebuffer(GL_FRAMEBUFFER, fboId);
 	glViewport(0, 0, CanvasDims[0], CanvasDims[1]);
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glBindTexture(GL_TEXTURE_2D, 0); // Unbind any texture
-	glUseProgram(textureShaderId); // Use The Texture Shader
+	glUseProgram(textureShaderId);   // Use The Texture Shader
 
 	if (DrawCheckerboardBg == true) {
 		// Draw The BG Texture Directly Without Uploading The Data Since We've Done It Once Above
@@ -143,7 +114,20 @@ void StartCanvas(bool DrawCheckerboardBg) {
 	}
 }
 
-void DrawLayer(CanvasLayer_T* c, bool UpdateTexture) {
+void Canvas_Resize(int32_t w, int32_t h) {
+	CanvasDims[0] = w;
+	CanvasDims[1] = h;
+	glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+	DestroyCanvasTexture(&fboTexId);
+	fboTexId = CreateCanvasTexture(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, NULL, CanvasDims[0], CanvasDims[1]);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexId, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glViewport(0, 0, CanvasDims[0], CanvasDims[1]);
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Canvas_Layer(CanvasLayer_T* c, bool UpdateTexture) {
 	glBindTexture(GL_TEXTURE_2D, c->texture); // Select Current Texture
 	if (UpdateTexture == true) {
 		// Upload Pixels To Currently Selected Texture On GPU
@@ -152,7 +136,7 @@ void DrawLayer(CanvasLayer_T* c, bool UpdateTexture) {
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Draw Texture
 }
 
-void EndCanvas(GLint ViewportPosX, GLint ViewportPosY, GLsizei ViewportWidth, GLsizei ViewportHeight) {
+void Canvas_Render(GLint ViewportPosX, GLint ViewportPosY, GLsizei ViewportWidth, GLsizei ViewportHeight) {
 	glReadBuffer(GL_COLOR_ATTACHMENT0); // Buffer From Which Data will be read to blit
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // Buffer From Which Our Canvas Will Be Blitted Onto
 	glBlitFramebuffer(
@@ -163,16 +147,20 @@ void EndCanvas(GLint ViewportPosX, GLint ViewportPosY, GLsizei ViewportWidth, GL
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-uchar_t* CanvasGetRendered() {
+uchar_t* Canvas_GetRender() {
 	uchar_t* data = (uchar_t*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
 	if (data == NULL) return NULL;
-	glBindFramebuffer(GL_FRAMEBUFFER, CanvasGetFBO()); // Select Our Canvas Framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, fboId); // Select Our Canvas Framebuffer
 	glReadPixels(0, 0, CanvasDims[0], CanvasDims[1], GL_RGBA, GL_UNSIGNED_BYTE, data); // Read Data From Currently Selected Buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	return data;
 }
 
-CanvasLayer_T* CreateCanvasLayer() {
+GLuint Canvas_GetFBOTex() {
+	return fboTexId;
+}
+
+CanvasLayer_T* Canvas_CreateLayer() {
 	if (CanvasDims[0] == 0 || CanvasDims[1] == 1) return NULL;
 
 	CanvasLayer_T* c = malloc(sizeof(CanvasLayer_T));
@@ -186,7 +174,7 @@ CanvasLayer_T* CreateCanvasLayer() {
 	return c;
 }
 
-void DestroyCanvasLayer(CanvasLayer_T* c) {
+void Canvas_DestroyLayer(CanvasLayer_T* c) {
 	if (c == NULL) return;
 	if (c->texture != 0) {
 		DestroyCanvasTexture(&c->texture);

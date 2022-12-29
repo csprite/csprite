@@ -1,12 +1,12 @@
 #include <string>
+#include <chrono>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
 #include <limits.h>
-
-#include <chrono>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
@@ -26,11 +26,11 @@
 #include "macros.h"
 #include "tools.h"
 #include "config.h"
-#include "canvas.h"
 #include "theme.h"
 #include "palette.h"
 #include "history.h"
 #include "system.h"
+#include "renderer/canvas.h"
 #include "renderer/renderer.h"
 
 typedef unsigned char uchar_t;
@@ -78,8 +78,8 @@ float CurrViewportZoom = 1.0f;
 GLint ViewportPos[2] = { 0, 0 };
 GLsizei ViewportSize[2] = { 0, 0 };
 
-uint16_t PaletteIndex = 0;
-uint16_t ThemeIndex = 0;
+int32_t PaletteIndex = 0;
+int32_t ThemeIndex = 0;
 uint16_t PaletteColorIndex = 2;
 uchar_t EraseColor[4] = { 0, 0, 0, 0 };
 uchar_t SelectedColor[4] = { 255, 255, 255, 255 };
@@ -172,11 +172,11 @@ int RendererThreadFunc(void* _args) {
 	UpdateViewportPos();
 	UpdateViewportSize();
 
-	if (InitCanvas(CanvasDims[0], CanvasDims[1]) != EXIT_SUCCESS) {
+	if (Canvas_Init(CanvasDims[0], CanvasDims[1]) != EXIT_SUCCESS) {
 		return EXIT_FAILURE;
 	}
 
-	CURR_CANVAS_LAYER = CreateCanvasLayer();
+	CURR_CANVAS_LAYER = Canvas_CreateLayer();
 	if (CURR_CANVAS_LAYER == NULL) return EXIT_FAILURE;
 
 	if (argc > 1) {
@@ -192,12 +192,12 @@ int RendererThreadFunc(void* _args) {
 			if (w > 0 && h > 0) {
 				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 					if (CanvasLayers[i] != NULL) {
-						DestroyCanvasLayer(CanvasLayers[i]);
+						Canvas_DestroyLayer(CanvasLayers[i]);
 						CanvasLayers[i] = NULL;
 					}
 				}
 				if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-					ResizeCanvas(w, h);
+					Canvas_Resize(w, h);
 					CanvasDims[0] = w;
 					CanvasDims[1] = h;
 					CurrViewportZoom = 1.0f;
@@ -206,7 +206,7 @@ int RendererThreadFunc(void* _args) {
 				}
 
 				SelectedLayerIndex = 0;
-				CURR_CANVAS_LAYER = CreateCanvasLayer();
+				CURR_CANVAS_LAYER = Canvas_CreateLayer();
 				memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
 				FreeHistory(&CURR_CANVAS_LAYER->history);
 				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
@@ -284,8 +284,8 @@ int RendererThreadFunc(void* _args) {
 					REDO();
 				}
 				if (ImGui::BeginMenu("Palette")) {
-					for (unsigned int i = 0; i < PaletteArr->numOfEntries; ++i) {
-						unsigned int _palidx = PaletteIndex;
+					for (int32_t i = 0; i < PaletteArr->numOfEntries; ++i) {
+						int32_t _palidx = PaletteIndex;
 
 						if (ImGui::MenuItem(PaletteArr->Palettes[i]->name, NULL)) {
 							PaletteIndex = i;
@@ -302,8 +302,8 @@ int RendererThreadFunc(void* _args) {
 				}
 
 				if (ImGui::BeginMenu("Theme")) {
-					for (unsigned int i = 0; i < ThemeArr->numOfEntries; ++i) {
-						unsigned int _palidx = ThemeIndex;
+					for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
+						int32_t _themeidx = ThemeIndex;
 
 						if (ImGui::MenuItem(ThemeArr->entries[i]->name, NULL)) {
 							ThemeIndex = i;
@@ -313,7 +313,7 @@ int RendererThreadFunc(void* _args) {
 							ImGui::SetTooltip("%s", ThemeArr->entries[i]->author);
 						}
 
-						if (_palidx == i) {
+						if (_themeidx == i) {
 							ImGui::SameLine();
 							ImGui::Text("<");
 						}
@@ -448,7 +448,7 @@ int RendererThreadFunc(void* _args) {
 				ResetPreviewWindowSize = false;
 			}
 			ImGui::Image(
-				(ImTextureID)CanvasGetFBOTex(), // FBO Texture
+				reinterpret_cast<ImTextureID>(Canvas_GetFBOTex()), // FBO Texture
 				{ WinSize.x - 15, CanvasDims[1] * (WinSize.x - 15) / CanvasDims[0] },
 				ImVec2(0,1), ImVec2(1,0) // UV
 			);
@@ -464,7 +464,7 @@ int RendererThreadFunc(void* _args) {
 			if (ImGui::Button("+")) {
 				if (SelectedLayerIndex + 1 != MAX_CANVAS_LAYERS) {
 					if (CURR_CANVAS_LAYER == NULL) {
-						CURR_CANVAS_LAYER = CreateCanvasLayer();
+						CURR_CANVAS_LAYER = Canvas_CreateLayer();
 					} else {
 						if (SelectedLayerIndex + 1 < MAX_CANVAS_LAYERS) {
 IncrementAndCreateLayer__:
@@ -472,7 +472,7 @@ IncrementAndCreateLayer__:
 							if (SelectedLayerIndex + 1 != MAX_CANVAS_LAYERS) {
 								if (CURR_CANVAS_LAYER != NULL) goto IncrementAndCreateLayer__;
 							}
-							CURR_CANVAS_LAYER = CreateCanvasLayer();
+							CURR_CANVAS_LAYER = Canvas_CreateLayer();
 						}
 					}
 				}
@@ -480,7 +480,7 @@ IncrementAndCreateLayer__:
 			ImGui::SameLine();
 			if (ImGui::Button("-")) {
 				if (CURR_CANVAS_LAYER != NULL) {
-					DestroyCanvasLayer(CURR_CANVAS_LAYER);
+					Canvas_DestroyLayer(CURR_CANVAS_LAYER);
 					CURR_CANVAS_LAYER = NULL;
 					if (SelectedLayerIndex >= 1) SelectedLayerIndex--;
 					else SelectedLayerIndex++;
@@ -511,13 +511,13 @@ IncrementAndCreateLayer__:
 					if (NewDims[0] > 0 && NewDims[1] > 0) {
 						for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 							if (CanvasLayers[i] != NULL) {
-								DestroyCanvasLayer(CanvasLayers[i]);
+								Canvas_DestroyLayer(CanvasLayers[i]);
 								CanvasLayers[i] = NULL;
 							}
 						}
 						SelectedLayerIndex = 0;
-						ResizeCanvas(NewDims[0], NewDims[1]);
-						CURR_CANVAS_LAYER = CreateCanvasLayer();
+						Canvas_Resize(NewDims[0], NewDims[1]);
+						CURR_CANVAS_LAYER = Canvas_CreateLayer();
 						CanvasDims[0] = NewDims[0];
 						CanvasDims[1] = NewDims[1];
 						CurrViewportZoom = 1.0f;
@@ -596,13 +596,13 @@ IncrementAndCreateLayer__:
 		Logger_Draw("Logs");
 
 		if (CURR_CANVAS_LAYER != NULL) {
-			StartCanvas(!ShouldSave && !ShouldSaveAs);
+			Canvas_NewFrame(!ShouldSave && !ShouldSaveAs);
 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
-					DrawLayer(CanvasLayers[i], SelectedLayerIndex == i);
+					Canvas_Layer(CanvasLayers[i], SelectedLayerIndex == i);
 				}
 			}
-			EndCanvas(ViewportPos[0], ViewportPos[1], ViewportSize[0], ViewportSize[1]); // This Is When Canvas Is Rendered To Screen
+			Canvas_Render(ViewportPos[0], ViewportPos[1], ViewportSize[0], ViewportSize[1]); // This Is When Canvas Is Rendered To Screen
 
 			if (ShouldSave == true || ShouldSaveAs == true) {
 				if (ShouldSaveAs == true) {
@@ -621,7 +621,7 @@ IncrementAndCreateLayer__:
 
 				// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
 				if (ShouldSave == true || ShouldSaveAs == true) {
-					uchar_t* canvas_data = CanvasGetRendered();
+					uchar_t* canvas_data = Canvas_GetRender();
 					stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
 					stbi_write_png(FilePath, CanvasDims[0], CanvasDims[1], 4, canvas_data, 0);
 					free(canvas_data);
@@ -640,11 +640,11 @@ IncrementAndCreateLayer__:
 		}
 	}
 
-	DeInitCanvas();
+	Canvas_Destroy();
 
 	for (int i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 		if (CanvasLayers[i] != NULL) {
-			DestroyCanvasLayer(CanvasLayers[i]);
+			Canvas_DestroyLayer(CanvasLayers[i]);
 			CanvasLayers[i] = NULL;
 		}
 	}
@@ -1130,12 +1130,12 @@ static void OpenNewFile(SDL_Window* window) {
 		if (w > 0 && h > 0) {
 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
-					DestroyCanvasLayer(CanvasLayers[i]);
+					Canvas_DestroyLayer(CanvasLayers[i]);
 					CanvasLayers[i] = NULL;
 				}
 			}
 			if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-				ResizeCanvas(w, h);
+				Canvas_Resize(w, h);
 				CanvasDims[0] = w;
 				CanvasDims[1] = h;
 				CurrViewportZoom = 1.0f;
@@ -1144,7 +1144,7 @@ static void OpenNewFile(SDL_Window* window) {
 			}
 
 			SelectedLayerIndex = 0;
-			CURR_CANVAS_LAYER = CreateCanvasLayer();
+			CURR_CANVAS_LAYER = Canvas_CreateLayer();
 			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
 			FreeHistory(&CURR_CANVAS_LAYER->history);
 			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
