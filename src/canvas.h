@@ -26,6 +26,7 @@ void StartCanvas(bool DrawCheckerboardBg);
 void DrawLayer(CanvasLayer_T* c, bool UpdateTexture);
 void EndCanvas(GLint ViewportPosX, GLint ViewportPosY, GLsizei ViewportWidth, GLsizei ViewportHeight);
 void ResizeCanvas(uint32_t w, uint32_t h);
+uchar_t* CanvasGetRendered();
 
 CanvasLayer_T* CreateCanvasLayer();
 void DestroyCanvasLayer(CanvasLayer_T* c);

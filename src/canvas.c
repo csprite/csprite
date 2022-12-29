@@ -18,7 +18,7 @@ static GLuint fboId = 0;
 static GLuint fboTexId = 0;
 static GLuint textureShaderId = 0;
 static GLuint bgTexture = 0;
-static unsigned char bgData[2 * 2 * 4] = {
+static uchar_t bgData[2 * 2 * 4] = {
 	// 2x2 Pixel Array To Create Checkerboard Background
 	0x80, 0x80, 0x80, 0xFF,
 	0xC0, 0xC0, 0xC0, 0xFF,
@@ -163,12 +163,21 @@ void EndCanvas(GLint ViewportPosX, GLint ViewportPosY, GLsizei ViewportWidth, GL
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+uchar_t* CanvasGetRendered() {
+	uchar_t* data = (uchar_t*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
+	if (data == NULL) return NULL;
+	glBindFramebuffer(GL_FRAMEBUFFER, CanvasGetFBO()); // Select Our Canvas Framebuffer
+	glReadPixels(0, 0, CanvasDims[0], CanvasDims[1], GL_RGBA, GL_UNSIGNED_BYTE, data); // Read Data From Currently Selected Buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return data;
+}
+
 CanvasLayer_T* CreateCanvasLayer() {
 	if (CanvasDims[0] == 0 || CanvasDims[1] == 1) return NULL;
 
 	CanvasLayer_T* c = malloc(sizeof(CanvasLayer_T));
-	c->pixels = (unsigned char*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-	memset(c->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
+	c->pixels = (uchar_t*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
+	memset(c->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
 	c->texture = CreateCanvasTexture(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, c->pixels, CanvasDims[0], CanvasDims[1]);
 	c->history = NULL; // Need To Explicitly Set This To NULL Cause SaveHistory Functions Tries To Check If The Pointer Is Not NULL And If So It Tries To Check it's Member.
 	SaveHistory(&c->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), c->pixels);
