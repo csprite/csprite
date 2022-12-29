@@ -140,7 +140,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: CLANG64
-          update: true
+          update: false
           install: mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-python make git
 
       - uses: actions/download-artifact@v2
@@ -182,7 +182,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: CLANG32
-          update: true
+          update: false
           install: mingw-w64-clang-i686-binutils mingw-w64-clang-i686-clang mingw-w64-clang-i686-cmake mingw-w64-clang-i686-python make git
 
       - uses: actions/download-artifact@v2
