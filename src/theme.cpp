@@ -48,7 +48,7 @@ theme_t* LoadTheme(const char* themeIni, const char* fileName) {
 	ini_t *config = ini_load_txt(themeIni);
 
 	const char* name = ini_get(config, "theme", "name");
-	if (name != NULL) strncpy(t->name, name, THEME_NAME_SIZE_MAX);
+	if (name != NULL) strncpy(t->name, name, THEME_NAME_SIZE_MAX - 1);
 	else strncpy(t->name, "theme", 6);
 
 	const char* author = ini_get(config, "theme", "author");
