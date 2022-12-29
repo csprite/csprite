@@ -173,9 +173,9 @@ static void split_data(ini_t *ini) {
 
 
 ini_t* ini_load_txt(const char *iniTxt) {
-  if (iniTxt == NULL) goto fail;
-
   ini_t *ini = NULL;
+
+  if (iniTxt == NULL) goto fail;
   int len = strlen(iniTxt);
 
   /* Init ini struct */
