@@ -8,15 +8,13 @@
 
 #include <chrono>
 
-#include <glad/glad.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
 
 #include "pfd.h"
 #include "imgui.h"
-#include "imgui_extension.h"
 #include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl3.h"
+#include "imgui_extension.h"
 
 #include "stb_image_write.h"
 #include "stb_image.h"
@@ -34,6 +32,7 @@
 #include "history.h"
 #include "system.h"
 #include "ogl_wrapper.h"
+#include "renderer/renderer.h"
 
 typedef unsigned char uchar_t;
 
@@ -75,7 +74,6 @@ enum tool_shape_e ToolShape = CIRCLE;
 
 float PreviewWindowZoom = 1.0f;
 float CurrViewportZoom = 1.0f;
-float LastViewportZoom = CurrViewportZoom;
 
 // Using GLint & GLsizei as it's specified in the documentation and using float or something else causes glitches like viewport suddenly disappearing
 GLint ViewportPos[2] = { 0, 0 };
@@ -168,24 +166,9 @@ int RendererThreadFunc(void* _args) {
 	SDL_Window* window = args->win;
 	if (window == NULL) return -1;
 
-	SDL_GLContext glContext;
-	glContext = SDL_GL_CreateContext(window);
-	SDL_GL_MakeCurrent(window, glContext);
-
-	// 0 for immediate updates, 1 for updates synchronized with the vertical retrace, -1 for adaptive vsync
-	if (SDL_GL_SetSwapInterval(AppConfig->vsync == true ? 1 : 0) != 0) {
-		Logger_Error("Failed To Set Swap Interval: %s\n", SDL_GetError());
-	}
-
-	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-		Logger_Error("Failed to initialize GLAD");
+	if (R_Init(window, AppConfig->vsync) != EXIT_SUCCESS) {
 		return EXIT_FAILURE;
 	}
-
-	glEnable(GL_ALPHA_TEST);        
-	glEnable(GL_COLOR_MATERIAL);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	UpdateViewportPos();
 	UpdateViewportSize();
@@ -239,16 +222,12 @@ int RendererThreadFunc(void* _args) {
 		}
 	}
 
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& io = ImGui::GetIO();
 	ImGuiStyle& style = ImGui::GetStyle();
 	io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
 	ImGui::StyleColorsDark();
 	ThemeArr = ThemeLoadAll();
-	ImGui_ImplSDL2_InitForOpenGL(window, glContext);
-	ImGui_ImplOpenGL3_Init("#version 330");
 	_GuiSetColors(style);
 
 	{
@@ -276,9 +255,8 @@ int RendererThreadFunc(void* _args) {
 		frameStart = SDL_GetTicks();
 		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
 
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
+		R_Clear(); // Clear The Screen, This Is Required To Done Before The Canvas Is Drawn Because Rendered Canvas Is Directly Copied Onto Screen & Clearing The screen After Copying It Will Not Show The Canvas
+		R_NewFrame(); // All The Calls To ImGui Will Be Recorded After This Function
 
 		if (ImGui::BeginMainMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
@@ -434,7 +412,7 @@ int RendererThreadFunc(void* _args) {
 			ImGui::SetWindowPos({ 5, io.DisplaySize.y - WinSize.y - 10 });
 			ImGui::Text("%s", SelectedToolText);
 #if(CS_BUILD_STABLE == 0)
-			ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			if (ImGui::Button("Clear Undo/Redo Buffers")) {
 				for (int i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 					if (CanvasLayers[i] != NULL) {
@@ -618,15 +596,8 @@ IncrementAndCreateLayer__:
 
 		Logger_Draw("Logs");
 
-		ImGui::Render();
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		glClearColor(0.075, 0.075, 0.1, 1.0); // Set The Color Used When Clearing Buffer (Set Alpha To 0 When Saving The Image So That The Color Doesn't Add In Final Render)
-		glClear(GL_COLOR_BUFFER_BIT); // Clear The Back Buffer With The Color Specified Above
-
-		if (CURR_CANVAS_LAYER == NULL) {
-			glBindFramebuffer(GL_FRAMEBUFFER, 0); // Ensure Our Default Framebuffer is Selected
-		} else {
-			StartCanvas(ShouldSave == false && ShouldSaveAs == false);
+		if (CURR_CANVAS_LAYER != NULL) {
+			StartCanvas(!ShouldSave && !ShouldSaveAs);
 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
 					DrawLayer(CanvasLayers[i], SelectedLayerIndex == i);
@@ -635,45 +606,33 @@ IncrementAndCreateLayer__:
 			EndCanvas(ViewportPos[0], ViewportPos[1], ViewportSize[0], ViewportSize[1]); // This Is When Canvas Is Rendered To Screen
 
 			if (ShouldSave == true || ShouldSaveAs == true) {
-				// If Viewport Size is as same as the image size then read the pixels and save them
-				if (CurrViewportZoom == 1.0f) {
-					if (ShouldSaveAs == true) {
-						auto destination = pfd::save_file("Select a file", ".", { "Image Files", "*.png" }, pfd::opt::none).result();
-						const char* _fPath = destination.empty() ? NULL : destination.c_str();
-						if (_fPath != NULL) {
-							snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fPath);
-							char* _fName = Sys_GetBasename(_fPath);
-							snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", _fName);
-							free(_fName);
-							UpdateWindowTitle = true;
-						} else {
-							ShouldSaveAs = false;
-						}
-					}
-
-					// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
-					if (ShouldSave == true || ShouldSaveAs == true) {
-						unsigned char* data = (unsigned char*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char));
-						glBindFramebuffer(GL_FRAMEBUFFER, CanvasGetFBO()); // Select Our Canvas Framebuffer
-						glReadPixels(0, 0, CanvasDims[0], CanvasDims[1], GL_RGBA, GL_UNSIGNED_BYTE, data); // Read Data From Currently Selected Buffer
-						stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
-						stbi_write_png(FilePath, CanvasDims[0], CanvasDims[1], 4, data, 0); // Write The Data
-						free(data);
-						ShouldSave = false;
+				if (ShouldSaveAs == true) {
+					auto destination = pfd::save_file("Select a file", ".", { "Image Files", "*.png" }, pfd::opt::none).result();
+					const char* _fPath = destination.empty() ? NULL : destination.c_str();
+					if (_fPath != NULL) {
+						snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fPath);
+						char* _fName = Sys_GetBasename(_fPath);
+						snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", _fName);
+						free(_fName);
+						UpdateWindowTitle = true;
+					} else {
 						ShouldSaveAs = false;
 					}
-					CurrViewportZoom = LastViewportZoom;
-					UpdateViewportSize();
-				} else { // If Viewport Size is not same as the image size then save the current viewport size, update the opengl viewport render everything again
-					LastViewportZoom = CurrViewportZoom;
-					CurrViewportZoom = 1.0f;
-					UpdateViewportSize();
+				}
+
+				// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
+				if (ShouldSave == true || ShouldSaveAs == true) {
+					uchar_t* canvas_data = CanvasGetRendered();
+					stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
+					stbi_write_png(FilePath, CanvasDims[0], CanvasDims[1], 4, canvas_data, 0);
+					free(canvas_data);
+					ShouldSave = false;
+					ShouldSaveAs = false;
 				}
 			}
 		}
 
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		SDL_GL_SwapWindow(window); // Swap Front & Back Buffers
+		R_Present();
 
 		if (!AppConfig->vsync) {
 			frameTime = SDL_GetTicks() - frameStart;
@@ -691,11 +650,7 @@ IncrementAndCreateLayer__:
 		}
 	}
 
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplSDL2_Shutdown();
-	ImGui::DestroyContext();
-
-	SDL_GL_DeleteContext(glContext);
+	R_Destroy();
 	return 0;
 }
 
