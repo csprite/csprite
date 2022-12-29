@@ -4,7 +4,6 @@
 	#if defined(__linux__) || defined(__FreeBSD__)
 	#elif defined(__APPLE__)
 	#elif defined(_WIN32)
-		#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 		#include <windows.h>
 		#include <shellapi.h>
 	#endif
