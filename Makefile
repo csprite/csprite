@@ -6,7 +6,7 @@ Arch:=x86_64 # Used By gen-rc task
 CXX:=g++
 CC:=gcc
 STD:=c99
-CXX_STD:=c++17
+CXX_STD:=c++11
 CCFLAGS:=-Iinclude/ -Ilibs/imgui/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DSDL_MAIN_HANDLED=1 -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 CFLAGS:=
 LFLAGS:=
