@@ -69,10 +69,10 @@ char* Sys_GetConfigDir(void) {
 	}
 #elif defined(_WIN32) || defined(WIN32)
 	const char* appdata = getenv("APPDATA");
-	strncpy(fullPath, appdata, SYS_PATH_MAX_SIZE);
+	strncpy(fullPath, appdata, SYS_PATH_MAX_SIZE - 1);
 #elif defined(__APPLE__) || defined(__MACH__)
 	const char* home = getenv("HOME");
-	snprintf(fullPath, SYS_PATH_MAX_SIZE, "%s/Library/Application Support", home);
+	snprintf(fullPath, SYS_PATH_MAX_SIZE - 1, "%s/Library/Application Support", home);
 #endif
 
 	return fullPath;

@@ -75,7 +75,7 @@ Palette_T* LoadCsvPalette(const char* csvText) {
 
 	// First We Find Out Total Elements, To Allocate Array
 	token = strtok(text, ","); // Palette Name
-	strncpy(newPalette->name, token, PaletteNameSize);
+	strncpy(newPalette->name, token, PaletteNameSize - 1);
 	token = strtok(NULL, ","); // Author Name
 	memset(newPalette->author, 0, PaletteAuthorSize);
 	snprintf(newPalette->author, PaletteAuthorSize, "Awesome Palette By %s", token == NULL ? "Unknown" : token);
