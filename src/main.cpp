@@ -413,7 +413,7 @@ int RendererThreadFunc(void* _args) {
 		)) {
 			ImVec2 WinSize = ImGui::GetWindowSize();
 			ImGui::SetWindowPos({ 5, io.DisplaySize.y - WinSize.y - 10 });
-			ImGui::Text("%s", SelectedToolText);
+			ImGui::Text("%s\nZoom: %d%%", SelectedToolText, (int)(CurrViewportZoom * 100));
 #if(CS_BUILD_STABLE == 0)
 			ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			if (ImGui::Button("Clear Undo/Redo Buffers")) {
