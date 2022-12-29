@@ -31,7 +31,6 @@
 #include "palette.h"
 #include "history.h"
 #include "system.h"
-#include "ogl_wrapper.h"
 #include "renderer/renderer.h"
 
 typedef unsigned char uchar_t;
