@@ -139,9 +139,9 @@ jobs:
 
       - uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64
+          msystem: CLANG64
           update: true
-          install: mingw-w64-x86_64-clang mingw-w64-x86_64-cmake mingw-w64-x86_64-python make git
+          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-python make git
 
       - uses: actions/download-artifact@v2
         with:
@@ -154,7 +154,7 @@ jobs:
           path: ./data/
 
       - name: Build & Install SDL2
-        run: bash ./tools/BuildNInstall_Windows.sh mingw64
+        run: bash ./tools/BuildNInstall_Windows.sh clang64
 
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
@@ -181,9 +181,9 @@ jobs:
 
       - uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW32
+          msystem: CLANG32
           update: true
-          install: mingw-w64-i686-binutils mingw-w64-i686-clang mingw-w64-i686-cmake mingw-w64-i686-python make git
+          install: mingw-w64-clang-i686-binutils mingw-w64-clang-i686-clang mingw-w64-clang-i686-cmake mingw-w64-clang-i686-python make git
 
       - uses: actions/download-artifact@v2
         with:
@@ -196,7 +196,7 @@ jobs:
           path: ./data/
 
       - name: Build & Install SDL2
-        run: bash ./tools/BuildNInstall_Windows.sh mingw32
+        run: bash ./tools/BuildNInstall_Windows.sh clang32
 
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
