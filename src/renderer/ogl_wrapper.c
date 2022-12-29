@@ -1,4 +1,4 @@
-#include "ogl_wrapper.h"
+#include "./ogl_wrapper.h"
 
 void GenerateBuffers(GLuint* vao, GLuint* vbo, GLuint* ebo) {
 	if (vao) glGenVertexArrays(1, vao);
