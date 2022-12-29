@@ -1,6 +1,7 @@
 #pragma once
 
 #include "imgui.h"
+#include <cstdint>
 
 #define THEME_NAME_SIZE_MAX 512
 #define THEME_AUTHOR_SIZE_MAX 512 + 17 // The Extra 17 Are For "Awesome Theme By ", so the actual name starts after 17 Characters
@@ -12,7 +13,7 @@ typedef struct {
 } theme_t;
 
 typedef struct {
-	unsigned int numOfEntries;
+	int32_t numOfEntries;
 	theme_t** entries;
 	ImGuiStyle originalStyle;
 } theme_arr_t;
