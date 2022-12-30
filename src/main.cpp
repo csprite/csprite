@@ -575,18 +575,24 @@ IncrementAndCreateLayer__:
 		if (ShowLayerRenameWindow) {
 			if (ImGui::BeginPopupModal("Rename Layer###LayerRenameWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
 				static char TempBuff[LAYER_NAME_MAX] = "";
+				static bool LayerRenamed;
+
+				LayerRenamed = false;
 
 				if (ImGui::InputText("##NewLayerName", TempBuff, LAYER_NAME_MAX, ImGuiInputTextFlags_EnterReturnsTrue)) {
-					strncpy(CURR_CANVAS_LAYER->name, TempBuff, LAYER_NAME_MAX);
-					memset(TempBuff, 0, LAYER_NAME_MAX);
-					ShowLayerRenameWindow = false;
+					LayerRenamed = true;
 				}
 
 				if (ImGui::Button("Ok")) {
+					LayerRenamed = true;
+				}
+
+				if (LayerRenamed && TempBuff[0] != '\0') {
 					strncpy(CURR_CANVAS_LAYER->name, TempBuff, LAYER_NAME_MAX);
 					memset(TempBuff, 0, LAYER_NAME_MAX);
 					ShowLayerRenameWindow = false;
 				}
+
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
 					ShowLayerRenameWindow = false;
