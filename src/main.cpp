@@ -573,12 +573,20 @@ IncrementAndCreateLayer__:
 		}
 
 		if (ShowLayerRenameWindow) {
+			// This Variable is only true when the popup first appears & is needed to be set to false after the first time of the popup appearing & is needed to be set to true again after the window closes
+			static bool isFirstTime = true;
 			if (ImGui::BeginPopupModal("Rename Layer###LayerRenameWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
 				static char TempBuff[LAYER_NAME_MAX] = "";
 				static bool LayerRenamed;
 				LayerRenamed = false; // Needed To Be Set To False Every Frame Or Else When Pressing Enter & Pressing A Key It Will Only Read That Single Key Press.
 
-				if (ImGui::InputText("##NewLayerName", TempBuff, LAYER_NAME_MAX, ImGuiInputTextFlags_EnterReturnsTrue)) {
+				// if the popup just opened copy the layer name to input buffer
+				if (isFirstTime) {
+					isFirstTime = false;
+					strncpy(TempBuff, CURR_CANVAS_LAYER->name, LAYER_NAME_MAX);
+				}
+
+				if (ImGui::InputText("##NewLayerName", TempBuff, LAYER_NAME_MAX, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
 					LayerRenamed = true;
 				}
 
@@ -601,6 +609,7 @@ IncrementAndCreateLayer__:
 				ImGui::EndPopup();
 			} else {
 				ImGui::OpenPopup("Rename Layer###LayerRenameWindow");
+				isFirstTime = true; // set to true cause next frame the popup will appear.
 			}
 		}
 
