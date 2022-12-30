@@ -576,8 +576,7 @@ IncrementAndCreateLayer__:
 			if (ImGui::BeginPopupModal("Rename Layer###LayerRenameWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
 				static char TempBuff[LAYER_NAME_MAX] = "";
 				static bool LayerRenamed;
-
-				LayerRenamed = false;
+				LayerRenamed = false; // Needed To Be Set To False Every Frame Or Else When Pressing Enter & Pressing A Key It Will Only Read That Single Key Press.
 
 				if (ImGui::InputText("##NewLayerName", TempBuff, LAYER_NAME_MAX, ImGuiInputTextFlags_EnterReturnsTrue)) {
 					LayerRenamed = true;
@@ -591,6 +590,7 @@ IncrementAndCreateLayer__:
 					strncpy(CURR_CANVAS_LAYER->name, TempBuff, LAYER_NAME_MAX);
 					memset(TempBuff, 0, LAYER_NAME_MAX);
 					ShowLayerRenameWindow = false;
+					LayerRenamed = false;
 				}
 
 				ImGui::SameLine();
