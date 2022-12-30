@@ -6,6 +6,16 @@
 # text file, we try to keep the data as a string, for binary files we store it
 # into a uint8_t array.
 
+# The Script Can Be Run With Multiple Flags Which Change The Behaviour Of The Script
+# Disable File Types From Being Processed: --disabled=<comma-separated-values>
+#   - Example:
+#        --disabled=png,tga
+#        --disabled=mp4
+#
+# Change Compiler The Script Uses To Compile A C++ Script For Image Asset Generation: --cxx=<compiler-name>
+#   - Example:
+#        --cxx=g++
+
 from PIL import Image
 from collections import namedtuple
 import numpy as np
@@ -13,6 +23,7 @@ import os
 import sys
 import subprocess
 
+CXX = "clang++"
 CWD = os.getcwd()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
@@ -29,16 +40,18 @@ TYPES = {
 	"ttf":   { "text": False, "Disabled": False }
 }
 
-# Parse Disabled Stuff, --disabled=csv,glsl
+# Parse Disabled Stuff, --disabled=csv,glsl & --cxx=gcc
 for argument in sys.argv:
-	if argument.startswith("--disabled="):
+	if argument.startswith("--cxx="):
+		CXX = argument.replace("--cxx=", '')
+	elif argument.startswith("--disabled="):
 		argument = argument.replace("--disabled=", '')
 		argument = argument.split(',')
 		for item in argument:
 			if item in TYPES:
 				TYPES[item]["Disabled"] = True
-
-		break;
+			else:
+				TYPES[item] = { "text": True, "Disabled": True }
 
 GROUPS = [
 	'fonts', 'icons',
@@ -93,7 +106,7 @@ def encode_bin(data):
 
 def encode_font(fontPath):
 	if not os.path.isfile("./tools/font2inl.out"):
-		result = subprocess.run(['clang++', 'tools/font2inl.cpp', '-o', 'tools/font2inl.out'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		result = subprocess.run([CXX, 'tools/font2inl.cpp', '-o', 'tools/font2inl.out'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 		print(result.stdout.decode('utf-8'))
 		if not os.path.isfile("./tools/font2inl.out"):
 			print("Cannot compile tools/font2inl.cpp for compressing font!")
