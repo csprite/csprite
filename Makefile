@@ -125,7 +125,7 @@ gen-rc:
 gen-assets:
 	@python3 tools/create_icons.py
 	@echo Generated Icons...
-	@python3 tools/create_assets.py
+	@python3 tools/create_assets.py --cxx=clang++
 	@echo Generated Assets...
 
 # make appimage
