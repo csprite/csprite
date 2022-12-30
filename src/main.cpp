@@ -595,6 +595,7 @@ IncrementAndCreateLayer__:
 
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
+					memset(TempBuff, 0, LAYER_NAME_MAX);
 					ShowLayerRenameWindow = false;
 				}
 				ImGui::EndPopup();
