@@ -584,8 +584,8 @@ IncrementAndCreateLayer__:
 				if (isFirstTime) {
 					isFirstTime = false;
 					strncpy(TempBuff, CURR_CANVAS_LAYER->name, LAYER_NAME_MAX);
+					ImGui::SetKeyboardFocusHere(); // Focus The Next Text Input When Popup Appears
 				}
-
 				if (ImGui::InputText("##NewLayerName", TempBuff, LAYER_NAME_MAX, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
 					LayerRenamed = true;
 				}
