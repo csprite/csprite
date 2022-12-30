@@ -1,3 +1,6 @@
+# simple hacky way to convert strings to lowercase, usage: NEW_VAR = $(call lc,$(VAR))
+lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
+
 MajVer:=1
 MinVer:=0
 PatVer:=0
@@ -15,10 +18,10 @@ SDL2_STATIC_LINK:=1
 WINDRES_TARGET:=pe-x86-64 # pe-x86-64 for 64 bit system or pe-i686 for 32 bit system
 BUILD_TARGET=debug
 
-ifeq ($(BUILD_TARGET),debug)
+ifeq ($(call lc,$(BUILD_TARGET)),debug)
 	CCFLAGS+=-DCS_BUILD_STABLE=0
 else
-	ifeq ($(BUILD_TARGET),release)
+	ifeq ($(call lc,$(BUILD_TARGET)),release)
 		CCFLAGS+=-DCS_BUILD_STABLE=1
 	else
 $(error Invalid Build Target: "$(BUILD_TARGET)")
@@ -32,7 +35,7 @@ OBJS_CPP:=$(SRCS_CPP:.cpp=.o)
 DEPENDS:=$(patsubst %.c,%.d,$(SRCS_C)) $(patsubst %.cpp,%.d,$(SRCS_CPP))
 bin:=csprite
 
-ifeq ($(BUILD_TARGET),debug)
+ifeq ($(call lc,$(BUILD_TARGET)),debug)
 	CCFLAGS+=-O0 -g
 else
 	CCFLAGS+=-O2
@@ -45,7 +48,7 @@ ifeq ($(OS),Windows_NT)
 		LFLAGS+=-lSDL2main -lSDL2
 	endif
 	LFLAGS+=$(addprefix -l,opengl32 winmm gdi32 imm32 ole32 oleaut32 shell32 version uuid setupapi)
-	ifeq ($(BUILD_TARGET),debug)
+	ifeq ($(call lc,$(BUILD_TARGET)),debug)
 		LFLAGS+=-mconsole
 	else
 		LFLAGS+=-mwindows
@@ -67,7 +70,7 @@ else
 		_libs+=dl
 		# On POSX Use Address Sanitizers in Debug Mode
 		ifeq ($(CC),gcc)
-			ifeq ($(BUILD_TARGET),debug)
+			ifeq ($(call lc,$(BUILD_TARGET)),debug)
 				CCFLAGS+=-fsanitize=address -fsanitize=undefined
 				LFLAGS+=-fsanitize=address -fsanitize=undefined -lasan -lubsan
 			endif
