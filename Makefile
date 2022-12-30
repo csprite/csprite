@@ -14,6 +14,7 @@ CCFLAGS:=-Iinclude/ -Ilibs/imgui/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(Ma
 CFLAGS:=
 LFLAGS:=
 
+PYTHON:=python3
 SDL2_STATIC_LINK:=1
 WINDRES_TARGET:=pe-x86-64 # pe-x86-64 for 64 bit system or pe-i686 for 32 bit system
 BUILD_TARGET=debug
@@ -118,14 +119,14 @@ clean:
 
 # make gen-rc Arch=x86_64(or i686)
 gen-rc:
-	@python3 tools/create_rc.py --arch=$(Arch) --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
+	@$(PYTHON) tools/create_rc.py --arch=$(Arch) --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
 	@echo Generated RC...
 
 # make gen-assets
 gen-assets:
-	@python3 tools/create_icons.py
+	@$(PYTHON) tools/create_icons.py
 	@echo Generated Icons...
-	@python3 tools/create_assets.py --cxx=clang++
+	@$(PYTHON) tools/create_assets.py --cxx=clang++
 	@echo Generated Assets...
 
 # make appimage
