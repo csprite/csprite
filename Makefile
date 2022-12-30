@@ -126,7 +126,7 @@ gen-rc:
 gen-assets:
 	@$(PYTHON) tools/create_icons.py
 	@echo Generated Icons...
-	@$(PYTHON) tools/create_assets.py --cxx=clang++
+	@$(PYTHON) tools/create_assets.py --cxx=$(CXX)
 	@echo Generated Assets...
 
 # make appimage
