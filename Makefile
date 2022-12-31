@@ -10,11 +10,14 @@ CXX:=g++
 CC:=gcc
 STD:=c99
 CXX_STD:=c++11
-CCFLAGS:=-Iinclude/ -Ilibs/imgui/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DSDL_MAIN_HANDLED=1 -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
+CCFLAGS:=-Iinclude/ -Ilibs/imgui/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 CFLAGS:=
 LFLAGS:=
 
+PYTHON:=python3
 SDL2_STATIC_LINK:=1
+SDL2_LFLAGS:=
+SDL2_CFLAGS:=-DSDL_MAIN_HANDLED=1
 WINDRES_TARGET:=pe-x86-64 # pe-x86-64 for 64 bit system or pe-i686 for 32 bit system
 BUILD_TARGET=debug
 
@@ -43,11 +46,12 @@ endif
 
 ifeq ($(OS),Windows_NT)
 	ifeq ($(SDL2_STATIC_LINK),1)
-		LFLAGS+=-static-libstdc++ -Wl,-Bstatic -lSDL2main -lSDL2 -Wl,-Bdynamic
+		SDL2_LFLAGS+=-static-libstdc++ -Wl,-Bstatic -lSDL2main -lSDL2 -Wl,-Bdynamic
 	else
-		LFLAGS+=-lSDL2main -lSDL2
+		SDL2_LFLAGS+=-lSDL2main -lSDL2
 	endif
-	LFLAGS+=$(addprefix -l,opengl32 winmm gdi32 imm32 ole32 oleaut32 shell32 version uuid setupapi)
+	LFLAGS+=-lopengl32
+	SDL2_LFLAGS+=$(addprefix -l,winmm gdi32 imm32 ole32 oleaut32 shell32 version uuid setupapi)
 	ifeq ($(call lc,$(BUILD_TARGET)),debug)
 		LFLAGS+=-mconsole
 	else
@@ -62,9 +66,9 @@ else
 
 	ifeq ($(UNAME_S),Linux)
 		ifeq ($(SDL2_STATIC_LINK),1)
-			LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lX11 -lXext -lXi -lXfixes -lXrandr -lXcursor
+			SDL2_LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lX11 -lXext -lXi -lXfixes -lXrandr -lXcursor
 		else
-			LFLAGS+=-lSDL2
+			SDL2_LFLAGS+=-lSDL2
 		endif
 
 		_libs+=dl
@@ -77,7 +81,8 @@ else
 		endif
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -lSDL2
+		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
+		SDL2_LFLAGS:=-lSDL2
 	endif
 
 	LFLAGS+=$(addprefix -l,$(_libs))
@@ -94,15 +99,15 @@ all: $(bin)
 
 %.o: %.c
 	@echo "CC  -" $<
-	@$(CC) --std=$(STD) $(CFLAGS) $(CCFLAGS) -c $< -o $@
+	@$(CC) --std=$(STD) $(CFLAGS) $(CCFLAGS) $(SDL2_CFLAGS) -c $< -o $@
 
 %.o: %.cpp
 	@echo "CXX -" $<
-	@$(CXX) --std=$(CXX_STD) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
+	@$(CXX) --std=$(CXX_STD) $(CXXFLAGS) $(CCFLAGS) $(SDL2_CFLAGS) -c $< -o $@
 
 $(bin): $(OBJS_C) $(OBJS_CPP)
 	@echo Linking $@
-	@$(CXX) --std=$(CXX_STD) $(OBJS_C) $(OBJS_CPP) $(LFLAGS) -o $@
+	@$(CXX) --std=$(CXX_STD) $(OBJS_C) $(OBJS_CPP) $(LFLAGS) $(SDL2_LFLAGS) -o $@
 
 .PHONY: run
 .PHONY: clean
@@ -118,14 +123,14 @@ clean:
 
 # make gen-rc Arch=x86_64(or i686)
 gen-rc:
-	@python3 tools/create_rc.py --arch=$(Arch) --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
+	@$(PYTHON) tools/create_rc.py --arch=$(Arch) --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
 	@echo Generated RC...
 
 # make gen-assets
 gen-assets:
-	@python3 tools/create_icons.py
+	@$(PYTHON) tools/create_icons.py
 	@echo Generated Icons...
-	@python3 tools/create_assets.py
+	@$(PYTHON) tools/create_assets.py --cxx=$(CXX)
 	@echo Generated Assets...
 
 # make appimage
