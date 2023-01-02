@@ -190,7 +190,7 @@ int RendererThreadFunc(void* _args) {
 			Logger_Error("Cannot Open The File in filePath");
 		} else {
 			uint32_t w = 0, h = 0;
-			uchar_t* _data = ifio_read_uchar(_fName, &w, &h);
+			uchar_t* _data = ifio_read_uchar(filePath, &w, &h);
 			if (w > 0 && h > 0 && _data != NULL) {
 				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 					if (CanvasLayers[i] != NULL) {
