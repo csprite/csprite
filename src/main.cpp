@@ -20,10 +20,7 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_extension.h"
 
-#include "stb_image_write.h"
-#include "stb_image.h"
 #include "utils.h"
-
 #include "log/log.h"
 #include "assets.h"
 #include "logger.h"
@@ -36,6 +33,7 @@
 #include "system.h"
 #include "renderer/canvas.h"
 #include "renderer/renderer.h"
+#include "ifileio/ifileio.h"
 
 typedef unsigned char uchar_t;
 
@@ -139,7 +137,7 @@ static inline bool CanMutateCanvas();
 void MutateCanvas(bool LmbJustReleased);
 uchar_t* GetPixel(int x, int y);
 static void InitWindowIcon(SDL_Window* window);
-static void OpenNewFile(SDL_Window* window);
+static void OpenNewFile();
 
 #define GetSelectedPalette() PaletteArr->Palettes[PaletteIndex]
 
@@ -191,9 +189,9 @@ int RendererThreadFunc(void* _args) {
 		} else if (result == 0) {
 			Logger_Error("Cannot Open The File in filePath");
 		} else {
-			int w = 0, h = 0, channels = 0;
-			uchar_t* _data = stbi_load(filePath, &w, &h, &channels, 4);
-			if (w > 0 && h > 0) {
+			uint32_t w = 0, h = 0;
+			uchar_t* _data = ifio_read_uchar(_fName, &w, &h);
+			if (w > 0 && h > 0 && _data != NULL) {
 				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 					if (CanvasLayers[i] != NULL) {
 						Canvas_DestroyLayer(CanvasLayers[i]);
@@ -219,7 +217,7 @@ int RendererThreadFunc(void* _args) {
 				char* filePathBasename = Sys_GetBasename(filePath);
 				snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
 				free(filePathBasename);
-				stbi_image_free(_data);
+				free(_data);
 				UpdateWindowTitle = true;
 			}
 		}
@@ -267,7 +265,7 @@ int RendererThreadFunc(void* _args) {
 					ShowNewCanvasWindow = true;
 				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					OpenNewFile(window);
+					OpenNewFile();
 				}
 				if (ImGui::BeginMenu("Save")) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
@@ -626,7 +624,7 @@ IncrementAndCreateLayer__:
 
 			if (ShouldSave == true || ShouldSaveAs == true) {
 				if (ShouldSaveAs == true) {
-					auto destination = pfd::save_file("Select a file", ".", { "Image Files", "*.png" }, pfd::opt::none).result();
+					auto destination = pfd::save_file("Select a file", ".", { "Image Files", "*.png *.jpg *.jpeg *.ppm" }, pfd::opt::none).result();
 					const char* _fPath = destination.empty() ? NULL : destination.c_str();
 					if (_fPath != NULL) {
 						snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fPath);
@@ -642,8 +640,7 @@ IncrementAndCreateLayer__:
 				// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
 				if (ShouldSave == true || ShouldSaveAs == true) {
 					uchar_t* canvas_data = Canvas_GetRender();
-					stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
-					stbi_write_png(FilePath, CanvasDims[0], CanvasDims[1], 4, canvas_data, 0);
+					ifio_write_uchar(FilePath, canvas_data, CanvasDims[0], CanvasDims[1]);
 					free(canvas_data);
 					ShouldSave = false;
 					ShouldSaveAs = false;
@@ -925,7 +922,7 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 			if (IsCtrlDown == true && ShouldSave == false) ShouldSave = true;
 			break;
 		case SDLK_o:
-			if (IsCtrlDown == true) OpenNewFile(SDL_GetWindowFromID(e->window.windowID));
+			if (IsCtrlDown == true) OpenNewFile();
 			break;
 		case SDLK_LCTRL:
 		case SDLK_RCTRL:
@@ -1133,7 +1130,7 @@ static void InitWindowIcon(SDL_Window* window) {
 	SDL_FreeSurface(surface);
 }
 
-static void OpenNewFile(SDL_Window* window) {
+static void OpenNewFile() {
 	auto selection = pfd::open_file(
 		"Select a file", ".",
 		{
@@ -1142,12 +1139,12 @@ static void OpenNewFile(SDL_Window* window) {
 		},
 		pfd::opt::none
 	).result();
-	const char* _fName = selection.empty() ? NULL : selection[0].c_str();
 
+	const char* _fName = selection.empty() ? NULL : selection[0].c_str();
 	if (_fName != NULL) {
-		int w = 0, h = 0, channels = 0;
-		uchar_t* _data = stbi_load(_fName, &w, &h, &channels, 4);
-		if (w > 0 && h > 0) {
+		uint32_t w = 0, h = 0;
+		uchar_t* _data = ifio_read_uchar(_fName, &w, &h);
+		if (w > 0 && h > 0 && _data != NULL) {
 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
 					Canvas_DestroyLayer(CanvasLayers[i]);
@@ -1173,7 +1170,7 @@ static void OpenNewFile(SDL_Window* window) {
 			char* filePathBasename = Sys_GetBasename(_fName);
 			snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
 			free(filePathBasename);
-			stbi_image_free(_data);
+			free(_data);
 			UpdateWindowTitle = true;
 		}
 	}
