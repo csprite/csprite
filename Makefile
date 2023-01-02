@@ -25,7 +25,7 @@ ifeq ($(call lc,$(BUILD_TARGET)),debug)
 	CCFLAGS+=-DCS_BUILD_STABLE=0
 else
 	ifeq ($(call lc,$(BUILD_TARGET)),release)
-		CCFLAGS+=-DCS_BUILD_STABLE=1
+		CCFLAGS+=-DCS_BUILD_STABLE=1 -DIMGUI_DISABLE_DEMO_WINDOWS=1 -DIMGUI_DISABLE_DEBUG_TOOLS=1
 	else
 $(error Invalid Build Target: "$(BUILD_TARGET)")
 	endif
