@@ -113,7 +113,7 @@ $(bin): $(OBJS_C) $(OBJS_CPP)
 .PHONY: clean
 
 # make run
-run: $(all)
+run: $(bin)
 	./$(bin)
 
 # make clean
