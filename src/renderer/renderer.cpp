@@ -48,7 +48,9 @@ void R_Destroy(void) {
 }
 
 void R_Clear(void) {
-	glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)ImGui::GetIO().DisplaySize.y);
+	int w, h;
+	SDL_GL_GetDrawableSize(window, &w, &h);
+	glViewport(0, 0, w, h);
 	glClearColor(0.075, 0.075, 0.1, 1.0); // Set The Color Used When Clearing Buffer (Set Alpha To 0 When Saving The Image So That The Color Doesn't Add In Final Render)
 	glClear(GL_COLOR_BUFFER_BIT); // Clear The Back Buffer With The Color Specified Above
 }
