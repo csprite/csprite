@@ -708,7 +708,6 @@ int main(int argc, char* argv[]) {
 		WindowDims[0], WindowDims[1],
 		SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED
 	);
-	SDL_GetWindowSize(window, &WindowDims[0], &WindowDims[1]);
 	UpdateViewportPos();
 
 	InitWindowIcon(window);
@@ -1002,8 +1001,8 @@ static inline void OnEvent_MouseMotion(SDL_Event* e) {
 
 	MousePosRelLast[0] = MousePosRel[0];
 	MousePosRelLast[1] = MousePosRel[1];
-	MousePosRel[0] = (e->motion.x - ViewportPos[0]) / CurrViewportZoom;
-	MousePosRel[1] = ((e->motion.y + ViewportPos[1]) - (WindowDims[1] - ViewportSize[1])) / CurrViewportZoom;
+	MousePosRel[0] = (MousePos[0] - ViewportPos[0]) / CurrViewportZoom;
+	MousePosRel[1] = ((MousePos[1] + ViewportPos[1]) - (WindowDims[1] - ViewportSize[1])) / CurrViewportZoom;
 
 	if (Tool == TOOL_PAN) {
 		ViewportPos[0] -= MousePosLast[0] - MousePos[0];
