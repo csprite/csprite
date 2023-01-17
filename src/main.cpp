@@ -1040,7 +1040,7 @@ static inline void ProcessEvents(SDL_Window* window) {
 				ShouldClose = true;
 				break;
 			case SDL_WINDOWEVENT:
-				if (event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window)) {
+				if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
 					ShouldClose = true;
 				}
 				break;
