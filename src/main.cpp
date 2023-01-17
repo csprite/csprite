@@ -1043,6 +1043,16 @@ static inline void ProcessEvents(SDL_Window* window) {
 				if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
 					ShouldClose = true;
 				}
+				if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+					int w = 0, h = 0;
+					SDL_GetWindowSize(window, &w, &h);
+					if (w > 0 && h > 0) {
+						WindowDims[0] = w;
+						WindowDims[1] = h;
+					} else {
+						Logger_Error("invalid window size %dx%d", w, h);
+					}
+				}
 				break;
 			case SDL_KEYDOWN:
 				OnEvent_KeyDown(&event);
