@@ -71,7 +71,6 @@ enum tool_e { BRUSH_COLOR, BRUSH_ERASER, SHAPE_LINE, SHAPE_RECT, SHAPE_CIRCLE, T
 enum tool_shape_e { CIRCLE, SQUARE };
 enum tool_e Tool = BRUSH_COLOR;
 enum tool_e LastTool = BRUSH_COLOR;
-enum tool_shape_e ToolShape = CIRCLE;
 
 float PreviewWindowZoom = 1.0f;
 float CurrViewportZoom = 1.0f;
@@ -752,11 +751,11 @@ static void _GuiSetToolText() {
 	switch (Tool) {
 	case BRUSH_COLOR:
 	case BRUSH_ERASER:
-		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Size: %d)", ToolShape == SQUARE ? "Square" : "Circle", Tool == BRUSH_COLOR ? "Brush" : "Eraser", Tools_GetBrushSize());
+		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Size: %d)", Tools_GetBrushShape() ? "Square" : "Circle", Tool == BRUSH_COLOR ? "Brush" : "Eraser", Tools_GetBrushSize());
 		break;
 	case SHAPE_RECT:
 	case SHAPE_LINE:
-		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Width: %d)", ToolShape == SQUARE ? "Square" : "Rounded", Tool == SHAPE_LINE ? "Line" : "Rectangle", Tools_GetBrushSize());
+		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Width: %d)", Tools_GetBrushShape() ? "Square" : "Rounded", Tool == SHAPE_LINE ? "Line" : "Rectangle", Tools_GetBrushSize());
 		break;
 	case SHAPE_CIRCLE:
 		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "Circle (Boundary Width: %d)", Tools_GetBrushSize());
@@ -796,7 +795,7 @@ void MutateCanvas(bool LmbJustReleased) {
 		switch (Tool) {
 			case BRUSH_COLOR:
 			case BRUSH_ERASER: {
-				bool didChange = Tool_Brush(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, ToolShape == CIRCLE, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
+				bool didChange = Tool_Brush(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
 				CanvasDidMutate = CanvasDidMutate || didChange;
 				break;
 			}
@@ -816,9 +815,9 @@ void MutateCanvas(bool LmbJustReleased) {
 						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
 					}
 					if (Tool == SHAPE_RECT) {
-						Tool_Rect(CURR_CANVAS_LAYER->pixels, SelectedColor, ToolShape == CIRCLE, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
+						Tool_Rect(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
 					} else if (Tool == SHAPE_LINE) {
-						Tool_Line(CURR_CANVAS_LAYER->pixels, SelectedColor, ToolShape == CIRCLE, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
+						Tool_Line(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
 					} else if (Tool == SHAPE_CIRCLE) {
 						Tool_Circle(
 							CURR_CANVAS_LAYER->pixels,
@@ -895,22 +894,22 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 			break;
 		case SDLK_e:
 			Tool = BRUSH_ERASER;
-			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			Tools_SetBrushShape(IsShiftDown ? BRUSH_SHAPE_SQUARE : BRUSH_SHAPE_CIRCLE);
 			_GuiSetToolText();
 			break;
 		case SDLK_b:
 			Tool = BRUSH_COLOR;
-			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			Tools_SetBrushShape(IsShiftDown ? BRUSH_SHAPE_SQUARE : BRUSH_SHAPE_CIRCLE);
 			_GuiSetToolText();
 			break;
 		case SDLK_l:
 			Tool = SHAPE_LINE;
-			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			Tools_SetBrushShape(IsShiftDown ? BRUSH_SHAPE_SQUARE : BRUSH_SHAPE_CIRCLE);
 			_GuiSetToolText();
 			break;
 		case SDLK_r:
 			Tool = SHAPE_RECT;
-			ToolShape = IsShiftDown ? SQUARE : CIRCLE;
+			Tools_SetBrushShape(IsShiftDown ? BRUSH_SHAPE_SQUARE : BRUSH_SHAPE_CIRCLE);
 			_GuiSetToolText();
 			break;
 		case SDLK_c:
