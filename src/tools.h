@@ -8,15 +8,17 @@ extern "C" {
 #endif
 
 typedef unsigned char uchar_t;
+typedef enum { BRUSH_SHAPE_CIRCLE, BRUSH_SHAPE_SQUARE } BrushShape_t;
 
-void Tools_SetBrushSize(int32_t BrushSize);
+void Tools_SetBrushSize(int32_t size);
+void Tools_SetBrushShape(BrushShape_t shape);
 int32_t Tools_GetBrushSize();
+BrushShape_t Tools_GetBrushShape();
 
 // Returns true if it did modify the Pixels
 bool Tool_Brush(
 	uchar_t* Pixels,        // Pixels To Modify
 	uchar_t* Color,         // Color To Use
-	bool IsCircle,          // Whether To Draw Circle Or Square
 	uint32_t x, uint32_t y, // X, Y Position Of Where To Start
 	uint32_t w, uint32_t h  // Width & Height Of Pixel Array
 );
@@ -25,7 +27,6 @@ bool Tool_Brush(
 bool Tool_Line(
 	uchar_t* Pixels,       // Pixels To Modify
 	uchar_t* Color,        // Color To Use
-	bool IsCircle,         // Wether To Draw Line Rounded Or Not
 	int x0, int y0,        // Line Start x, y
 	int x1, int y1,        // Line End x, y
 	uint32_t w, uint32_t h // Width & Height Of Pixel Array
@@ -35,7 +36,6 @@ bool Tool_Line(
 bool Tool_Rect(
 	uchar_t* Pixels,       // Pixels To Modify
 	uchar_t* Color,        // Color To Use
-	bool IsCircle,         // Wether To Draw Rounded Rectangle Or Not
 	int x0, int y0,        // Rectangle Start x, y
 	int x1, int y1,        // Rectangle End x, y
 	uint32_t w, uint32_t h // Width & Height Of Pixel Array
