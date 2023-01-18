@@ -3,17 +3,26 @@
 #include "macros.h"
 #include "stb_image.h"
 
+BrushShape_t BrushShape = BRUSH_SHAPE_CIRCLE;
 int32_t BrushSize = 1;
 
 int32_t Tools_GetBrushSize() {
 	return BrushSize;
 }
 
+BrushShape_t Tools_GetBrushShape() {
+	return BrushShape;
+}
+
+void Tools_SetBrushShape(BrushShape_t _bshape) {
+	BrushShape = _bshape;
+}
+
 void Tools_SetBrushSize(int32_t NewBrushSize) {
 	BrushSize = NewBrushSize;
 }
 
-bool Tool_Brush(uchar_t* Pixels, uchar_t* Color, bool IsCircle, uint32_t st_x, uint32_t st_y, uint32_t w, uint32_t h) {
+bool Tool_Brush(uchar_t* Pixels, uchar_t* Color, uint32_t st_x, uint32_t st_y, uint32_t w, uint32_t h) {
 	bool didChange = false;
 	// dirY = direction Y
 	// dirX = direction X
@@ -24,7 +33,7 @@ bool Tool_Brush(uchar_t* Pixels, uchar_t* Color, bool IsCircle, uint32_t st_x, u
 			if (st_x + dirX < 0 || st_x + dirX >= w || st_y + dirY < 0 || st_y + dirY > h)
 				continue;
 
-			if (IsCircle == true && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
+			if (BrushShape == BRUSH_SHAPE_CIRCLE && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
 			uchar_t* pixel = GetCharData(Pixels, st_x + dirX, st_y + dirY, w, h);
@@ -40,14 +49,14 @@ bool Tool_Brush(uchar_t* Pixels, uchar_t* Color, bool IsCircle, uint32_t st_x, u
 	return didChange;
 }
 
-bool Tool_Line(uchar_t* Pixels, uchar_t* Color, bool IsCircle, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
+bool Tool_Line(uchar_t* Pixels, uchar_t* Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
 	int dx =  abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
 	int err = dx + dy, e2; /* error value e_xy */
 	bool didChange = false;
 
 	for (;;) {
-		didChange = Tool_Brush(Pixels, Color, IsCircle, x0, y0, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, x0, y0, w, h) || didChange;
 		if (x0 == x1 && y0 == y1) break;
 		e2 = 2 * err;
 		if (e2 >= dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
@@ -72,12 +81,12 @@ bool Tool_Line(uchar_t* Pixels, uchar_t* Color, bool IsCircle, int x0, int y0, i
  x0, y1           x1, y1
 */
 
-bool Tool_Rect(uchar_t* Pixels, uchar_t* Color, bool IsCircle, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
+bool Tool_Rect(uchar_t* Pixels, uchar_t* Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
 	bool didChange = false;
-	didChange = Tool_Line(Pixels, Color, IsCircle, x0, y0, x1, y0, w, h) || didChange;
-	didChange = Tool_Line(Pixels, Color, IsCircle, x1, y0, x1, y1, w, h) || didChange;
-	didChange = Tool_Line(Pixels, Color, IsCircle, x1, y1, x0, y1, w, h) || didChange;
-	didChange = Tool_Line(Pixels, Color, IsCircle, x0, y1, x0, y0, w, h) || didChange;
+	didChange = Tool_Line(Pixels, Color, x0, y0, x1, y0, w, h) || didChange;
+	didChange = Tool_Line(Pixels, Color, x1, y0, x1, y1, w, h) || didChange;
+	didChange = Tool_Line(Pixels, Color, x1, y1, x0, y1, w, h) || didChange;
+	didChange = Tool_Line(Pixels, Color, x0, y1, x0, y0, w, h) || didChange;
 	return didChange;
 }
 
@@ -93,14 +102,14 @@ bool Tool_Circle(uchar_t* Pixels, uchar_t* Color, int centreX, int centreY, int 
 
 	while (x >= y) {
 		// Each of the following renders an octant of the circle
-		didChange = Tool_Brush(Pixels, Color, true, centreX + x, centreY - y, w, h) || didChange;
-		didChange = Tool_Brush(Pixels, Color, true, centreX + x, centreY + y, w, h) || didChange;
-		didChange = Tool_Brush(Pixels, Color, true, centreX - x, centreY - y, w, h) || didChange;
-		didChange = Tool_Brush(Pixels, Color, true, centreX - x, centreY + y, w, h) || didChange;
-		didChange = Tool_Brush(Pixels, Color, true, centreX + y, centreY - x, w, h) || didChange;
-		didChange = Tool_Brush(Pixels, Color, true, centreX + y, centreY + x, w, h) || didChange;
-		didChange = Tool_Brush(Pixels, Color, true, centreX - y, centreY - x, w, h) || didChange;
-		didChange = Tool_Brush(Pixels, Color, true, centreX - y, centreY + x, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, centreX + x, centreY - y, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, centreX + x, centreY + y, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, centreX - x, centreY - y, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, centreX - x, centreY + y, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, centreX + y, centreY - x, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, centreX + y, centreY + x, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, centreX - y, centreY - x, w, h) || didChange;
+		didChange = Tool_Brush(Pixels, Color, centreX - y, centreY + x, w, h) || didChange;
 
 		if (error <= 0) {
 			++y;
