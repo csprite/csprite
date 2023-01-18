@@ -8,8 +8,7 @@ BEGIN
   BEGIN
     BLOCK "080904E4"
     BEGIN
-      VALUE "FileDescription", "A Tiny Pixel Art Tool"
-      VALUE "FileVersion", "1.0"
+      VALUE "FileDescription", "A tiny pixel art tool"
       VALUE "InternalName", "csprite"
       VALUE "LegalCopyright", "Aditya Mishra"
       VALUE "OriginalFilename", "__ORIGINAL_FILENAME__"
@@ -22,3 +21,4 @@ BEGIN
     VALUE "Translation", 0x809, 1252
   END
 END
+
