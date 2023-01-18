@@ -19,7 +19,7 @@ SDL2_STATIC_LINK:=1
 SDL2_LFLAGS:=
 SDL2_CFLAGS:=-DSDL_MAIN_HANDLED=1
 WINDRES_TARGET:=pe-x86-64 # pe-x86-64 for 64 bit system or pe-i686 for 32 bit system
-BUILD_TARGET=debug
+BUILD_TARGET:=debug
 
 ifeq ($(call lc,$(BUILD_TARGET)),debug)
 	CCFLAGS+=-DCS_BUILD_STABLE=0
