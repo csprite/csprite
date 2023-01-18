@@ -2,14 +2,10 @@
 this document roughly explains about code of csprite & stuff, so that contributors or any code reader get's some idea.
 
 ---
-
 ## Code
-
 most of the code of CSprite is C & C Styled & that's why i have used `malloc` & `free` instead of `new` & `delete`, i'm just using C++ for some stuff like strings etc & will completely switch to C in future because i didn't have much experience with strings in c back then.
 
 you might've noticed that there is just a single executable with no-dlls & stuff that's because csprite embeds required stuff like fonts & icons, this is basically done in 2 parts, first you need to convert the assets to include-able c arrays which is done via the `tools/create_assets.py` python3 script, second you need a way to access the c-arrays which is basically done in `src/assets.c`, this is the file where our assets are included & this file provides functions to interact with the assets like: `assets_get` & `assets_list`
-
-all of the gui code of csprite is inside [src/_GuiImpl.h](src/_GuiImpl.h), it's a simple c++ header file only to be included by [src/main.cpp](src/main.cpp), it has `static inline` functions which are called in the main loop of the app, since the functions are `static inline` the function calls is substituted with the code so we don't need to worry about it "slowing down" the code, it's just something i did to make the code clean (& might remove it in future?).
 
 ---
 ## Libraries
@@ -21,7 +17,7 @@ this way i can use Direct3d, Metal, OpenGL, Vulkan & Software depending on platf
 This was very helpful as i am not really a graphics programmer.
 
 #### ImGui
-csprite uses [ImGui](https://github.com/ocornut/imgui/) v1.87 which is used for making GUIs, so i don't need to do that myself
+csprite uses [ImGui](https://github.com/ocornut/imgui/) v1.89.1 which is used for making GUIs.
 
 #### STB
 csprite uses [STB's](https://github.com/nothings/stb) Image Loader & Writer for Interacting With PNGs.
@@ -30,11 +26,11 @@ csprite uses [STB's](https://github.com/nothings/stb) Image Loader & Writer for 
 csprite uses [Log.c](https://github.com/rxi/log.c) for logging stuff (i didn't want to re-invent the wheel?) &
 [Ini](https://github.com/rxi/ini) for reading & writing csprite config.
 
-#### Tiny File Dialogs
-csprite uses [Tiny File Dialogs](https://sourceforge.net/projects/tinyfiledialogs/) for open & save dialogs,
+#### Portable File Dialogs
+csprite uses [Portable File Dialogs](https://github.com/samhocevar/portable-file-dialogs) for open & save dialogs,
 tho i might re-write a file open & save dialog using ImGui because it takes some time to launch initially & using ImGui
 i can control the theme too!
 
 ---
-
 # Thanks
+
