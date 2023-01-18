@@ -114,7 +114,7 @@ $(bin): $(OBJS_C) $(OBJS_CPP)
 
 # make run
 run: $(bin)
-	./$(bin)
+	@./$(bin)
 
 # make clean
 clean:
