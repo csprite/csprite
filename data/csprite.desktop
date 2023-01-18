@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=CSprite
-Comment=A tiny pixel art editor
+Comment=A tiny pixel art tool
 GenericName=pixel editor
 Categories=Graphics;2DGraphics;RasterGraphics
 Icon=csprite
@@ -11,3 +11,4 @@ Terminal=false
 StartupNotify=false
 StartupWMClass=CSprite
 MimeType=image/jpeg;image/png;
+
