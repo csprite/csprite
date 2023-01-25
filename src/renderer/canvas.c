@@ -12,7 +12,7 @@ static GLuint fboId = 0;
 static GLuint fboTexId = 0;
 static GLuint textureShaderId = 0;
 static GLuint bgTexture = 0;
-static uchar_t bgData[2 * 2 * 4] = {
+static uint8_t bgData[2 * 2 * 4] = {
 	// 2x2 Pixel Array To Create Checkerboard Background
 	0x80, 0x80, 0x80, 0xFF,
 	0xC0, 0xC0, 0xC0, 0xFF,
@@ -147,8 +147,8 @@ void Canvas_Render(GLint ViewportPosX, GLint ViewportPosY, GLsizei ViewportWidth
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-uchar_t* Canvas_GetRender() {
-	uchar_t* data = (uchar_t*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
+uint8_t* Canvas_GetRender() {
+	uint8_t* data = (uint8_t*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t));
 	if (data == NULL) return NULL;
 	glBindFramebuffer(GL_FRAMEBUFFER, fboId); // Select Our Canvas Framebuffer
 	glReadPixels(0, 0, CanvasDims[0], CanvasDims[1], GL_RGBA, GL_UNSIGNED_BYTE, data); // Read Data From Currently Selected Buffer
@@ -164,11 +164,11 @@ CanvasLayer_T* Canvas_CreateLayer() {
 	if (CanvasDims[0] == 0 || CanvasDims[1] == 1) return NULL;
 
 	CanvasLayer_T* c = malloc(sizeof(CanvasLayer_T));
-	c->pixels = (uchar_t*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
-	memset(c->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
+	c->pixels = (uint8_t*) malloc(CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t));
+	memset(c->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t));
 	c->texture = CreateCanvasTexture(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, c->pixels, CanvasDims[0], CanvasDims[1]);
 	c->history = NULL; // Need To Explicitly Set This To NULL Cause SaveHistory Functions Tries To Check If The Pointer Is Not NULL And If So It Tries To Check it's Member.
-	SaveHistory(&c->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), c->pixels);
+	SaveHistory(&c->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), c->pixels);
 	snprintf(c->name, LAYER_NAME_MAX, "New Layer");
 
 	return c;

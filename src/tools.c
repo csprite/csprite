@@ -22,7 +22,7 @@ void Tools_SetBrushSize(int32_t NewBrushSize) {
 	BrushSize = NewBrushSize;
 }
 
-bool Tool_Brush(uchar_t* Pixels, uchar_t* Color, uint32_t st_x, uint32_t st_y, uint32_t w, uint32_t h) {
+bool Tool_Brush(uint8_t* Pixels, uint8_t* Color, uint32_t st_x, uint32_t st_y, uint32_t w, uint32_t h) {
 	bool didChange = false;
 	// dirY = direction Y
 	// dirX = direction X
@@ -36,7 +36,7 @@ bool Tool_Brush(uchar_t* Pixels, uchar_t* Color, uint32_t st_x, uint32_t st_y, u
 			if (BrushShape == BRUSH_SHAPE_CIRCLE && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
-			uchar_t* pixel = GetCharData(Pixels, st_x + dirX, st_y + dirY, w, h);
+			uint8_t* pixel = GetCharData(Pixels, st_x + dirX, st_y + dirY, w, h);
 			if (pixel != NULL) {
 				*(pixel + 0) = Color[0];
 				*(pixel + 1) = Color[1];
@@ -49,7 +49,7 @@ bool Tool_Brush(uchar_t* Pixels, uchar_t* Color, uint32_t st_x, uint32_t st_y, u
 	return didChange;
 }
 
-bool Tool_Line(uchar_t* Pixels, uchar_t* Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
+bool Tool_Line(uint8_t* Pixels, uint8_t* Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
 	int dx =  abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
 	int err = dx + dy, e2; /* error value e_xy */
@@ -81,7 +81,7 @@ bool Tool_Line(uchar_t* Pixels, uchar_t* Color, int x0, int y0, int x1, int y1, 
  x0, y1           x1, y1
 */
 
-bool Tool_Rect(uchar_t* Pixels, uchar_t* Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
+bool Tool_Rect(uint8_t* Pixels, uint8_t* Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
 	bool didChange = false;
 	didChange = Tool_Line(Pixels, Color, x0, y0, x1, y0, w, h) || didChange;
 	didChange = Tool_Line(Pixels, Color, x1, y0, x1, y1, w, h) || didChange;
@@ -90,7 +90,7 @@ bool Tool_Rect(uchar_t* Pixels, uchar_t* Color, int x0, int y0, int x1, int y1, 
 	return didChange;
 }
 
-bool Tool_Circle(uchar_t* Pixels, uchar_t* Color, int centreX, int centreY, int radius, uint32_t w, uint32_t h) {
+bool Tool_Circle(uint8_t* Pixels, uint8_t* Color, int centreX, int centreY, int radius, uint32_t w, uint32_t h) {
 	const int diameter = (radius * 2);
 
 	int32_t x = (radius - 1);
@@ -126,9 +126,9 @@ bool Tool_Circle(uchar_t* Pixels, uchar_t* Color, int centreX, int centreY, int 
 }
 
 bool Tool_FloodFill(
-	uchar_t* Pixels,
-	uchar_t* OldColor,
-	uchar_t* NewColor,
+	uint8_t* Pixels,
+	uint8_t* OldColor,
+	uint8_t* NewColor,
 	uint32_t x, uint32_t y,
 	uint32_t w, uint32_t h
 ) {
@@ -138,7 +138,7 @@ bool Tool_FloodFill(
 		Pixels != NULL && OldColor != NULL && NewColor != NULL &&
 		!COLOR_EQUAL(NewColor, OldColor)
 	) {
-		uchar_t* pixel = GetCharData(Pixels, x, y, w, h);
+		uint8_t* pixel = GetCharData(Pixels, x, y, w, h);
 
 		if (pixel != NULL) {
 			if (COLOR_EQUAL(pixel, OldColor) == 1) {
