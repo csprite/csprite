@@ -35,8 +35,6 @@
 #include "renderer/renderer.h"
 #include "ifileio/ifileio.h"
 
-typedef unsigned char uchar_t;
-
 int32_t WindowDims[2] = { 700, 500 };
 uint32_t CanvasDims[2] = { 32, 24 };
 
@@ -82,8 +80,8 @@ GLsizei ViewportSize[2] = { 0, 0 };
 int32_t PaletteIndex = 0;
 int32_t ThemeIndex = 0;
 uint16_t PaletteColorIndex = 2;
-uchar_t EraseColor[4] = { 0, 0, 0, 0 };
-uchar_t SelectedColor[4] = { 255, 255, 255, 255 };
+uint8_t EraseColor[4] = { 0, 0, 0, 0 };
+uint8_t SelectedColor[4] = { 255, 255, 255, 255 };
 
 #define MAX_SELECTEDTOOLTEXT_SIZE 512
 char SelectedToolText[MAX_SELECTEDTOOLTEXT_SIZE] = "";
@@ -134,17 +132,17 @@ void UpdateViewportSize();
 void UpdateViewportPos();
 static inline bool CanMutateCanvas();
 void MutateCanvas(bool LmbJustReleased);
-uchar_t* GetPixel(int x, int y);
+uint8_t* GetPixel(int x, int y);
 static void InitWindowIcon(SDL_Window* window);
 static void OpenNewFile();
 
 #define GetSelectedPalette() PaletteArr->Palettes[PaletteIndex]
 
 #define UNDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels)
+	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
 
 #define REDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels)
+	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
 
 struct sdl_thread_arg {
 	SDL_Window* win;
@@ -189,7 +187,7 @@ int RendererThreadFunc(void* _args) {
 			Logger_Error("Cannot Open The File in filePath");
 		} else {
 			uint32_t w = 0, h = 0;
-			uchar_t* _data = ifio_read_uchar(filePath, &w, &h);
+			uint8_t* _data = ifio_read(filePath, &w, &h);
 			if (w > 0 && h > 0 && _data != NULL) {
 				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 					if (CanvasLayers[i] != NULL) {
@@ -208,9 +206,9 @@ int RendererThreadFunc(void* _args) {
 
 				SelectedLayerIndex = 0;
 				CURR_CANVAS_LAYER = Canvas_CreateLayer();
-				memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
+				memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
 				FreeHistory(&CURR_CANVAS_LAYER->history);
-				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
 
 				snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", filePath);
 				char* filePathBasename = Sys_GetBasename(filePath);
@@ -417,7 +415,7 @@ int RendererThreadFunc(void* _args) {
 				for (int i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 					if (CanvasLayers[i] != NULL) {
 						FreeHistory(&CanvasLayers[i]->history);
-						SaveHistory(&CanvasLayers[i]->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), CanvasLayers[i]->pixels);
+						SaveHistory(&CanvasLayers[i]->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CanvasLayers[i]->pixels);
 					}
 				}
 			}
@@ -638,8 +636,8 @@ IncrementAndCreateLayer__:
 
 				// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
 				if (ShouldSave == true || ShouldSaveAs == true) {
-					uchar_t* canvas_data = Canvas_GetRender();
-					ifio_write_uchar(FilePath, canvas_data, CanvasDims[0], CanvasDims[1]);
+					uint8_t* canvas_data = Canvas_GetRender();
+					ifio_write(FilePath, canvas_data, CanvasDims[0], CanvasDims[1]);
 					free(canvas_data);
 					ShouldSave = false;
 					ShouldSaveAs = false;
@@ -805,14 +803,14 @@ void MutateCanvas(bool LmbJustReleased) {
 				if (LmbJustReleased) {
 					CanvasDidMutate = CanvasDidMutate || (Tool == SHAPE_LINE || Tool == SHAPE_RECT || Tool == SHAPE_CIRCLE);
 					if (CanvasDidMutate == true) {
-						SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+						SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
 						CanvasDidMutate = false;
 					}
 				} else if (IsLMBDown) {
 					if (CURR_CANVAS_LAYER->history->prev != NULL) {
-						memcpy(CURR_CANVAS_LAYER->pixels, CURR_CANVAS_LAYER->history->pixels, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
+						memcpy(CURR_CANVAS_LAYER->pixels, CURR_CANVAS_LAYER->history->pixels, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t));
 					} else {
-						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t));
+						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t));
 					}
 					if (Tool == SHAPE_RECT) {
 						Tool_Rect(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
@@ -851,7 +849,7 @@ void MutateCanvas(bool LmbJustReleased) {
 			}
 			case TOOL_INKDROPPER: {
 				if (LmbJustReleased) {
-					uchar_t* pixel = GetPixel(MousePosRel[0], MousePosRel[1]);
+					uint8_t* pixel = GetPixel(MousePosRel[0], MousePosRel[1]);
 					if (pixel != NULL && *(pixel + 3) != 0) {
 						bool foundEntry = false;
 						for (unsigned int i = 0; i < GetSelectedPalette()->numOfEntries; i++) {
@@ -1075,7 +1073,7 @@ static inline void ProcessEvents(SDL_Window* window) {
 	}
 
 	if (CanvasDidMutate == true && IsLMBDown == false) {
-		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
 		CanvasDidMutate = false;
 	}
 }
@@ -1115,13 +1113,13 @@ void ZoomOpenGlViewport(int increase) {
 	UpdateViewportSize();
 }
 
-uchar_t* GetPixel(int x, int y) {
+uint8_t* GetPixel(int x, int y) {
 	if (CURR_CANVAS_LAYER == NULL) return NULL;
 	return CURR_CANVAS_LAYER->pixels + ((y * CanvasDims[0] + x) * 4);
 }
 
 static void InitWindowIcon(SDL_Window* window) {
-	uchar_t* winIcon = (uchar_t*)Assets_Get("data/icons/icon-24.png", NULL);
+	uint8_t* winIcon = (uint8_t*)Assets_Get("data/icons/icon-24.png", NULL);
 	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
 		winIcon,
 		24, 24, 32, 24 * 4,
@@ -1151,7 +1149,7 @@ static void OpenNewFile() {
 	const char* _fName = selection.empty() ? NULL : selection[0].c_str();
 	if (_fName != NULL) {
 		uint32_t w = 0, h = 0;
-		uchar_t* _data = ifio_read_uchar(_fName, &w, &h);
+		uint8_t* _data = ifio_read(_fName, &w, &h);
 		if (w > 0 && h > 0 && _data != NULL) {
 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
@@ -1170,9 +1168,9 @@ static void OpenNewFile() {
 
 			SelectedLayerIndex = 0;
 			CURR_CANVAS_LAYER = Canvas_CreateLayer();
-			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uchar_t));
+			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
 			FreeHistory(&CURR_CANVAS_LAYER->history);
-			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uchar_t), CURR_CANVAS_LAYER->pixels);
+			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
 
 			snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fName);
 			char* filePathBasename = Sys_GetBasename(_fName);

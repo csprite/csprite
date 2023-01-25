@@ -43,7 +43,7 @@ void FreeHistory(History_T** CurrentState) {
 	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
 	Removes The Elements in a range from "History" if "IsDirty" is true
 */
-void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, uchar_t* data) {
+void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, uint8_t* data) {
 	// Runs When We Did Undo And Tried To Modify The Canvas
 	if (CurrentState != NULL && (*CurrentState != NULL) && (*CurrentState)->next != NULL) {
 		History_T* tmp;
@@ -60,7 +60,7 @@ void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, uchar_t* data) 
 	}
 
 	History_T* NewState = (History_T*) malloc(sizeof(History_T));
-	NewState->pixels = (uchar_t*) malloc(dataSizeBytes);
+	NewState->pixels = (uint8_t*) malloc(dataSizeBytes);
 
 	if ((*CurrentState) == NULL) {
 		(*CurrentState) = NewState;
