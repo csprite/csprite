@@ -9,10 +9,8 @@
 extern "C" {
 #endif
 
-typedef unsigned char uchar_t;
-
 typedef struct history {
-	uchar_t*         pixels;
+	uint8_t*         pixels;
 	struct history*  next;
 	struct history*  prev;
 } History_T;
@@ -32,16 +30,16 @@ void FreeHistory(History_T** CurrentState);
 	Remarks:
 		- It's safe to pass the un-initialized buffer, it allocated the memory for it
 */
-void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, uchar_t* data);
+void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, uint8_t* data);
 
-// HISTORY_UNDO(History_T* state, unsigned int size, uchar_t* data)
+// HISTORY_UNDO(History_T* state, unsigned int size, uint8_t* data)
 #define HISTORY_UNDO(state, size, data)         \
 	if (state->prev != NULL) {                  \
 		state = state->prev;                    \
 		memcpy(data, state->pixels, size);      \
 	}
 
-// HISTORY_REDO(History_T* state, unsigned int size, uchar_t* data)
+// HISTORY_REDO(History_T* state, unsigned int size, uint8_t* data)
 #define HISTORY_REDO(state, size, data)        \
 	if (state->next != NULL) {                 \
 		state = state->next;                   \

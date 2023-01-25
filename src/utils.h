@@ -4,8 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef unsigned char uchar_t;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -15,7 +13,7 @@ int ColorEqual(unsigned char *a, unsigned char *b);
 unsigned char* GetCharData(unsigned char *data, uint32_t x, uint32_t y, uint32_t w, uint32_t h);
 char* ReadTextFile(const char* path);
 bool StringStartsWith(const char* prefix, const char* str);
-uchar_t* ScalePixelArray(uchar_t* src, uint32_t src_w, uint32_t src_h, uint32_t target_w, uint32_t target_h);
+uint8_t* ScalePixelArray(uint8_t* src, uint32_t src_w, uint32_t src_h, uint32_t target_w, uint32_t target_h);
 
 #ifdef __cplusplus
 }
@@ -24,12 +22,12 @@ uchar_t* ScalePixelArray(uchar_t* src, uint32_t src_w, uint32_t src_h, uint32_t 
 #ifdef UTILS_IMPLEMENTATION
 
 // https://stackoverflow.com/a/299305/14516016
-uchar_t* ScalePixelArray(uchar_t* src, uint32_t src_w, uint32_t src_h, uint32_t target_w, uint32_t target_h) {
-	uchar_t* dest = (uchar_t*) malloc(target_w * target_h * 4 * sizeof(uchar_t));
+uint8_t* ScalePixelArray(uint8_t* src, uint32_t src_w, uint32_t src_h, uint32_t target_w, uint32_t target_h) {
+	uint8_t* dest = (uint8_t*) malloc(target_w * target_h * 4 * sizeof(uint8_t));
 	for (uint32_t x = 0; x < target_w; ++x) {
 		for (uint32_t y = 0; y < target_h; ++y) {
-			uchar_t* srcPixel = GetCharData(src, x * src_w / target_w, y * src_h / target_h, src_w, src_h);
-			uchar_t* destPixel = GetCharData(dest, x, y, target_w, target_h);
+			uint8_t* srcPixel = GetCharData(src, x * src_w / target_w, y * src_h / target_h, src_w, src_h);
+			uint8_t* destPixel = GetCharData(dest, x, y, target_w, target_h);
 			*(destPixel + 0) = srcPixel[0];
 			*(destPixel + 1) = srcPixel[1];
 			*(destPixel + 2) = srcPixel[2];
