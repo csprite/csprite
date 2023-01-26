@@ -57,8 +57,8 @@ bool CanvasDidMutate = false;
 bool EventsLocked = true;
 bool UpdateWindowTitle = false;
 
-char FilePath[SYS_PATH_MAX_SIZE] = "untitled.png";
-char FileName[SYS_PATH_MAX_SIZE] = "untitled.png";
+char FilePath[SYS_PATHNAME_MAX] = "untitled.png";
+char FileName[SYS_FILENAME_MAX] = "untitled.png";
 
 #define MAX_CANVAS_LAYERS 100
 uint32_t SelectedLayerIndex = 0;
@@ -86,6 +86,9 @@ uint8_t SelectedColor[4] = { 255, 255, 255, 255 };
 #define MAX_SELECTEDTOOLTEXT_SIZE 512
 char SelectedToolText[MAX_SELECTEDTOOLTEXT_SIZE] = "";
 
+#define WINDOW_TITLE_MAX 512 + SYS_FILENAME_MAX
+char WindowTitle[WINDOW_TITLE_MAX] = "";
+
 Config_T* AppConfig = NULL;
 PaletteArr_T* PaletteArr = NULL;
 theme_arr_t* ThemeArr = NULL;
@@ -112,16 +115,15 @@ theme_arr_t* ThemeArr = NULL;
 	#define CS_BUILD_TYPE "stable"
 #endif
 
-#define VERSION_STR "v" + std::to_string(CS_VERSION_MAJOR) + \
-						"." + std::to_string(CS_VERSION_MINOR) + \
-						"." + std::to_string(CS_VERSION_PATCH) + \
-						"-" + CS_BUILD_TYPE
+#define __STR_IMPL_(s) #s     // Stringify Argument
+#define STR(s) __STR_IMPL_(s) // Expand Argument
 
-#define WINDOW_TITLE_CSTR ( \
-	FileName[0] != 0 ? \
-		FileName + std::string(" - csprite ") + VERSION_STR : \
-		std::string("csprite - ") + VERSION_STR \
-	).c_str()
+// two macros for assembling the structure of window title on compile time and appending the filename when needed.
+#define VERSION_STR "v" STR(CS_VERSION_MAJOR) "." STR(CS_VERSION_MINOR) "." STR(CS_VERSION_PATCH) "-" CS_BUILD_TYPE
+#define GEN_WIN_TITLE() do {\
+		if (FileName[0] != 0) { snprintf(WindowTitle, WINDOW_TITLE_MAX, "%s - csprite " VERSION_STR, FileName); }\
+		else { snprintf(WindowTitle, WINDOW_TITLE_MAX, "csprite " VERSION_STR); }\
+	} while(0)
 
 static void OpenNewFile();
 static void InitWindowIcon(SDL_Window* window);
@@ -209,9 +211,9 @@ int RendererThreadFunc(void* _args) {
 				FreeHistory(&CURR_CANVAS_LAYER->history);
 				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
 
-				snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", filePath);
+				snprintf(FilePath, SYS_PATHNAME_MAX, "%s", filePath);
 				char* filePathBasename = Sys_GetBasename(filePath);
-				snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
+				snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
 				free(filePathBasename);
 				free(_data);
 				UpdateWindowTitle = true;
@@ -623,9 +625,9 @@ IncrementAndCreateLayer__:
 					auto destination = pfd::save_file("Select a file", ".", { "Image Files", "*.png *.jpg *.jpeg *.ppm" }, pfd::opt::none).result();
 					const char* _fPath = destination.empty() ? NULL : destination.c_str();
 					if (_fPath != NULL) {
-						snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fPath);
+						snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fPath);
 						char* _fName = Sys_GetBasename(_fPath);
-						snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", _fName);
+						snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
 						free(_fName);
 						UpdateWindowTitle = true;
 					} else {
@@ -683,6 +685,7 @@ int main(int argc, char* argv[]) {
 	SDL_VERSION(&compiled);
 	SDL_GetVersion(&linked);
 
+	Logger_Info("Init csprite " VERSION_STR);
 	Logger_Info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
 	Logger_Info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
 
@@ -698,8 +701,9 @@ int main(int argc, char* argv[]) {
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
+	GEN_WIN_TITLE();
 	SDL_Window* window = SDL_CreateWindow(
-		WINDOW_TITLE_CSTR,
+		WindowTitle,
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		WindowDims[0], WindowDims[1],
 		SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED
@@ -723,7 +727,8 @@ int main(int argc, char* argv[]) {
 		if (!EventsLocked) {
 			ProcessEvents(window);
 			if (UpdateWindowTitle) {
-				SDL_SetWindowTitle(window, WINDOW_TITLE_CSTR);
+				GEN_WIN_TITLE();
+				SDL_SetWindowTitle(window, WindowTitle);
 				UpdateWindowTitle = false;
 			}
 		}
@@ -1171,9 +1176,9 @@ static void OpenNewFile() {
 			FreeHistory(&CURR_CANVAS_LAYER->history);
 			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
 
-			snprintf(FilePath, SYS_PATH_MAX_SIZE, "%s", _fName);
+			snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fName);
 			char* filePathBasename = Sys_GetBasename(_fName);
-			snprintf(FileName, SYS_PATH_MAX_SIZE, "%s", filePathBasename);
+			snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
 			free(filePathBasename);
 			free(_data);
 			UpdateWindowTitle = true;

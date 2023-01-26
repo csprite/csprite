@@ -52,7 +52,7 @@ int Sys_IsRegularDir(const char* dirPath) {
 }
 
 char* Sys_GetConfigDir(void) {
-	static char fullPath[SYS_PATH_MAX_SIZE] = "";
+	static char fullPath[SYS_PATHNAME_MAX] = "";
 
 #if defined(__unix__) || defined(__linux__)
 	const char* configHome = NULL;
@@ -63,23 +63,23 @@ char* Sys_GetConfigDir(void) {
 			configHome = getpwuid(getuid())->pw_dir;
 			if (!configHome) return NULL;
 		}
-		snprintf(fullPath, SYS_PATH_MAX_SIZE, "%s/.config", configHome);
+		snprintf(fullPath, SYS_PATHNAME_MAX, "%s/.config", configHome);
 	} else {
-		snprintf(fullPath, SYS_PATH_MAX_SIZE, "%s", configHome);
+		snprintf(fullPath, SYS_PATHNAME_MAX, "%s", configHome);
 	}
 #elif defined(_WIN32) || defined(WIN32)
 	const char* appdata = getenv("APPDATA");
-	strncpy(fullPath, appdata, SYS_PATH_MAX_SIZE - 1);
+	strncpy(fullPath, appdata, SYS_PATHNAME_MAX - 1);
 #elif defined(__APPLE__) || defined(__MACH__)
 	const char* home = getenv("HOME");
-	snprintf(fullPath, SYS_PATH_MAX_SIZE - 1, "%s/Library/Application Support", home);
+	snprintf(fullPath, SYS_PATHNAME_MAX - 1, "%s/Library/Application Support", home);
 #endif
 
 	return fullPath;
 }
 
 void Sys_MakeDirRecursive(const char* dir) {
-	char tmp[SYS_PATH_MAX_SIZE];
+	char tmp[SYS_PATHNAME_MAX];
 	char* p = NULL;
 	size_t len;
 

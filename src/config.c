@@ -11,18 +11,18 @@
 
 static char* getSettingsPath() {
 	char* configdir = Sys_GetConfigDir();
-	static char configPath[SYS_PATH_MAX_SIZE + 128] = "";
+	static char configPath[SYS_PATHNAME_MAX + 128] = "";
 
 	if (!*configPath) {
 		if (configdir == NULL) {
 			Logger_Error("cannot get the config directory!\n");
-			snprintf(configPath, SYS_PATH_MAX_SIZE + 128, "config.ini");
+			snprintf(configPath, SYS_PATHNAME_MAX + 128, "config.ini");
 		} else {
-			snprintf(configPath, SYS_PATH_MAX_SIZE + 128, "%s/csprite", configdir);
+			snprintf(configPath, SYS_PATHNAME_MAX + 128, "%s/csprite", configdir);
 			struct stat st = {0};
 			if (stat(configPath, &st) == -1) Sys_MakeDirRecursive(configPath);
 			memset(configPath, 0, sizeof(configPath));
-			snprintf(configPath, SYS_PATH_MAX_SIZE + 128, "%s/csprite/config.ini", configdir);
+			snprintf(configPath, SYS_PATHNAME_MAX + 128, "%s/csprite/config.ini", configdir);
 		}
 
 		return configPath;
