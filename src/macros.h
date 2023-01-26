@@ -26,25 +26,6 @@
 
 #ifdef __cplusplus // C++ Only Macros
 
-/*
-	Macro: OpenURL(std::string URL)
-	Description: Opens The Given URL in default browser, if no implementation found logs a msg in console
-	Notes: I could've made it a simple function but i saw macro was a little fast
-*/
-#if defined(__linux__) || defined(__FreeBSD__)
-	#define OpenURL(URL) \
-		system((std::string("xdg-open \"") + URL + "\"").c_str())
-#elif defined(__APPLE__)
-	#define OpenURL(URL) \
-		system((std::string("open \"") + URL + "\"").c_str())
-#elif defined(_WIN32)
-	#define OpenURL(URL) \
-		ShellExecute(0, 0, std::string(URL).c_str(), 0, 0, SW_SHOWNORMAL)
-#else
-	#define OpenURL(URL) \
-		printf("cannot open url: %s, because no function implementation found!", URL.c_str())
-#endif
-
 // ImGui::ColorConvertU32ToFloat4 but in RGBA format
 #define _U32TOIV4(in)                          \
 	ImVec4(                                    \
@@ -53,7 +34,6 @@
 		((in >> 8) & 0xFF)  * (1.0f / 255.0f), \
 		((in >> 0) & 0xFF)  * (1.0f / 255.0f)  \
 	)
-
 #endif
 
 // Clamps The Given Integer A Between min & max

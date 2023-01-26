@@ -335,13 +335,13 @@ int RendererThreadFunc(void* _args) {
 			}
 			if (ImGui::BeginMenu("Help")) {
 				if (ImGui::MenuItem("Wiki")) {
-					OpenURL("https://csprite.github.io/wiki/");
+					Sys_OpenURL("https://csprite.github.io/wiki/");
 				}
 				if (ImGui::MenuItem("About")) {
-					OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
+					Sys_OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
 				}
 				if (ImGui::MenuItem("GitHub")) {
-					OpenURL("https://github.com/pegvin/csprite");
+					Sys_OpenURL("https://github.com/pegvin/csprite");
 				}
 				ImGui::EndMenu();
 			}

@@ -20,8 +20,29 @@
 #endif
 
 /*
-	Returns File Size Using A FILE*
+	Macro: Sys_OpenURL(std::string URL)
+	Description: Opens The Given URL in default browser, if no implementation found logs a msg in console
+	Notes: I could've made it a simple function but i saw macro was a little fast
 */
+
+void Sys_OpenURL(const char* URL) {
+	#if defined(_WIN32)
+		ShellExecute(0, 0, URL, 0, 0, SW_SHOWNORMAL);
+	#elif defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
+		#ifdef __APPLE__
+			#define OPEN_CMD "open"
+		#else
+			#define OPEN_CMD "xdg-open"
+		#endif
+		char command[SYS_URL_MAX + 15] = "";
+		snprintf(command, SYS_URL_MAX + 15, OPEN_CMD " \"%s\"", URL);
+		system(command);
+	#else
+		printf("Cannot open url: %s, No function implementation found!", URL);
+	#endif
+}
+
+// Returns File Size Using A FILE*
 size_t Sys_GetFileSize(FILE* fp) {
 	if (fp == NULL) return 0;
 	size_t CurrPos = ftell(fp);
