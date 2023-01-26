@@ -2,7 +2,6 @@
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #endif
 
-#include <string>
 #include <chrono>
 
 #include <stdio.h>
@@ -354,7 +353,10 @@ int RendererThreadFunc(void* _args) {
 			ImGui::SetWindowPos({ 3.0f, 30.0f });
 			for (unsigned int i = 0; i < GetSelectedPalette()->numOfEntries; i++) {
 				if (i != 0 && i % 2 != 0) ImGui::SameLine();
-				if (ImGui::ColorButton(PaletteColorIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {
+				static char ColorButtonId[20] = "";
+				if (PaletteColorIndex != i) { snprintf(ColorButtonId, 20, "Color##%d", i); }
+
+				if (ImGui::ColorButton(PaletteColorIndex == i ? "Selected Color" : ColorButtonId, {
 					((float)(GetSelectedPalette()->Colors[i][0]) / 255),
 					((float)(GetSelectedPalette()->Colors[i][1]) / 255),
 					((float)(GetSelectedPalette()->Colors[i][2]) / 255),
