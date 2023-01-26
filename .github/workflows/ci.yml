@@ -328,6 +328,11 @@ jobs:
         mv osx-x86_64/csprite csprite-osx-x86_64
         mv osx-x86_64/csprite-osx.zip csprite-osx-x86_64.zip
 
+    - uses: dev-drprasad/delete-tag-and-release@v0.2.0
+      with:
+        tag_name: latest-git
+        delete_release: true
+
     - uses: ncipollo/release-action@v1
       with:
         name: "Csprite Latest Git"
