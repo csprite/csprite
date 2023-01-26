@@ -106,15 +106,15 @@ Palette_T* LoadCsvPalette(const char* csvText) {
 
 char* SysGetPaletteDir() {
 	char* configdir = Sys_GetConfigDir();
-	static char configPath[SYS_PATH_MAX_SIZE + 128] = "";
+	static char configPath[SYS_PATHNAME_MAX + 128] = "";
 
 	if (!*configPath) {
 		if (configdir == NULL) {
 			Logger_Warn("cannot get the config directory!\n");
-			snprintf(configPath, SYS_PATH_MAX_SIZE + 128, "palettes");
+			snprintf(configPath, SYS_PATHNAME_MAX + 128, "palettes");
 			Sys_MakeDirRecursive(configPath);
 		} else {
-			snprintf(configPath, SYS_PATH_MAX_SIZE + 128, "%s%ccsprite%cpalettes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
+			snprintf(configPath, SYS_PATHNAME_MAX + 128, "%s%ccsprite%cpalettes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
 			Sys_MakeDirRecursive(configPath);
 		}
 	}
@@ -124,8 +124,8 @@ char* SysGetPaletteDir() {
 
 PaletteArr_T* PaletteLoadAll() {
 	char* pallete_dir_path = SysGetPaletteDir();
-	char dir[SYS_PATH_MAX_SIZE + 128] = "";
-	strncpy(dir, pallete_dir_path, SYS_PATH_MAX_SIZE);
+	char dir[SYS_PATHNAME_MAX + 128] = "";
+	strncpy(dir, pallete_dir_path, SYS_PATHNAME_MAX);
 
 	// Check If Palettes Directory On Disk Is Empty, If So Extract The Built-in Palettes
 	int numOfPalettes = Sys_ListDirContents((const char*)dir, NULL, NULL);
@@ -181,9 +181,9 @@ static int OnAssetMgrList(int i, const char *fname) {
 	FILE* file = NULL;
 	const char* data = NULL;
 	char* pallete_dir_path = SysGetPaletteDir();
-	char dir[SYS_PATH_MAX_SIZE + 128] = "";
+	char dir[SYS_PATHNAME_MAX + 128] = "";
 	char* fileName = Sys_GetBasename(fname);
-	snprintf(dir, SYS_PATH_MAX_SIZE + 128, "%s/%s", pallete_dir_path, fileName);
+	snprintf(dir, SYS_PATHNAME_MAX + 128, "%s/%s", pallete_dir_path, fileName);
 
 	free(fileName);
 	fileName = NULL;
