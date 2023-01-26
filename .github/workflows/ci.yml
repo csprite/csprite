@@ -292,32 +292,41 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
         name: win-x86_64
-        path: ./csprite-x86_64.exe
+        path: ./win-x86_64
 
     - uses: actions/download-artifact@v2
       with:
         name: win-i686
-        path: ./csprite-i686.exe
+        path: ./win-i686
 
     - uses: actions/download-artifact@v2
       with:
         name: linux-x86_64
-        path: ./csprite-linux-x86_64
+        path: ./linux-x86_64
 
     - uses: actions/download-artifact@v2
       with:
         name: linux-i686
-        path: ./csprite-linux-i686
+        path: ./linux-i686
 
     - uses: actions/download-artifact@v2
       with:
         name: osx_executable
-        path: ./csprite-osx
+        path: ./osx-x86_64
 
     - uses: actions/download-artifact@v2
       with:
         name: osx_binary
-        path: ./csprite-osx.zip
+        path: ./osx-x86_64
+
+    - uses: rename
+      run: |
+        mv win-x86_64/csprite.exe csprite-win-x86_64.exe
+        mv win-i686/csprite.exe csprite-win-i686.exe
+        mv linux-x86_64/csprite.exe csprite-linux-x86_64
+        mv linux-i686/csprite.exe csprite-linux-i686
+        mv osx-x86_64/csprite csprite-osx-x86_64
+        mv osx-x86_64/csprite-osx.zip csprite-osx-x86_64.zip
 
     - uses: ncipollo/release-action@v1
       with:
@@ -329,6 +338,6 @@ jobs:
         allowUpdates: true
         generateReleaseNotes: true
         artifactErrorsFailBuild: true
-        artifacts: "csprite-*.exe,csprite-linux-*,csprite-osx,csprite-osx.zip"
+        artifacts: "csprite-win-*.exe,csprite-linux-*,csprite-osx-*"
 
 
