@@ -10,6 +10,9 @@
 #if defined(__unix__) || defined(__linux__)
 	#include <unistd.h>
 	#include <pwd.h>
+#elif defined(_WIN32)
+	#include <winuser.h>
+	#include <shellapi.h>
 #endif
 
 // On Windows Mkdir Only Takes Path So We Don't Pass Path
