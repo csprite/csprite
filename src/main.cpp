@@ -2,6 +2,7 @@
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #endif
 
+#include <string>
 #include <chrono>
 
 #include <stdio.h>
