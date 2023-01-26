@@ -319,7 +319,7 @@ jobs:
         name: osx_binary
         path: ./osx-x86_64
 
-    - uses: rename
+    - name: rename
       run: |
         mv win-x86_64/csprite.exe csprite-win-x86_64.exe
         mv win-i686/csprite.exe csprite-win-i686.exe
