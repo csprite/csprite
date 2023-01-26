@@ -123,18 +123,17 @@ theme_arr_t* ThemeArr = NULL;
 		std::string("csprite - ") + VERSION_STR \
 	).c_str()
 
-static inline void ProcessEvents(SDL_Window* window);
+static void OpenNewFile();
+static void InitWindowIcon(SDL_Window* window);
 static void _GuiSetColors(ImGuiStyle& style);
 static void _GuiSetToolText();
-void ZoomOpenGlViewport(int increase);
-void fill(uint32_t x, uint32_t y, unsigned char *old_colour);
-void UpdateViewportSize();
-void UpdateViewportPos();
+static void UpdateViewportSize();
+static void UpdateViewportPos();
+static void ZoomOpenGlViewport(int increase);
+static void MutateCanvas(bool LmbJustReleased);
 static inline bool CanMutateCanvas();
-void MutateCanvas(bool LmbJustReleased);
-uint8_t* GetPixel(int x, int y);
-static void InitWindowIcon(SDL_Window* window);
-static void OpenNewFile();
+static inline void ProcessEvents(SDL_Window* window);
+static uint8_t* GetPixel(int x, int y);
 
 #define GetSelectedPalette() PaletteArr->Palettes[PaletteIndex]
 
@@ -788,7 +787,7 @@ static inline bool CanMutateCanvas() {
 }
 
 // Drawing And Stuff Is Done Here
-void MutateCanvas(bool LmbJustReleased) {
+static void MutateCanvas(bool LmbJustReleased) {
 	if (CanMutateCanvas() && (LmbJustReleased || IsLMBDown)) {
 		switch (Tool) {
 			case BRUSH_COLOR:
@@ -1078,17 +1077,17 @@ static inline void ProcessEvents(SDL_Window* window) {
 	}
 }
 
-void UpdateViewportSize() {
+static void UpdateViewportSize() {
 	ViewportSize[0] = CanvasDims[0] * CurrViewportZoom;
 	ViewportSize[1] = CanvasDims[1] * CurrViewportZoom;
 }
 
-void UpdateViewportPos() {
+static void UpdateViewportPos() {
 	ViewportPos[0] = WindowDims[0] / 2 - CanvasDims[0] * CurrViewportZoom / 2;
 	ViewportPos[1] = WindowDims[1] / 2 - CanvasDims[1] * CurrViewportZoom / 2;
 }
 
-void ZoomOpenGlViewport(int increase) {
+static void ZoomOpenGlViewport(int increase) {
 	if (CanvasLocked) return;
 	if (increase > 0) {
 		if (CurrViewportZoom < 1.0f) CurrViewportZoom += 0.25f;
@@ -1113,7 +1112,7 @@ void ZoomOpenGlViewport(int increase) {
 	UpdateViewportSize();
 }
 
-uint8_t* GetPixel(int x, int y) {
+static uint8_t* GetPixel(int x, int y) {
 	if (CURR_CANVAS_LAYER == NULL) return NULL;
 	return CURR_CANVAS_LAYER->pixels + ((y * CanvasDims[0] + x) * 4);
 }
