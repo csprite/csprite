@@ -97,6 +97,19 @@ char* Sys_GetConfigDir(void) {
 	return fullPath;
 }
 
+// get the filename where csprite's log will be writen to.
+char* Sys_GetLogFileName(void) {
+	static char path[SYS_PATHNAME_MAX] = "";
+	/* only executed if variable path is empty.
+	   since it's a static variable there's no need to append,
+	   the same information again as it will persist till the life-time of the program */
+	if (path[0] == 0) {
+		char* configDir = Sys_GetConfigDir();
+		snprintf(path, SYS_PATHNAME_MAX, "%s/csprite/csprite.log", configDir);
+	}
+	return path;
+}
+
 void Sys_MakeDirRecursive(const char* dir) {
 	char tmp[SYS_PATHNAME_MAX];
 	char* p = NULL;

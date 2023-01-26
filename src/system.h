@@ -28,6 +28,7 @@ extern "C" {
 		- Returned Pointer doesn't need to be freed as it's allocated & de-allocated autmatically.
 */
 char*  Sys_GetConfigDir(void);
+char*  Sys_GetLogFileName(void); // Get the filename where csprite's log will be writen to.
 size_t Sys_GetFileSize(FILE* fp); // Get File Size From A FILE*
 void   Sys_MakeDirRecursive(const char* dir); // Create Directories Recursively
 char*  Sys_GetBasename(const char* path); // Get Basename from a path

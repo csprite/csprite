@@ -672,7 +672,7 @@ IncrementAndCreateLayer__:
 }
 
 int main(int argc, char* argv[]) {
-	FILE* LogFilePtr = fopen("csprite.log", "w");
+	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
 
 	AppConfig = LoadConfig();
