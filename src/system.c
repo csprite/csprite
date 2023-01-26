@@ -11,7 +11,7 @@
 	#include <unistd.h>
 	#include <pwd.h>
 #elif defined(_WIN32)
-	#include <winuser.h>
+	#include <windows.h>
 	#include <shellapi.h>
 #endif
 
