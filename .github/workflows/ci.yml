@@ -284,7 +284,7 @@ jobs:
         if-no-files-found: error
 
   update-ci-release:
-    needs: [linux-x86_64 linux-i686 windows-x86_64 windows-i686 osx_x86_64]
+    needs: [linux-x86_64, linux-i686, windows-x86_64, windows-i686, osx_x86_64]
     permissions:
       contents: write
     runs-on: ubuntu-latest
