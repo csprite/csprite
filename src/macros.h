@@ -1,14 +1,5 @@
 #pragma once
 
-#ifdef __cplusplus
-	#if defined(__linux__) || defined(__FreeBSD__)
-	#elif defined(__APPLE__)
-	#elif defined(_WIN32)
-		#include <windows.h>
-		#include <shellapi.h>
-	#endif
-#endif
-
 /*
 	Macro: COLOR_EQUAL(unsigned char* a, unsigned char* b)
 	Description: Checks if 2 Colors RGBA are Equal
