@@ -323,8 +323,8 @@ jobs:
       run: |
         mv win-x86_64/csprite.exe csprite-win-x86_64.exe
         mv win-i686/csprite.exe csprite-win-i686.exe
-        mv linux-x86_64/csprite.exe csprite-linux-x86_64
-        mv linux-i686/csprite.exe csprite-linux-i686
+        mv linux-x86_64/csprite csprite-linux-x86_64
+        mv linux-i686/csprite csprite-linux-i686
         mv osx-x86_64/csprite csprite-osx-x86_64
         mv osx-x86_64/csprite-osx.zip csprite-osx-x86_64.zip
 
