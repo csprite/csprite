@@ -19,12 +19,7 @@
 	#define _mkdir_custom(path, perms) mkdir(path, perms)
 #endif
 
-/*
-	Macro: Sys_OpenURL(std::string URL)
-	Description: Opens The Given URL in default browser, if no implementation found logs a msg in console
-	Notes: I could've made it a simple function but i saw macro was a little fast
-*/
-
+// Opens The Given URL in default browser where URL's max size SYS_URL_MAX, If no implementation found logs a msg in console
 void Sys_OpenURL(const char* URL) {
 	#if defined(_WIN32)
 		ShellExecute(0, 0, URL, 0, 0, SW_SHOWNORMAL);
