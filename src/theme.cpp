@@ -64,15 +64,15 @@ theme_t* LoadTheme(const char* themeIni, const char* fileName) {
 
 char* SysGetThemesDir() {
 	char* configdir = Sys_GetConfigDir();
-	static char configPath[SYS_PATH_MAX_SIZE + 128] = "";
+	static char configPath[SYS_PATHNAME_MAX + 128] = "";
 
 	if (!*configPath) {
 		if (configdir == NULL) {
 			Logger_Error("cannot get the themes directory!\n");
-			snprintf(configPath, SYS_PATH_MAX_SIZE + 128, "themes");
+			snprintf(configPath, SYS_PATHNAME_MAX + 128, "themes");
 			Sys_MakeDirRecursive(configPath);
 		} else {
-			snprintf(configPath, SYS_PATH_MAX_SIZE + 128, "%s%ccsprite%cthemes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
+			snprintf(configPath, SYS_PATHNAME_MAX + 128, "%s%ccsprite%cthemes", configdir, SYS_PATH_SEP, SYS_PATH_SEP);
 			Sys_MakeDirRecursive(configPath);
 		}
 	}
@@ -82,8 +82,8 @@ char* SysGetThemesDir() {
 
 theme_arr_t* ThemeLoadAll() {
 	char* themesDirPath = SysGetThemesDir();
-	char dir[SYS_PATH_MAX_SIZE + 128] = "";
-	strncpy(dir, themesDirPath, SYS_PATH_MAX_SIZE);
+	char dir[SYS_PATHNAME_MAX + 128] = "";
+	strncpy(dir, themesDirPath, SYS_PATHNAME_MAX);
 
 	int numOfThemes = Sys_ListDirContents((const char*)dir, NULL, NULL);
 	if (numOfThemes <= 0) {
@@ -139,9 +139,9 @@ static int OnAssetMgrList(int i, const char *fname) {
 	FILE* file = NULL;
 	const char* data = NULL;
 	char* themesDirPath = SysGetThemesDir();
-	char dir[SYS_PATH_MAX_SIZE + 128] = "";
+	char dir[SYS_PATHNAME_MAX + 128] = "";
 	char* fileName = Sys_GetBasename(fname);
-	snprintf(dir, SYS_PATH_MAX_SIZE + 128, "%s/%s", themesDirPath, fileName);
+	snprintf(dir, SYS_PATHNAME_MAX + 128, "%s/%s", themesDirPath, fileName);
 
 	free(fileName);
 	fileName = NULL;

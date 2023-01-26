@@ -4,9 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef SYS_PATH_MAX_SIZE
-	#define SYS_PATH_MAX_SIZE 4096
-#endif
+#define SYS_PATHNAME_MAX 4096
+#define SYS_FILENAME_MAX 1024
 
 #if defined(_WIN32) || defined(WIN32)
 	#define SYS_PATH_SEP '\\'
