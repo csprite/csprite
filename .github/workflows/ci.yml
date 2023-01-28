@@ -314,6 +314,11 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
+        name: linux-x86_64-appimage
+        path: ./linux-x86_64-AppImage
+
+    - uses: actions/download-artifact@v2
+      with:
         name: osx_executable
         path: ./osx-x86_64
 
@@ -328,6 +333,7 @@ jobs:
         mv win-i686/csprite.exe csprite-win-i686.exe
         mv linux-x86_64/csprite csprite-linux-x86_64
         mv linux-i686/csprite csprite-linux-i686
+        mv linux-x86_64-AppImage/csprite-x86_64.AppImage csprite-linux-x86_64.appimage
         mv osx-x86_64/csprite csprite-osx-x86_64
         mv osx-x86_64/csprite-osx.zip csprite-osx-x86_64.zip
 
