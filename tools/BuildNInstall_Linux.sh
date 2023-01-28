@@ -7,7 +7,7 @@ git clone https://github.com/libsdl-org/SDL -b release-2.26.1
 cd SDL/
 mkdir build
 cd build/
-../configure --enable-timers --enable-video --enable-events --disable-render --disable-render-d3d --disable-video-vulkan --disable-video-opengles1 --disable-video-dummy  --disable-audio --disable-joystick --disable-haptic --disable-joystick-virtual --disable-hidapi --disable-sensor --disable-power --disable-filesystem --disable-file --disable-misc --disable-loadso --disable-cpuinfo --disable-oss --disable-alsa --disable-alsatest --disable-alsa-shared --disable-jack --disable-jack-shared --disable-esd --disable-esdtest --disable-esd-shared --disable-pipewire --disable-pipewire-shared --disable-pulseaudio --disable-pulseaudio-shared --disable-arts --disable-arts-shared --disable-nas --disable-nas-shared --disable-sndio --disable-sndio-shared --disable-fusionsound --disable-fusionsound-shared --disable-diskaudio --disable-dummyaudio --disable-libsamplerate --disable-libsamplerate-shared --disable-joystick-mfi --disable-hidapi-joystick --disable-hidapi-libusb
+../configure --enable-timers --enable-video --enable-render --enable-events --disable-atomic --disable-locale --disable-audio --disable-joystick --disable-haptic --disable-hidapi --disable-sensor --disable-power --disable-filesystem --disable-file --disable-misc --disable-cpuinfo --disable-hidapi-joystick --disable-hidapi-libusb --disable-oss --disable-alsa --disable-jack --disable-esd --disable-esdtest --disable-pipewire --disable-pulseaudio --disable-arts --disable-nas --disable-sndio --disable-fusionsound --disable-diskaudio --disable-dummyaudio --disable-libsamplerate --disable-joystick-mfi
 make -j4
 
 # On Ubuntu 18.04 VM Sudo Isn't Installed.
