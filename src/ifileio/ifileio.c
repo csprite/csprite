@@ -27,10 +27,8 @@ int ifio_write(const char* filePath, uint8_t* pixels, int32_t w, int32_t h) {
 	#define HAS_SUFFIX(str, ext, size) strncmpci(str + (strlen(str) - size), ext, size) == 0
 
 	if (HAS_SUFFIX(filePath, ".png", 4)) {
-		stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
 		stbi_write_png(filePath, w, h, 4, pixels, 0);
 	} else if (HAS_SUFFIX(filePath, ".jpeg", 5) || HAS_SUFFIX(filePath, ".jpg", 4)) {
-		stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
 		stbi_write_jpg(filePath, w, h, 4, pixels, 100);
 	} else {
 		Logger_Error("Error Un-supported file format: %s\n", filePath);
