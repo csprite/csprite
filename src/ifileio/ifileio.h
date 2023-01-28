@@ -8,8 +8,8 @@ extern "C" {
 #endif
 
 // Full Support For Reading & Writing PNGs & JPEGs/JPGs
-int ifio_write(const char* filePath, uint8_t* pixels, uint32_t w, uint32_t h);
-uint8_t* ifio_read(const char* filePath, uint32_t* w_ptr, uint32_t* h_ptr);
+int ifio_write(const char* filePath, uint8_t* pixels, int32_t w, int32_t h);
+uint8_t* ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr);
 
 #ifdef __cplusplus
 }
