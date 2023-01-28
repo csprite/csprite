@@ -20,17 +20,15 @@ static int strncmpci(const char* s1, const char* s2, size_t n) {
 	else return ( *(unsigned char *)s1 - *(unsigned char *)s2 );
 }
 
-int ifio_write(const char* filePath, uint8_t* pixels, uint32_t w, uint32_t h) {
+int ifio_write(const char* filePath, uint8_t* pixels, int32_t w, int32_t h) {
 	if (filePath == NULL || pixels == NULL || w < 1 || h < 1) return -1;
 
 	// Checks if a string has a suffix, it is case-insensitive.
 	#define HAS_SUFFIX(str, ext, size) strncmpci(str + (strlen(str) - size), ext, size) == 0
 
 	if (HAS_SUFFIX(filePath, ".png", 4)) {
-		stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
 		stbi_write_png(filePath, w, h, 4, pixels, 0);
 	} else if (HAS_SUFFIX(filePath, ".jpeg", 5) || HAS_SUFFIX(filePath, ".jpg", 4)) {
-		stbi_flip_vertically_on_write(1); // Flip Vertically Because Of OpenGL's Coordinate System
 		stbi_write_jpg(filePath, w, h, 4, pixels, 100);
 	} else {
 		Logger_Error("Error Un-supported file format: %s\n", filePath);
@@ -40,7 +38,7 @@ int ifio_write(const char* filePath, uint8_t* pixels, uint32_t w, uint32_t h) {
 	return 0;
 }
 
-uint8_t* ifio_read(const char* filePath, uint32_t* w_ptr, uint32_t* h_ptr) {
+uint8_t* ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr) {
 	if (filePath == NULL || w_ptr == NULL || h_ptr == NULL) return NULL;
 
 	// Checks if a string has a suffix, it is case-insensitive.
