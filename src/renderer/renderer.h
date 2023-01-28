@@ -7,3 +7,5 @@ void R_Destroy(void); // Destroy ImGui & OpenGL Contexts
 void R_Clear(void); // Clear The Screen
 void R_NewFrame(void); // Call Before Calling Any ImGui Functions For Rendering The Gui
 void R_Present(void); // Render Everything & Swap Buffers
+SDL_Renderer* R_GetRenderer();
+
