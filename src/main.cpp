@@ -36,14 +36,14 @@
 #include "ifileio/ifileio.h"
 
 int32_t WindowDims[2] = { 700, 500 };
-uint32_t CanvasDims[2] = { 32, 24 };
+int32_t CanvasDims[2] = { 32, 24 };
 
-uint32_t MousePos[2] = { 0, 0 };
-uint32_t MousePosDown[2] = { 0, 0 };
-uint32_t MousePosLast[2] = { 0, 0 };
-uint32_t MousePosRel[2] = { 0, 0 };
-uint32_t MousePosDownRel[2] = { 0, 0 };
-uint32_t MousePosRelLast[2] = { 0, 0 };
+int32_t MousePos[2] = { 0, 0 };
+int32_t MousePosDown[2] = { 0, 0 };
+int32_t MousePosLast[2] = { 0, 0 };
+int32_t MousePosRel[2] = { 0, 0 };
+int32_t MousePosDownRel[2] = { 0, 0 };
+int32_t MousePosRelLast[2] = { 0, 0 };
 
 bool ShouldClose = false;
 bool IsLMBDown = false;
@@ -52,7 +52,7 @@ bool IsShiftDown = false;
 bool ShouldSave = false;
 bool ShouldSaveAs = false;
 bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
-bool CanvasLocked = false;  // Same As `CanvasMutable` but with conditions like if any window is being hover or not
+bool CanvasLocked = false; // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
 bool EventsLocked = true;
 bool UpdateWindowTitle = false;
@@ -72,10 +72,7 @@ enum tool_e LastTool = BRUSH_COLOR;
 
 float PreviewWindowZoom = 1.0f;
 float CurrViewportZoom = 1.0f;
-
-// Using GLint & GLsizei as it's specified in the documentation and using float or something else causes glitches like viewport suddenly disappearing
-GLint ViewportPos[2] = { 0, 0 };
-GLsizei ViewportSize[2] = { 0, 0 };
+SDL_Rect ViewportLoc = { 0, 0, 0, 0 };
 
 int32_t PaletteIndex = 0;
 int32_t ThemeIndex = 0;
@@ -131,7 +128,7 @@ static void _GuiSetColors(ImGuiStyle& style);
 static void _GuiSetToolText();
 static void UpdateViewportSize();
 static void UpdateViewportPos();
-static void ZoomOpenGlViewport(int increase);
+static void ZoomViewport(int increase);
 static void MutateCanvas(bool LmbJustReleased);
 static inline bool CanMutateCanvas();
 static inline void ProcessEvents(SDL_Window* window);
@@ -163,20 +160,22 @@ int RendererThreadFunc(void* _args) {
 	int argc = args->argc;
 	char** argv = args->argv;
 	SDL_Window* window = args->win;
+	SDL_Renderer* renderer = NULL;
 	if (window == NULL) return -1;
 
 	if (R_Init(window, AppConfig->vsync) != EXIT_SUCCESS) {
 		return EXIT_FAILURE;
 	}
+	renderer = R_GetRenderer();
 
 	UpdateViewportPos();
 	UpdateViewportSize();
 
-	if (Canvas_Init(CanvasDims[0], CanvasDims[1]) != EXIT_SUCCESS) {
+	if (Canvas_Init(CanvasDims[0], CanvasDims[1], renderer) != EXIT_SUCCESS) {
 		return EXIT_FAILURE;
 	}
 
-	CURR_CANVAS_LAYER = Canvas_CreateLayer();
+	CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 	if (CURR_CANVAS_LAYER == NULL) return EXIT_FAILURE;
 
 	if (argc > 1) {
@@ -187,7 +186,7 @@ int RendererThreadFunc(void* _args) {
 		} else if (result == 0) {
 			Logger_Error("Cannot Open The File in filePath");
 		} else {
-			uint32_t w = 0, h = 0;
+			int32_t w = 0, h = 0;
 			uint8_t* _data = ifio_read(filePath, &w, &h);
 			if (w > 0 && h > 0 && _data != NULL) {
 				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
@@ -196,7 +195,7 @@ int RendererThreadFunc(void* _args) {
 						CanvasLayers[i] = NULL;
 					}
 				}
-				if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+				if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
 					Canvas_Resize(w, h);
 					CanvasDims[0] = w;
 					CanvasDims[1] = h;
@@ -206,7 +205,7 @@ int RendererThreadFunc(void* _args) {
 				}
 
 				SelectedLayerIndex = 0;
-				CURR_CANVAS_LAYER = Canvas_CreateLayer();
+				CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 				memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
 				FreeHistory(&CURR_CANVAS_LAYER->history);
 				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
@@ -450,11 +449,11 @@ int RendererThreadFunc(void* _args) {
 				ImGui::SetWindowSize({ 192.0f, 168.0f });
 				ResetPreviewWindowSize = false;
 			}
-			ImGui::Image(
-				reinterpret_cast<ImTextureID>(Canvas_GetFBOTex()), // FBO Texture
-				{ WinSize.x - 15, CanvasDims[1] * (WinSize.x - 15) / CanvasDims[0] },
-				ImVec2(0,1), ImVec2(1,0) // UV
-			);
+			// ImGui::Image(
+			// 	reinterpret_cast<ImTextureID>(Canvas_GetFBOTex()), // FBO Texture
+			// 	{ WinSize.x - 15, CanvasDims[1] * (WinSize.x - 15) / CanvasDims[0] },
+			// 	ImVec2(0,1), ImVec2(1,0) // UV
+			// );
 			WinSize = ImGui::GetWindowSize();
 			ImGui::End();
 		}
@@ -467,7 +466,7 @@ int RendererThreadFunc(void* _args) {
 			if (ImGui::Button("+")) {
 				if (SelectedLayerIndex + 1 != MAX_CANVAS_LAYERS) {
 					if (CURR_CANVAS_LAYER == NULL) {
-						CURR_CANVAS_LAYER = Canvas_CreateLayer();
+						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 					} else {
 						if (SelectedLayerIndex + 1 < MAX_CANVAS_LAYERS) {
 IncrementAndCreateLayer__:
@@ -475,7 +474,7 @@ IncrementAndCreateLayer__:
 							if (SelectedLayerIndex + 1 != MAX_CANVAS_LAYERS) {
 								if (CURR_CANVAS_LAYER != NULL) goto IncrementAndCreateLayer__;
 							}
-							CURR_CANVAS_LAYER = Canvas_CreateLayer();
+							CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 						}
 					}
 				}
@@ -520,7 +519,7 @@ IncrementAndCreateLayer__:
 						}
 						SelectedLayerIndex = 0;
 						Canvas_Resize(NewDims[0], NewDims[1]);
-						CURR_CANVAS_LAYER = Canvas_CreateLayer();
+						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 						CanvasDims[0] = NewDims[0];
 						CanvasDims[1] = NewDims[1];
 						CurrViewportZoom = 1.0f;
@@ -615,13 +614,15 @@ IncrementAndCreateLayer__:
 		Logger_Draw("Logs");
 
 		if (CURR_CANVAS_LAYER != NULL) {
-			Canvas_NewFrame(!ShouldSave && !ShouldSaveAs);
+			Canvas_NewFrame(!ShouldSave && !ShouldSaveAs, renderer, &ViewportLoc);
 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
-					Canvas_Layer(CanvasLayers[i], SelectedLayerIndex == i);
+					Canvas_Layer(CanvasLayers[i], SelectedLayerIndex == i, renderer, &ViewportLoc);
 				}
 			}
-			Canvas_Render(ViewportPos[0], ViewportPos[1], ViewportSize[0], ViewportSize[1]); // This Is When Canvas Is Rendered To Screen
+			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+			SDL_RenderDrawRect(renderer, &ViewportLoc);
+			SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
 
 			if (ShouldSave == true || ShouldSaveAs == true) {
 				if (ShouldSaveAs == true) {
@@ -640,7 +641,35 @@ IncrementAndCreateLayer__:
 
 				// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
 				if (ShouldSave == true || ShouldSaveAs == true) {
-					uint8_t* canvas_data = Canvas_GetRender();
+					uint8_t* canvas_data = (uint8_t*) malloc(CanvasDims[0] * CanvasDims[0] * 4 * sizeof(uint8_t));
+					memset(canvas_data, 0, CanvasDims[0] * CanvasDims[0] * 4 * sizeof(uint8_t));
+
+					// Simple Alpha-Blending Being Done Here.
+					for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+						if (CanvasLayers[i] != NULL) {
+							for (int32_t y = 0; y < CanvasDims[1]; ++y) {
+								for (int32_t x = 0; x < CanvasDims[0]; ++x) {
+									uint8_t* srcPixel = GetCharData(CanvasLayers[i]->pixels, x, y, CanvasDims[0], CanvasDims[1]);
+									uint8_t* destPixel = GetCharData(canvas_data, x, y, CanvasDims[0], CanvasDims[1]);
+									if (srcPixel != NULL && destPixel != NULL) {
+										uint8_t src1Red = *(srcPixel + 0), src1Green = *(srcPixel + 1), src1Blue = *(srcPixel + 2), src1Alpha = *(srcPixel + 3);
+										uint8_t src2Red = *(destPixel + 0), src2Green = *(destPixel + 1), src2Blue = *(destPixel + 2), src2Alpha = *(destPixel + 3);
+
+										uint16_t outRed = ((uint16_t)src1Red * src1Alpha + (uint16_t)src2Red * (255 - src1Alpha) / 255 * src2Alpha) / 255;
+										uint16_t outGreen = ((uint16_t)src1Green * src1Alpha + (uint16_t)src2Green * (255 - src1Alpha) / 255 * src2Alpha) / 255;
+										uint16_t outBlue = ((uint16_t)src1Blue * src1Alpha + (uint16_t)src2Blue * (255 - src1Alpha) / 255 * src2Alpha) / 255;
+										uint16_t outAlpha = src1Alpha + (uint16_t)src2Alpha * (255 - src1Alpha) / 255;
+
+										if (outRed > -1   && outRed < 256)   *(destPixel + 0) = outRed;
+										if (outGreen > -1 && outGreen < 256) *(destPixel + 1) = outGreen;
+										if (outBlue > -1  && outBlue < 256)  *(destPixel + 2) = outBlue;
+										if (outAlpha > -1 && outAlpha < 256) *(destPixel + 3) = outAlpha;
+									}
+								}
+							}
+						}
+					}
+
 					ifio_write(FilePath, canvas_data, CanvasDims[0], CanvasDims[1]);
 					free(canvas_data);
 					ShouldSave = false;
@@ -697,19 +726,12 @@ int main(int argc, char* argv[]) {
 	WindowDims[0] = dm.w * 0.7;
 	WindowDims[1] = dm.h * 0.8;
 
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
 	GEN_WIN_TITLE();
 	SDL_Window* window = SDL_CreateWindow(
 		WindowTitle,
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		WindowDims[0], WindowDims[1],
-		SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_MAXIMIZED
+		SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_MAXIMIZED
 	);
 	UpdateViewportPos();
 
@@ -979,9 +1001,9 @@ static inline void OnEvent_KeyDown(SDL_Event* e) {
 static inline void OnEvent_MouseWheel(SDL_Event* e) {
 	if (IsCtrlDown == true) {
 		if (e->wheel.y > 0) { // Scroll Up - Zoom In
-			ZoomOpenGlViewport(1);
+			ZoomViewport(1);
 		} else if (e->wheel.y < 0) { // Scroll Down - Zoom Out
-			ZoomOpenGlViewport(0);
+			ZoomViewport(0);
 		}
 	} else {
 		uint32_t BrushSize = Tools_GetBrushSize();
@@ -1005,12 +1027,12 @@ static inline void OnEvent_MouseMotion(SDL_Event* e) {
 
 	MousePosRelLast[0] = MousePosRel[0];
 	MousePosRelLast[1] = MousePosRel[1];
-	MousePosRel[0] = (MousePos[0] - ViewportPos[0]) / CurrViewportZoom;
-	MousePosRel[1] = ((MousePos[1] + ViewportPos[1]) - (WindowDims[1] - ViewportSize[1])) / CurrViewportZoom;
+	MousePosRel[0] = (MousePos[0] - ViewportLoc.x) / CurrViewportZoom;
+	MousePosRel[1] = (MousePos[1] - ViewportLoc.y) / CurrViewportZoom;
 
 	if (Tool == TOOL_PAN) {
-		ViewportPos[0] -= MousePosLast[0] - MousePos[0];
-		ViewportPos[1] += MousePosLast[1] - MousePos[1];
+		ViewportLoc.x -= MousePosLast[0] - MousePos[0];
+		ViewportLoc.y -= MousePosLast[1] - MousePos[1];
 	}
 
 	MutateCanvas(false);
@@ -1086,16 +1108,16 @@ static inline void ProcessEvents(SDL_Window* window) {
 }
 
 static void UpdateViewportSize() {
-	ViewportSize[0] = CanvasDims[0] * CurrViewportZoom;
-	ViewportSize[1] = CanvasDims[1] * CurrViewportZoom;
+	ViewportLoc.w = (int)CanvasDims[0] * CurrViewportZoom;
+	ViewportLoc.h = (int)CanvasDims[1] * CurrViewportZoom;
 }
 
 static void UpdateViewportPos() {
-	ViewportPos[0] = WindowDims[0] / 2 - CanvasDims[0] * CurrViewportZoom / 2;
-	ViewportPos[1] = WindowDims[1] / 2 - CanvasDims[1] * CurrViewportZoom / 2;
+	ViewportLoc.x = (int)(WindowDims[0] / 2) - (CanvasDims[0] * CurrViewportZoom / 2);
+	ViewportLoc.y = (int)(WindowDims[1] / 2) - (CanvasDims[1] * CurrViewportZoom / 2);
 }
 
-static void ZoomOpenGlViewport(int increase) {
+static void ZoomViewport(int increase) {
 	if (CanvasLocked) return;
 	if (increase > 0) {
 		if (CurrViewportZoom < 1.0f) CurrViewportZoom += 0.25f;
@@ -1110,13 +1132,13 @@ static void ZoomOpenGlViewport(int increase) {
 	else if (CurrViewportZoom > 100.0f) CurrViewportZoom = 100.0f;
 
 	// This Ensures That The Canvas Is Zoomed From It's Center And Not From The Bottom Left Position
-	int32_t CurrRectCenter[2] = { (ViewportSize[0] / 2) + ViewportPos[0], (ViewportSize[1] / 2) + ViewportPos[1] };
+	int32_t CurrRectCenter[2] = { (ViewportLoc.w / 2) + ViewportLoc.x, (ViewportLoc.h / 2) + ViewportLoc.y };
 	int32_t NewRectCenter[2] = {
-		(int32_t)(CanvasDims[0] * CurrViewportZoom / 2) + ViewportPos[0],
-		(int32_t)(CanvasDims[1] * CurrViewportZoom / 2) + ViewportPos[1]
+		(int32_t)(CanvasDims[0] * CurrViewportZoom / 2) + ViewportLoc.x,
+		(int32_t)(CanvasDims[1] * CurrViewportZoom / 2) + ViewportLoc.y
 	};
-	ViewportPos[0] -= NewRectCenter[0] - CurrRectCenter[0];
-	ViewportPos[1] -= NewRectCenter[1] - CurrRectCenter[1];
+	ViewportLoc.x -= NewRectCenter[0] - CurrRectCenter[0];
+	ViewportLoc.y -= NewRectCenter[1] - CurrRectCenter[1];
 	UpdateViewportSize();
 }
 
@@ -1155,7 +1177,7 @@ static void OpenNewFile() {
 
 	const char* _fName = selection.empty() ? NULL : selection[0].c_str();
 	if (_fName != NULL) {
-		uint32_t w = 0, h = 0;
+		int32_t w = 0, h = 0;
 		uint8_t* _data = ifio_read(_fName, &w, &h);
 		if (w > 0 && h > 0 && _data != NULL) {
 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
@@ -1164,7 +1186,7 @@ static void OpenNewFile() {
 					CanvasLayers[i] = NULL;
 				}
 			}
-			if ((uint32_t)w != CanvasDims[0] || (uint32_t)h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+			if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
 				Canvas_Resize(w, h);
 				CanvasDims[0] = w;
 				CanvasDims[1] = h;
@@ -1174,7 +1196,7 @@ static void OpenNewFile() {
 			}
 
 			SelectedLayerIndex = 0;
-			CURR_CANVAS_LAYER = Canvas_CreateLayer();
+			CURR_CANVAS_LAYER = Canvas_CreateLayer(R_GetRenderer());
 			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
 			FreeHistory(&CURR_CANVAS_LAYER->history);
 			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
