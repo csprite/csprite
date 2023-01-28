@@ -63,6 +63,13 @@ Using CSprite isn't rocket science and infact you can learn how to use it in 5 m
 | Ctrl + Y                     | Redo                                         |
 
 ---
+### References/Resources
+list of references & resources i used while developing csprite, might be good for learning.
+
+- Simple Alpha-Blending: https://stackoverflow.com/a/68936281/14516016
+- Talk/Coding Live Stream On Color Blending By TSoding: https://youtu.be/aKnl8-qifvE
+
+---
 ### Credits
 
 CSprite Uses [BM Mini](https://www.dafont.com/bm-mini.font) Font Designed By [Bitmap Mania](https://www.dafont.com/bitmapmania.d283)
