@@ -641,7 +641,35 @@ IncrementAndCreateLayer__:
 
 				// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
 				if (ShouldSave == true || ShouldSaveAs == true) {
-					uint8_t* canvas_data = Canvas_GetRender();
+					uint8_t* canvas_data = (uint8_t*) malloc(CanvasDims[0] * CanvasDims[0] * 4 * sizeof(uint8_t));
+					memset(canvas_data, 0, CanvasDims[0] * CanvasDims[0] * 4 * sizeof(uint8_t));
+
+					// Simple Alpha-Blending Being Done Here.
+					for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+						if (CanvasLayers[i] != NULL) {
+							for (int32_t y = 0; y < CanvasDims[1]; ++y) {
+								for (int32_t x = 0; x < CanvasDims[0]; ++x) {
+									uint8_t* srcPixel = GetCharData(CanvasLayers[i]->pixels, x, y, CanvasDims[0], CanvasDims[1]);
+									uint8_t* destPixel = GetCharData(canvas_data, x, y, CanvasDims[0], CanvasDims[1]);
+									if (srcPixel != NULL && destPixel != NULL) {
+										uint8_t src1Red = *(srcPixel + 0), src1Green = *(srcPixel + 1), src1Blue = *(srcPixel + 2), src1Alpha = *(srcPixel + 3);
+										uint8_t src2Red = *(destPixel + 0), src2Green = *(destPixel + 1), src2Blue = *(destPixel + 2), src2Alpha = *(destPixel + 3);
+
+										uint16_t outRed = ((uint16_t)src1Red * src1Alpha + (uint16_t)src2Red * (255 - src1Alpha) / 255 * src2Alpha) / 255;
+										uint16_t outGreen = ((uint16_t)src1Green * src1Alpha + (uint16_t)src2Green * (255 - src1Alpha) / 255 * src2Alpha) / 255;
+										uint16_t outBlue = ((uint16_t)src1Blue * src1Alpha + (uint16_t)src2Blue * (255 - src1Alpha) / 255 * src2Alpha) / 255;
+										uint16_t outAlpha = src1Alpha + (uint16_t)src2Alpha * (255 - src1Alpha) / 255;
+
+										if (outRed > -1   && outRed < 256)   *(destPixel + 0) = outRed;
+										if (outGreen > -1 && outGreen < 256) *(destPixel + 1) = outGreen;
+										if (outBlue > -1  && outBlue < 256)  *(destPixel + 2) = outBlue;
+										if (outAlpha > -1 && outAlpha < 256) *(destPixel + 3) = outAlpha;
+									}
+								}
+							}
+						}
+					}
+
 					ifio_write(FilePath, canvas_data, CanvasDims[0], CanvasDims[1]);
 					free(canvas_data);
 					ShouldSave = false;
