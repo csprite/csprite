@@ -196,7 +196,7 @@ int RendererThreadFunc(void* _args) {
 					}
 				}
 				if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-					Canvas_Resize(w, h);
+					Canvas_Resize(w, h, R_GetRenderer());
 					CanvasDims[0] = w;
 					CanvasDims[1] = h;
 					CurrViewportZoom = 1.0f;
@@ -449,11 +449,10 @@ int RendererThreadFunc(void* _args) {
 				ImGui::SetWindowSize({ 192.0f, 168.0f });
 				ResetPreviewWindowSize = false;
 			}
-			// ImGui::Image(
-			// 	reinterpret_cast<ImTextureID>(Canvas_GetFBOTex()), // FBO Texture
-			// 	{ WinSize.x - 15, CanvasDims[1] * (WinSize.x - 15) / CanvasDims[0] },
-			// 	ImVec2(0,1), ImVec2(1,0) // UV
-			// );
+			ImGui::Image(
+				reinterpret_cast<ImTextureID>(Canvas_GetTex()), // FBO Texture
+				{ WinSize.x - 15, CanvasDims[1] * (WinSize.x - 15) / CanvasDims[0] }
+			);
 			WinSize = ImGui::GetWindowSize();
 			ImGui::End();
 		}
@@ -518,7 +517,7 @@ IncrementAndCreateLayer__:
 							}
 						}
 						SelectedLayerIndex = 0;
-						Canvas_Resize(NewDims[0], NewDims[1]);
+						Canvas_Resize(NewDims[0], NewDims[1], R_GetRenderer());
 						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 						CanvasDims[0] = NewDims[0];
 						CanvasDims[1] = NewDims[1];
@@ -614,15 +613,22 @@ IncrementAndCreateLayer__:
 		Logger_Draw("Logs");
 
 		if (CURR_CANVAS_LAYER != NULL) {
-			Canvas_NewFrame(!ShouldSave && !ShouldSaveAs, renderer, &ViewportLoc);
+			Canvas_NewFrame(!ShouldSave && !ShouldSaveAs, renderer);
 			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
-					Canvas_Layer(CanvasLayers[i], SelectedLayerIndex == i, renderer, &ViewportLoc);
+					Canvas_Layer(CanvasLayers[i], SelectedLayerIndex == i, renderer);
 				}
 			}
-			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+			Canvas_FrameEnd(renderer, &ViewportLoc);
+
+			SDL_SetRenderDrawColor(
+				renderer,
+				style.Colors[ImGuiCol_Border].x * 255,
+				style.Colors[ImGuiCol_Border].y * 255,
+				style.Colors[ImGuiCol_Border].z * 255,
+				style.Colors[ImGuiCol_Border].w * 255
+			);
 			SDL_RenderDrawRect(renderer, &ViewportLoc);
-			SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
 
 			if (ShouldSave == true || ShouldSaveAs == true) {
 				if (ShouldSaveAs == true) {
@@ -1187,7 +1193,7 @@ static void OpenNewFile() {
 				}
 			}
 			if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-				Canvas_Resize(w, h);
+				Canvas_Resize(w, h, R_GetRenderer());
 				CanvasDims[0] = w;
 				CanvasDims[1] = h;
 				CurrViewportZoom = 1.0f;

@@ -14,7 +14,7 @@ SDL_Renderer* R_GetRenderer() {
 
 int R_Init(SDL_Window* _window, bool vsyncEnabled) {
 	window = _window;
-	uint32_t renFlags = SDL_RENDERER_ACCELERATED;
+	uint32_t renFlags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
 	if (vsyncEnabled) renFlags |= SDL_RENDERER_PRESENTVSYNC;
 
 	renderer = SDL_CreateRenderer(window, -1, renFlags);
