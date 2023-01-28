@@ -287,8 +287,9 @@ jobs:
     needs: [linux-x86_64, linux-i686, windows-x86_64, windows-i686, osx_x86_64]
     permissions:
       contents: write
-    if: github.event.push == true
-    if: github.event.pull_request.merged == true
+    if: |
+      github.event.push == true ||
+      github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v2
