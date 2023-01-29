@@ -799,8 +799,7 @@ static void MutateCanvas(bool LmbJustReleased) {
 		switch (Tool) {
 			case BRUSH_COLOR:
 			case BRUSH_ERASER: {
-				bool didChange = Tool_Brush(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
-				CanvasDidMutate = CanvasDidMutate || didChange;
+				CanvasDidMutate = Tool_Brush(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]) || CanvasDidMutate;
 				break;
 			}
 			case SHAPE_RECT:
@@ -844,12 +843,12 @@ static void MutateCanvas(bool LmbJustReleased) {
 				if (LmbJustReleased) {
 					unsigned char* pixel = GetCharData(CURR_CANVAS_LAYER->pixels, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
 					unsigned char OldColor[4] = { *(pixel + 0), *(pixel + 1), *(pixel + 2), *(pixel + 3) };
-					CanvasDidMutate = CanvasDidMutate || Tool_FloodFill(
+					CanvasDidMutate = Tool_FloodFill(
 						CURR_CANVAS_LAYER->pixels,
 						OldColor, SelectedColor,
 						MousePosRel[0], MousePosRel[1],
 						CanvasDims[0], CanvasDims[1]
-					);
+					) || CanvasDidMutate;
 				}
 				break;
 			}
