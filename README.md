@@ -67,7 +67,8 @@ Using CSprite isn't rocket science and infact you can learn how to use it in 5 m
 list of references & resources i used while developing csprite, might be good for learning.
 
 - Simple Alpha-Blending: https://stackoverflow.com/a/68936281/14516016
-- Talk/Coding Live Stream On Color Blending By TSoding: https://youtu.be/aKnl8-qifvE
+- Talk/Coding live stream on color blending by TSoding: https://youtu.be/aKnl8-qifvE
+- Re-Orderable list in ImGui using Drag & Drop API: https://github.com/ocornut/imgui/issues/1931#issuecomment-403305945
 
 ---
 ### Credits
