@@ -146,11 +146,12 @@ bool Tool_FloodFill(
 				*(pixel + 1) = NewColor[1];
 				*(pixel + 2) = NewColor[2];
 				*(pixel + 3) = NewColor[3];
+				didChange = true;
 
-				if (x + 1 < w)  didChange = didChange || Tool_FloodFill(Pixels, OldColor, NewColor, x + 1, y, w, h);
-				if (x - 1 >= 0) didChange = didChange || Tool_FloodFill(Pixels, OldColor, NewColor, x - 1, y, w, h);
-				if (y + 1 < h)  didChange = didChange || Tool_FloodFill(Pixels, OldColor, NewColor, x, y + 1, w, h);
-				if (x + 1 >= 0) didChange = didChange || Tool_FloodFill(Pixels, OldColor, NewColor, x, y - 1, w, h);
+				if (x + 1 < w)  didChange = Tool_FloodFill(Pixels, OldColor, NewColor, x + 1, y, w, h) || didChange;
+				if (x - 1 >= 0) didChange = Tool_FloodFill(Pixels, OldColor, NewColor, x - 1, y, w, h) || didChange;
+				if (y + 1 < h)  didChange = Tool_FloodFill(Pixels, OldColor, NewColor, x, y + 1, w, h) || didChange;
+				if (x + 1 >= 0) didChange = Tool_FloodFill(Pixels, OldColor, NewColor, x, y - 1, w, h) || didChange;
 			}
 		}
 	}
