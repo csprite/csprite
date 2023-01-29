@@ -61,7 +61,7 @@ char FilePath[SYS_PATHNAME_MAX] = "untitled.png";
 char FileName[SYS_FILENAME_MAX] = "untitled.png";
 
 #define MAX_CANVAS_LAYERS 100
-uint32_t SelectedLayerIndex = 0;
+int32_t SelectedLayerIndex = 0;
 CanvasLayer_T* CanvasLayers[MAX_CANVAS_LAYERS] = { NULL };
 #define CURR_CANVAS_LAYER CanvasLayers[SelectedLayerIndex]
 
@@ -489,7 +489,8 @@ IncrementAndCreateLayer__:
 				}
 			}
 
-			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+			int move_from = -1, move_to = -1;
+			for (int32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
 					if (ImGui::Selectable(CanvasLayers[i]->name, SelectedLayerIndex == i, ImGuiSelectableFlags_AllowDoubleClick)) {
 						if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
@@ -498,8 +499,34 @@ IncrementAndCreateLayer__:
 							SelectedLayerIndex = i;
 						}
 					}
+
+					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover | ImGuiDragDropFlags_SourceNoHoldToOpenOthers)) {
+						ImGui::Text("Moving \"%s\"", CanvasLayers[i]->name); // tooltip text
+						ImGui::SetDragDropPayload("LayersDNDId", &i, sizeof(int));
+						ImGui::EndDragDropSource();
+					}
+
+					if (ImGui::BeginDragDropTarget()) {
+						ImGuiDragDropFlags target_flags = ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect;
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("LayersDNDId", target_flags)) {
+							move_from = *((const int*)payload->Data);
+							move_to = i;
+						}
+						ImGui::EndDragDropTarget();
+					}
 				}
 			}
+
+			if (move_from != -1 && move_to != -1) {
+				// Reorder items
+				int copy_dst = (move_from < move_to) ? move_from : move_to + 1;
+				int copy_src = (move_from < move_to) ? move_from + 1 : move_to;
+				CanvasLayer_T* tmp = CanvasLayers[move_from];
+				CanvasLayers[copy_dst] = CanvasLayers[copy_src];
+				CanvasLayers[move_to] = tmp;
+				ImGui::SetDragDropPayload("LayersDNDId", &move_to, sizeof(int));
+			}
+
 			ImGui::End();
 		}
 
@@ -615,7 +642,7 @@ IncrementAndCreateLayer__:
 
 		if (CURR_CANVAS_LAYER != NULL) {
 			Canvas_NewFrame(!ShouldSave && !ShouldSaveAs, renderer);
-			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+			for (int32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
 					Canvas_Layer(CanvasLayers[i], SelectedLayerIndex == i, renderer);
 				}
