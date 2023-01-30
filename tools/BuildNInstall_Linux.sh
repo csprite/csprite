@@ -3,7 +3,7 @@
 set -e
 
 rm -rf SDL/
-git clone https://github.com/libsdl-org/SDL -b release-2.26.1
+git clone https://github.com/libsdl-org/SDL -b release-2.26.2
 cd SDL/
 mkdir build
 cd build/
