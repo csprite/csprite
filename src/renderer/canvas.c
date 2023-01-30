@@ -58,7 +58,7 @@ int Canvas_Init(int32_t w, int32_t h, SDL_Renderer* ren) {
 	}
 
 	CanvasTex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
-	if (bgLayer.texture == NULL) {
+	if (CanvasTex == NULL) {
 		Logger_Error("Cannot create CanvasTex, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
 		_FreeCanvasBgLayer();
 		return EXIT_FAILURE;
