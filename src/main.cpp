@@ -1,1204 +1,1062 @@
-#if defined(_WIN32) && defined(_MSC_VER)
-	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
-#endif
+#define _CRT_SECURE_NO_WARNINGS
 
+#include <climits>
+#include <cstdio>
+#include <cstring>
+#include <iostream>
 #include <string>
+
+// For Converting Strings To LowerCase in FixFileExtension function
+#include <algorithm>
+#include <cctype>
+
 #include <chrono>
+#include <thread>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <limits.h>
-#include <SDL2/SDL.h>
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+#include "tinyfiledialogs.h"
 
-#include "pfd.h"
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_extension.h"
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
 
-#include "utils.h"
-#include "log/log.h"
 #include "assets.h"
-#include "logger.h"
-#include "macros.h"
-#include "tools.h"
-#include "config.h"
-#include "theme.h"
-#include "palette.h"
-#include "history.h"
-#include "system.h"
-#include "renderer/canvas.h"
-#include "renderer/renderer.h"
-#include "ifileio/ifileio.h"
+#include "shader.h"
+#include "math_linear.h"
+#include "main.h"
+#include "save.h"
+#include "helpers.h"
 
-int32_t WindowDims[2] = { 700, 500 };
-int32_t CanvasDims[2] = { 32, 24 };
+std::string FilePath = "untitled.png"; // Default Output Filename
+char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
+unsigned char NumOfFilterPatterns = 3;
 
-int32_t MousePos[2] = { 0, 0 };
-int32_t MousePosDown[2] = { 0, 0 };
-int32_t MousePosLast[2] = { 0, 0 };
-int32_t MousePosRel[2] = { 0, 0 };
-int32_t MousePosDownRel[2] = { 0, 0 };
-int32_t MousePosRelLast[2] = { 0, 0 };
+int WindowDims[2] = {700, 500}; // Default Window Dimensions
+int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
 
-bool ShouldClose = false;
-bool IsLMBDown = false;
-bool IsCtrlDown = false;
-bool IsShiftDown = false;
-bool ShouldSave = false;
-bool ShouldSaveAs = false;
-bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
-bool CanvasLocked = false; // Same As `CanvasMutable` but with conditions like if any window is being hover or not
-bool CanvasDidMutate = false;
+unsigned char *CanvasData; // Canvas Data Containg Pixel Values.
+#define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char)
 
-char FilePath[SYS_PATHNAME_MAX] = "untitled.png";
-char FileName[SYS_FILENAME_MAX] = "untitled.png";
+unsigned char LastPaletteIndex = 1;
+unsigned char PaletteIndex = 1;
+unsigned char PaletteCount = 17;
+unsigned char ColorPalette[17][4] = {
+	{ 0,   0,   0,   0   }, // Black Transparent/None
+	// Pico 8 Color Palette - https://lospec.com/ColorPalette-list/pico-8
+	{ 0,   0,   0,   255 }, // Black Color
+	{ 29,  43,  83,  255 }, // Dark Violet
+	{ 126, 37,  83,  255 }, // Dark Pink
+	{ 0,   135, 81,  255 }, // Dark Green
+	{ 171, 82,  54,  255 }, // Dark Orange
+	{ 95,  87,  79,  255 }, // Dark Brown
+	{ 194, 195, 199, 255 }, // Grey
+	{ 255, 241, 232, 255 }, // Seashell
+	{ 255, 0,   77,  255 }, // Redish Pink
+	{ 255, 163, 0,   255 }, // Orange
+	{ 255, 236, 39,  255 }, // Yellow
+	{ 0,   228, 54,  255 }, // Green
+	{ 41,  173, 255, 255 }, // Blue
+	{ 131, 118, 156, 255 }, // Light Purple
+	{ 255, 119, 168, 255 }, // Pink
+	{ 255, 204, 170, 255 }  // Pale Orange
+};
 
-#define MAX_CANVAS_LAYERS 100
-int32_t SelectedLayerIndex = 0;
-CanvasLayer_T* CanvasLayers[MAX_CANVAS_LAYERS] = { NULL };
-#define CURR_CANVAS_LAYER CanvasLayers[SelectedLayerIndex]
+unsigned int ZoomLevel = 8; // Default Zoom Level
+std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
+unsigned char BrushSize = 5; // Default Brush Size
 
-enum tool_e { BRUSH_COLOR, BRUSH_ERASER, SHAPE_LINE, SHAPE_RECT, SHAPE_CIRCLE, TOOL_INKDROPPER, TOOL_FLOODFILL, TOOL_PAN };
-enum tool_shape_e { CIRCLE, SQUARE };
-enum tool_e Tool = BRUSH_COLOR;
-enum tool_e LastTool = BRUSH_COLOR;
+// Holds if a ctrl/shift is pressed or not
+unsigned char IsCtrlDown = 0;
+unsigned char IsShiftDown = 0;
 
-float PreviewWindowZoom = 1.0f;
-float CurrViewportZoom = 1.0f;
-SDL_Rect ViewportLoc = { 0, 0, 0, 0 };
+enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER };
+unsigned char CanvasFreeze = 0;
 
-int32_t PaletteIndex = 0;
-int32_t ThemeIndex = 0;
-uint16_t PaletteColorIndex = 2;
-uint8_t EraseColor[4] = { 0, 0, 0, 0 };
-uint8_t SelectedColor[4] = { 255, 255, 255, 255 };
+// Currently & last selected tool
+enum mode_e Mode = CIRCLE_BRUSH;
+enum mode_e LastMode = CIRCLE_BRUSH;
 
-#define MAX_SELECTEDTOOLTEXT_SIZE 512
-char SelectedToolText[MAX_SELECTEDTOOLTEXT_SIZE] = "";
+unsigned char *SelectedColor; // Holds Pointer To Currently Selected Color
+unsigned char ShouldSave = 0;
+unsigned char ShowNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
 
-SDL_Window* window = NULL;
-#define WINDOW_TITLE_MAX 512 + SYS_FILENAME_MAX
-char WindowTitle[WINDOW_TITLE_MAX] = "";
+GLfloat ViewPort[4];
+GLfloat CanvasVertices[] = {
+	//       Canvas              Color To       Texture
+	//     Coordinates          Blend With     Coordinates
+	//  X      Y      Z      R     G     B      X     Y
+	   1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 0.0f, // Top Right
+	   1.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // Bottom Right
+	  -1.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 1.0f, // Bottom Left
+	  -1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 0.0f  // Top Left
+	// Z Coordinates Are 0 Because We Are Working With 2D Stuff
+	// Color To Blend With Are The Colors Which Will Be multiplied by the selected color to get the final output on the canvas
+};
 
-Config_T* AppConfig = NULL;
-PaletteArr_T* PaletteArr = NULL;
-theme_arr_t* ThemeArr = NULL;
+// Index Buffer
+unsigned int Indices[] = {0, 1, 3, 1, 2, 3};
 
-#ifndef CS_VERSION_MAJOR
-	#define CS_VERSION_MAJOR 0
-#endif
+// Mouse Position On Window
+double MousePos[2];
+double MousePosLast[2];
 
-#ifndef CS_VERSION_MAJOR
-	#define CS_VERSION_MINOR 0
-#endif
+// Mouse Position On Canvas
+double MousePosRelative[2];
+double MousePosRelativeLast[2];
 
-#ifndef CS_VERSION_MAJOR
-	#define CS_VERSION_PATCH 0
-#endif
+bool DidUndo = false;
+bool IsDirty = false;
 
-#ifndef CS_BUILD_STABLE
-	#define CS_BUILD_STABLE 0
-#endif
+struct cvstate {
+	unsigned char* pixelData;
+	cvstate* next; // Canvas State Before This Node
+	cvstate* prev; // Canvas State After This Node
+};
 
-#if CS_BUILD_STABLE == 0
-	#define CS_BUILD_TYPE "dev"
-#else
-	#define CS_BUILD_TYPE "stable"
-#endif
+typedef struct cvstate cvstate_t; // Canvas State Type
 
-#define __STR_IMPL_(s) #s     // Stringify Argument
-#define STR(s) __STR_IMPL_(s) // Expand Argument
+cvstate_t* CurrentState = NULL;
 
-// two macros for assembling the structure of window title on compile time and appending the filename when needed.
-#define VERSION_STR "v" STR(CS_VERSION_MAJOR) "." STR(CS_VERSION_MINOR) "." STR(CS_VERSION_PATCH) "-" CS_BUILD_TYPE
-#define GEN_WIN_TITLE() do {\
-		if (FileName[0] != 0) { snprintf(WindowTitle, WINDOW_TITLE_MAX, "%s - csprite " VERSION_STR, FileName); }\
-		else { snprintf(WindowTitle, WINDOW_TITLE_MAX, "csprite " VERSION_STR); }\
-	} while(0)
+int main(int argc, char **argv) {
+	for (unsigned char i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "-f") == 0) {
+			FilePath = argv[i+1];
+			LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
+			i++;
+		}
 
-static void _SaveCanvasLayersTo(const char* filePath);
-static void OpenNewFile();
-static void InitWindowIcon();
-static void _GuiSetColors(ImGuiStyle& style);
-static void _GuiSetToolText();
-static void UpdateViewportSize();
-static void UpdateViewportPos();
-static void ZoomViewport(int increase);
-static void MutateCanvas(bool LmbJustReleased);
-static inline bool CanMutateCanvas();
-static inline void ProcessEvents();
-static uint8_t* GetPixel(int x, int y);
+		if (strcmp(argv[i], "-d") == 0) {
+			int w, h;
+			string_to_int(&w, argv[i + 1]);
+			string_to_int(&h, argv[i + 2]);
+			CanvasDims[0] = w;
+			CanvasDims[1] = h;
+			i += 2;
+		}
 
-#define GetSelectedPalette() PaletteArr->Palettes[PaletteIndex]
+		if (strcmp(argv[i], "-o") == 0) {
+			FilePath = argv[i + 1];
+			i++;
+		}
 
-#define UNDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
+		if (strcmp(argv[i], "-w") == 0) {
+			int w, h;
+			string_to_int(&w, argv[i + 1]);
+			string_to_int(&h, argv[i + 2]);
+			WindowDims[0] = w;
+			WindowDims[1] = h;
+			i += 2;
+		}
 
-#define REDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
+		if (strcmp(argv[i], "-p") == 0) {
+			PaletteCount = 0;
+			i++;
 
-#define UPDATE_WINDOW_TITLE() do {\
-		GEN_WIN_TITLE();\
-		SDL_SetWindowTitle(window, WindowTitle);\
-	} while(0)
+			while (i < argc && (strlen(argv[i]) == 6 || strlen(argv[i]) == 8)) {
+				long number = (long)strtol(argv[i], NULL, 16);
+				int start;
+				unsigned char r, g, b, a;
 
-int main(int argc, char* argv[]) {
-	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
-	log_add_fp(LogFilePtr, LOG_TRACE);
-
-	AppConfig = LoadConfig();
-	PaletteArr = PaletteLoadAll();
-
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
-		Logger_Error("failed to initialize SDL2: %s", SDL_GetError());
-		return EXIT_FAILURE;
-	}
-
-	SDL_version compiled;
-	SDL_version linked;
-	SDL_VERSION(&compiled);
-	SDL_GetVersion(&linked);
-
-	Logger_Info("Init csprite " VERSION_STR);
-	Logger_Info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
-	Logger_Info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
-
-	SDL_DisplayMode dm;
-	SDL_GetCurrentDisplayMode(0, &dm);
-	WindowDims[0] = dm.w * 0.7;
-	WindowDims[1] = dm.h * 0.8;
-
-	GEN_WIN_TITLE();
-	window = SDL_CreateWindow(
-		WindowTitle,
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		WindowDims[0], WindowDims[1],
-		SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_MAXIMIZED
-	);
-	UpdateViewportPos();
-
-	InitWindowIcon();
-	SDL_ShowWindow(window);
-	_GuiSetToolText();
-
-	if (R_Init(window, AppConfig->vsync) != EXIT_SUCCESS) {
-		return EXIT_FAILURE;
-	}
-	SDL_Renderer* renderer = R_GetRenderer();
-
-	UpdateViewportPos();
-	UpdateViewportSize();
-
-	if (Canvas_Init(CanvasDims[0], CanvasDims[1], renderer) != EXIT_SUCCESS) {
-		return EXIT_FAILURE;
-	}
-
-	CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
-	if (CURR_CANVAS_LAYER == NULL) return EXIT_FAILURE;
-
-	if (argc > 1) {
-		const char* filePath = (const char*)argv[1];
-		int result = Sys_IsRegularFile(filePath);
-		if (result < 0) {
-			Logger_Error("Error Trying To Valid File Path: %s", strerror(errno));
-		} else if (result == 0) {
-			Logger_Error("Cannot Open The File in filePath");
-		} else {
-			int32_t w = 0, h = 0;
-			uint8_t* _data = ifio_read(filePath, &w, &h);
-			if (w > 0 && h > 0 && _data != NULL) {
-				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-					if (CanvasLayers[i] != NULL) {
-						Canvas_DestroyLayer(CanvasLayers[i]);
-						CanvasLayers[i] = NULL;
-					}
-				}
-				if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-					Canvas_Resize(w, h, R_GetRenderer());
-					CanvasDims[0] = w;
-					CanvasDims[1] = h;
-					CurrViewportZoom = 1.0f;
-					UpdateViewportSize();
-					UpdateViewportPos();
+				if (strlen(argv[i]) == 6) {
+					start = 16;
+					a = 255;
+				} else if (strlen(argv[i]) == 8) {
+					start = 24;
+					a = number >> (start - 24) & 0xff;
+				} else {
+					printf("Invalid color in ColorPalette, check the length is 6 or 8.\n");
+					break;
 				}
 
-				SelectedLayerIndex = 0;
-				CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
-				memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
-				FreeHistory(&CURR_CANVAS_LAYER->history);
-				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
+				r = number >> start & 0xff;
+				g = number >> (start - 8) & 0xff;
+				b = number >> (start - 16) & 0xff;
 
-				snprintf(FilePath, SYS_PATHNAME_MAX, "%s", filePath);
-				char* filePathBasename = Sys_GetBasename(filePath);
-				snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
-				free(filePathBasename);
-				free(_data);
-				UPDATE_WINDOW_TITLE();
+				ColorPalette[PaletteCount + 1][0] = r;
+				ColorPalette[PaletteCount + 1][1] = g;
+				ColorPalette[PaletteCount + 1][2] = b;
+				ColorPalette[PaletteCount + 1][3] = a;
+
+				printf("Adding color: #%s - rgb(%d, %d, %d)\n", argv[i], r, g, b);
+
+				PaletteCount++;
+				i++;
 			}
 		}
 	}
 
-	ImGuiIO& io = ImGui::GetIO();
-	ImGuiStyle& style = ImGui::GetStyle();
-	io.IniFilename = nullptr;
-	io.LogFilename = nullptr;
-	ImGui::StyleColorsDark();
-	ThemeArr = ThemeLoadAll();
-	_GuiSetColors(style);
-
-	{
-		int defaultUiFontSize = 0;
-		const void* defaultUiFont = Assets_Get("data/fonts/bm-mini.ttf", &defaultUiFontSize);
-		if (defaultUiFont) io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 16.0f);
+	if (CanvasData == NULL) {
+		CanvasData = (unsigned char *)malloc(CANVAS_SIZE_B);
+		memset(CanvasData, 0, CANVAS_SIZE_B);
+		if (CanvasData == NULL) {
+			printf("Unable To allocate memory for canvas.\n");
+			return 1;
+		}
 	}
 
-	SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
-	SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
-	SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
-	SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
+	GLFWwindow *window;
+	GLFWcursor *cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
 
-	bool ShowPreferencesWindow = false;
-	bool ShowLayerRenameWindow = false;
-	bool ShowNewCanvasWindow = false;
+	SelectedColor = ColorPalette[PaletteIndex];
 
-	Logger_Hide();
+	glfwInit();
+	glfwSetErrorCallback(logGLFWErrors);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
 
-	unsigned int frameStart, frameTime;
-	unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
+	window = glfwCreateWindow(WindowDims[0], WindowDims[1], "CSprite", NULL, NULL);
 
-	while (!ShouldClose) {
-		ProcessEvents();
+	if (!window) {
+		printf("Failed to create GLFW window\n");
+		free(CanvasData);
+		return 1;
+	}
 
-		frameStart = SDL_GetTicks();
-		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
+	glfwMakeContextCurrent(window);
+	glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
+	glfwSwapInterval(0);
 
-		R_Clear(); // Clear The Screen, This Is Required To Done Before The Canvas Is Drawn Because Rendered Canvas Is Directly Copied Onto Screen & Clearing The screen After Copying It Will Not Show The Canvas
-		R_NewFrame(); // All The Calls To ImGui Will Be Recorded After This Function
+	GLFWimage iconArr[3];
+	iconArr[0].width = 16;
+	iconArr[0].height = 16;
+	iconArr[0].pixels = (unsigned char*)assets_get("data/icons/icon-16.png", NULL);
+
+	iconArr[1].width = 32;
+	iconArr[1].height = 32;
+	iconArr[1].pixels = (unsigned char*)assets_get("data/icons/icon-32.png", NULL);
+
+	iconArr[2].width = 48;
+	iconArr[2].height = 48;
+	iconArr[2].pixels = (unsigned char*)assets_get("data/icons/icon-48.png", NULL);
+	glfwSetWindowIcon(window, 3, iconArr);
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		printf("Failed to init GLAD\n");
+		free(CanvasData);
+		return 1;
+	}
+
+	glfwSetCursor(window, cursor);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Initial Canvas Position
+	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2; // X Position
+	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2; // Y Position
+
+	// Output Width And Height Of The Canvas
+	ViewPort[2] = CanvasDims[0] * ZoomLevel; // Width
+	ViewPort[3] = CanvasDims[1] * ZoomLevel; // Height
+
+	ZoomNLevelViewport();
+	glfwSetWindowSizeCallback(window, WindowSizeCallback);
+	glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
+	glfwSetScrollCallback(window, ScrollCallback);
+	glfwSetKeyCallback(window, KeyCallback);
+	glfwSetMouseButtonCallback(window, MouseButtonCallback);
+
+	unsigned int shader_program = CreateShaderProgram();
+	unsigned int vertexBuffObj, vertexArrObj, ebo;
+	glGenVertexArrays(1, &vertexArrObj);
+	glGenBuffers(1, &vertexBuffObj);
+	glGenBuffers(1, &ebo);
+	glBindVertexArray(vertexArrObj);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffObj);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(CanvasVertices), CanvasVertices, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+	glBindAttribLocation(shader_program, 0, "position");
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+	glBindAttribLocation(shader_program, 1, "color");
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+	glBindAttribLocation(shader_program, 2, "tex_coords");
+	glEnableVertexAttribArray(2);
+
+	unsigned int texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CanvasDims[0], CanvasDims[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, CanvasData);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.IniFilename = NULL; // Disable Generation of .ini file
+
+	const void* Montserrat_Bold = NULL;
+	int Montserrat_Bold_Size = 0;
+
+	Montserrat_Bold = assets_get("data/fonts/Montserrat-Bold.ttf", &Montserrat_Bold_Size);
+
+	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold, Montserrat_Bold_Size, 16.0f);
+
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 130");
+
+	ImGuiWindowFlags window_flags = 0;
+	window_flags |= ImGuiWindowFlags_NoBackground;
+	window_flags |= ImGuiWindowFlags_NoTitleBar;
+	window_flags |= ImGuiWindowFlags_NoResize;
+	window_flags |= ImGuiWindowFlags_NoMove;
+
+#ifdef SHOW_FRAME_TIME
+	double lastTime = glfwGetTime();
+	int nbFrames = 0; // Number Of Frames Rendered
+#endif
+
+	auto const wait_time = std::chrono::milliseconds{ 17 };
+	auto const start_time = std::chrono::steady_clock::now();
+	auto next_time = start_time + wait_time;
+
+	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
+
+	while (!glfwWindowShouldClose(window)) {
+		// --------------------------------------------------------------------------------------
+		// Updating Cursor Position Here because function callback was causing performance issues.
+		glfwGetCursorPos(window, &MousePos[0], &MousePos[1]);
+		/* infitesimally small chance aside from startup */
+		if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
+			if (Mode == PAN) {
+				ViewPort[0] -= MousePosLast[0] - MousePos[0];
+				ViewPort[1] += MousePosLast[1] - MousePos[1];
+				ViewportSet();
+			}
+		}
+		MousePosLast[0] = MousePos[0];
+		MousePosLast[1] = MousePos[1];
+
+		MousePosRelativeLast[0] = MousePosRelative[0];
+		MousePosRelativeLast[1] = MousePosRelative[1];
+		MousePosRelative[0] = MousePos[0] - ViewPort[0];
+		MousePosRelative[1] = (MousePos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
+		// --------------------------------------------------------------------------------------
+
+#ifdef SHOW_FRAME_TIME
+		double currentTime = glfwGetTime();
+		nbFrames++;
+		if (currentTime - lastTime >= 1.0) {
+			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
+			nbFrames = 0;
+			lastTime += 1.0;
+		}
+#endif
+
+		std::this_thread::sleep_until(next_time);
+
+		glfwPollEvents();
+		ProcessInput(window);
+
+		glClearColor(0.075, 0.075, 0.1, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glUseProgram(shader_program);
+		glBindVertexArray(vertexArrObj);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		unsigned int alpha_loc = glGetUniformLocation(shader_program, "alpha");
+		glUniform1f(alpha_loc, 0.2f);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		glUniform1f(alpha_loc, 1.0f);
+		glBindTexture(GL_TEXTURE_2D, texture);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CanvasDims[0], CanvasDims[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, CanvasData);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		if (ImGui::BeginMainMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
-				if (ImGui::MenuItem("New")) {
-					ShowNewCanvasWindow = true;
+				if (ImGui::MenuItem("New", "Ctrl+N")) {
+					ShowNewCanvasWindow = 1;
 				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					OpenNewFile();
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
+					if (filePath != NULL) {
+						FilePath = std::string(filePath);
+						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						ZoomNLevelViewport();
+					}
 				}
 				if (ImGui::BeginMenu("Save")) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						ShouldSave = true;
+						FilePath = FixFileExtension(FilePath);
+						SaveImageFromCanvas(FilePath);
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					}
-					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
-						ShouldSaveAs = true;
+					if (ImGui::MenuItem("Save As", "Alt+S")) {
+						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
+						if (filePath != NULL) {
+							FilePath = FixFileExtension(std::string(filePath));
+							SaveImageFromCanvas(FilePath);
+							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						}
 					}
 					ImGui::EndMenu();
 				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Edit")) {
-				if (ImGui::MenuItem("Undo", "Ctrl+Z", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->prev != NULL))) {
-					UNDO();
+				if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
+					Undo();
 				}
-				if (ImGui::MenuItem("Redo", "Ctrl+Y", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->next != NULL))) {
-					REDO();
-				}
-				if (ImGui::BeginMenu("Palette")) {
-					for (int32_t i = 0; i < PaletteArr->numOfEntries; ++i) {
-						int32_t _palidx = PaletteIndex;
-
-						if (ImGui::MenuItem(PaletteArr->Palettes[i]->name, NULL)) {
-							PaletteIndex = i;
-						}
-						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-							ImGui::SetTooltip("%s", PaletteArr->Palettes[i]->author);
-						}
-						if (_palidx == i) {
-							ImGui::SameLine();
-							ImGui::Text("<");
-						}
-					}
-					ImGui::EndMenu();
-				}
-
-				if (ImGui::BeginMenu("Theme")) {
-					for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
-						int32_t _themeidx = ThemeIndex;
-
-						if (ImGui::MenuItem(ThemeArr->entries[i]->name, NULL)) {
-							ThemeIndex = i;
-							_GuiSetColors(style);
-						}
-						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-							ImGui::SetTooltip("%s", ThemeArr->entries[i]->author);
-						}
-
-						if (_themeidx == i) {
-							ImGui::SameLine();
-							ImGui::Text("<");
-						}
-					}
-					ImGui::EndMenu();
-				}
-
-				if (ImGui::MenuItem("Preferences")) {
-					ShowPreferencesWindow = true;
-				}
-
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("View")) {
-				if (ImGui::MenuItem("Logs")) {
-					if (Logger_IsHidden()) Logger_Show();
-					else Logger_Hide();
+				if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
+					Redo();
 				}
 				ImGui::EndMenu();
 			}
+
 			if (ImGui::BeginMenu("Help")) {
-				if (ImGui::MenuItem("Wiki")) {
-					Sys_OpenURL("https://csprite.github.io/wiki/");
-				}
 				if (ImGui::MenuItem("About")) {
-					Sys_OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
+					openUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
 				}
 				if (ImGui::MenuItem("GitHub")) {
-					Sys_OpenURL("https://github.com/pegvin/csprite");
+					openUrl("https://github.com/pegvin/CSprite");
 				}
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
 		}
 
-		ImVec2 PalWinSize;
-		if (ImGui::Begin("Palettes", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
-			ImGui::SetWindowPos({ 3.0f, 30.0f });
-			for (unsigned int i = 0; i < GetSelectedPalette()->numOfEntries; i++) {
-				if (i != 0 && i % 2 != 0) ImGui::SameLine();
-				static char ColorButtonId[20] = "";
-				if (PaletteColorIndex != i) { snprintf(ColorButtonId, 20, "Color##%d", i); }
-
-				if (ImGui::ColorButton(PaletteColorIndex == i ? "Selected Color" : ColorButtonId, {
-					((float)(GetSelectedPalette()->Colors[i][0]) / 255),
-					((float)(GetSelectedPalette()->Colors[i][1]) / 255),
-					((float)(GetSelectedPalette()->Colors[i][2]) / 255),
-					((float)(GetSelectedPalette()->Colors[i][3]) / 255)
-				})) {
-					PaletteColorIndex = i;
-					SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
-					SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
-					SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
-					SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
-				}
-
-				ImGui::GetWindowDrawList()->AddRect(
-					ImGui::GetItemRectMin(),
-					ImGui::GetItemRectMax(),
-					(PaletteColorIndex == i && COLOR_EQUAL(SelectedColor, GetSelectedPalette()->Colors[i])) ? 0xFFFFFFFF : 0x000000FF,
-					0, 0, 1
-				);
-			};
-
-			ImGui::SetWindowSize({0.0f, 0.0f}); // This Will Make the window adjust size according to children
-			PalWinSize = ImGui::GetWindowSize();
-			ImGui::End();
-		}
-
-		if (ImGui::Begin("###ColorPickerWindow", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground)) {
-			ImGui::SetWindowPos({ 0, PalWinSize.y + 40.0f });
-			float ImColPicker[4] = { (float)(SelectedColor[0]) / 255, (float)(SelectedColor[1]) / 255, (float)(SelectedColor[2]) / 255, (float)(SelectedColor[3]) / 255 };
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
-			ImGui::ColorEdit4(
-				"##ColorPickerWidget", (float*)&ImColPicker,
-				ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel
-			);
-			ImGui::PopStyleVar();
-
-			SelectedColor[0] = ImColPicker[0] * 255;
-			SelectedColor[1] = ImColPicker[1] * 255;
-			SelectedColor[2] = ImColPicker[2] * 255;
-			SelectedColor[3] = ImColPicker[3] * 255;
-
-			ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), 0xFFFFFFFF, 0, 0, 1);
-			ImGui::SetWindowSize({ 0, 0 });
-			ImGui::End();
-		}
-
-		if (ImGui::Begin(
-			"Debug Window", NULL,
-			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize
-#if(CS_BUILD_STABLE == 1)
-			| ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground
-#endif
-		)) {
-			ImVec2 WinSize = ImGui::GetWindowSize();
-			ImGui::SetWindowPos({ 5, io.DisplaySize.y - WinSize.y - 10 });
-			ImGui::Text("%s\nZoom: %d%%", SelectedToolText, (int)(CurrViewportZoom * 100));
-#if(CS_BUILD_STABLE == 0)
-			ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-			if (ImGui::Button("Clear Undo/Redo Buffers")) {
-				for (int i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-					if (CanvasLayers[i] != NULL) {
-						FreeHistory(&CanvasLayers[i]->history);
-						SaveHistory(&CanvasLayers[i]->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CanvasLayers[i]->pixels);
-					}
-				}
-			}
-#endif
-			ImGui::End();
-		}
-
-		static bool ResetPreviewWindowSize = true;
-		static bool ResetPreviewWindowPos = true;
-
-		if (ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoCollapse)) {
-			if (ImGui::BeginPopupContextItem()) {
-				if (ImGui::MenuItem("Reset Size")) {
-					ResetPreviewWindowSize = true;
-				}
-				if (ImGui::MenuItem("Reset Position")) {
-					ResetPreviewWindowPos = true;
-				}
-				ImGui::EndPopup();
-			}
-			static ImVec2 WinSize = { 192.0f, 168.0f };
-			// XX - Use "SetNextWindowPos" & "SetNextWindowSize" If The Window Is Movable Or Else The Children Won't Be Able To Move
-			if (ResetPreviewWindowPos == true) {
-				ImGui::SetWindowPos({ io.DisplaySize.x - WinSize.x - 20, io.DisplaySize.y - WinSize.y - 20, }); // Move Window To Bottom Right With 20 pixel padding
-				ResetPreviewWindowPos = false;
-			}
-			if (ResetPreviewWindowSize == true) {
-				ImGui::SetWindowSize({ 192.0f, 168.0f });
-				ResetPreviewWindowSize = false;
-			}
-			ImGui::Image(
-				reinterpret_cast<ImTextureID>(Canvas_GetTex()), // FBO Texture
-				{ WinSize.x - 15, CanvasDims[1] * (WinSize.x - 15) / CanvasDims[0] }
-			);
-			WinSize = ImGui::GetWindowSize();
-			ImGui::End();
-		}
-
-		if (ImGui::Begin("Layer", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
-			ImVec2 WinSize = { 200, 300 };
-			ImGui::SetWindowPos({ io.DisplaySize.x - WinSize.x - 10, 40, }); // Move Window To Bottom Right With 20 pixel padding
-			ImGui::SetWindowSize(WinSize, ImGuiCond_FirstUseEver);
-
-			if (ImGui::Button("+")) {
-				if (SelectedLayerIndex + 1 != MAX_CANVAS_LAYERS) {
-					if (CURR_CANVAS_LAYER == NULL) {
-						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
-					} else {
-						if (SelectedLayerIndex + 1 < MAX_CANVAS_LAYERS) {
-IncrementAndCreateLayer__:
-							SelectedLayerIndex++;
-							if (SelectedLayerIndex + 1 != MAX_CANVAS_LAYERS) {
-								if (CURR_CANVAS_LAYER != NULL) goto IncrementAndCreateLayer__;
-							}
-							CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
-						}
-					}
-				}
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("-")) {
-				if (CURR_CANVAS_LAYER != NULL) {
-					Canvas_DestroyLayer(CURR_CANVAS_LAYER);
-					CURR_CANVAS_LAYER = NULL;
-					if (SelectedLayerIndex >= 1) SelectedLayerIndex--;
-					else SelectedLayerIndex++;
-				}
-			}
-
-			int move_from = -1, move_to = -1;
-			for (int32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-				if (CanvasLayers[i] != NULL) {
-					if (ImGui::Selectable(CanvasLayers[i]->name, SelectedLayerIndex == i, ImGuiSelectableFlags_AllowDoubleClick)) {
-						if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-							ShowLayerRenameWindow = true;
-						} else {
-							SelectedLayerIndex = i;
-						}
-					}
-
-					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover | ImGuiDragDropFlags_SourceNoHoldToOpenOthers)) {
-						ImGui::Text("Moving \"%s\"", CanvasLayers[i]->name); // tooltip text
-						ImGui::SetDragDropPayload("LayersDNDId", &i, sizeof(int));
-						ImGui::EndDragDropSource();
-					}
-
-					if (ImGui::BeginDragDropTarget()) {
-						ImGuiDragDropFlags target_flags = ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect;
-						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("LayersDNDId", target_flags)) {
-							move_from = *((const int*)payload->Data);
-							move_to = i;
-						}
-						ImGui::EndDragDropTarget();
-					}
-				}
-			}
-
-			if (move_from != -1 && move_to != -1) {
-				// Reorder items
-				int copy_dst = (move_from < move_to) ? move_from : move_to + 1;
-				int copy_src = (move_from < move_to) ? move_from + 1 : move_to;
-				CanvasLayer_T* tmp = CanvasLayers[move_from];
-				CanvasLayers[copy_dst] = CanvasLayers[copy_src];
-				CanvasLayers[move_to] = tmp;
-				ImGui::SetDragDropPayload("LayersDNDId", &move_to, sizeof(int));
-			}
-
-			ImGui::End();
-		}
-
-		if (ShowNewCanvasWindow) {
-			if (ImGui::BeginPopupModal("Create New###NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
-				static int32_t NewDims[2] = { 32, 24 };
-				ImGui::InputInt("Width", &NewDims[0], 1, 5);
-				ImGui::InputInt("Height", &NewDims[1], 1, 5);
-
-				if (ImGui::Button("Create")) {
-					if (NewDims[0] > 0 && NewDims[1] > 0) {
-						for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-							if (CanvasLayers[i] != NULL) {
-								Canvas_DestroyLayer(CanvasLayers[i]);
-								CanvasLayers[i] = NULL;
-							}
-						}
-						SelectedLayerIndex = 0;
-						Canvas_Resize(NewDims[0], NewDims[1], R_GetRenderer());
-						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
-						CanvasDims[0] = NewDims[0];
-						CanvasDims[1] = NewDims[1];
-						CurrViewportZoom = 1.0f;
-						UpdateViewportSize();
-						UpdateViewportPos();
-					}
-					ShowNewCanvasWindow = false;
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel")) {
-					NewDims[0] = 32;
-					NewDims[1] = 24;
-					ShowNewCanvasWindow = false;
-				}
-				ImGui::EndPopup();
-			} else {
-				ImGui::OpenPopup("Create New###NewCanvasWindow");
-			}
-		}
-
-		if (ShowPreferencesWindow) {
-			if (ImGui::BeginPopupModal("Preferences###PreferencesWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
-				ImGui::Text("VSync (%s)", AppConfig->vsync ? "Enabled" : "Disabled");
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Vertical Sync - Synchronize App's FPS To Your Monitor's FPS");
-				ImGui::SameLine();
-				ImGui::Ext_ToggleButton("VSync_Toggle", &AppConfig->vsync);
-
-				ImGui::InputInt("FPS", &AppConfig->FramesUpdateRate, 1, 5, AppConfig->vsync == true ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Frames Per Second");
-
-				AppConfig->FramesUpdateRate = AppConfig->FramesUpdateRate < 5 ? 5 : AppConfig->FramesUpdateRate;
-				if (ImGui::Button("Save")) {
-					WriteConfig(AppConfig);
-					frameDelay = 1000 / AppConfig->FramesUpdateRate;
-					ShowPreferencesWindow = false;
-				}
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("please restart the app after saving");
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel")) {
-					ShowPreferencesWindow = false;
-				}
-				ImGui::EndPopup();
-			} else {
-				ImGui::OpenPopup("Preferences###PreferencesWindow");
-			}
-		}
-
-		if (ShowLayerRenameWindow) {
-			// This Variable is only true when the popup first appears & is needed to be set to false after the first time of the popup appearing & is needed to be set to true again after the window closes
-			static bool isFirstTime = true;
-			if (ImGui::BeginPopupModal("Rename Layer###LayerRenameWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
-				static char TempBuff[LAYER_NAME_MAX] = "";
-				static bool LayerRenamed;
-				LayerRenamed = false; // Needed To Be Set To False Every Frame Or Else When Pressing Enter & Pressing A Key It Will Only Read That Single Key Press.
-
-				// if the popup just opened copy the layer name to input buffer
-				if (isFirstTime) {
-					isFirstTime = false;
-					strncpy(TempBuff, CURR_CANVAS_LAYER->name, LAYER_NAME_MAX);
-					ImGui::SetKeyboardFocusHere(); // Focus The Next Text Input When Popup Appears
-				}
-				if (ImGui::InputText("##NewLayerName", TempBuff, LAYER_NAME_MAX, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-					LayerRenamed = true;
-				}
+		if (ShowNewCanvasWindow == 1) {
+			CanvasFreeze = 1;
+			ImGui::SetNextWindowSize({280, 100}, 0);
+			if (ImGui::Begin("NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
+				ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
+				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
 				if (ImGui::Button("Ok")) {
-					LayerRenamed = true;
-				}
+					free(CanvasData);
+					CanvasDims[0] = NEW_DIMS[0];
+					CanvasDims[1] = NEW_DIMS[1];
+					CanvasData = (unsigned char *)malloc(CANVAS_SIZE_B);
+					memset(CanvasData, 0, CANVAS_SIZE_B);
+					if (CanvasData == NULL) {
+						printf("Unable To allocate memory for canvas.\n");
+						return 1;
+					}
 
-				if (LayerRenamed && TempBuff[0] != '\0') {
-					strncpy(CURR_CANVAS_LAYER->name, TempBuff, LAYER_NAME_MAX);
-					memset(TempBuff, 0, LAYER_NAME_MAX);
-					ShowLayerRenameWindow = false;
-					LayerRenamed = false;
+					ZoomNLevelViewport();
+					FreeHistory();
+					CanvasFreeze = 0;
+					ShowNewCanvasWindow = 0;
 				}
-
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
-					memset(TempBuff, 0, LAYER_NAME_MAX);
-					ShowLayerRenameWindow = false;
+					CanvasFreeze = 0;
+					ShowNewCanvasWindow = 0;
 				}
-				ImGui::EndPopup();
-			} else {
-				ImGui::OpenPopup("Rename Layer###LayerRenameWindow");
-				isFirstTime = true; // set to true cause next frame the popup will appear.
+
+				ImGui::End();
 			}
 		}
 
-		Logger_Draw("Logs");
+		if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
+			ImGui::SetWindowPos({0, 20});
+			std::string selectedToolText;
 
-		if (CURR_CANVAS_LAYER != NULL) {
-			Canvas_NewFrame(!ShouldSave && !ShouldSaveAs, renderer);
-			for (int32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-				if (CanvasLayers[i] != NULL) {
-					Canvas_Layer(CanvasLayers[i], SelectedLayerIndex == i, renderer);
-				}
-			}
-			Canvas_FrameEnd(renderer, &ViewportLoc);
-
-			SDL_SetRenderDrawColor(
-				renderer,
-				style.Colors[ImGuiCol_Border].x * 255,
-				style.Colors[ImGuiCol_Border].y * 255,
-				style.Colors[ImGuiCol_Border].z * 255,
-				style.Colors[ImGuiCol_Border].w * 255
-			);
-			SDL_RenderDrawRect(renderer, &ViewportLoc);
-
-			if (ShouldSave == true || ShouldSaveAs == true) {
-				if (ShouldSaveAs == true) {
-					auto destination = pfd::save_file("Select a file", ".", { "Image Files", "*.png *.jpg *.jpeg *.ppm" }, pfd::opt::none).result();
-					const char* _fPath = destination.empty() ? NULL : destination.c_str();
-					if (_fPath != NULL) {
-						snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fPath);
-						char* _fName = Sys_GetBasename(_fPath);
-						snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
-						free(_fName);
-						UPDATE_WINDOW_TITLE();
+			switch (Mode) {
+				case SQUARE_BRUSH:
+					if (PaletteIndex == 0)
+						selectedToolText = "Square Eraser - (Size: " + std::to_string(BrushSize) + ")";
+					else
+						selectedToolText = "Square Brush - (Size: " + std::to_string(BrushSize) + ")";
+					break;
+				case CIRCLE_BRUSH:
+					if (PaletteIndex == 0) {
+						selectedToolText = "Circle Eraser - (Size: " + std::to_string(BrushSize) + ")";
 					} else {
-						ShouldSaveAs = false;
+						selectedToolText = "Circle Brush - (Size: " + std::to_string(BrushSize) + ")";
 					}
-				}
-
-				// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
-				if (ShouldSave == true || ShouldSaveAs == true) {
-					_SaveCanvasLayersTo(FilePath);
-					ShouldSave = false;
-					ShouldSaveAs = false;
-				}
+					break;
+				case FILL:
+					selectedToolText = "Fill";
+					break;
+				case INK_DROPPER:
+					selectedToolText = "Ink Dropper";
+					break;
+				case PAN:
+					selectedToolText = "Panning";
+					break;
 			}
+
+			ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
+			ImVec2 textSize2 = ImGui::CalcTextSize(ZoomText.c_str(), NULL, false, -2.0f);
+			ImGui::SetWindowSize({(float)(textSize1.x + textSize2.x), (float)(textSize1.y + textSize2.y) * 2}); // Make Sure Text is visible everytime.
+
+			ImGui::Text("%s", selectedToolText.c_str());
+			ImGui::Text("%s", ZoomText.c_str());
+			ImGui::End();
 		}
 
-		R_Present();
+		if (ImGui::Begin("ColorPaletteWindow", NULL, window_flags)) {
+			ImGui::SetWindowPos({0, (float)WindowDims[1] - 35});
+			for (int i = 1; i < PaletteCount; i++) {
+				if (i != 1) ImGui::SameLine();
+				if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)ColorPalette[i][0]/255, (float)ColorPalette[i][1]/255, (float)ColorPalette[i][2]/255, (float)ColorPalette[i][3]/255})) {
+					PaletteIndex = i;
+					SelectedColor = ColorPalette[PaletteIndex];
+				}
+			};
+			ImGui::End();
+		}
 
-		if (!AppConfig->vsync) {
-			frameTime = SDL_GetTicks() - frameStart;
-			if (frameDelay > frameTime) SDL_Delay(frameDelay - frameTime);
-			frameStart = SDL_GetTicks();
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		glfwSwapBuffers(window);
+		next_time += wait_time;
+	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
+	glfwDestroyWindow(window);
+	glfwTerminate();
+	FreeHistory();
+	return 0;
+}
+
+unsigned char * GetCharData(unsigned char *data, int x, int y) {
+	return data + ((y * CanvasDims[0] + x) * 4);
+}
+
+void FrameBufferSizeCallback(GLFWwindow *window, int w, int h) {
+	glViewport(0, 0, w, h);
+}
+
+void ZoomNLevelViewport() {
+	// Simple hacky way to adjust canvas zoom level till it fits the window
+	while (true) {
+		if (ViewPort[2] >= WindowDims[1] || ViewPort[3] >= WindowDims[1]) {
+			AdjustZoom(false);
+			AdjustZoom(false);
+			AdjustZoom(false);
+			break;
+		}
+		AdjustZoom(true);
+		ViewPort[2] = CanvasDims[0] * ZoomLevel;
+		ViewPort[3] = CanvasDims[1] * ZoomLevel;
+	}
+
+	// Center On Screen
+	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
+	ViewportSet();
+}
+
+void WindowSizeCallback(GLFWwindow* window, int width, int height) {
+	WindowDims[0] = width;
+	WindowDims[1] = height;
+
+	// Center The Canvas On X, Y
+	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
+
+	// Set The Canvas Size (Not Neccessary Here Tho)
+	ViewPort[2] = CanvasDims[0] * ZoomLevel;
+	ViewPort[3] = CanvasDims[1] * ZoomLevel;
+	ViewportSet();
+}
+
+void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		int x = (int)(MousePosRelative[0] / ZoomLevel);
+		int y = (int)(MousePosRelative[1] / ZoomLevel);
+
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
+			if (action == GLFW_PRESS) {
+				SaveState();
+			}
+			if (action == GLFW_RELEASE) {
+				if (DidUndo == true) {
+					IsDirty = true;
+					DidUndo = false;
+				} else {
+					IsDirty = false;
+				}
+				SaveState();
+			}
 		}
 	}
-
-	for (int i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-		if (CanvasLayers[i] != NULL) {
-			Canvas_DestroyLayer(CanvasLayers[i]);
-			CanvasLayers[i] = NULL;
-		}
-	}
-
-	Canvas_Destroy();
-	R_Destroy();
-	SDL_DestroyWindow(window);
-	SDL_Quit();
-	FreePaletteArr(PaletteArr);
-
-	window = NULL;
-	PaletteArr = NULL;
-	return EXIT_SUCCESS;
 }
 
-static void _GuiSetToolText() {
-	switch (Tool) {
-	case BRUSH_COLOR:
-	case BRUSH_ERASER:
-		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Size: %d)", Tools_GetBrushShape() ? "Square" : "Circle", Tool == BRUSH_COLOR ? "Brush" : "Eraser", Tools_GetBrushSize());
-		break;
-	case SHAPE_RECT:
-	case SHAPE_LINE:
-		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s %s (Width: %d)", Tools_GetBrushShape() ? "Square" : "Rounded", Tool == SHAPE_LINE ? "Line" : "Rectangle", Tools_GetBrushSize());
-		break;
-	case SHAPE_CIRCLE:
-		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "Circle (Boundary Width: %d)", Tools_GetBrushSize());
-		break;
-	case TOOL_FLOODFILL:
-	case TOOL_PAN:
-		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "%s", Tool == TOOL_FLOODFILL ? "Flood Fill" : "Panning");
-		break;
-	case TOOL_INKDROPPER:
-		snprintf(SelectedToolText, MAX_SELECTEDTOOLTEXT_SIZE, "Ink Dropper");
-		break;
-	}
-}
+void ProcessInput(GLFWwindow *window) {
+	if (CanvasFreeze == 1) return;
 
-static void _GuiSetColors(ImGuiStyle& style) {
-	if (ThemeArr != NULL && ThemeArr->entries[ThemeIndex] != NULL) {
-		theme_t* t = ThemeArr->entries[ThemeIndex];
-		style = t->style;
-	}
-}
+	int x, y;
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+		x = (int)(MousePosRelative[0] / ZoomLevel);
+		y = (int)(MousePosRelative[1] / ZoomLevel);
 
-// Basically Checks if Canvas Is Not Locked, Current Layer isn't NULL, Mouse Positons Are In Bound
-static inline bool CanMutateCanvas() {
-	return (
-		!CanvasLocked                   &&
-		CURR_CANVAS_LAYER != NULL       &&
-		MousePosRel[0] >= 0             &&
-		MousePosRel[0] < CanvasDims[0]  &&
-		MousePosRel[1] >= 0             &&
-		MousePosRel[1] < CanvasDims[1]
-	);
-}
-
-// Drawing And Stuff Is Done Here
-static void MutateCanvas(bool LmbJustReleased) {
-	if (CanMutateCanvas() && (LmbJustReleased || IsLMBDown)) {
-		switch (Tool) {
-			case BRUSH_COLOR:
-			case BRUSH_ERASER: {
-				CanvasDidMutate = Tool_Brush(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]) || CanvasDidMutate;
-				break;
-			}
-			case SHAPE_RECT:
-			case SHAPE_CIRCLE:
-			case SHAPE_LINE: {
-				if (LmbJustReleased) {
-					CanvasDidMutate = CanvasDidMutate || (Tool == SHAPE_LINE || Tool == SHAPE_RECT || Tool == SHAPE_CIRCLE);
-					if (CanvasDidMutate == true) {
-						SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
-						CanvasDidMutate = false;
-					}
-				} else if (IsLMBDown) {
-					if (CURR_CANVAS_LAYER->history->prev != NULL) {
-						memcpy(CURR_CANVAS_LAYER->pixels, CURR_CANVAS_LAYER->history->pixels, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t));
-					} else {
-						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t));
-					}
-					if (Tool == SHAPE_RECT) {
-						Tool_Rect(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
-					} else if (Tool == SHAPE_LINE) {
-						Tool_Line(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
-					} else if (Tool == SHAPE_CIRCLE) {
-						Tool_Circle(
-							CURR_CANVAS_LAYER->pixels,
-							SelectedColor,
-							MousePosDownRel[0], MousePosDownRel[1],
-							(int)sqrt( // Calculates Distance Between 2 x, y points
-								(MousePosRel[0] - MousePosDownRel[0]) * (MousePosRel[0] - MousePosDownRel[0]) +
-								(MousePosRel[1] - MousePosDownRel[1]) * (MousePosRel[1] - MousePosDownRel[1])
-							),
-							CanvasDims[0], CanvasDims[1]
-						);
-					}
+		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
+			switch (Mode) {
+				case SQUARE_BRUSH:
+				case CIRCLE_BRUSH: {
+					draw(x, y);
+					drawInBetween(x, y, (int)(MousePosRelativeLast[0] / ZoomLevel), (int)(MousePosRelativeLast[1] / ZoomLevel));
+					break;
 				}
-				break;
-			}
-			case TOOL_PAN: {
-				break;
-			}
-			case TOOL_FLOODFILL: {
-				if (LmbJustReleased) {
-					unsigned char* pixel = GetCharData(CURR_CANVAS_LAYER->pixels, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
-					unsigned char OldColor[4] = { *(pixel + 0), *(pixel + 1), *(pixel + 2), *(pixel + 3) };
-					CanvasDidMutate = Tool_FloodFill(
-						CURR_CANVAS_LAYER->pixels,
-						OldColor, SelectedColor,
-						MousePosRel[0], MousePosRel[1],
-						CanvasDims[0], CanvasDims[1]
-					) || CanvasDidMutate;
+				case FILL: {
+					unsigned char *ptr = GetPixel(x, y);
+					// Color Clicked On.
+					unsigned char color[4] = {
+						*(ptr + 0),
+						*(ptr + 1),
+						*(ptr + 2),
+						*(ptr + 3)
+					};
+					fill(x, y, color);
+					break;
 				}
-				break;
-			}
-			case TOOL_INKDROPPER: {
-				if (LmbJustReleased) {
-					uint8_t* pixel = GetPixel(MousePosRel[0], MousePosRel[1]);
-					if (pixel != NULL && *(pixel + 3) != 0) {
-						bool foundEntry = false;
-						for (unsigned int i = 0; i < GetSelectedPalette()->numOfEntries; i++) {
-							if (COLOR_EQUAL(GetSelectedPalette()->Colors[i], pixel)) {
-								PaletteColorIndex = i;
-								SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
-								SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
-								SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
-								SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
-								foundEntry = true;
-								break;
-							}
+				case INK_DROPPER: {
+					unsigned char *ptr = GetPixel(x, y);
+					// Color Clicked On.
+					unsigned char color[4] = {
+						*(ptr + 0),
+						*(ptr + 1),
+						*(ptr + 2),
+						*(ptr + 3)
+					};
+
+					// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
+					for (int i = 1; i < PaletteCount; i++) {
+						if (color_equal(ColorPalette[i], color) == 1) {
+							LastPaletteIndex = PaletteIndex;
+							PaletteIndex = i;
+							break;
 						}
-						if (!foundEntry) {
-							SelectedColor[0] = *(pixel + 0);
-							SelectedColor[1] = *(pixel + 1);
-							SelectedColor[2] = *(pixel + 2);
-							SelectedColor[3] = *(pixel + 3);
-						}
-						Tool = LastTool;
-						_GuiSetToolText();
 					}
+					break;
 				}
-				break;
+				default: {
+					break;
+				}
 			}
 		}
 	}
 }
 
-static inline void OnEvent_KeyUp(SDL_Event* e) {
-	switch(e->key.keysym.sym) {
-		case SDLK_SPACE:
-			Tool = LastTool;
-			CanvasMutable = true;
-			_GuiSetToolText();
-			break;
-		case SDLK_f:
-			Tool = TOOL_FLOODFILL;
-			_GuiSetToolText();
-			break;
-		case SDLK_e:
-			Tool = BRUSH_ERASER;
-			Tools_SetBrushShape(IsShiftDown ? BRUSH_SHAPE_SQUARE : BRUSH_SHAPE_CIRCLE);
-			_GuiSetToolText();
-			break;
-		case SDLK_b:
-			Tool = BRUSH_COLOR;
-			Tools_SetBrushShape(IsShiftDown ? BRUSH_SHAPE_SQUARE : BRUSH_SHAPE_CIRCLE);
-			_GuiSetToolText();
-			break;
-		case SDLK_l:
-			Tool = SHAPE_LINE;
-			Tools_SetBrushShape(IsShiftDown ? BRUSH_SHAPE_SQUARE : BRUSH_SHAPE_CIRCLE);
-			_GuiSetToolText();
-			break;
-		case SDLK_r:
-			Tool = SHAPE_RECT;
-			Tools_SetBrushShape(IsShiftDown ? BRUSH_SHAPE_SQUARE : BRUSH_SHAPE_CIRCLE);
-			_GuiSetToolText();
-			break;
-		case SDLK_c:
-			Tool = SHAPE_CIRCLE;
-			_GuiSetToolText();
-			break;
-		case SDLK_s:
-			if (IsCtrlDown == true && ShouldSave == false) ShouldSave = true;
-			break;
-		case SDLK_o:
-			if (IsCtrlDown == true) OpenNewFile();
-			break;
-		case SDLK_LCTRL:
-		case SDLK_RCTRL:
-			IsCtrlDown = false;
-			break;
-		case SDLK_LSHIFT:
-		case SDLK_RSHIFT:
-			IsShiftDown = false;
-			break;
-	}
+void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
+	if (yoffset > 0)
+		AdjustZoom(true);
+	else
+		AdjustZoom(false);
 }
 
-static inline void OnEvent_KeyDown(SDL_Event* e) {
-	switch(e->key.keysym.sym) {
-		case SDLK_SPACE:
-			if (Tool != TOOL_PAN) {
-				LastTool = Tool;
-				Tool = TOOL_PAN;
-				CanvasMutable = false;
-				_GuiSetToolText();
-			}
-			break;
-		case SDLK_LCTRL:
-		case SDLK_RCTRL:
-			IsCtrlDown = true;
-			break;
-		case SDLK_LSHIFT:
-		case SDLK_RSHIFT:
-			IsShiftDown = true;
-			break;
-		case SDLK_z:
-			if (IsCtrlDown && CURR_CANVAS_LAYER != NULL) {
-				UNDO();
-			}
-			break;
-		case SDLK_y:
-			if (IsCtrlDown && CURR_CANVAS_LAYER != NULL) {
-				REDO();
-			}
-			break;
-		case SDLK_i:
-			if (Tool != TOOL_INKDROPPER) {
-				LastTool = Tool;
-				Tool = TOOL_INKDROPPER;
-				_GuiSetToolText();
-			}
-			break;
+void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+	if (action == GLFW_RELEASE) {
+		if (mods == GLFW_MOD_CONTROL)
+			IsCtrlDown = 0;
+
+		if (mods == GLFW_MOD_SHIFT)
+			IsShiftDown = 0;
+
+		if (key == GLFW_KEY_SPACE) {
+			Mode = LastMode;
+		}
 	}
+
+	if (action == GLFW_PRESS) {
+		if (mods == GLFW_MOD_CONTROL) {
+			IsCtrlDown = 1;
+
+			// if IsCtrlDown key is pressed and + or - is pressed, adjust the zoom size
+			if (key == GLFW_KEY_EQUAL) {
+				AdjustZoom(true);
+			} else if (key == GLFW_KEY_MINUS) {
+				AdjustZoom(false);
+			}
+		} else if (mods == GLFW_MOD_SHIFT) {
+			IsShiftDown = 1;
+		} else {
+			if (key == GLFW_KEY_EQUAL) {
+				if (BrushSize < 255) {
+					BrushSize++;
+				}
+			} else if (key == GLFW_KEY_MINUS) {
+				if (BrushSize != 1) {
+					BrushSize--;
+				}
+			}
+		}
+
+		switch (key) {
+			case GLFW_KEY_K:
+				if (PaletteIndex > 1) {
+					PaletteIndex--;
+				}
+				break;
+			case GLFW_KEY_L:
+				if (PaletteIndex < PaletteCount-1) {
+					PaletteIndex++;
+				}
+				break;
+			case GLFW_KEY_1:
+				if (PaletteCount >= 1) {
+					PaletteIndex = IsShiftDown ? 9 : 1;
+				}
+				break;
+			case GLFW_KEY_2:
+				if (PaletteCount >= 2) {
+					PaletteIndex = IsShiftDown ? 10 : 2;
+				}
+				break;
+			case GLFW_KEY_3:
+				if (PaletteCount >= 3) {
+					PaletteIndex = IsShiftDown ? 11 : 3;
+				}
+				break;
+			case GLFW_KEY_4:
+				if (PaletteCount >= 4) {
+					PaletteIndex = IsShiftDown ? 12 : 4;
+				}
+				break;
+			case GLFW_KEY_5:
+				if (PaletteCount >= 5) {
+					PaletteIndex = IsShiftDown ? 13 : 5;
+				}
+				break;
+			case GLFW_KEY_6:
+				if (PaletteCount >= 6) {
+					PaletteIndex = IsShiftDown ? 14 : 6;
+				}
+				break;
+			case GLFW_KEY_7:
+				if (PaletteCount >= 7) {
+					PaletteIndex = IsShiftDown ? 15 : 7;
+				}
+				break;
+			case GLFW_KEY_8:
+				if (PaletteCount >= 8) {
+					PaletteIndex = IsShiftDown ? 16 : 8;
+				}
+				break;
+			case GLFW_KEY_F:
+				Mode = FILL;
+				break;
+			case GLFW_KEY_B:
+				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
+				PaletteIndex = LastPaletteIndex;
+				break;
+			case GLFW_KEY_E:
+				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
+				if (PaletteIndex != 0) {
+					LastPaletteIndex = PaletteIndex;
+					PaletteIndex = 0;
+				}
+				break;
+			case GLFW_KEY_I:
+				LastMode = Mode;
+				Mode = INK_DROPPER;
+				break;
+			case GLFW_KEY_SPACE:
+				LastMode = Mode;
+				Mode = PAN;
+				break;
+			case GLFW_KEY_Z:
+				if (IsCtrlDown == 1) {
+					Undo();
+				}
+				break;
+			case GLFW_KEY_Y:
+				if (IsCtrlDown == 1) {
+					Redo();
+				}
+				break;
+			case GLFW_KEY_N:
+				if (IsCtrlDown == 1) ShowNewCanvasWindow = 1;
+				break;
+			case GLFW_KEY_S:
+				if (mods == GLFW_MOD_ALT) { // Show Prompt To Save if Alt + S pressed
+					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
+					if (filePath != NULL) {
+						FilePath = FixFileExtension(std::string(filePath));
+						SaveImageFromCanvas(FilePath);
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+					}
+				} else if (IsCtrlDown == 1) { // Directly Save Don't Prompt
+					FilePath = FixFileExtension(FilePath);
+					SaveImageFromCanvas(FilePath);
+				}
+				break;
+			case GLFW_KEY_O: {
+				if (IsCtrlDown == 1) {
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
+					if (filePath != NULL) {
+						FilePath = std::string(filePath);
+						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+					}
+				}
+			}
+			default:
+				break;
+		}
+	}
+
+	SelectedColor = ColorPalette[PaletteIndex];
 }
 
-static inline void OnEvent_MouseWheel(SDL_Event* e) {
-	if (IsCtrlDown == true) {
-		if (e->wheel.y > 0) { // Scroll Up - Zoom In
-			ZoomViewport(1);
-		} else if (e->wheel.y < 0) { // Scroll Down - Zoom Out
-			ZoomViewport(0);
+void ViewportSet() {
+	glViewport(ViewPort[0], ViewPort[1], ViewPort[2], ViewPort[3]);
+}
+
+void AdjustZoom(bool increase) {
+	if (increase == true) {
+		if (ZoomLevel < UINT_MAX) { // Max Value Of Unsigned int
+			ZoomLevel++;
 		}
 	} else {
-		uint32_t BrushSize = Tools_GetBrushSize();
-		if (e->wheel.y > 0) {
-			BrushSize++;
-		} else if (e->wheel.y < 0) {
-			if (BrushSize > 1) {
-				BrushSize--;
+		if (ZoomLevel != 1) { // if zoom is 1 then don't decrease it further
+			ZoomLevel--;
+		}
+	}
+
+	// Comment Out To Not Center When Zooming
+	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
+
+	ViewPort[2] = CanvasDims[0] * ZoomLevel;
+	ViewPort[3] = CanvasDims[1] * ZoomLevel;
+
+	ViewportSet();
+	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
+}
+
+unsigned char * GetPixel(int x, int y) {
+	return CanvasData + ((y * CanvasDims[0] + x) * 4);
+}
+
+/*
+	Function Takes 4 Argument First 2 Are starting x, y coordinates,
+	and second 2 are ending x, y coordinates.
+	And using a while loop it draws between the 2 given coordinates,
+	hence no gap is left when mouse is being moved very fast
+*/
+void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
+	while (st_x != end_x || st_y != end_y) {
+		if (st_x < end_x) {
+			st_x++;
+		}
+		if (st_x > end_x) {
+			st_x--;
+		}
+		if (st_y < end_y) {
+			st_y++;
+		}
+		if (st_y > end_y) {
+			st_y--;
+		}
+
+		for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
+			for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
+				if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
+					continue;
+
+				if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
+					continue;
+
+				unsigned char *ptr = GetPixel(st_x + dirX, st_y + dirY);
+
+				// Set Pixel Color
+				*ptr = SelectedColor[0]; // Red
+				*(ptr + 1) = SelectedColor[1]; // Green
+				*(ptr + 2) = SelectedColor[2]; // Blue
+				*(ptr + 3) = SelectedColor[3]; // Alpha
 			}
 		}
-		Tools_SetBrushSize(BrushSize);
-		_GuiSetToolText();
 	}
 }
 
-static inline void OnEvent_MouseMotion(SDL_Event* e) {
-	MousePosLast[0] = MousePos[0];
-	MousePosLast[1] = MousePos[1];
-	MousePos[0] = e->motion.x;
-	MousePos[1] = e->motion.y;
+void draw(int st_x, int st_y) {
+	// dirY = direction Y
+	// dirX = direction X
 
-	MousePosRelLast[0] = MousePosRel[0];
-	MousePosRelLast[1] = MousePosRel[1];
-	MousePosRel[0] = (MousePos[0] - ViewportLoc.x) / CurrViewportZoom;
-	MousePosRel[1] = (MousePos[1] - ViewportLoc.y) / CurrViewportZoom;
+	for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
+		for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
+			if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
+				continue;
 
-	if (Tool == TOOL_PAN) {
-		ViewportLoc.x -= MousePosLast[0] - MousePos[0];
-		ViewportLoc.y -= MousePosLast[1] - MousePos[1];
-	}
+			if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
+				continue;
 
-	MutateCanvas(false);
-}
+			unsigned char *ptr = GetPixel(st_x + dirX, st_y + dirY);
 
-static inline void OnEvent_MouseButtonDown(SDL_Event* e) {
-	if (e->button.button == SDL_BUTTON_LEFT) {
-		MousePosDown[0] = MousePos[0];
-		MousePosDown[1] = MousePos[1];
-		MousePosDownRel[0] = MousePosRel[0];
-		MousePosDownRel[1] = MousePosRel[1];
-
-		IsLMBDown = true;
-		if (CanMutateCanvas()) MutateCanvas(false);
-	}
-}
-
-static inline void OnEvent_MouseButtonUp(SDL_Event* e) {
-	if (e->button.button == SDL_BUTTON_LEFT) {
-		IsLMBDown = false;
-		if (CanMutateCanvas()) MutateCanvas(true);
-	}
-}
-
-static inline void ProcessEvents() {
-	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		ImGui_ImplSDL2_ProcessEvent(&event);
-		switch (event.type) {
-			case SDL_QUIT:
-				ShouldClose = true;
-				break;
-			case SDL_WINDOWEVENT:
-				if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
-					ShouldClose = true;
-				}
-				if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-					int w = 0, h = 0;
-					SDL_GetWindowSize(window, &w, &h);
-					if (w > 0 && h > 0) {
-						WindowDims[0] = w;
-						WindowDims[1] = h;
-					} else {
-						Logger_Error("invalid window size %dx%d", w, h);
-					}
-				}
-				break;
-			case SDL_KEYDOWN:
-				OnEvent_KeyDown(&event);
-				break;
-			case SDL_KEYUP:
-				OnEvent_KeyUp(&event);
-				break;
-			case SDL_MOUSEWHEEL:
-				OnEvent_MouseWheel(&event);
-				break;
-			case SDL_MOUSEMOTION:
-				OnEvent_MouseMotion(&event);
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				OnEvent_MouseButtonDown(&event);
-				break;
-			case SDL_MOUSEBUTTONUP:
-				OnEvent_MouseButtonUp(&event);
-				break;
+			// Set Pixel Color
+			*ptr = SelectedColor[0]; // Red
+			*(ptr + 1) = SelectedColor[1]; // Green
+			*(ptr + 2) = SelectedColor[2]; // Blue
+			*(ptr + 3) = SelectedColor[3]; // Alpha
 		}
 	}
+}
 
-	if (CanvasDidMutate == true && IsLMBDown == false) {
-		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
-		CanvasDidMutate = false;
+// Fill Tool, Fills The Whole Canvas Using Recursion
+void fill(int x, int y, unsigned char *old_color) {
+	unsigned char *ptr = GetPixel(x, y);
+	if (color_equal(ptr, old_color)) {
+		*ptr = SelectedColor[0];
+		*(ptr + 1) = SelectedColor[1];
+		*(ptr + 2) = SelectedColor[2];
+		*(ptr + 3) = SelectedColor[3];
+
+		if (x != 0 && !color_equal(GetPixel(x - 1, y), SelectedColor))
+			fill(x - 1, y, old_color);
+		if (x != CanvasDims[0] - 1 && !color_equal(GetPixel(x + 1, y), SelectedColor))
+			fill(x + 1, y, old_color);
+		if (y != CanvasDims[1] - 1 && !color_equal(GetPixel(x, y + 1), SelectedColor))
+			fill(x, y + 1, old_color);
+		if (y != 0 && !color_equal(GetPixel(x, y - 1), SelectedColor))
+			fill(x, y - 1, old_color);
 	}
 }
 
-static void UpdateViewportSize() {
-	ViewportLoc.w = (int)CanvasDims[0] * CurrViewportZoom;
-	ViewportLoc.h = (int)CanvasDims[1] * CurrViewportZoom;
+// Makes sure that the file extension is .png or .jpg/.jpeg
+std::string FixFileExtension(std::string filepath) {
+	std::string fileExt = filepath.substr(filepath.find_last_of(".") + 1);
+	std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), [](unsigned char c){ return std::tolower(c); });
+
+	if (fileExt != "png" && fileExt != "jpg" && fileExt != "jpeg") {
+		filepath = filepath + ".png";
+	}
+
+	return filepath;
 }
 
-static void UpdateViewportPos() {
-	ViewportLoc.x = (int)(WindowDims[0] / 2) - (CanvasDims[0] * CurrViewportZoom / 2);
-	ViewportLoc.y = (int)(WindowDims[1] / 2) - (CanvasDims[1] * CurrViewportZoom / 2);
-}
+void SaveImageFromCanvas(std::string filepath) {
+	std::string fileExt = filepath.substr(filepath.find_last_of(".") + 1);
+	// Convert File Extension to LowerCase
+	std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), [](unsigned char c){ return std::tolower(c); });
 
-static void ZoomViewport(int increase) {
-	if (CanvasLocked) return;
-	if (increase > 0) {
-		if (CurrViewportZoom < 1.0f) CurrViewportZoom += 0.25f;
-		else CurrViewportZoom += 1.0f;
+	if (fileExt == "png") {
+		WritePngFromCanvas(filepath.c_str(), CanvasDims);
+	} else if (fileExt == "jpg" || fileExt == "jpeg") {
+		WriteJpgFromCanvas(filepath.c_str(), CanvasDims);
 	} else {
-		if (CurrViewportZoom > 0.1f) {
-			if (CurrViewportZoom < 1.0f) CurrViewportZoom -= 0.25f;
-			else CurrViewportZoom -= 1.0f;
-		}
+		filepath = filepath + ".png";
+		WritePngFromCanvas(filepath.c_str(), CanvasDims);
 	}
-	if (CurrViewportZoom < 0.5f) CurrViewportZoom = 0.5f;
-	else if (CurrViewportZoom > 100.0f) CurrViewportZoom = 100.0f;
-
-	// This Ensures That The Canvas Is Zoomed From It's Center And Not From The Bottom Left Position
-	int32_t CurrRectCenter[2] = { (ViewportLoc.w / 2) + ViewportLoc.x, (ViewportLoc.h / 2) + ViewportLoc.y };
-	int32_t NewRectCenter[2] = {
-		(int32_t)(CanvasDims[0] * CurrViewportZoom / 2) + ViewportLoc.x,
-		(int32_t)(CanvasDims[1] * CurrViewportZoom / 2) + ViewportLoc.y
-	};
-	ViewportLoc.x -= NewRectCenter[0] - CurrRectCenter[0];
-	ViewportLoc.y -= NewRectCenter[1] - CurrRectCenter[1];
-	UpdateViewportSize();
+	ShouldSave = 0;
 }
 
-static uint8_t* GetPixel(int x, int y) {
-	if (CURR_CANVAS_LAYER == NULL) return NULL;
-	return CURR_CANVAS_LAYER->pixels + ((y * CanvasDims[0] + x) * 4);
-}
+/*
+	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
+	Removes The Elements in a range from "History" if "IsDirty" is true
+*/
+void SaveState() {
+	if (IsDirty == true && CurrentState != NULL) {
+		cvstate_t* tmp;
+		cvstate_t* head = CurrentState->next; // we start freeing from the next node of current node
 
-static void InitWindowIcon() {
-	uint8_t* winIcon = (uint8_t*)Assets_Get("data/icons/icon-24.png", NULL);
-	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
-		winIcon,
-		24, 24, 32, 24 * 4,
-		0x000000ff,
-		0x0000ff00,
-		0x00ff0000,
-		0xff000000
-	);
-	if (surface == NULL) {
-		Logger_Error("Failed to set window icon: %s", SDL_GetError());
-		return;
-	}
-	SDL_SetWindowIcon(window, surface);
-	SDL_FreeSurface(surface);
-}
-
-static void OpenNewFile() {
-	auto selection = pfd::open_file(
-		"Select a file", ".",
-		{
-			"Image Files", "*.png *.jpg *.jpeg *.bmp",
-			"All Files", "*"
-		},
-		pfd::opt::none
-	).result();
-
-	const char* _fName = selection.empty() ? NULL : selection[0].c_str();
-	if (_fName != NULL) {
-		int32_t w = 0, h = 0;
-		uint8_t* _data = ifio_read(_fName, &w, &h);
-		if (w > 0 && h > 0 && _data != NULL) {
-			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-				if (CanvasLayers[i] != NULL) {
-					Canvas_DestroyLayer(CanvasLayers[i]);
-					CanvasLayers[i] = NULL;
-				}
+		while (head != NULL) {
+			tmp = head;
+			head = head->next;
+			if (tmp->pixelData != NULL) {
+				free(tmp->pixelData);
 			}
-			if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-				Canvas_Resize(w, h, R_GetRenderer());
-				CanvasDims[0] = w;
-				CanvasDims[1] = h;
-				CurrViewportZoom = 1.0f;
-				UpdateViewportSize();
-				UpdateViewportPos();
-			}
-
-			SelectedLayerIndex = 0;
-			CURR_CANVAS_LAYER = Canvas_CreateLayer(R_GetRenderer());
-			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
-			FreeHistory(&CURR_CANVAS_LAYER->history);
-			SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
-
-			snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fName);
-			char* filePathBasename = Sys_GetBasename(_fName);
-			snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
-			free(filePathBasename);
-			free(_data);
-			UPDATE_WINDOW_TITLE();
-		}
-	}
-}
-
-static void _SaveCanvasLayersTo(const char* filePath) {
-	uint8_t* canvas_data = (uint8_t*) malloc(CanvasDims[0] * CanvasDims[0] * 4 * sizeof(uint8_t));
-	memset(canvas_data, 0, CanvasDims[0] * CanvasDims[0] * 4 * sizeof(uint8_t));
-
-	for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-		if (CanvasLayers[i] != NULL) {
-			for (int32_t y = 0; y < CanvasDims[1]; ++y) {
-				for (int32_t x = 0; x < CanvasDims[0]; ++x) {
-					// Simple Alpha-Blending Being Done Here.
-					uint8_t* srcPixel = GetCharData(CanvasLayers[i]->pixels, x, y, CanvasDims[0], CanvasDims[1]);
-					uint8_t* destPixel = GetCharData(canvas_data, x, y, CanvasDims[0], CanvasDims[1]);
-					if (srcPixel != NULL && destPixel != NULL) {
-						uint8_t src1Red = *(srcPixel + 0), src1Green = *(srcPixel + 1), src1Blue = *(srcPixel + 2), src1Alpha = *(srcPixel + 3);
-						uint8_t src2Red = *(destPixel + 0), src2Green = *(destPixel + 1), src2Blue = *(destPixel + 2), src2Alpha = *(destPixel + 3);
-
-						uint16_t outRed = ((uint16_t)src1Red * src1Alpha + (uint16_t)src2Red * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-						uint16_t outGreen = ((uint16_t)src1Green * src1Alpha + (uint16_t)src2Green * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-						uint16_t outBlue = ((uint16_t)src1Blue * src1Alpha + (uint16_t)src2Blue * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-						uint16_t outAlpha = src1Alpha + (uint16_t)src2Alpha * (255 - src1Alpha) / 255;
-
-						// Simple macro checks if u16Value is in bound (0 - 255) else clamps it to 0 or 255
-						#define __SET_PIXEL_CLAMPED(u16Value, var) \
-							if (u16Value > -1 && u16Value < 256) var = u16Value; \
-							else u16Value > 255 ? var = 255 : var = 0;
-
-						__SET_PIXEL_CLAMPED(outRed,   *(destPixel + 0));
-						__SET_PIXEL_CLAMPED(outGreen, *(destPixel + 1));
-						__SET_PIXEL_CLAMPED(outBlue,  *(destPixel + 2));
-						__SET_PIXEL_CLAMPED(outAlpha, *(destPixel + 3));
-					}
-				}
-			}
+			free(tmp);
 		}
 	}
 
-	ifio_write(filePath, canvas_data, CanvasDims[0], CanvasDims[1]);
-	free(canvas_data);
+	cvstate_t* NewState = (cvstate_t*) malloc(sizeof(cvstate_t));
+	NewState->pixelData = (unsigned char*) malloc(CANVAS_SIZE_B);
+
+	if (CurrentState == NULL) {
+		CurrentState = NewState;
+		CurrentState->prev = NULL;
+		CurrentState->next = NULL;
+	} else {
+		NewState->prev = CurrentState;
+		NewState->next = NULL;
+		CurrentState->next = NewState;
+		CurrentState = NewState;
+	}
+
+	memset(CurrentState->pixelData, 0, CANVAS_SIZE_B);
+	memcpy(CurrentState->pixelData, CanvasData, CANVAS_SIZE_B);
 }
 
+// Undo - Puts The Pixels from "History" at "HistoryIndex"
+int Undo() {
+	DidUndo = true;
+
+	if (CurrentState->prev != NULL) {
+		CurrentState = CurrentState->prev;
+		memcpy(CanvasData, CurrentState->pixelData, CANVAS_SIZE_B);
+	}
+	return 0;
+}
+
+// Redo - Puts The Pixels from "History" at "HistoryIndex"
+int Redo() {
+	if (CurrentState->next != NULL) {
+		CurrentState = CurrentState->next;
+		memcpy(CanvasData, CurrentState->pixelData, CANVAS_SIZE_B);
+	}
+
+	return 0;
+}
+
+/*
+	Function: FreeHistory()
+	Takes The CurrentState Node
+		- Frees All Of The Nodes Before It
+		- Frees All Of The Nodes After It
+*/
+void FreeHistory() {
+	if (CurrentState == NULL) return;
+
+	cvstate_t* tmp;
+	cvstate_t* head = CurrentState->prev;
+
+	while (head != NULL) {
+		tmp = head;
+		head = head->prev;
+		if (tmp != NULL && tmp->pixelData != NULL) {
+			free(tmp->pixelData);
+			free(tmp);
+		}
+		tmp = NULL;
+	}
+
+	head = CurrentState;
+
+	while (head != NULL) {
+		tmp = head;
+		head = head->next;
+		if (tmp != NULL && tmp->pixelData != NULL) {
+			free(tmp->pixelData);
+			free(tmp);
+		}
+		tmp = NULL;
+	}
+
+	CurrentState = NULL;
+}

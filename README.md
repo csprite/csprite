@@ -1,35 +1,20 @@
-# <img src="data/icon-scaled.png" width="32"> csprite
-A tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
+# csprite
+A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
 
-[![Continous Integration](https://github.com/pegvin/csprite/actions/workflows/ci.yml/badge.svg)](https://github.com/pegvin/csprite/actions/)
-[![Open Issues](https://img.shields.io/github/issues/pegvin/csprite)](https://github.com/pegvin/csprite/issues)
-[![Total Downloads](https://img.shields.io/github/downloads/pegvin/csprite/total)](https://csprite.github.io/downloads/)
-[![Discord Icon](https://discordapp.com/api/guilds/1027457407732957206/embed.png)](https://discord.gg/ZKs8sm2CPA)
-
-![image](https://user-images.githubusercontent.com/75035219/199698417-bcb5a600-3f94-41ab-adba-ac582cda33cb.png)
+![image](https://user-images.githubusercontent.com/75035219/170718904-9e3c0b00-4a1c-4d48-8876-5dd43d5f4d7b.png)
 
 ---
 ### Features
 - :beginner: Beginner Friendly
 - :zap: Extremely Fast
 - :package: Small (Just 1 MB)
-- :desktop_computer: Works On Windows, Linux & Mac
+- :desktop_computer: Works On Windows & Linux
 - :moneybag: Free & Open Source
 
 ### Requirements
-- Works On Any Computer With Windows, Linux or Mac.
+- Any PC With OpenGL 3.0 or higher Support.
 
-### Download
-- You can get csprite from [downloads page](https://csprite.github.io/downloads/) or you can build it from source from the instructions [here](https://csprite.github.io/wiki/latest-git/building-from-source.html).
-
----
 ### Todo
-- [ ] "Custom" File Format
-- [ ] Configurable Alpha For Each Layer
-- [ ] Configurable Blend Mode For Each Layer
-- [x] ReFactor Code
-- [x] Add Layers Support
-- [x] New Icon
 - [x] Undo Redo
 - [x] Ink Dropper Tool.
 - [x] Square/Circle in Brush/Eraser.
@@ -38,39 +23,27 @@ A tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 - [x] Support For Windows.
 - [x] Native File dialogs for Opening & Saving.
 
+---
+### Installation
+1. [Download Pre-Built Binaries](https://github.com/pegvin/csprite/releases/tag/v0.1.1)
+2. [Building From Source](https://csprite.github.io/wiki/v0.1.x/)
+
 ### Controls
-| Key                          | Description                                  |
-|------------------------------|----------------------------------------------|
-| B                            | Circle Brush                                 |
-| Shift + B                    | Square Brush                                 |
-| E                            | Circle Eraser                                |
-| Shift + E                    | Square Eraser                                |
-| R                            | Rounded Rectangle                            |
-| Shift + R                    | Square Rectangle                             |
-| C                            | Circle                                       |
-| F                            | Flood Fill                                   |
-| I                            | Ink Dropper                                  |
-| Space + Mouse Move           | Pan                                          |
-| Left Mouse                   | Draw/Erase/Fill/Ink Dropper                  |
-| Scroll Up                    | Brush Size Increase                          |
-| Scroll Down                  | Brush Size Decrease                          |
-| Ctrl + Scroll Up             | Zoom In                                      |
-| Ctrl + Scroll Down           | Zoom Out                                     |
-| Ctrl + Z                     | Undo                                         |
-| Ctrl + Y                     | Redo                                         |
-
----
-### References/Resources
-list of references & resources i used while developing csprite, might be good for learning.
-
-- Simple Alpha-Blending: https://stackoverflow.com/a/68936281/14516016
-- Talk/Coding live stream on color blending by TSoding: https://youtu.be/aKnl8-qifvE
-- Re-Orderable list in ImGui using Drag & Drop API: https://github.com/ocornut/imgui/issues/1931#issuecomment-403305945
-
----
-### Credits
-
-CSprite Uses [BM Mini](https://www.dafont.com/bm-mini.font) Font Designed By [Bitmap Mania](https://www.dafont.com/bitmapmania.d283)
+| Key                          | Description                  |
+|------------------------------|------------------------------|
+| B                            | Circle Brush                 |
+| Shift + B                    | Square Brush                 |
+| E                            | Circle Eraser                |
+| Shift + E                    | Square Eraser                |
+| F                            | Fill                         |
+| I                            | Ink Dropper                  |
+| Plus/Minus                   | Brush Size Increase/Decrease |
+| Space + Mouse Move           | Pan                          |
+| Left Mouse                   | Draw/Erase/Fill/Ink Dropper  |
+| Ctrl + Plus / Scroll Up      | Zoom In                      |
+| Ctrl + Minus / Scroll Down   | Zoom Out                     |
+| Ctrl + Z                     | Undo                         |
+| Ctrl + Y                     | Redo                         |
 
 ---
 ### Thanks
