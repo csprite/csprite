@@ -1,23 +1,21 @@
 # simple hacky way to convert strings to lowercase, usage: NEW_VAR = $(call lc,$(VAR))
 lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
 
-MajVer:=1
-MinVer:=0
-PatVer:=0
+MajVer:=0
+MinVer:=1
+PatVer:=1
 Arch:=x86_64 # Used By gen-rc task
 
 CXX:=g++
 CC:=gcc
 STD:=c99
 CXX_STD:=c++11
-CCFLAGS:=-Iinclude/ -Ilibs/imgui/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
+CCFLAGS:=-Iinclude/ -Ilib/imgui/ -Ilib/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1
 CFLAGS:=
 LFLAGS:=
 
 PYTHON:=python3
 SDL2_STATIC_LINK:=1
-SDL2_LFLAGS:=
-SDL2_CFLAGS:=-DSDL_MAIN_HANDLED=1
 WINDRES_TARGET:=pe-x86-64 # pe-x86-64 for 64 bit system or pe-i686 for 32 bit system
 BUILD_TARGET:=debug
 
@@ -31,8 +29,8 @@ $(error Invalid Build Target: "$(BUILD_TARGET)")
 	endif
 endif
 
-SRCS_C:=$(wildcard src/*.c) $(wildcard src/**/*.c) $(wildcard libs/ini/*.c) $(wildcard libs/log/*.c) $(wildcard libs/tfd/*.c)
-SRCS_CPP:=$(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard libs/imgui/*.cpp) $(wildcard libs/imgooeystyles/*.cpp)
+SRCS_C:=$(wildcard src/*.c) $(wildcard lib/*.c) $(wildcard lib/**/*.c)
+SRCS_CPP:=$(wildcard src/*.cpp) $(wildcard lib/**/*.cpp)
 OBJS_C:=$(SRCS_C:.c=.o)
 OBJS_CPP:=$(SRCS_CPP:.cpp=.o)
 DEPENDS:=$(patsubst %.c,%.d,$(SRCS_C)) $(patsubst %.cpp,%.d,$(SRCS_CPP))
@@ -41,17 +39,11 @@ bin:=csprite
 ifeq ($(call lc,$(BUILD_TARGET)),debug)
 	CCFLAGS+=-O0 -g
 else
-	CCFLAGS+=-O2
+	CCFLAGS+=-O3
 endif
 
 ifeq ($(OS),Windows_NT)
-	ifeq ($(SDL2_STATIC_LINK),1)
-		SDL2_LFLAGS+=-static-libstdc++ -Wl,-Bstatic -lSDL2main -lSDL2 -Wl,-Bdynamic
-	else
-		SDL2_LFLAGS+=-lSDL2main -lSDL2
-	endif
-	LFLAGS+=-lopengl32
-	SDL2_LFLAGS+=$(addprefix -l,winmm gdi32 imm32 ole32 oleaut32 shell32 version uuid setupapi)
+	LFLAGS+=-static-libstdc++ -Wl,-Bstatic -lglfw3 -Wl,-Bdynamic $(addprefix -l,opengl32 gdi32 comdlg32 ole32 shell32)
 	ifeq ($(call lc,$(BUILD_TARGET)),debug)
 		LFLAGS+=-mconsole
 	else
@@ -62,16 +54,8 @@ ifeq ($(OS),Windows_NT)
 	bin=csprite.exe
 else
 	UNAME_S:=$(shell uname -s)
-	_libs:=m pthread
 
 	ifeq ($(UNAME_S),Linux)
-		ifeq ($(SDL2_STATIC_LINK),1)
-			SDL2_LFLAGS+=-Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lX11 -lXext -lXi -lXfixes -lXrandr -lXcursor
-		else
-			SDL2_LFLAGS+=-lSDL2
-		endif
-
-		_libs+=dl
 		# On POSX Use Address Sanitizers in Debug Mode
 		ifeq ($(CC),gcc)
 			ifeq ($(call lc,$(BUILD_TARGET)),debug)
@@ -81,11 +65,10 @@ else
 		endif
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
-		SDL2_LFLAGS:=-lSDL2
+		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -lobjc
 	endif
 
-	LFLAGS+=$(addprefix -l,$(_libs))
+	LFLAGS+=-lglfw -ldl -lm -lpthread
 endif
 
 # make all WINDRES_TARGET=pe-x86-64(or pe-i386, WINDRES_TARGET is only needed on windows builds, this also requires make gen-rc)
@@ -99,15 +82,15 @@ all: $(bin)
 
 %.o: %.c
 	@echo "CC  -" $<
-	@$(CC) --std=$(STD) $(CFLAGS) $(CCFLAGS) $(SDL2_CFLAGS) -c $< -o $@
+	@$(CC) --std=$(STD) $(CFLAGS) $(CCFLAGS) -c $< -o $@
 
 %.o: %.cpp
 	@echo "CXX -" $<
-	@$(CXX) --std=$(CXX_STD) $(CXXFLAGS) $(CCFLAGS) $(SDL2_CFLAGS) -c $< -o $@
+	@$(CXX) --std=$(CXX_STD) $(CXXFLAGS) $(CCFLAGS) -c $< -o $@
 
 $(bin): $(OBJS_C) $(OBJS_CPP)
 	@echo Linking $@
-	@$(CXX) --std=$(CXX_STD) $(OBJS_C) $(OBJS_CPP) $(LFLAGS) $(SDL2_LFLAGS) -o $@
+	@$(CXX) --std=$(CXX_STD) $(OBJS_C) $(OBJS_CPP) $(LFLAGS) -o $@
 
 .PHONY: run
 .PHONY: clean
@@ -138,3 +121,4 @@ appimage:
 	@echo Creating AppImage...
 	@CSPRITE_VERSION=$(MajVer).$(MinVer).$(PatVer) appimage-builder --skip-test --recipe=AppImage-Builder.yml
 	@echo Done!
+
