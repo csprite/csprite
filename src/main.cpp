@@ -11,9 +11,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <limits.h>
-
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_thread.h>
 
 #include "pfd.h"
 #include "imgui.h"
@@ -269,7 +267,7 @@ int main(int argc, char* argv[]) {
 	Logger_Hide();
 
 	unsigned int frameStart, frameTime;
-	const unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
+	unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
 
 	while (!ShouldClose) {
 		ProcessEvents();
@@ -603,6 +601,7 @@ IncrementAndCreateLayer__:
 				AppConfig->FramesUpdateRate = AppConfig->FramesUpdateRate < 5 ? 5 : AppConfig->FramesUpdateRate;
 				if (ImGui::Button("Save")) {
 					WriteConfig(AppConfig);
+					frameDelay = 1000 / AppConfig->FramesUpdateRate;
 					ShowPreferencesWindow = false;
 				}
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("please restart the app after saving");
