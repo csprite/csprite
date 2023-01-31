@@ -8,8 +8,7 @@ extern "C" {
 #endif
 
 typedef struct {
-	bool     vsync;
-	int32_t EventsUpdateRate;
+	bool    vsync;
 	int32_t FramesUpdateRate;
 } Config_T;
 

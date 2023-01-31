@@ -44,9 +44,6 @@ Config_T* LoadConfig(void) {
 		else
 			s->vsync = false;
 
-		const char* EventsUpdateRate_Str = ini_get(config, "csprite", "EventsUpdateRate");
-		s->EventsUpdateRate = EventsUpdateRate_Str == NULL ? 70 : atoi(EventsUpdateRate_Str);
-		s->EventsUpdateRate = s->EventsUpdateRate < 5 ? 5 : s->EventsUpdateRate;
 		const char* FramesUpdateRate_Str = ini_get(config, "csprite", "FramesUpdateRate");
 		s->FramesUpdateRate = FramesUpdateRate_Str == NULL ? 30 : atoi(FramesUpdateRate_Str);
 		s->FramesUpdateRate = s->FramesUpdateRate < 5 ? 5 : s->FramesUpdateRate;
@@ -56,8 +53,7 @@ Config_T* LoadConfig(void) {
 		return s;
 	} else {
 		s->vsync = true;
-		s->EventsUpdateRate = 70;
-		s->FramesUpdateRate = 30;
+		s->FramesUpdateRate = 50;
 		WriteConfig(s);
 		return s;
 	}
@@ -77,14 +73,12 @@ int WriteConfig(Config_T* s) {
 		return -1;
 	}
 
-	s->EventsUpdateRate = s->EventsUpdateRate < 5 ? 5 : s->EventsUpdateRate;
 	s->FramesUpdateRate = s->FramesUpdateRate < 5 ? 5 : s->FramesUpdateRate;
 
 	FILE* f = fopen(configPath, "w");
 	fprintf(
-		f, "[csprite]\nvsync = %s\nEventsUpdateRate = %d\nFramesUpdateRate = %d\n",
+		f, "[csprite]\nvsync = %s\nFramesUpdateRate = %d\n",
 		s->vsync == true ? "true" : "false",
-		s->EventsUpdateRate,
 		s->FramesUpdateRate
 	);
 	fclose(f);
