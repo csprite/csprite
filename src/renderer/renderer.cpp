@@ -5,15 +5,13 @@
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_sdlrenderer.h"
 
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
+static SDL_Renderer* renderer = NULL;
 
 SDL_Renderer* R_GetRenderer() {
 	return renderer;
 }
 
-int R_Init(SDL_Window* _window, bool vsyncEnabled) {
-	window = _window;
+int R_Init(SDL_Window* window, bool vsyncEnabled) {
 	uint32_t renFlags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
 	if (vsyncEnabled) renFlags |= SDL_RENDERER_PRESENTVSYNC;
 

@@ -49,15 +49,13 @@ static int _CanvasGenBgLayer(SDL_Renderer* ren) {
 	return EXIT_SUCCESS;
 }
 
-int Canvas_Init(int32_t w, int32_t h, SDL_Renderer* ren) {
-	CanvasDims[0] = w;
-	CanvasDims[1] = h;
+static void _DestroyCanvasTex() {
+	if (CanvasTex != NULL) SDL_DestroyTexture(CanvasTex);
+	CanvasTex = NULL;
+}
 
-	if (_CanvasGenBgLayer(ren) != EXIT_SUCCESS) {
-		_FreeCanvasBgLayer();
-	}
-
-	CanvasTex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
+static int _InitCanvasTex(SDL_Renderer* ren) {
+	CanvasTex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, CanvasDims[0], CanvasDims[1]);
 	if (CanvasTex == NULL) {
 		Logger_Error("Cannot create CanvasTex, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
 		_FreeCanvasBgLayer();
@@ -67,9 +65,25 @@ int Canvas_Init(int32_t w, int32_t h, SDL_Renderer* ren) {
 	return EXIT_SUCCESS;
 }
 
+int Canvas_Init(int32_t w, int32_t h, SDL_Renderer* ren) {
+	CanvasDims[0] = w;
+	CanvasDims[1] = h;
+
+	if (_CanvasGenBgLayer(ren) != EXIT_SUCCESS) {
+		_FreeCanvasBgLayer();
+	}
+
+	if (_InitCanvasTex(ren) != EXIT_SUCCESS) {
+		_FreeCanvasBgLayer();
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
 void Canvas_Destroy(void) {
-	if (bgLayer.pixels != NULL) { free(bgLayer.pixels); bgLayer.pixels = NULL; }
-	if (bgLayer.texture != NULL) { SDL_DestroyTexture(bgLayer.texture); bgLayer.texture = NULL; }
+	_FreeCanvasBgLayer();
+	_DestroyCanvasTex();
 	CanvasDims[0] = CanvasDims[1] = 0;
 }
 
@@ -86,6 +100,8 @@ void Canvas_Resize(int32_t w, int32_t h, SDL_Renderer* ren) {
 	CanvasDims[0] = w;
 	CanvasDims[1] = h;
 
+	_DestroyCanvasTex();
+	assert(_InitCanvasTex(ren) == EXIT_SUCCESS);
 	assert(_CanvasGenBgLayer(ren) == EXIT_SUCCESS);
 }
 
