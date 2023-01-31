@@ -54,8 +54,6 @@ bool ShouldSaveAs = false;
 bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
 bool CanvasLocked = false; // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
-bool EventsLocked = true;
-bool UpdateWindowTitle = false;
 
 char FilePath[SYS_PATHNAME_MAX] = "untitled.png";
 char FileName[SYS_FILENAME_MAX] = "untitled.png";
@@ -83,6 +81,7 @@ uint8_t SelectedColor[4] = { 255, 255, 255, 255 };
 #define MAX_SELECTEDTOOLTEXT_SIZE 512
 char SelectedToolText[MAX_SELECTEDTOOLTEXT_SIZE] = "";
 
+SDL_Window* window = NULL;
 #define WINDOW_TITLE_MAX 512 + SYS_FILENAME_MAX
 char WindowTitle[WINDOW_TITLE_MAX] = "";
 
@@ -124,7 +123,7 @@ theme_arr_t* ThemeArr = NULL;
 
 static void _SaveCanvasLayersTo(const char* filePath);
 static void OpenNewFile();
-static void InitWindowIcon(SDL_Window* window);
+static void InitWindowIcon();
 static void _GuiSetColors(ImGuiStyle& style);
 static void _GuiSetToolText();
 static void UpdateViewportSize();
@@ -132,7 +131,7 @@ static void UpdateViewportPos();
 static void ZoomViewport(int increase);
 static void MutateCanvas(bool LmbJustReleased);
 static inline bool CanMutateCanvas();
-static inline void ProcessEvents(SDL_Window* window);
+static inline void ProcessEvents();
 static uint8_t* GetPixel(int x, int y);
 
 #define GetSelectedPalette() PaletteArr->Palettes[PaletteIndex]
@@ -143,31 +142,54 @@ static uint8_t* GetPixel(int x, int y);
 #define REDO() \
 	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
 
-struct sdl_thread_arg {
-	SDL_Window* win;
-	int argc;
-	char** argv;
-};
+#define UPDATE_WINDOW_TITLE() do {\
+		GEN_WIN_TITLE();\
+		SDL_SetWindowTitle(window, WindowTitle);\
+	} while(0)
 
-/*
-	This Function Handles All The Rendering Stuff,
-	Changing Anything Of Window Like Title And Stuff
-	Should Be Done In THe Event Thread Where The Window Was Initialized.
-	void* args = struct sdl_thread_arg* args;
-*/
-int RendererThreadFunc(void* _args) {
-	if (_args == NULL) return -1;
-	struct sdl_thread_arg* args = (struct sdl_thread_arg*)_args;
-	int argc = args->argc;
-	char** argv = args->argv;
-	SDL_Window* window = args->win;
-	SDL_Renderer* renderer = NULL;
-	if (window == NULL) return -1;
+int main(int argc, char* argv[]) {
+	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
+	log_add_fp(LogFilePtr, LOG_TRACE);
+
+	AppConfig = LoadConfig();
+	PaletteArr = PaletteLoadAll();
+
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
+		Logger_Error("failed to initialize SDL2: %s", SDL_GetError());
+		return EXIT_FAILURE;
+	}
+
+	SDL_version compiled;
+	SDL_version linked;
+	SDL_VERSION(&compiled);
+	SDL_GetVersion(&linked);
+
+	Logger_Info("Init csprite " VERSION_STR);
+	Logger_Info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
+	Logger_Info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
+
+	SDL_DisplayMode dm;
+	SDL_GetCurrentDisplayMode(0, &dm);
+	WindowDims[0] = dm.w * 0.7;
+	WindowDims[1] = dm.h * 0.8;
+
+	GEN_WIN_TITLE();
+	window = SDL_CreateWindow(
+		WindowTitle,
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		WindowDims[0], WindowDims[1],
+		SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_MAXIMIZED
+	);
+	UpdateViewportPos();
+
+	InitWindowIcon();
+	SDL_ShowWindow(window);
+	_GuiSetToolText();
 
 	if (R_Init(window, AppConfig->vsync) != EXIT_SUCCESS) {
 		return EXIT_FAILURE;
 	}
-	renderer = R_GetRenderer();
+	SDL_Renderer* renderer = R_GetRenderer();
 
 	UpdateViewportPos();
 	UpdateViewportSize();
@@ -216,7 +238,7 @@ int RendererThreadFunc(void* _args) {
 				snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
 				free(filePathBasename);
 				free(_data);
-				UpdateWindowTitle = true;
+				UPDATE_WINDOW_TITLE();
 			}
 		}
 	}
@@ -245,12 +267,13 @@ int RendererThreadFunc(void* _args) {
 	bool ShowNewCanvasWindow = false;
 
 	Logger_Hide();
-	EventsLocked = false;
 
 	unsigned int frameStart, frameTime;
 	const unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
 
 	while (!ShouldClose) {
+		ProcessEvents();
+
 		frameStart = SDL_GetTicks();
 		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
 
@@ -577,10 +600,6 @@ IncrementAndCreateLayer__:
 				ImGui::InputInt("FPS", &AppConfig->FramesUpdateRate, 1, 5, AppConfig->vsync == true ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Frames Per Second");
 
-				ImGui::InputInt("EPS", &AppConfig->EventsUpdateRate, 1, 5);
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Events Per Second");
-
-				AppConfig->EventsUpdateRate = AppConfig->EventsUpdateRate < 5 ? 5 : AppConfig->EventsUpdateRate;
 				AppConfig->FramesUpdateRate = AppConfig->FramesUpdateRate < 5 ? 5 : AppConfig->FramesUpdateRate;
 				if (ImGui::Button("Save")) {
 					WriteConfig(AppConfig);
@@ -667,7 +686,7 @@ IncrementAndCreateLayer__:
 						char* _fName = Sys_GetBasename(_fPath);
 						snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
 						free(_fName);
-						UpdateWindowTitle = true;
+						UPDATE_WINDOW_TITLE();
 					} else {
 						ShouldSaveAs = false;
 					}
@@ -691,8 +710,6 @@ IncrementAndCreateLayer__:
 		}
 	}
 
-	Canvas_Destroy();
-
 	for (int i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 		if (CanvasLayers[i] != NULL) {
 			Canvas_DestroyLayer(CanvasLayers[i]);
@@ -700,81 +717,14 @@ IncrementAndCreateLayer__:
 		}
 	}
 
+	Canvas_Destroy();
 	R_Destroy();
-	return 0;
-}
-
-int main(int argc, char* argv[]) {
-	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
-	log_add_fp(LogFilePtr, LOG_TRACE);
-
-	AppConfig = LoadConfig();
-	PaletteArr = PaletteLoadAll();
-
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
-		Logger_Error("failed to initialize SDL2: %s", SDL_GetError());
-		return EXIT_FAILURE;
-	}
-
-	SDL_version compiled;
-	SDL_version linked;
-	SDL_VERSION(&compiled);
-	SDL_GetVersion(&linked);
-
-	Logger_Info("Init csprite " VERSION_STR);
-	Logger_Info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
-	Logger_Info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
-
-	SDL_DisplayMode dm;
-	SDL_GetCurrentDisplayMode(0, &dm);
-	WindowDims[0] = dm.w * 0.7;
-	WindowDims[1] = dm.h * 0.8;
-
-	GEN_WIN_TITLE();
-	SDL_Window* window = SDL_CreateWindow(
-		WindowTitle,
-		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		WindowDims[0], WindowDims[1],
-		SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_MAXIMIZED
-	);
-	UpdateViewportPos();
-
-	InitWindowIcon(window);
-	SDL_ShowWindow(window);
-	_GuiSetToolText();
-
-	struct sdl_thread_arg* renderer_args = (struct sdl_thread_arg*)malloc(sizeof(struct sdl_thread_arg));
-	renderer_args->argc = argc;
-	renderer_args->argv = argv;
-	renderer_args->win = window;
-	SDL_Thread* _RenderThread = SDL_CreateThread(RendererThreadFunc, "Renderer Thread", renderer_args);
-
-	unsigned int frameStart, frameTime;
-	const unsigned int frameDelay = 1000 / AppConfig->EventsUpdateRate;
-	while (!ShouldClose) {
-		frameStart = SDL_GetTicks();
-		if (!EventsLocked) {
-			ProcessEvents(window);
-			if (UpdateWindowTitle) {
-				GEN_WIN_TITLE();
-				SDL_SetWindowTitle(window, WindowTitle);
-				UpdateWindowTitle = false;
-			}
-		}
-		frameTime = SDL_GetTicks() - frameStart;
-		if (frameDelay > frameTime) SDL_Delay(frameDelay - frameTime);
-		frameStart = SDL_GetTicks();
-	}
-
-	SDL_WaitThread(_RenderThread, NULL);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-
 	FreePaletteArr(PaletteArr);
-	PaletteArr = NULL;
 
-	free(renderer_args);
-	renderer_args = NULL;
+	window = NULL;
+	PaletteArr = NULL;
 	return EXIT_SUCCESS;
 }
 
@@ -1060,7 +1010,7 @@ static inline void OnEvent_MouseButtonUp(SDL_Event* e) {
 	}
 }
 
-static inline void ProcessEvents(SDL_Window* window) {
+static inline void ProcessEvents() {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		ImGui_ImplSDL2_ProcessEvent(&event);
@@ -1150,7 +1100,7 @@ static uint8_t* GetPixel(int x, int y) {
 	return CURR_CANVAS_LAYER->pixels + ((y * CanvasDims[0] + x) * 4);
 }
 
-static void InitWindowIcon(SDL_Window* window) {
+static void InitWindowIcon() {
 	uint8_t* winIcon = (uint8_t*)Assets_Get("data/icons/icon-24.png", NULL);
 	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
 		winIcon,
@@ -1209,7 +1159,7 @@ static void OpenNewFile() {
 			snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
 			free(filePathBasename);
 			free(_data);
-			UpdateWindowTitle = true;
+			UPDATE_WINDOW_TITLE();
 		}
 	}
 }
