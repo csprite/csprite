@@ -1,70 +1,30 @@
 name: ci
 on:
   push:
-    branches: [ master ]
-  pull_request:
+    branches: [ v0.1.1 ]
 
 jobs:
-  generate-assets:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - name: Generate Asset
-      run: |
-        python3 -m pip install --upgrade Pillow
-        python3 -m pip install --upgrade numpy
-        make gen-assets
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: data
-        path: ./data/
-        if-no-files-found: error
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: src-assets
-        path: ./src/assets/
-        if-no-files-found: error
-
   linux-x86_64:
-    needs: [generate-assets]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+    - name: Check out
+      uses: actions/checkout@v2
 
-    - uses: actions/download-artifact@v2
-      with:
-        name: src-assets
-        path: ./src/assets/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: data
-        path: ./data/
-
-    - name: Build & Install SDL2
-      run: bash ./tools/BuildNInstall_Linux.sh
-
-    - name: Install LibFuse2 & AppImage-Builder
+    - name: Install GLFW3, Git, LibFuse2 & AppImage-Builder
       run: |
         sudo apt-get update
-        sudo apt-get install libfuse2
+        sudo apt-get install libfuse2 libglfw3 libglfw3-dev git
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
         wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.0.0-beta.1/appimage-builder-1.0.0-677acbd-x86_64.AppImage
         chmod +x appimage-builder-x86_64.AppImage
         sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
 
-    - name: Build & Strip (Static Linking=False;)
-      run: |
-        make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=0
-        strip ./csprite
+    - name: Generate Assets
+      run: make gen-assets
+
+    - name: Build
+      run: make all -j4 BUILD_TARGET=release && strip ./csprite
 
     - name: Build AppImage
       run: |
@@ -85,49 +45,7 @@ jobs:
         path: ./csprite
         if-no-files-found: error
 
-  linux-i686:
-    needs: [generate-assets]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: src-assets
-        path: ./src/assets/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: data
-        path: ./data/
-
-    - name: Build (Setup Ubuntu 18.04 x86) (Build & Install SDL2) (Compiler = Clang;)
-      uses: paulproteus/ubuntu-18.04-x86@0.1
-      with:
-        command: |
-          apt-get update -y
-          apt-get install -y pkg-config git libgtk-3-dev clang
-          bash ./tools/BuildNInstall_Linux.sh
-          make all -j4 BUILD_TARGET=release CC=clang CXX=clang++
-
-    - name: Exit if file not exists
-      run: |
-        if [ ! -e ./csprite ]; then
-            echo "'csprite' executable not found"
-            exit 1
-        fi
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: linux-i686
-        path: ./csprite
-        if-no-files-found: error
-
   windows-x86_64:
-    needs: [generate-assets]
     runs-on: windows-latest
     defaults:
       run:
@@ -139,122 +57,55 @@ jobs:
 
       - uses: msys2/setup-msys2@v2
         with:
-          msystem: CLANG64
+          msystem: MINGW64
           update: false
-          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-python make git
+          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-python mingw-w64-x86_64-python-numpy mingw-w64-x86_64-python-pillow make git
 
-      - uses: actions/download-artifact@v2
-        with:
-          name: src-assets
-          path: ./src/assets/
+      - name: Generate Assets
+        run: make gen-assets gen-rc
 
-      - uses: actions/download-artifact@v2
-        with:
-          name: data
-          path: ./data/
-
-      - name: Build & Install SDL2
-        run: bash ./tools/BuildNInstall_Windows.sh clang64
-
-      - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
-        run: |
-          make gen-rc Arch=x86_64
-          make all -j4 BUILD_TARGET=release WINDRES_TARGET=pe-x86-64 CC=clang CXX=clang++
+      - name: Build
+        run: CC=clang CXX=clang++ make all -j4 BUILD_TARGET=release
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: win-x86_64
-          path: csprite.exe
-          if-no-files-found: error
-
-  windows-i686:
-    needs: [generate-assets]
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: CLANG32
-          update: false
-          install: mingw-w64-clang-i686-binutils mingw-w64-clang-i686-clang mingw-w64-clang-i686-cmake mingw-w64-clang-i686-python make git
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: src-assets
-          path: ./src/assets/
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: data
-          path: ./data/
-
-      - name: Build & Install SDL2
-        run: bash ./tools/BuildNInstall_Windows.sh clang32
-
-      - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
-        run: |
-          make gen-rc Arch=i686
-          make all -j4 BUILD_TARGET=release WINDRES_TARGET=pe-i386 CC=clang CXX=clang++
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: win-i686
-          path: csprite.exe
+          path: ./csprite.exe
           if-no-files-found: error
 
   osx_x86_64:
-    needs: [generate-assets]
     runs-on: macos-11
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
 
-    - name: Install dylibbundler & SDL2
+    - name: Install dylibbundler, pillow & glfw3
       run: |
-        brew install dylibbundler sdl2
+        brew install dylibbundler glfw
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
 
-    - uses: actions/download-artifact@v2
-      with:
-        name: src-assets
-        path: ./src/assets/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: data
-        path: ./data/
+    - name: Generate Assets
+      run: make gen-assets
 
     - name: Build
       run: make all -j4 BUILD_TARGET=release
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: osx_executable
-        path: ./csprite
-        if-no-files-found: error
-
     - name: Generate .icns
       run: |
         mkdir csprite.iconset
-        sips -z 16 16     data/icon-scaled.png --out csprite.iconset/icon_16x16.png
-        sips -z 32 32     data/icon-scaled.png --out csprite.iconset/icon_16x16@2x.png
-        sips -z 32 32     data/icon-scaled.png --out csprite.iconset/icon_32x32.png
-        sips -z 64 64     data/icon-scaled.png --out csprite.iconset/icon_32x32@2x.png
-        sips -z 128 128   data/icon-scaled.png --out csprite.iconset/icon_128x128.png
-        sips -z 256 256   data/icon-scaled.png --out csprite.iconset/icon_128x128@2x.png
-        sips -z 256 256   data/icon-scaled.png --out csprite.iconset/icon_256x256.png
-        sips -z 512 512   data/icon-scaled.png --out csprite.iconset/icon_256x256@2x.png
-        sips -z 512 512   data/icon-scaled.png --out csprite.iconset/icon_512x512.png
-        cp data/icon-scaled.png csprite.iconset/icon_512x512@2x.png
+        sips -z 16 16     data/icon-512.png --out csprite.iconset/icon_16x16.png
+        sips -z 32 32     data/icon-512.png --out csprite.iconset/icon_16x16@2x.png
+        sips -z 32 32     data/icon-512.png --out csprite.iconset/icon_32x32.png
+        sips -z 64 64     data/icon-512.png --out csprite.iconset/icon_32x32@2x.png
+        sips -z 128 128   data/icon-512.png --out csprite.iconset/icon_128x128.png
+        sips -z 256 256   data/icon-512.png --out csprite.iconset/icon_128x128@2x.png
+        sips -z 256 256   data/icon-512.png --out csprite.iconset/icon_256x256.png
+        sips -z 512 512   data/icon-512.png --out csprite.iconset/icon_256x256@2x.png
+        sips -z 512 512   data/icon-512.png --out csprite.iconset/icon_512x512.png
+        cp data/icon-512.png csprite.iconset/icon_512x512@2x.png
         iconutil -c icns -o csprite.icns csprite.iconset
         rm -R csprite.iconset
 
@@ -270,11 +121,17 @@ jobs:
         cp ./data/Info.plist ./csprite.app/Contents/
 
     - name: Put Dylibs
-      run: |
-        dylibbundler -od -b -ns -x ./csprite.app/Contents/MacOS/csprite -d ./csprite.app/Contents/libs/
+      run: dylibbundler -od -b -ns -x ./csprite.app/Contents/MacOS/csprite -d ./csprite.app/Contents/libs/
 
     - name: Create Zip
       run: zip -r csprite-osx.zip ./csprite.app
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: osx_executable
+        path: ./csprite
+        if-no-files-found: error
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
@@ -283,13 +140,11 @@ jobs:
         path: ./csprite-osx.zip
         if-no-files-found: error
 
+
   update-ci-release:
-    needs: [linux-x86_64, linux-i686, windows-x86_64, windows-i686, osx_x86_64]
+    needs: [linux-x86_64, windows-x86_64, osx_x86_64]
     permissions:
       contents: write
-    if: |
-      github.event_name == 'push' ||
-      github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v2
@@ -299,18 +154,8 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
-        name: win-i686
-        path: ./win-i686
-
-    - uses: actions/download-artifact@v2
-      with:
         name: linux-x86_64
         path: ./linux-x86_64
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: linux-i686
-        path: ./linux-i686
 
     - uses: actions/download-artifact@v2
       with:
@@ -330,29 +175,27 @@ jobs:
     - name: rename
       run: |
         mv win-x86_64/csprite.exe csprite-win-x86_64.exe
-        mv win-i686/csprite.exe csprite-win-i686.exe
         mv linux-x86_64/csprite csprite-linux-x86_64
-        mv linux-i686/csprite csprite-linux-i686
         mv linux-x86_64-AppImage/csprite-x86_64.AppImage csprite-linux-x86_64.appimage
         mv osx-x86_64/csprite csprite-osx-x86_64
         mv osx-x86_64/csprite-osx.zip csprite-osx-x86_64.zip
 
     - uses: dev-drprasad/delete-tag-and-release@v0.2.0
       with:
-        tag_name: latest-git
+        tag_name: v0.1.x-legacy
         delete_release: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - uses: ncipollo/release-action@v1
       with:
-        name: "Csprite Latest Git"
-        body: "this build provides latest features but the features might be un-documented & the builds might be unstable."
-        tag: "latest-git"
-        commit: "master"
+        name: "Csprite Legacy"
+        body: "this is "legacy" release simplifies alot of stuff in [csprite - v0.1.0](https://github.com/pegvin/csprite/releases/tag/v0.1.0)"
+        tag: "v0.1.x-legacy"
+        commit: "legacy"
         prerelease: true
         allowUpdates: true
-        generateReleaseNotes: true
+        generateReleaseNotes: false
         artifactErrorsFailBuild: true
         artifacts: "csprite-win-*.exe,csprite-linux-*,csprite-osx-*"
 

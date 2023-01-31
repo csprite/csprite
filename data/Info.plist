@@ -16,37 +16,5 @@
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
-
-	<!-- Supported Document Types For Drag & Drop To Work Properly -->
-	<key>CFBundleDocumentTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeIconFile</key>
-			<string>csprite.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>JPEG image</string>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-			<key>LSItemContentTypes</key>
-			<array>
-				<!-- https://developer.apple.com/documentation/uniformtypeidentifiers/uttype/3551523-jpeg -->
-				<string>public.jpeg</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeIconFile</key>
-			<string>csprite.icns</string>
-			<key>CFBundleTypeName</key>
-			<string>PNG image</string>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-			<key>LSItemContentTypes</key>
-			<array>
-				<!-- https://developer.apple.com/documentation/uniformtypeidentifiers/uttype/3551551-png -->
-				<string>public.png</string>
-			</array>
-		</dict>
-	</key>
 </dict>
 </plist>
-
