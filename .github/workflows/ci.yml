@@ -190,7 +190,8 @@ jobs:
     - uses: ncipollo/release-action@v1
       with:
         name: "Csprite Legacy"
-        body: "this is "legacy" release simplifies alot of stuff in [csprite - v0.1.0](https://github.com/pegvin/csprite/releases/tag/v0.1.0)"
+        body: |
+          this is "legacy" release simplifies alot of stuff in [csprite - v0.1.0](https://github.com/pegvin/csprite/releases/tag/v0.1.0)
         tag: "v0.1.x-legacy"
         commit: "legacy"
         prerelease: true
