@@ -6,7 +6,7 @@ A tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 [![Total Downloads](https://img.shields.io/github/downloads/pegvin/csprite/total)](https://csprite.github.io/downloads/)
 [![Discord Icon](https://discordapp.com/api/guilds/1027457407732957206/embed.png)](https://discord.gg/ZKs8sm2CPA)
 
-![image](https://user-images.githubusercontent.com/75035219/199698417-bcb5a600-3f94-41ab-adba-ac582cda33cb.png)
+![program preview](https://user-images.githubusercontent.com/75035219/215963557-eade47a0-b20a-45dc-91af-b136442d9a77.png)
 
 ---
 ### Features
