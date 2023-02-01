@@ -41,7 +41,7 @@ bin:=csprite
 ifeq ($(call lc,$(BUILD_TARGET)),debug)
 	CCFLAGS+=-O0 -g
 else
-	CCFLAGS+=-O2
+	CCFLAGS+=-O3
 endif
 
 ifeq ($(OS),Windows_NT)
