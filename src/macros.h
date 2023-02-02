@@ -4,13 +4,7 @@
 	Macro: COLOR_EQUAL(unsigned char* a, unsigned char* b)
 	Description: Checks if 2 Colors RGBA are Equal
 */
-#define COLOR_EQUAL(a, b)          \
-	( a != NULL              &&    \
-	  b != NULL              &&    \
-	  *(a + 0) == *(b + 0)   &&    \
-	  *(a + 1) == *(b + 1)   &&    \
-	  *(a + 2) == *(b + 2)   &&    \
-	  *(a + 3) == *(b + 3) )
+#define COLOR_EQUAL(a, b) (a != NULL && b != NULL && *(a + 0) == *(b + 0) && *(a + 1) == *(b + 1) && *(a + 2) == *(b + 2) && *(a + 3) == *(b + 3))
 
 #define RGBA2UINT32(r, g, b, a) \
 	((r & 0xff) << 24) + ((g & 0xff) << 16) + ((b & 0xff) << 8) + (a & 0xff)

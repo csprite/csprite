@@ -1,6 +1,7 @@
+#include "../utils.h"
+#include "../macros.h"
 #include "tools.h"
-#include "utils.h"
-#include "macros.h"
+#include "xy_stack.h"
 #include "stb_image.h"
 
 BrushShape_t BrushShape = BRUSH_SHAPE_CIRCLE;
@@ -125,6 +126,61 @@ bool Tool_Circle(uint8_t* Pixels, uint8_t* Color, int centreX, int centreY, int 
 	return didChange;
 }
 
+xy_stack_t* floodFillLocStack = NULL;
+
+#include <time.h>
+
+bool Tool_FloodFill(
+	uint8_t* Pixels,
+	uint8_t* OldColor,
+	uint8_t* NewColor,
+	uint32_t x, uint32_t y,
+	uint32_t w, uint32_t h
+) {
+	clock_t t = clock();
+	if (COLOR_EQUAL(NewColor, OldColor)) return false;
+	if (floodFillLocStack == NULL) {
+		floodFillLocStack = s_init(w * h);
+	} else if (floodFillLocStack->length != w * h) {
+		s_free(floodFillLocStack);
+		floodFillLocStack = s_init(w * h);
+	}
+
+	bool didChange = false;
+	s_push(floodFillLocStack, x, y);
+	while (!s_isEmpty(floodFillLocStack)) {
+		int32_t x, y;
+		s_pop(floodFillLocStack, &x, &y);
+
+		if (x > -1 && x < w && y > -1 && y < h) {
+			uint8_t* pixel = GetCharData(Pixels, x, y, w, h);
+			if (COLOR_EQUAL(pixel, OldColor)) {
+				*pixel = NewColor[0];
+				*(pixel + 1) = NewColor[1];
+				*(pixel + 2) = NewColor[2];
+				*(pixel + 3) = NewColor[3];
+				didChange = true;
+
+				if (x + 1 < w && COLOR_EQUAL(GetCharData(Pixels, x + 1, y, w, h), OldColor))
+					s_push(floodFillLocStack, x + 1, y);
+				if (x - 1 >= 0 && COLOR_EQUAL(GetCharData(Pixels, x - 1, y, w, h), OldColor))
+					s_push(floodFillLocStack, x - 1, y);
+				if (y + 1 < h && COLOR_EQUAL(GetCharData(Pixels, x, y + 1, w, h), OldColor))
+					s_push(floodFillLocStack, x, y + 1);
+				if (x + 1 >= 0 && COLOR_EQUAL(GetCharData(Pixels, x, y - 1, w, h), OldColor))
+					s_push(floodFillLocStack, x, y - 1);
+			}
+		}
+	}
+	s_clear(floodFillLocStack);
+
+	t = clock() - t;
+	double time_taken = ((double)t)/CLOCKS_PER_SEC;
+	printf("Tool_FloodFill took %f seconds to execute\n", time_taken);
+	return didChange;
+}
+
+/*
 bool Tool_FloodFill(
 	uint8_t* Pixels,
 	uint8_t* OldColor,
@@ -156,4 +212,5 @@ bool Tool_FloodFill(
 		}
 	}
 	return didChange;
-}
+}*/
+
