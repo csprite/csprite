@@ -128,8 +128,6 @@ bool Tool_Circle(uint8_t* Pixels, uint8_t* Color, int centreX, int centreY, int 
 
 xy_stack_t* floodFillLocStack = NULL;
 
-#include <time.h>
-
 bool Tool_FloodFill(
 	uint8_t* Pixels,
 	uint8_t* OldColor,
@@ -137,7 +135,6 @@ bool Tool_FloodFill(
 	uint32_t x, uint32_t y,
 	uint32_t w, uint32_t h
 ) {
-	clock_t t = clock();
 	if (COLOR_EQUAL(NewColor, OldColor)) return false;
 	if (floodFillLocStack == NULL) {
 		floodFillLocStack = s_init(w * h);
@@ -161,22 +158,26 @@ bool Tool_FloodFill(
 				*(pixel + 3) = NewColor[3];
 				didChange = true;
 
-				if (x + 1 < w && COLOR_EQUAL(GetCharData(Pixels, x + 1, y, w, h), OldColor))
-					s_push(floodFillLocStack, x + 1, y);
-				if (x - 1 >= 0 && COLOR_EQUAL(GetCharData(Pixels, x - 1, y, w, h), OldColor))
-					s_push(floodFillLocStack, x - 1, y);
-				if (y + 1 < h && COLOR_EQUAL(GetCharData(Pixels, x, y + 1, w, h), OldColor))
-					s_push(floodFillLocStack, x, y + 1);
-				if (x + 1 >= 0 && COLOR_EQUAL(GetCharData(Pixels, x, y - 1, w, h), OldColor))
-					s_push(floodFillLocStack, x, y - 1);
+				int32_t newX = x + 1;
+				if (newX < w && COLOR_EQUAL(GetCharData(Pixels, newX, y, w, h), OldColor))
+					s_push(floodFillLocStack, newX, y);
+
+				newX = x - 1;
+				if (newX >= 0 && COLOR_EQUAL(GetCharData(Pixels, newX, y, w, h), OldColor))
+					s_push(floodFillLocStack, newX, y);
+
+				int32_t newY = y + 1;
+				if (newY < h && COLOR_EQUAL(GetCharData(Pixels, x, newY, w, h), OldColor))
+					s_push(floodFillLocStack, x, newY);
+
+				newY = y - 1;
+				if (newY >= 0 && COLOR_EQUAL(GetCharData(Pixels, x, newY, w, h), OldColor))
+					s_push(floodFillLocStack, x, newY);
 			}
 		}
 	}
 	s_clear(floodFillLocStack);
 
-	t = clock() - t;
-	double time_taken = ((double)t)/CLOCKS_PER_SEC;
-	printf("Tool_FloodFill took %f seconds to execute\n", time_taken);
 	return didChange;
 }
 
