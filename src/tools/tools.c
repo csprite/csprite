@@ -1,6 +1,7 @@
+#include "../utils.h"
+#include "../macros.h"
 #include "tools.h"
-#include "utils.h"
-#include "macros.h"
+#include "xy_stack.h"
 #include "stb_image.h"
 
 BrushShape_t BrushShape = BRUSH_SHAPE_CIRCLE;
@@ -125,6 +126,62 @@ bool Tool_Circle(uint8_t* Pixels, uint8_t* Color, int centreX, int centreY, int 
 	return didChange;
 }
 
+xy_stack_t* floodFillLocStack = NULL;
+
+bool Tool_FloodFill(
+	uint8_t* Pixels,
+	uint8_t* OldColor,
+	uint8_t* NewColor,
+	uint32_t x, uint32_t y,
+	uint32_t w, uint32_t h
+) {
+	if (COLOR_EQUAL(NewColor, OldColor)) return false;
+	if (floodFillLocStack == NULL) {
+		floodFillLocStack = s_init(w * h);
+	} else if (floodFillLocStack->length != w * h) {
+		s_free(floodFillLocStack);
+		floodFillLocStack = s_init(w * h);
+	}
+
+	bool didChange = false;
+	s_push(floodFillLocStack, x, y);
+	while (!s_isEmpty(floodFillLocStack)) {
+		int32_t x, y;
+		s_pop(floodFillLocStack, &x, &y);
+
+		if (x > -1 && x < w && y > -1 && y < h) {
+			uint8_t* pixel = GetCharData(Pixels, x, y, w, h);
+			if (COLOR_EQUAL(pixel, OldColor)) {
+				*pixel = NewColor[0];
+				*(pixel + 1) = NewColor[1];
+				*(pixel + 2) = NewColor[2];
+				*(pixel + 3) = NewColor[3];
+				didChange = true;
+
+				int32_t newX = x + 1;
+				if (newX < w && COLOR_EQUAL(GetCharData(Pixels, newX, y, w, h), OldColor))
+					s_push(floodFillLocStack, newX, y);
+
+				newX = x - 1;
+				if (newX >= 0 && COLOR_EQUAL(GetCharData(Pixels, newX, y, w, h), OldColor))
+					s_push(floodFillLocStack, newX, y);
+
+				int32_t newY = y + 1;
+				if (newY < h && COLOR_EQUAL(GetCharData(Pixels, x, newY, w, h), OldColor))
+					s_push(floodFillLocStack, x, newY);
+
+				newY = y - 1;
+				if (newY >= 0 && COLOR_EQUAL(GetCharData(Pixels, x, newY, w, h), OldColor))
+					s_push(floodFillLocStack, x, newY);
+			}
+		}
+	}
+	s_clear(floodFillLocStack);
+
+	return didChange;
+}
+
+/*
 bool Tool_FloodFill(
 	uint8_t* Pixels,
 	uint8_t* OldColor,
@@ -156,4 +213,5 @@ bool Tool_FloodFill(
 		}
 	}
 	return didChange;
-}
+}*/
+
