@@ -23,10 +23,7 @@ void s_clear(xy_stack_t* s) {
 }
 
 bool s_push(xy_stack_t* s, int x, int y) {
-	if (s == NULL || s->stack == NULL || s->top >= s->length - 1) {
-		printf("cannot push: %d,%d\n", x, y);
-		return false;
-	}
+	if (s == NULL || s->stack == NULL || s->top >= s->length - 1) return false;
 	s->top++;
 	int32_t* stack_ptr = &s->stack[s->top * 2];
 	*(stack_ptr + 0) = x;
