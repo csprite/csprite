@@ -87,13 +87,10 @@ void Canvas_Destroy(void) {
 	CanvasDims[0] = CanvasDims[1] = 0;
 }
 
-void Canvas_NewFrame(bool DrawCheckerboardBg, SDL_Renderer* ren) {
+void Canvas_NewFrame(SDL_Renderer* ren) {
 	SDL_SetRenderTarget(ren, CanvasTex);
 	SDL_RenderClear(ren);
-
-	if (DrawCheckerboardBg == true) {
-		SDL_RenderCopy(ren, bgLayer.texture, NULL, NULL);
-	}
+	SDL_RenderCopy(ren, bgLayer.texture, NULL, NULL);
 }
 
 void Canvas_Resize(int32_t w, int32_t h, SDL_Renderer* ren) {

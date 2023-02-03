@@ -13,7 +13,6 @@
 #include <limits.h>
 #include <SDL2/SDL.h>
 
-#include "pfd.h"
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_extension.h"
@@ -48,11 +47,11 @@ bool ShouldClose = false;
 bool IsLMBDown = false;
 bool IsCtrlDown = false;
 bool IsShiftDown = false;
-bool ShouldSave = false;
-bool ShouldSaveAs = false;
 bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
 bool CanvasLocked = false; // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
+bool ShowOpenNewFileWindow = false;
+bool ShowSaveAsFileWindow = false;
 
 char FilePath[SYS_PATHNAME_MAX] = "untitled.png";
 char FileName[SYS_FILENAME_MAX] = "untitled.png";
@@ -120,8 +119,8 @@ theme_arr_t* ThemeArr = NULL;
 		else { snprintf(WindowTitle, WINDOW_TITLE_MAX, "csprite " VERSION_STR); }\
 	} while(0)
 
+static int  OpenNewFile(const char* fileName);
 static void _SaveCanvasLayersTo(const char* filePath);
-static void OpenNewFile();
 static void InitWindowIcon();
 static void _GuiSetColors(ImGuiStyle& style);
 static void _GuiSetToolText();
@@ -270,8 +269,7 @@ int main(int argc, char* argv[]) {
 	unsigned int frameStart, frameTime;
 	unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
 
-	bool open = false, save = false;
-	static imgui_addons::ImGuiFileBrowser file_dialog;
+	imgui_addons::ImGuiFileBrowser ImFileDialog;
 	while (!ShouldClose) {
 		ProcessEvents();
 
@@ -287,22 +285,17 @@ int main(int argc, char* argv[]) {
 					ShowNewCanvasWindow = true;
 				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					OpenNewFile();
+					ShowOpenNewFileWindow = true;
 				}
 				if (ImGui::BeginMenu("Save")) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						ShouldSave = true;
+						_SaveCanvasLayersTo(FilePath);
 					}
 					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
-						ShouldSaveAs = true;
+						ShowSaveAsFileWindow = true;
 					}
 					ImGui::EndMenu();
 				}
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Debug")) {
-				if (ImGui::MenuItem("Open", NULL)) open = true;
-				if (ImGui::MenuItem("Save", NULL)) save = true;
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Edit")) {
@@ -378,21 +371,25 @@ int main(int argc, char* argv[]) {
 			ImGui::EndMainMenuBar();
 		}
 
-		if (open) { ImGui::OpenPopup("Open File"); open = false; }
-		if (save) { ImGui::OpenPopup("Save File"); save = false; }
-
-		/* Optional third parameter. Support opening only compressed rar/zip files. 
-		* Opening any other file will show error, return false and won't close the dialog.
-		*/
-		if (file_dialog.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(700, 310), ".rar,.zip,.7z")) {
-			std::cout << file_dialog.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
-			std::cout << file_dialog.selected_path << std::endl;    // The absolute path to the selected file
+		if (ShowOpenNewFileWindow) {
+			ImGui::OpenPopup("Select a file##Csprite_OpenNewFileDlg");
+			ShowOpenNewFileWindow = false;
 		}
-		if (file_dialog.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(700, 310), ".png,.jpg,.bmp")) {
-			std::cout << file_dialog.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
-			std::cout << file_dialog.selected_path << std::endl;    // The absolute path to the selected file
-			std::cout << file_dialog.ext << std::endl;              // Access ext separately (For SAVE mode)
-			//Do writing of files based on extension here
+		if (ShowSaveAsFileWindow) {
+			ImGui::OpenPopup("Save file as##Csprite_SaveAsFileDlg");
+			ShowSaveAsFileWindow = false;
+		}
+
+		if (ImFileDialog.showFileDialog("Select a file##Csprite_OpenNewFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".png,.jpg,.jpeg,.bmp")) {
+			OpenNewFile(ImFileDialog.selected_path.c_str());
+		}
+		if (ImFileDialog.showFileDialog("Save file as##Csprite_SaveAsFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(0, 0), ".png,.jpg,.jpeg,.bmp")) {
+			snprintf(FilePath, SYS_PATHNAME_MAX, "%s", ImFileDialog.selected_path.c_str());
+			char* _fName = Sys_GetBasename(ImFileDialog.selected_path.c_str());
+			snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
+			free(_fName);
+			UPDATE_WINDOW_TITLE();
+			_SaveCanvasLayersTo(FilePath);
 		}
 
 		ImVec2 PalWinSize;
@@ -684,7 +681,7 @@ IncrementAndCreateLayer__:
 		Logger_Draw("Logs");
 
 		if (CURR_CANVAS_LAYER != NULL) {
-			Canvas_NewFrame(!ShouldSave && !ShouldSaveAs, renderer);
+			Canvas_NewFrame(renderer);
 			for (int32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
 				if (CanvasLayers[i] != NULL) {
 					Canvas_Layer(CanvasLayers[i], SelectedLayerIndex == i, renderer);
@@ -700,29 +697,6 @@ IncrementAndCreateLayer__:
 				style.Colors[ImGuiCol_Border].w * 255
 			);
 			SDL_RenderDrawRect(renderer, &ViewportLoc);
-
-			if (ShouldSave == true || ShouldSaveAs == true) {
-				if (ShouldSaveAs == true) {
-					auto destination = pfd::save_file("Select a file", ".", { "Image Files", "*.png *.jpg *.jpeg *.ppm" }, pfd::opt::none).result();
-					const char* _fPath = destination.empty() ? NULL : destination.c_str();
-					if (_fPath != NULL) {
-						snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fPath);
-						char* _fName = Sys_GetBasename(_fPath);
-						snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
-						free(_fName);
-						UPDATE_WINDOW_TITLE();
-					} else {
-						ShouldSaveAs = false;
-					}
-				}
-
-				// ShouldSave or ShouldSaveAs Might Be Set To False If There Was An Error So We Need To Check It
-				if (ShouldSave == true || ShouldSaveAs == true) {
-					_SaveCanvasLayersTo(FilePath);
-					ShouldSave = false;
-					ShouldSaveAs = false;
-				}
-			}
 		}
 
 		R_Present();
@@ -921,10 +895,18 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 			_GuiSetToolText();
 			break;
 		case SDLK_s:
-			if (IsCtrlDown == true && ShouldSave == false) ShouldSave = true;
+			if (IsCtrlDown == true) {
+				if (IsShiftDown) {
+					ShowSaveAsFileWindow = true;
+				} else {
+					_SaveCanvasLayersTo(FilePath);
+				}
+			}
 			break;
 		case SDLK_o:
-			if (IsCtrlDown == true) OpenNewFile();
+			if (IsCtrlDown == true) {
+				ShowOpenNewFileWindow = true;
+			}
 			break;
 		case SDLK_LCTRL:
 		case SDLK_RCTRL:
@@ -1142,50 +1124,44 @@ static void InitWindowIcon() {
 	SDL_FreeSurface(surface);
 }
 
-static void OpenNewFile() {
-	auto selection = pfd::open_file(
-		"Select a file", ".",
-		{
-			"Image Files", "*.png *.jpg *.jpeg *.bmp",
-			"All Files", "*"
-		},
-		pfd::opt::none
-	).result();
-
-	const char* _fName = selection.empty() ? NULL : selection[0].c_str();
-	if (_fName != NULL) {
-		int32_t w = 0, h = 0;
-		uint8_t* _data = ifio_read(_fName, &w, &h);
-		if (w > 0 && h > 0 && _data != NULL) {
-			for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-				if (CanvasLayers[i] != NULL) {
-					Canvas_DestroyLayer(CanvasLayers[i]);
-					CanvasLayers[i] = NULL;
-				}
-			}
-			if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-				Canvas_Resize(w, h, R_GetRenderer());
-				CanvasDims[0] = w;
-				CanvasDims[1] = h;
-				CurrViewportZoom = 1.0f;
-				UpdateViewportSize();
-				UpdateViewportPos();
-			}
-
-			SelectedLayerIndex = 0;
-			CURR_CANVAS_LAYER = Canvas_CreateLayer(R_GetRenderer());
-			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
-			memcpy(CURR_CANVAS_LAYER->history->pixels, _data, w * h * 4 * sizeof(uint8_t));
-			SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
-
-			snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fName);
-			char* filePathBasename = Sys_GetBasename(_fName);
-			snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
-			free(filePathBasename);
-			free(_data);
-			UPDATE_WINDOW_TITLE();
-		}
+static int OpenNewFile(const char* _fName) {
+	if (_fName == NULL) {
+		Logger_Error("_fName is NULL!");
+		return -1;
 	}
+
+	int32_t w = 0, h = 0;
+	uint8_t* _data = ifio_read(_fName, &w, &h);
+	if (w > 0 && h > 0 && _data != NULL) {
+		for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
+			if (CanvasLayers[i] != NULL) {
+				Canvas_DestroyLayer(CanvasLayers[i]);
+				CanvasLayers[i] = NULL;
+			}
+		}
+		if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
+			Canvas_Resize(w, h, R_GetRenderer());
+			CanvasDims[0] = w;
+			CanvasDims[1] = h;
+			CurrViewportZoom = 1.0f;
+			UpdateViewportSize();
+			UpdateViewportPos();
+		}
+
+		SelectedLayerIndex = 0;
+		CURR_CANVAS_LAYER = Canvas_CreateLayer(R_GetRenderer());
+		memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
+		memcpy(CURR_CANVAS_LAYER->history->pixels, _data, w * h * 4 * sizeof(uint8_t));
+		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
+
+		snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fName);
+		char* filePathBasename = Sys_GetBasename(_fName);
+		snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
+		free(filePathBasename);
+		free(_data);
+		UPDATE_WINDOW_TITLE();
+	}
+	return 0;
 }
 
 static void _SaveCanvasLayersTo(const char* filePath) {
