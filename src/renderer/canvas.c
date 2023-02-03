@@ -89,7 +89,6 @@ void Canvas_Destroy(void) {
 
 void Canvas_NewFrame(SDL_Renderer* ren) {
 	SDL_SetRenderTarget(ren, CanvasTex);
-	SDL_RenderClear(ren);
 	SDL_RenderCopy(ren, bgLayer.texture, NULL, NULL);
 }
 
