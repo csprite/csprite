@@ -17,6 +17,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_extension.h"
+#include "FileBrowser/ImGuiFileBrowser.h"
 
 #include "utils.h"
 #include "log/log.h"
@@ -269,6 +270,8 @@ int main(int argc, char* argv[]) {
 	unsigned int frameStart, frameTime;
 	unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
 
+	bool open = false, save = false;
+	static imgui_addons::ImGuiFileBrowser file_dialog;
 	while (!ShouldClose) {
 		ProcessEvents();
 
@@ -295,6 +298,11 @@ int main(int argc, char* argv[]) {
 					}
 					ImGui::EndMenu();
 				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Debug")) {
+				if (ImGui::MenuItem("Open", NULL)) open = true;
+				if (ImGui::MenuItem("Save", NULL)) save = true;
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Edit")) {
@@ -368,6 +376,23 @@ int main(int argc, char* argv[]) {
 				ImGui::EndMenu();
 			}
 			ImGui::EndMainMenuBar();
+		}
+
+		if (open) { ImGui::OpenPopup("Open File"); open = false; }
+		if (save) { ImGui::OpenPopup("Save File"); save = false; }
+
+		/* Optional third parameter. Support opening only compressed rar/zip files. 
+		* Opening any other file will show error, return false and won't close the dialog.
+		*/
+		if (file_dialog.showFileDialog("Open File", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(700, 310), ".rar,.zip,.7z")) {
+			std::cout << file_dialog.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
+			std::cout << file_dialog.selected_path << std::endl;    // The absolute path to the selected file
+		}
+		if (file_dialog.showFileDialog("Save File", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(700, 310), ".png,.jpg,.bmp")) {
+			std::cout << file_dialog.selected_fn << std::endl;      // The name of the selected file or directory in case of Select Directory dialog mode
+			std::cout << file_dialog.selected_path << std::endl;    // The absolute path to the selected file
+			std::cout << file_dialog.ext << std::endl;              // Access ext separately (For SAVE mode)
+			//Do writing of files based on extension here
 		}
 
 		ImVec2 PalWinSize;
