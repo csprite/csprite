@@ -1151,6 +1151,7 @@ static void OpenNewFile() {
 			CURR_CANVAS_LAYER = Canvas_CreateLayer(R_GetRenderer());
 			memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
 			memcpy(CURR_CANVAS_LAYER->history->pixels, _data, w * h * 4 * sizeof(uint8_t));
+			SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
 
 			snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fName);
 			char* filePathBasename = Sys_GetBasename(_fName);
