@@ -257,10 +257,8 @@ namespace imgui_addons
 						ImGui::OpenPopup("##NavBarDropboxPopup");
 					if(ImGui::BeginPopup("##NavBarDropboxPopup"))
 					{
-						ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.125f, 0.125f, 0.125f, 1.0f));
 						if(ImGui::BeginListBox("##NavBarDropBox", ImVec2(0, list_item_height* 5)))
 						{
-							ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.882f, 0.745f, 0.078f,1.0f));
 							for(std::vector<std::string>::size_type j = i+1; j < current_dirlist.size(); j++)
 							{
 								if(ImGui::Selectable(current_dirlist[j].c_str(), false) && j != current_dirlist.size() - 1)
@@ -269,10 +267,8 @@ namespace imgui_addons
 									ImGui::CloseCurrentPopup();
 								}
 							}
-							ImGui::PopStyleColor();
 							ImGui::EndListBox();
 						}
-						ImGui::PopStyleColor();
 						ImGui::EndPopup();
 					}
 					ImGui::PopStyleColor();
@@ -343,7 +339,6 @@ namespace imgui_addons
 		ImGui::Columns(num_cols);
 
 		//Output directories in yellow
-		// ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.882f, 0.745f, 0.078f,1.0f));
 		int items = 0;
 		for (std::vector<const Info*>::size_type i = 0; i < filtered_dirs.size(); i++)
 		{
@@ -369,7 +364,6 @@ namespace imgui_addons
 					ImGui::NextColumn();
 			}
 		}
-		// ImGui::PopStyleColor(1);
 
 		//Output files
 		for (std::vector<const Info*>::size_type i = 0; i < filtered_files.size(); i++)
@@ -610,8 +604,6 @@ namespace imgui_addons
 											ImGuiWindowFlags_NoScrollbar          |
 											ImGuiWindowFlags_NoSavedSettings;
 
-			ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.125f, 0.125f, 0.125f, 1.0f));
 			ImGui::SetNextWindowBgAlpha(1.0);
 			ImGui::SetNextWindowPos(input_combobox_pos + ImVec2(0, ImGui::GetFrameHeightWithSpacing()));
 			ImGui::PushClipRect(ImVec2(0,0), ImGui::GetIO().DisplaySize, false);
@@ -621,7 +613,6 @@ namespace imgui_addons
 			ImVec2 listbox_size = input_combobox_sz - ImGui::GetStyle().WindowPadding * 2.0f;
 			if(ImGui::BeginListBox("##InputBarComboBoxList", listbox_size))
 			{
-				// ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f,1.0f));
 				ImGui::PushFocusScope(focus_scope_id);
 				for(auto& element : inputcb_filter_files)
 				{
@@ -641,11 +632,9 @@ namespace imgui_addons
 					}
 				}
 				ImGui::PopFocusScope();
-				// ImGui::PopStyleColor(1);
 				ImGui::EndListBox();
 			}
 			ImGui::EndChild();
-			ImGui::PopStyleColor(2);
 			ImGui::PopClipRect();
 		}
 		return show_error;
