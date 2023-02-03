@@ -37,7 +37,6 @@ int Assets_List(const char* directoryPath, int (*callback)(int i, const char *pa
 
 static asset_t ASSETS[] = {
 	#include "assets/palettes.inl"
-	#include "assets/shaders.inl"
 	#include "assets/themes.inl"
 	#include "assets/fonts.inl"
 	#include "assets/icons.inl"
