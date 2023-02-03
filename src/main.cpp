@@ -16,7 +16,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_extension.h"
-#include "FileBrowser/ImGuiFileBrowser.h"
+#include "ImGuiFileBrowser.h"
 
 #include "utils.h"
 #include "log/log.h"
