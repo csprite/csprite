@@ -3,6 +3,13 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <ctype.h>
+
+// Checks if a string has a suffix, case-sensitive.
+#define HAS_SUFFIX(str, ext, extLen) strncmp(str + (strlen(str) - extLen), ext, extLen) == 0
+
+// Checks if a string has a suffix, case-insensitive.
+#define HAS_SUFFIX_CI(str, ext, extLen) strncmpci(str + (strlen(str) - extLen), ext, extLen) == 0
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,12 +21,23 @@ unsigned char* GetCharData(unsigned char *data, uint32_t x, uint32_t y, uint32_t
 char* ReadTextFile(const char* path);
 bool StringStartsWith(const char* prefix, const char* str);
 uint8_t* ScalePixelArray(uint8_t* src, uint32_t src_w, uint32_t src_h, uint32_t target_w, uint32_t target_h);
+int strncmpci(const char* s1, const char* s2, size_t n); // Case insensitive string compare upto n, returns 0 if true
 
 #ifdef __cplusplus
 }
 #endif
 
 #ifdef UTILS_IMPLEMENTATION
+
+int strncmpci(const char* s1, const char* s2, size_t n) {
+	while (n && *s1 && ( tolower(*s1) == tolower(*s2) )) {
+		++s1;
+		++s2;
+		--n;
+	}
+	if (n == 0) return 0;
+	else return (*(unsigned char*)s1 - *(unsigned char*)s2);
+}
 
 // https://stackoverflow.com/a/299305/14516016
 uint8_t* ScalePixelArray(uint8_t* src, uint32_t src_w, uint32_t src_h, uint32_t target_w, uint32_t target_h) {
