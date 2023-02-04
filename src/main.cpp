@@ -384,12 +384,23 @@ int main(int argc, char* argv[]) {
 			OpenNewFile(ImFileDialog.selected_path.c_str());
 		}
 		if (ImFileDialog.showFileDialog("Save file as##Csprite_SaveAsFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(0, 0), ".png,.jpg,.jpeg,.bmp")) {
-			snprintf(FilePath, SYS_PATHNAME_MAX, "%s", ImFileDialog.selected_path.c_str());
-			char* _fName = Sys_GetBasename(ImFileDialog.selected_path.c_str());
+			/*  simple logic which appends the appropriate extension if none provided.
+				like "test1" with ".png" filter selected is converted to "test1.png" */
+			char* _fPath = (char*)ImFileDialog.selected_path.c_str();
+			if (!HAS_SUFFIX_CI(_fPath, ImFileDialog.ext.c_str(), ImFileDialog.ext.length())) {
+				int newStrLen = ImFileDialog.selected_path.length() + ImFileDialog.ext.length() + 1;
+				_fPath = (char*)malloc(newStrLen);
+				snprintf(_fPath, newStrLen, "%s%s", ImFileDialog.selected_path.c_str(), ImFileDialog.ext.c_str());
+			}
+			snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fPath);
+			char* _fName = Sys_GetBasename(_fPath);
 			snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
-			free(_fName);
 			UPDATE_WINDOW_TITLE();
 			_SaveCanvasLayersTo(FilePath);
+			free(_fName);
+			free(_fPath);
+			_fName = NULL;
+			_fPath = NULL;
 		}
 
 		ImVec2 PalWinSize;
