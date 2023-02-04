@@ -481,34 +481,49 @@ int main(int argc, char* argv[]) {
 			ImGui::End();
 		}
 
-		static bool ResetPreviewWindowSize = true;
+		static int32_t PreviewZoom = 2;
+		static ImVec2  PreviewImageSize;
 		static bool ResetPreviewWindowPos = true;
+		static bool ReCalculateZoomSize = true;
 
-		if (ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoCollapse)) {
+		{
+			// simple condition that set ResetPreviewWindowPos to true, so that Preview window position can be updated after the window width is calculated
+			static int FramesPassed = 0;
+			static bool LockCond = false;
+			if (!LockCond) {
+				if (FramesPassed != 3) {
+					FramesPassed++;
+				} else {
+					LockCond = true;
+					ResetPreviewWindowPos = true;
+				}
+			}
+		}
+
+		if (ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
 			if (ImGui::BeginPopupContextItem()) {
-				if (ImGui::MenuItem("Reset Size")) {
-					ResetPreviewWindowSize = true;
+				if (ImGui::BeginMenu("Zoom")) {
+					if (ImGui::MenuItem("Increase")) { PreviewZoom++; ReCalculateZoomSize = true; }
+					if (ImGui::MenuItem("Decrease")) { if (PreviewZoom > 1) { PreviewZoom--; ReCalculateZoomSize = true; } }
+					ImGui::EndMenu();
 				}
 				if (ImGui::MenuItem("Reset Position")) {
 					ResetPreviewWindowPos = true;
 				}
 				ImGui::EndPopup();
 			}
-			static ImVec2 WinSize = { 192.0f, 168.0f };
-			// XX - Use "SetNextWindowPos" & "SetNextWindowSize" If The Window Is Movable Or Else The Children Won't Be Able To Move
+
+			if (ReCalculateZoomSize) {
+				PreviewImageSize.x = CanvasDims[0] * PreviewZoom;
+				PreviewImageSize.y = CanvasDims[1] * PreviewZoom;
+				ReCalculateZoomSize = false;
+			}
 			if (ResetPreviewWindowPos == true) {
-				ImGui::SetWindowPos({ io.DisplaySize.x - WinSize.x - 20, io.DisplaySize.y - WinSize.y - 20, }); // Move Window To Bottom Right With 20 pixel padding
+				ImGui::SetWindowPos({ io.DisplaySize.x - ImGui::GetWindowSize().x - 20, io.DisplaySize.y - ImGui::GetWindowSize().y - 20, }); // Move Window To Bottom Right With 20 pixel padding
 				ResetPreviewWindowPos = false;
 			}
-			if (ResetPreviewWindowSize == true) {
-				ImGui::SetWindowSize({ 192.0f, 168.0f });
-				ResetPreviewWindowSize = false;
-			}
-			ImGui::Image(
-				reinterpret_cast<ImTextureID>(Canvas_GetTex()), // FBO Texture
-				{ WinSize.x - 15, CanvasDims[1] * (WinSize.x - 15) / CanvasDims[0] }
-			);
-			WinSize = ImGui::GetWindowSize();
+
+			ImGui::Image(reinterpret_cast<ImTextureID>(Canvas_GetTex()), PreviewImageSize);
 			ImGui::End();
 		}
 
