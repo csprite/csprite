@@ -34,7 +34,7 @@
 #include "ifileio/ifileio.h"
 
 int32_t WindowDims[2] = { 700, 500 };
-int32_t CanvasDims[2] = { 32, 24 };
+int32_t CanvasDims[2] = { 64, 64 };
 
 int32_t MousePos[2] = { 0, 0 };
 int32_t MousePosDown[2] = { 0, 0 };
