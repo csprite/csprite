@@ -800,7 +800,7 @@ static void MutateCanvas(bool LmbJustReleased) {
 		switch (Tool) {
 			case BRUSH_COLOR:
 			case BRUSH_ERASER: {
-				CanvasDidMutate = Tool_Brush(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]) || CanvasDidMutate;
+				CanvasDidMutate = Tool_Line(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, MousePosRelLast[0], MousePosRelLast[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]) || CanvasDidMutate;
 				break;
 			}
 			case SHAPE_RECT:
