@@ -207,37 +207,7 @@ int main(int argc, char* argv[]) {
 		} else if (result == 0) {
 			Logger_Error("Cannot Open The File in filePath");
 		} else {
-			int32_t w = 0, h = 0;
-			uint8_t* _data = ifio_read(filePath, &w, &h);
-			if (w > 0 && h > 0 && _data != NULL) {
-				for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-					if (CanvasLayers[i] != NULL) {
-						Canvas_DestroyLayer(CanvasLayers[i]);
-						CanvasLayers[i] = NULL;
-					}
-				}
-				if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-					Canvas_Resize(w, h, R_GetRenderer());
-					CanvasDims[0] = w;
-					CanvasDims[1] = h;
-					CurrViewportZoom = 1.0f;
-					UpdateViewportSize();
-					UpdateViewportPos();
-				}
-
-				SelectedLayerIndex = 0;
-				CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
-				memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
-				FreeHistory(&CURR_CANVAS_LAYER->history);
-				SaveHistory(&CURR_CANVAS_LAYER->history, w * h * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
-
-				snprintf(FilePath, SYS_PATHNAME_MAX, "%s", filePath);
-				char* filePathBasename = Sys_GetBasename(filePath);
-				snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
-				free(filePathBasename);
-				free(_data);
-				UPDATE_WINDOW_TITLE();
-			}
+			OpenNewFile(filePath);
 		}
 	}
 
