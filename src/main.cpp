@@ -120,7 +120,6 @@ theme_arr_t* ThemeArr = NULL;
 	} while(0)
 
 static int  OpenNewFile(const char* fileName);
-static void _SaveCanvasLayersTo(const char* filePath);
 static void InitWindowIcon();
 static void _GuiSetColors(ImGuiStyle& style);
 static void _GuiSetToolText();
@@ -259,7 +258,7 @@ int main(int argc, char* argv[]) {
 				}
 				if (ImGui::BeginMenu("Save")) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						_SaveCanvasLayersTo(FilePath);
+						ifio_write(FilePath, CanvasDims[0], CanvasDims[1], MAX_CANVAS_LAYERS, CanvasLayers);
 					}
 					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
 						ShowSaveAsFileWindow = true;
@@ -366,9 +365,8 @@ int main(int argc, char* argv[]) {
 			char* _fName = Sys_GetBasename(_fPath);
 			snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
 			UPDATE_WINDOW_TITLE();
-			_SaveCanvasLayersTo(FilePath);
+			ifio_write(FilePath, CanvasDims[0], CanvasDims[1], MAX_CANVAS_LAYERS, CanvasLayers);
 			free(_fName);
-			free(_fPath);
 			_fName = NULL;
 			_fPath = NULL;
 		}
@@ -895,7 +893,7 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 				if (IsShiftDown) {
 					ShowSaveAsFileWindow = true;
 				} else {
-					_SaveCanvasLayersTo(FilePath);
+					ifio_write(FilePath, CanvasDims[0], CanvasDims[1], MAX_CANVAS_LAYERS, CanvasLayers);
 				}
 			}
 			break;
@@ -1158,44 +1156,5 @@ static int OpenNewFile(const char* _fName) {
 		UPDATE_WINDOW_TITLE();
 	}
 	return 0;
-}
-
-static void _SaveCanvasLayersTo(const char* filePath) {
-	uint8_t* canvas_data = (uint8_t*) malloc(CanvasDims[0] * CanvasDims[0] * 4 * sizeof(uint8_t));
-	memset(canvas_data, 0, CanvasDims[0] * CanvasDims[0] * 4 * sizeof(uint8_t));
-
-	for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-		if (CanvasLayers[i] != NULL) {
-			for (int32_t y = 0; y < CanvasDims[1]; ++y) {
-				for (int32_t x = 0; x < CanvasDims[0]; ++x) {
-					// Simple Alpha-Blending Being Done Here.
-					uint8_t* srcPixel = GetCharData(CanvasLayers[i]->pixels, x, y, CanvasDims[0], CanvasDims[1]);
-					uint8_t* destPixel = GetCharData(canvas_data, x, y, CanvasDims[0], CanvasDims[1]);
-					if (srcPixel != NULL && destPixel != NULL) {
-						uint8_t src1Red = *(srcPixel + 0), src1Green = *(srcPixel + 1), src1Blue = *(srcPixel + 2), src1Alpha = *(srcPixel + 3);
-						uint8_t src2Red = *(destPixel + 0), src2Green = *(destPixel + 1), src2Blue = *(destPixel + 2), src2Alpha = *(destPixel + 3);
-
-						uint16_t outRed = ((uint16_t)src1Red * src1Alpha + (uint16_t)src2Red * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-						uint16_t outGreen = ((uint16_t)src1Green * src1Alpha + (uint16_t)src2Green * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-						uint16_t outBlue = ((uint16_t)src1Blue * src1Alpha + (uint16_t)src2Blue * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-						uint16_t outAlpha = src1Alpha + (uint16_t)src2Alpha * (255 - src1Alpha) / 255;
-
-						// Simple macro checks if u16Value is in bound (0 - 255) else clamps it to 0 or 255
-						#define __SET_PIXEL_CLAMPED(u16Value, var) \
-							if (u16Value > -1 && u16Value < 256) var = u16Value; \
-							else u16Value > 255 ? var = 255 : var = 0;
-
-						__SET_PIXEL_CLAMPED(outRed,   *(destPixel + 0));
-						__SET_PIXEL_CLAMPED(outGreen, *(destPixel + 1));
-						__SET_PIXEL_CLAMPED(outBlue,  *(destPixel + 2));
-						__SET_PIXEL_CLAMPED(outAlpha, *(destPixel + 3));
-					}
-				}
-			}
-		}
-	}
-
-	ifio_write(filePath, canvas_data, CanvasDims[0], CanvasDims[1]);
-	free(canvas_data);
 }
 
