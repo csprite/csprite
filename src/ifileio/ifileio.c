@@ -12,16 +12,16 @@ static uint8_t clamp_u16_to_u8(uint16_t val) {
 	return 0;
 }
 
-static uint8_t* BlendPixels_Alpha(int32_t w, int32_t h, int32_t numOfLayers, CanvasLayer_T** layers) {
+static uint8_t* BlendPixels_Alpha(int32_t w, int32_t h, CanvasLayerArr_T* arr) {
 	uint8_t* canvas_data = (uint8_t*) malloc(w * h * 4 * sizeof(uint8_t));
 	memset(canvas_data, 0, w * h * 4 * sizeof(uint8_t));
 
-	for (uint32_t i = 0; i < numOfLayers; ++i) {
-		if (layers[i] != NULL) {
+	for (uint32_t i = 0; i < arr->size; ++i) {
+		if (arr->layers[i] != NULL) {
 			for (int32_t y = 0; y < h; ++y) {
 				for (int32_t x = 0; x < w; ++x) {
 					// Simple Alpha-Blending Being Done Here.
-					uint8_t* srcPixel = GetCharData(layers[i]->pixels, x, y, w, h);
+					uint8_t* srcPixel = GetCharData(arr->layers[i]->pixels, x, y, w, h);
 					uint8_t* destPixel = GetCharData(canvas_data, x, y, w, h);
 					if (srcPixel != NULL && destPixel != NULL) {
 						uint8_t src1Red = *(srcPixel + 0), src1Green = *(srcPixel + 1), src1Blue = *(srcPixel + 2), src1Alpha = *(srcPixel + 3);
@@ -44,12 +44,12 @@ static uint8_t* BlendPixels_Alpha(int32_t w, int32_t h, int32_t numOfLayers, Can
 	return canvas_data;
 }
 
-int ifio_write(const char* filePath, int32_t w, int32_t h, int32_t numOfLayers, CanvasLayer_T** layers) {
-	if (filePath == NULL || layers == NULL || numOfLayers < 1 || w < 1 || h < 1) return -1;
+int ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T* arr) {
+	if (filePath == NULL || arr == NULL || w < 1 || h < 1) return -1;
 
 	uint8_t* _BlendedPixels = NULL;
 	if (HAS_SUFFIX_CI(filePath, ".png", 4)) {
-		_BlendedPixels = BlendPixels_Alpha(w, h, numOfLayers, layers);
+		_BlendedPixels = BlendPixels_Alpha(w, h, arr);
 		if (_BlendedPixels == NULL) {
 			Logger_Error("Alpha Blending Failed, BlendPixels_Alpha(...) returned NULL");
 			return -1;
@@ -59,7 +59,7 @@ int ifio_write(const char* filePath, int32_t w, int32_t h, int32_t numOfLayers, 
 			_BlendedPixels = NULL;
 		}
 	} else if (HAS_SUFFIX_CI(filePath, ".jpeg", 5) || HAS_SUFFIX_CI(filePath, ".jpg", 4)) {
-		_BlendedPixels = BlendPixels_Alpha(w, h, numOfLayers, layers);
+		_BlendedPixels = BlendPixels_Alpha(w, h, arr);
 		if (_BlendedPixels == NULL) {
 			Logger_Error("Alpha Blending Failed, BlendPixels_Alpha(...) returned NULL");
 			return -1;

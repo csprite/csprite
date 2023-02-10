@@ -56,11 +56,9 @@ bool ShowSaveAsFileWindow = false;
 char FilePath[SYS_PATHNAME_MAX] = "untitled.png";
 char FileName[SYS_FILENAME_MAX] = "untitled.png";
 
-#define MAX_CANVAS_LAYERS 100
 int32_t SelectedLayerIndex = 0;
-CanvasLayer_T* CanvasLayers[MAX_CANVAS_LAYERS] = { NULL };
-#define CURR_CANVAS_LAYER CanvasLayers[SelectedLayerIndex]
-
+CanvasLayerArr_T* CanvasLayers = NULL;
+#define CURR_CANVAS_LAYER CanvasLayers->layers[SelectedLayerIndex]
 enum tool_e { BRUSH_COLOR, BRUSH_ERASER, SHAPE_LINE, SHAPE_RECT, SHAPE_CIRCLE, TOOL_INKDROPPER, TOOL_FLOODFILL, TOOL_PAN };
 enum tool_shape_e { CIRCLE, SQUARE };
 enum tool_e Tool = BRUSH_COLOR;
@@ -195,8 +193,12 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
+	CanvasLayers = Canvas_CreateArr(100);
+	if (CanvasLayers == NULL) return EXIT_FAILURE;
+
 	CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 	if (CURR_CANVAS_LAYER == NULL) return EXIT_FAILURE;
+	CanvasLayers->size++;
 
 	if (argc > 1) {
 		const char* filePath = (const char*)argv[1];
@@ -258,7 +260,7 @@ int main(int argc, char* argv[]) {
 				}
 				if (ImGui::BeginMenu("Save")) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						ifio_write(FilePath, CanvasDims[0], CanvasDims[1], MAX_CANVAS_LAYERS, CanvasLayers);
+						ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
 					}
 					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
 						ShowSaveAsFileWindow = true;
@@ -365,7 +367,7 @@ int main(int argc, char* argv[]) {
 			char* _fName = Sys_GetBasename(_fPath);
 			snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
 			UPDATE_WINDOW_TITLE();
-			ifio_write(FilePath, CanvasDims[0], CanvasDims[1], MAX_CANVAS_LAYERS, CanvasLayers);
+			ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
 			free(_fName);
 			_fName = NULL;
 			_fPath = NULL;
@@ -438,10 +440,10 @@ int main(int argc, char* argv[]) {
 #if(CS_BUILD_STABLE == 0)
 			ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			if (ImGui::Button("Clear Undo/Redo Buffers")) {
-				for (int i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-					if (CanvasLayers[i] != NULL) {
-						FreeHistory(&CanvasLayers[i]->history);
-						SaveHistory(&CanvasLayers[i]->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CanvasLayers[i]->pixels);
+				for (int i = 0; i < CanvasLayers->size; ++i) {
+					if (CanvasLayers->layers[i] != NULL) {
+						FreeHistory(&CanvasLayers->layers[i]->history);
+						SaveHistory(&CanvasLayers->layers[i]->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CanvasLayers->layers[i]->pixels);
 					}
 				}
 			}
@@ -501,35 +503,37 @@ int main(int argc, char* argv[]) {
 			ImGui::SetWindowSize(WinSize, ImGuiCond_FirstUseEver);
 
 			if (ImGui::Button("+")) {
-				if (SelectedLayerIndex + 1 != MAX_CANVAS_LAYERS) {
-					if (CURR_CANVAS_LAYER == NULL) {
+				if (SelectedLayerIndex + 1 >= CanvasLayers->capacity) {
+					int32_t newSize = CanvasLayers->capacity + 50;
+					Canvas_ResizeArr(CanvasLayers, newSize);
+					if (CanvasLayers->capacity == newSize) {
+						SelectedLayerIndex++;
 						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
+						CanvasLayers->size++;
+						Logger_Info("Resized canvas layers array to %d", newSize);
 					} else {
-						if (SelectedLayerIndex + 1 < MAX_CANVAS_LAYERS) {
-IncrementAndCreateLayer__:
-							SelectedLayerIndex++;
-							if (SelectedLayerIndex + 1 != MAX_CANVAS_LAYERS) {
-								if (CURR_CANVAS_LAYER != NULL) goto IncrementAndCreateLayer__;
-							}
-							CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
-						}
+						Logger_Error("Unable to resize canvas layers array!");
 					}
+				} else {
+					SelectedLayerIndex++;
+					CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
+					CanvasLayers->size++;
 				}
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("-")) {
 				if (CURR_CANVAS_LAYER != NULL) {
 					Canvas_DestroyLayer(CURR_CANVAS_LAYER);
+					CanvasLayers->size--;
 					CURR_CANVAS_LAYER = NULL;
-					if (SelectedLayerIndex >= 1) SelectedLayerIndex--;
-					else SelectedLayerIndex++;
+					if (SelectedLayerIndex > 0) SelectedLayerIndex--;
 				}
 			}
 
 			int move_from = -1, move_to = -1;
-			for (int32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-				if (CanvasLayers[i] != NULL) {
-					if (ImGui::Selectable(CanvasLayers[i]->name, SelectedLayerIndex == i, ImGuiSelectableFlags_AllowDoubleClick)) {
+			for (int32_t i = 0; i < CanvasLayers->size; ++i) {
+				if (CanvasLayers->layers[i] != NULL) {
+					if (ImGui::Selectable(CanvasLayers->layers[i]->name, SelectedLayerIndex == i, ImGuiSelectableFlags_AllowDoubleClick)) {
 						if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
 							ShowLayerRenameWindow = true;
 						} else {
@@ -538,7 +542,7 @@ IncrementAndCreateLayer__:
 					}
 
 					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover | ImGuiDragDropFlags_SourceNoHoldToOpenOthers)) {
-						ImGui::Text("Moving \"%s\"", CanvasLayers[i]->name); // tooltip text
+						ImGui::Text("Moving \"%s\"", CanvasLayers->layers[i]->name); // tooltip text
 						ImGui::SetDragDropPayload("LayersDNDId", &i, sizeof(int));
 						ImGui::EndDragDropSource();
 					}
@@ -558,9 +562,9 @@ IncrementAndCreateLayer__:
 				// Reorder items
 				int copy_dst = (move_from < move_to) ? move_from : move_to + 1;
 				int copy_src = (move_from < move_to) ? move_from + 1 : move_to;
-				CanvasLayer_T* tmp = CanvasLayers[move_from];
-				CanvasLayers[copy_dst] = CanvasLayers[copy_src];
-				CanvasLayers[move_to] = tmp;
+				CanvasLayer_T* tmp = CanvasLayers->layers[move_from];
+				CanvasLayers->layers[copy_dst] = CanvasLayers->layers[copy_src];
+				CanvasLayers->layers[move_to] = tmp;
 				ImGui::SetDragDropPayload("LayersDNDId", &move_to, sizeof(int));
 			}
 
@@ -569,21 +573,18 @@ IncrementAndCreateLayer__:
 
 		if (ShowNewCanvasWindow) {
 			if (ImGui::BeginPopupModal("Create New###NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
-				static int32_t NewDims[2] = { 32, 24 };
+				static int32_t NewDims[2] = { 64, 64 };
 				ImGui::InputInt("Width", &NewDims[0], 1, 5);
 				ImGui::InputInt("Height", &NewDims[1], 1, 5);
 
 				if (ImGui::Button("Create")) {
 					if (NewDims[0] > 0 && NewDims[1] > 0) {
-						for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-							if (CanvasLayers[i] != NULL) {
-								Canvas_DestroyLayer(CanvasLayers[i]);
-								CanvasLayers[i] = NULL;
-							}
-						}
+						Canvas_DestroyArr(CanvasLayers);
+						CanvasLayers = Canvas_CreateArr(100);
 						SelectedLayerIndex = 0;
 						Canvas_Resize(NewDims[0], NewDims[1], R_GetRenderer());
 						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
+						CanvasLayers->size++;
 						CanvasDims[0] = NewDims[0];
 						CanvasDims[1] = NewDims[1];
 						CurrViewportZoom = 1.0f;
@@ -594,8 +595,8 @@ IncrementAndCreateLayer__:
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
-					NewDims[0] = 32;
-					NewDims[1] = 24;
+					NewDims[0] = 64;
+					NewDims[1] = 64;
 					ShowNewCanvasWindow = false;
 				}
 				ImGui::EndPopup();
@@ -674,11 +675,11 @@ IncrementAndCreateLayer__:
 
 		Logger_Draw("Logs");
 
-		if (CURR_CANVAS_LAYER != NULL) {
+		if (CanvasLayers->size > 0) {
 			Canvas_NewFrame(renderer);
-			for (int32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-				if (CanvasLayers[i] != NULL) {
-					Canvas_Layer(CanvasLayers[i], SelectedLayerIndex == i, renderer);
+			for (int32_t i = 0; i < CanvasLayers->size; ++i) {
+				if (CanvasLayers->layers[i] != NULL) {
+					Canvas_Layer(CanvasLayers->layers[i], SelectedLayerIndex == i, renderer);
 				}
 			}
 			Canvas_FrameEnd(renderer, &ViewportLoc);
@@ -702,13 +703,7 @@ IncrementAndCreateLayer__:
 		}
 	}
 
-	for (int i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-		if (CanvasLayers[i] != NULL) {
-			Canvas_DestroyLayer(CanvasLayers[i]);
-			CanvasLayers[i] = NULL;
-		}
-	}
-
+	Canvas_DestroyArr(CanvasLayers);
 	Canvas_Destroy();
 	R_Destroy();
 	SDL_DestroyWindow(window);
@@ -717,6 +712,7 @@ IncrementAndCreateLayer__:
 
 	window = NULL;
 	PaletteArr = NULL;
+	CanvasLayers = NULL;
 	return EXIT_SUCCESS;
 }
 
@@ -893,7 +889,7 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 				if (IsShiftDown) {
 					ShowSaveAsFileWindow = true;
 				} else {
-					ifio_write(FilePath, CanvasDims[0], CanvasDims[1], MAX_CANVAS_LAYERS, CanvasLayers);
+					ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
 				}
 			}
 			break;
@@ -1127,12 +1123,9 @@ static int OpenNewFile(const char* _fName) {
 	int32_t w = 0, h = 0;
 	uint8_t* _data = ifio_read(_fName, &w, &h);
 	if (w > 0 && h > 0 && _data != NULL) {
-		for (uint32_t i = 0; i < MAX_CANVAS_LAYERS; ++i) {
-			if (CanvasLayers[i] != NULL) {
-				Canvas_DestroyLayer(CanvasLayers[i]);
-				CanvasLayers[i] = NULL;
-			}
-		}
+		Canvas_DestroyArr(CanvasLayers);
+		CanvasLayers = Canvas_CreateArr(100);
+
 		if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
 			Canvas_Resize(w, h, R_GetRenderer());
 			CanvasDims[0] = w;
@@ -1144,6 +1137,7 @@ static int OpenNewFile(const char* _fName) {
 
 		SelectedLayerIndex = 0;
 		CURR_CANVAS_LAYER = Canvas_CreateLayer(R_GetRenderer());
+		CanvasLayers->size++;
 		memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
 		memcpy(CURR_CANVAS_LAYER->history->pixels, _data, w * h * 4 * sizeof(uint8_t));
 		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
