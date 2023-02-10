@@ -1121,32 +1121,18 @@ static int OpenNewFile(const char* _fName) {
 	}
 
 	int32_t w = 0, h = 0;
-	uint8_t* _data = ifio_read(_fName, &w, &h);
-	if (w > 0 && h > 0 && _data != NULL) {
-		Canvas_DestroyArr(CanvasLayers);
-		CanvasLayers = Canvas_CreateArr(100);
-
-		if (w != CanvasDims[0] || h != CanvasDims[1]) { // If The Image We Are Opening Doesn't Has Same Resolution As Our Current Image Then Resize The Canvas
-			Canvas_Resize(w, h, R_GetRenderer());
-			CanvasDims[0] = w;
-			CanvasDims[1] = h;
-			CurrViewportZoom = 1.0f;
-			UpdateViewportSize();
-			UpdateViewportPos();
-		}
-
+	if (ifio_read(_fName, &w, &h, &CanvasLayers) == 0 && w > 0 && h > 0) {
+		CanvasDims[0] = w;
+		CanvasDims[1] = h;
+		CurrViewportZoom = 1.0f;
 		SelectedLayerIndex = 0;
-		CURR_CANVAS_LAYER = Canvas_CreateLayer(R_GetRenderer());
-		CanvasLayers->size++;
-		memcpy(CURR_CANVAS_LAYER->pixels, _data, w * h * 4 * sizeof(uint8_t));
-		memcpy(CURR_CANVAS_LAYER->history->pixels, _data, w * h * 4 * sizeof(uint8_t));
-		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
+		UpdateViewportSize();
+		UpdateViewportPos();
 
 		snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fName);
 		char* filePathBasename = Sys_GetBasename(_fName);
 		snprintf(FileName, SYS_FILENAME_MAX, "%s", filePathBasename);
 		free(filePathBasename);
-		free(_data);
 		UPDATE_WINDOW_TITLE();
 	}
 	return 0;
