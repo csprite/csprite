@@ -53,6 +53,9 @@ jobs:
     - name: Build & Install SDL2
       run: bash ./tools/BuildNInstall_Linux.sh
 
+    - name: Build & Install LuaJIT 2.0.5 (ABI 5.1)
+      run: bash ./tools/BuildNInstall_LuaJIT.sh
+
     - name: Install LibFuse2 & AppImage-Builder
       run: |
         echo "::group::Update System Repositories & Install libfuse2"
@@ -118,6 +121,9 @@ jobs:
           echo "::group::Build & Install SDL2"
           bash ./tools/BuildNInstall_Linux.sh
           echo "::endgroup::"
+          echo "::group::Build & Install LuaJIT 2.0.5 (ABI 5.1)"
+          bash ./tools/BuildNInstall_LuaJIT.sh
+          echo "::endgroup::"
           echo "::group::Build Csprite"
           make all -j4 BUILD_TARGET=release CC=clang CXX=clang++
           echo "::endgroup::"
@@ -166,6 +172,9 @@ jobs:
       - name: Build & Install SDL2
         run: bash ./tools/BuildNInstall_Windows.sh clang64
 
+      - name: Build & Install LuaJIT 2.0.5 (ABI 5.1)
+        run: bash ./tools/BuildNInstall_LuaJIT.sh
+
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
           make gen-rc Arch=x86_64
@@ -208,6 +217,9 @@ jobs:
       - name: Build & Install SDL2
         run: bash ./tools/BuildNInstall_Windows.sh clang32
 
+      - name: Build & Install LuaJIT 2.0.5 (ABI 5.1)
+        run: bash ./tools/BuildNInstall_LuaJIT.sh
+
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
           make gen-rc Arch=i686
@@ -231,6 +243,9 @@ jobs:
     - name: Install dylibbundler & SDL2
       run: |
         brew install dylibbundler sdl2
+
+    - name: Build & Install LuaJIT 2.0.5 (ABI 5.1)
+      run: bash ./tools/BuildNInstall_LuaJIT.sh
 
     - uses: actions/download-artifact@v2
       with:
