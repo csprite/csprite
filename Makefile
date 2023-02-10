@@ -12,7 +12,7 @@ STD:=c99
 CXX_STD:=c++11
 CCFLAGS:=-Iinclude/ -Ilibs/imgui/ -Ilibs/FileBrowser/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 CFLAGS:=
-LFLAGS:=-Wl,-Bstatic -lluajit-5.1 -Wl,-Bdynamic
+LFLAGS:=
 
 PYTHON:=python3
 SDL2_STATIC_LINK:=1
@@ -50,7 +50,7 @@ ifeq ($(OS),Windows_NT)
 	else
 		SDL2_LFLAGS+=-lSDL2main -lSDL2
 	endif
-	LFLAGS+=-lopengl32
+	LFLAGS+=-lopengl32 -Wl,-Bstatic -lluajit-5.1 -Wl,-Bdynamic
 	SDL2_LFLAGS+=$(addprefix -l,winmm gdi32 imm32 ole32 oleaut32 shell32 version uuid setupapi)
 	ifeq ($(call lc,$(BUILD_TARGET)),debug)
 		LFLAGS+=-mconsole
@@ -79,8 +79,10 @@ else
 				LFLAGS+=-fsanitize=address -fsanitize=undefined -lasan -lubsan
 			endif
 		endif
+		LFLAGS+=-Wl,-Bstatic -lluajit-5.1 -Wl,-Bdynamic
 	endif
 	ifeq ($(UNAME_S),Darwin)
+		_libs+=luajit-5.1
 		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
 		SDL2_LFLAGS:=-lSDL2
 	endif
