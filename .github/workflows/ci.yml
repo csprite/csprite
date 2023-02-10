@@ -57,8 +57,8 @@ jobs:
       run: |
         echo "::group::Update System Repositories & Install libfuse2"
         sudo apt-get update
-        echo "::endgroup::"
         sudo apt-get install libfuse2
+        echo "::endgroup::"
         echo "::group::Install AppImage-Builder"
         wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.0.0-beta.1/appimage-builder-1.0.0-677acbd-x86_64.AppImage
         chmod +x appimage-builder-x86_64.AppImage
