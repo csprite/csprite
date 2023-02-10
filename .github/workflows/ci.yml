@@ -234,12 +234,9 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install dylibbundler & SDL2
+    - name: Install dylibbundler, SDL2 & LuaJIT
       run: |
-        brew install dylibbundler sdl2
-
-    - name: Build & Install LuaJIT 2.0.5 (ABI 5.1)
-      run: bash ./tools/BuildNInstall_LuaJIT.sh
+        brew install dylibbundler sdl2 luajit
 
     - uses: actions/download-artifact@v2
       with:
