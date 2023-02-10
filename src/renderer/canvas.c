@@ -147,4 +147,61 @@ void Canvas_DestroyLayer(CanvasLayer_T* c) {
 	free(c);
 }
 
+CanvasLayerArr_T* Canvas_CreateArr(int32_t capacity) {
+	if (capacity <= 0) return NULL;
+	CanvasLayerArr_T* arr = malloc(sizeof(CanvasLayerArr_T));
+	if (arr == NULL) return NULL;
+
+	arr->size = 0;
+	arr->capacity = capacity;
+	arr->layers = malloc(sizeof(CanvasLayer_T*) * capacity);
+	if (arr->layers == NULL) {
+		free(arr);
+		return NULL;
+	}
+	memset(arr->layers, 0, sizeof(CanvasLayer_T*) * capacity);
+
+	return arr;
+}
+
+void Canvas_ResizeArr(CanvasLayerArr_T* arr, int32_t newCapacity) {
+	if (arr == NULL || arr->capacity == newCapacity || newCapacity == 0) return;
+	if (arr->layers == NULL) {
+		arr->capacity = newCapacity;
+		arr->layers = malloc(sizeof(CanvasLayer_T*) * newCapacity);
+		memset(arr->layers, 0, sizeof(CanvasLayer_T*) * newCapacity);
+	} else if (newCapacity > arr->capacity) {
+		CanvasLayer_T** layers = malloc(sizeof(CanvasLayer_T*) * newCapacity);
+		memset(layers, 0, sizeof(CanvasLayer_T*) * newCapacity);
+		memcpy(layers, arr->layers, arr->capacity * sizeof(CanvasLayer_T*));
+		free(arr->layers);
+		arr->layers = layers;
+		arr->capacity = newCapacity;
+	} else if (arr->capacity > newCapacity) {
+		CanvasLayer_T** layers = malloc(sizeof(CanvasLayer_T*) * newCapacity);
+		memset(layers, 0, sizeof(CanvasLayer_T*) * newCapacity);
+		memcpy(layers, arr->layers, newCapacity * sizeof(CanvasLayer_T*));
+
+		for (int32_t i = newCapacity - 1; i < arr->capacity; ++i) {
+			if (arr->layers[i] != NULL) Canvas_DestroyLayer(arr->layers[i]);
+		}
+		free(arr->layers);
+		arr->layers = layers;
+		arr->capacity = newCapacity;
+	}
+}
+
+void Canvas_DestroyArr(CanvasLayerArr_T* arr) {
+	if (arr == NULL) return;
+	if (arr->layers != NULL) {
+		for (int32_t i = 0; i < arr->capacity; ++i) {
+			if (arr->layers[i] != NULL) {
+				Canvas_DestroyLayer(arr->layers[i]);
+				arr->layers[i] = NULL;
+			}
+		}
+		free(arr->layers);
+	}
+	free(arr);
+}
 
