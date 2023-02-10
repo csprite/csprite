@@ -1,6 +1,7 @@
 #include "ifileio.h"
-#include "../logger.h"
 #include "../utils.h"
+#include "../logger.h"
+#include "../renderer/renderer.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -44,7 +45,7 @@ static uint8_t* BlendPixels_Alpha(int32_t w, int32_t h, CanvasLayerArr_T* arr) {
 	return canvas_data;
 }
 
-int ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T* arr) {
+int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T* arr) {
 	if (filePath == NULL || arr == NULL || w < 1 || h < 1) return -1;
 
 	uint8_t* _BlendedPixels = NULL;
@@ -76,20 +77,30 @@ int ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T* arr
 	return 0;
 }
 
-uint8_t* ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr) {
-	if (filePath == NULL || w_ptr == NULL || h_ptr == NULL) return NULL;
+int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLayerArr_T** arr) {
+	if (filePath == NULL || arr == NULL || *arr == NULL || w_ptr == NULL || h_ptr == NULL) return -1;
 
 	if (HAS_SUFFIX_CI(filePath, ".png", 4) || HAS_SUFFIX_CI(filePath, ".jpeg", 5) || HAS_SUFFIX_CI(filePath, ".jpg", 4)) {
-		int w = 0, h = 0, channels = 0;
+		int32_t w = 0, h = 0, channels = 0;
 		uint8_t* _data = stbi_load(filePath, &w, &h, &channels, 4);
 		if (w > 0 && h > 0 && _data) {
 			*w_ptr = (uint32_t)w;
 			*h_ptr = (uint32_t)h;
-			return _data;
+			Canvas_DestroyArr(*arr);
+			Canvas_Resize(w, h, R_GetRenderer());
+			CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer());
+			*arr = Canvas_CreateArr(100);
+			(*arr)->size++;
+			(*arr)->layers[0] = layer;
+
+			memcpy(layer->pixels, _data, w * h * 4 * sizeof(uint8_t));
+			memcpy(layer->history->pixels, _data, w * h * 4 * sizeof(uint8_t));
+			SaveHistory(&layer->history, w * h * 4 * sizeof(uint8_t), layer->pixels);
+			return 0;
 		}
 	} else {
 		Logger_Error("Error Un-supported file format: %s\n", filePath);
 	}
-
-	return NULL;
+	return -1;
 }
+
