@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 // Full Support For Reading & Writing PNGs & JPEGs/JPGs
-int ifio_write(const char* filePath, int32_t w, int32_t h, int32_t numOfLayers, CanvasLayer_T** layers);
+int ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T* arr);
 uint8_t* ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr);
 
 #ifdef __cplusplus
