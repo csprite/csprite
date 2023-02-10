@@ -157,7 +157,7 @@ jobs:
         with:
           msystem: CLANG64
           update: false
-          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-python make git
+          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-luajit make git
 
       - uses: actions/download-artifact@v2
         with:
@@ -171,9 +171,6 @@ jobs:
 
       - name: Build & Install SDL2
         run: bash ./tools/BuildNInstall_Windows.sh clang64
-
-      - name: Build & Install LuaJIT 2.0.5 (ABI 5.1)
-        run: bash ./tools/BuildNInstall_LuaJIT.sh
 
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
@@ -202,7 +199,7 @@ jobs:
         with:
           msystem: CLANG32
           update: false
-          install: mingw-w64-clang-i686-binutils mingw-w64-clang-i686-clang mingw-w64-clang-i686-cmake mingw-w64-clang-i686-python make git
+          install: mingw-w64-clang-i686-binutils mingw-w64-clang-i686-clang mingw-w64-clang-i686-cmake mingw-w64-clang-i686-python mingw-w64-clang-i686-luajit make git
 
       - uses: actions/download-artifact@v2
         with:
@@ -216,9 +213,6 @@ jobs:
 
       - name: Build & Install SDL2
         run: bash ./tools/BuildNInstall_Windows.sh clang32
-
-      - name: Build & Install LuaJIT 2.0.5 (ABI 5.1)
-        run: bash ./tools/BuildNInstall_LuaJIT.sh
 
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
