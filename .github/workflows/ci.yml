@@ -249,7 +249,7 @@ jobs:
         path: ./data/
 
     - name: Build
-      run: make all -j4 BUILD_TARGET=release
+      run: make all -j4 BUILD_TARGET=release CC=gcc CXX=g++
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
