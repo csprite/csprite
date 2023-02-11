@@ -50,7 +50,7 @@ ifeq ($(OS),Windows_NT)
 	else
 		SDL2_LFLAGS+=-lSDL2main -lSDL2
 	endif
-	LFLAGS+=-lopengl32 -Wl,-Bstatic -lluajit-5.1 -Wl,-Bdynamic
+	LFLAGS+=-lopengl32 -Wl,-Bstatic -Wl,-E -lluajit-5.1 -Wl,-Bdynamic
 	SDL2_LFLAGS+=$(addprefix -l,winmm gdi32 imm32 ole32 oleaut32 shell32 version uuid setupapi)
 	ifeq ($(call lc,$(BUILD_TARGET)),debug)
 		LFLAGS+=-mconsole
@@ -79,11 +79,10 @@ else
 				LFLAGS+=-fsanitize=address -fsanitize=undefined -lasan -lubsan
 			endif
 		endif
-		LFLAGS+=-Wl,-Bstatic -lluajit-5.1 -Wl,-Bdynamic
+		LFLAGS+=-Wl,-Bstatic -Wl,-E -lluajit-5.1 -Wl,-Bdynamic
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		_libs+=luajit-5.1
-		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
+		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -Wl,-E -lluajit-5.1
 		SDL2_LFLAGS:=-lSDL2
 	endif
 

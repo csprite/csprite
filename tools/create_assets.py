@@ -34,6 +34,7 @@ if CWD != PROJECT_ROOT:
 
 TYPES = {
 	"csv":   { "text": True,  "Disabled": False },
+	"lua":   { "text": True,  "Disabled": False },
 	"ini":   { "text": True,  "Disabled": False },
 	"glsl":  { "text": True,  "Disabled": False },
 	"png":   { "text": False, "Disabled": False },
@@ -56,7 +57,8 @@ for argument in sys.argv:
 GROUPS = [
 	'fonts', 'icons',
 	'palettes', 'shaders',
-	'cursors', 'themes'
+	'cursors', 'themes',
+	'scripts'
 ]
 
 TEMPLATE = '{{\n\t.path = "{path}",\n\t.size = {size},\n\t.data = {data}\n}},\n\n'

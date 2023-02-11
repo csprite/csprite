@@ -32,6 +32,7 @@
 #include "renderer/canvas.h"
 #include "renderer/renderer.h"
 #include "ifileio/ifileio.h"
+#include "api/api.h"
 
 int32_t WindowDims[2] = { 700, 500 };
 int32_t CanvasDims[2] = { 64, 64 };
@@ -142,12 +143,50 @@ static uint8_t* GetPixel(int x, int y);
 		SDL_SetWindowTitle(window, WindowTitle);\
 	} while(0)
 
+#include "api/cimgui.h"
+
 int main(int argc, char* argv[]) {
 	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
 
 	AppConfig = LoadConfig();
 	PaletteArr = PaletteLoadAll();
+
+	lua_State* L;
+	L = luaL_newstate();
+	luaL_openlibs(L);
+
+	const char* cdefsLua = (const char*)Assets_Get("data/scripts/cdefs.lua", NULL);
+	if (cdefsLua == NULL) {
+		Logger_Error("Cannot fetch contents of main.lua");
+		return EXIT_FAILURE;
+	}
+	if (luaL_loadstring(L, cdefsLua)) {
+		Logger_Error("Internal error when starting the application");
+		return EXIT_FAILURE;
+	}
+	lua_pcall(L, 0, 1, 0);
+	if (lua_toboolean(L, -1)) {
+		lua_close(L);
+		Logger_Error("Internal error when starting the application");
+		return EXIT_FAILURE;
+	}
+
+	const char* mainLua = (const char*)Assets_Get("data/scripts/main.lua", NULL);
+	if (mainLua == NULL) {
+		Logger_Error("Cannot fetch contents of main.lua");
+		return EXIT_FAILURE;
+	}
+	if (luaL_loadstring(L, mainLua)) {
+		Logger_Error("Internal error when starting the application");
+		return EXIT_FAILURE;
+	}
+	lua_pcall(L, 0, 1, 0);
+	if (lua_toboolean(L, -1)) {
+		lua_close(L);
+		Logger_Error("Internal error when starting the application");
+		return EXIT_FAILURE;
+	}
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
 		Logger_Error("failed to initialize SDL2: %s", SDL_GetError());
@@ -250,97 +289,100 @@ int main(int argc, char* argv[]) {
 		R_Clear(); // Clear The Screen, This Is Required To Done Before The Canvas Is Drawn Because Rendered Canvas Is Directly Copied Onto Screen & Clearing The screen After Copying It Will Not Show The Canvas
 		R_NewFrame(); // All The Calls To ImGui Will Be Recorded After This Function
 
-		if (ImGui::BeginMainMenuBar()) {
-			if (ImGui::BeginMenu("File")) {
-				if (ImGui::MenuItem("New")) {
-					ShowNewCanvasWindow = true;
-				}
-				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					ShowOpenNewFileWindow = true;
-				}
-				if (ImGui::BeginMenu("Save")) {
-					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
-					}
-					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
-						ShowSaveAsFileWindow = true;
-					}
-					ImGui::EndMenu();
-				}
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Edit")) {
-				if (ImGui::MenuItem("Undo", "Ctrl+Z", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->prev != NULL))) {
-					UNDO();
-				}
-				if (ImGui::MenuItem("Redo", "Ctrl+Y", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->next != NULL))) {
-					REDO();
-				}
-				if (ImGui::BeginMenu("Palette")) {
-					for (int32_t i = 0; i < PaletteArr->numOfEntries; ++i) {
-						int32_t _palidx = PaletteIndex;
+		lua_getglobal(L, "_OnImGui_Render");
+		lua_call(L, 0, 0);
 
-						if (ImGui::MenuItem(PaletteArr->Palettes[i]->name, NULL)) {
-							PaletteIndex = i;
-						}
-						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-							ImGui::SetTooltip("%s", PaletteArr->Palettes[i]->author);
-						}
-						if (_palidx == i) {
-							ImGui::SameLine();
-							ImGui::Text("<");
-						}
-					}
-					ImGui::EndMenu();
-				}
+		// if (ImGui::BeginMainMenuBar()) {
+		// 	if (ImGui::BeginMenu("File")) {
+		// 		if (ImGui::MenuItem("New")) {
+		// 			ShowNewCanvasWindow = true;
+		// 		}
+		// 		if (ImGui::MenuItem("Open", "Ctrl+O")) {
+		// 			ShowOpenNewFileWindow = true;
+		// 		}
+		// 		if (ImGui::BeginMenu("Save")) {
+		// 			if (ImGui::MenuItem("Save", "Ctrl+S")) {
+		// 				ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
+		// 			}
+		// 			if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
+		// 				ShowSaveAsFileWindow = true;
+		// 			}
+		// 			ImGui::EndMenu();
+		// 		}
+		// 		ImGui::EndMenu();
+		// 	}
+		// 	if (ImGui::BeginMenu("Edit")) {
+		// 		if (ImGui::MenuItem("Undo", "Ctrl+Z", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->prev != NULL))) {
+		// 			UNDO();
+		// 		}
+		// 		if (ImGui::MenuItem("Redo", "Ctrl+Y", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->next != NULL))) {
+		// 			REDO();
+		// 		}
+		// 		if (ImGui::BeginMenu("Palette")) {
+		// 			for (int32_t i = 0; i < PaletteArr->numOfEntries; ++i) {
+		// 				int32_t _palidx = PaletteIndex;
 
-				if (ImGui::BeginMenu("Theme")) {
-					for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
-						int32_t _themeidx = ThemeIndex;
+		// 				if (ImGui::MenuItem(PaletteArr->Palettes[i]->name, NULL)) {
+		// 					PaletteIndex = i;
+		// 				}
+		// 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+		// 					ImGui::SetTooltip("%s", PaletteArr->Palettes[i]->author);
+		// 				}
+		// 				if (_palidx == i) {
+		// 					ImGui::SameLine();
+		// 					ImGui::Text("<");
+		// 				}
+		// 			}
+		// 			ImGui::EndMenu();
+		// 		}
 
-						if (ImGui::MenuItem(ThemeArr->entries[i]->name, NULL)) {
-							ThemeIndex = i;
-							_GuiSetColors(style);
-						}
-						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-							ImGui::SetTooltip("%s", ThemeArr->entries[i]->author);
-						}
+		// 		if (ImGui::BeginMenu("Theme")) {
+		// 			for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
+		// 				int32_t _themeidx = ThemeIndex;
 
-						if (_themeidx == i) {
-							ImGui::SameLine();
-							ImGui::Text("<");
-						}
-					}
-					ImGui::EndMenu();
-				}
+		// 				if (ImGui::MenuItem(ThemeArr->entries[i]->name, NULL)) {
+		// 					ThemeIndex = i;
+		// 					_GuiSetColors(style);
+		// 				}
+		// 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+		// 					ImGui::SetTooltip("%s", ThemeArr->entries[i]->author);
+		// 				}
 
-				if (ImGui::MenuItem("Preferences")) {
-					ShowPreferencesWindow = true;
-				}
+		// 				if (_themeidx == i) {
+		// 					ImGui::SameLine();
+		// 					ImGui::Text("<");
+		// 				}
+		// 			}
+		// 			ImGui::EndMenu();
+		// 		}
 
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("View")) {
-				if (ImGui::MenuItem("Logs")) {
-					if (Logger_IsHidden()) Logger_Show();
-					else Logger_Hide();
-				}
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Help")) {
-				if (ImGui::MenuItem("Wiki")) {
-					Sys_OpenURL("https://csprite.github.io/wiki/");
-				}
-				if (ImGui::MenuItem("About")) {
-					Sys_OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
-				}
-				if (ImGui::MenuItem("GitHub")) {
-					Sys_OpenURL("https://github.com/pegvin/csprite");
-				}
-				ImGui::EndMenu();
-			}
-			ImGui::EndMainMenuBar();
-		}
+		// 		if (ImGui::MenuItem("Preferences")) {
+		// 			ShowPreferencesWindow = true;
+		// 		}
+
+		// 		ImGui::EndMenu();
+		// 	}
+		// 	if (ImGui::BeginMenu("View")) {
+		// 		if (ImGui::MenuItem("Logs")) {
+		// 			if (Logger_IsHidden()) Logger_Show();
+		// 			else Logger_Hide();
+		// 		}
+		// 		ImGui::EndMenu();
+		// 	}
+		// 	if (ImGui::BeginMenu("Help")) {
+		// 		if (ImGui::MenuItem("Wiki")) {
+		// 			Sys_OpenURL("https://csprite.github.io/wiki/");
+		// 		}
+		// 		if (ImGui::MenuItem("About")) {
+		// 			Sys_OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
+		// 		}
+		// 		if (ImGui::MenuItem("GitHub")) {
+		// 			Sys_OpenURL("https://github.com/pegvin/csprite");
+		// 		}
+		// 		ImGui::EndMenu();
+		// 	}
+		// 	ImGui::EndMainMenuBar();
+		// }
 
 		if (ShowOpenNewFileWindow) {
 			ImGui::OpenPopup("Select a file##Csprite_OpenNewFileDlg");
@@ -709,7 +751,9 @@ int main(int argc, char* argv[]) {
 	SDL_DestroyWindow(window);
 	SDL_Quit();
 	FreePaletteArr(PaletteArr);
+	lua_close(L);
 
+	L = NULL;
 	window = NULL;
 	PaletteArr = NULL;
 	CanvasLayers = NULL;
