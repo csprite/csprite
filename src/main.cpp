@@ -176,7 +176,7 @@ extern "C" {
 	theme_t*   GetThemeAtIndex(int32_t i) { return ThemeArr->entries[i]; }
 }
 
-void InitLuaAPI() {
+int32_t InitLuaAPI() {
 	L = luaL_newstate();
 	luaL_openlibs(L);
 
@@ -211,6 +211,7 @@ void InitLuaAPI() {
 		Logger_Error("Internal error when starting the application");
 		return EXIT_FAILURE;
 	}
+	return EXIT_SUCCESS;
 }
 
 int main(int argc, char* argv[]) {
@@ -302,7 +303,7 @@ int main(int argc, char* argv[]) {
 	SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
 	SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
 
-	InitLuaAPI();
+	if (InitLuaAPI() != EXIT_SUCCESS) return EXIT_FAILURE;
 
 	Logger_Hide();
 
