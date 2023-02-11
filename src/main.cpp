@@ -53,6 +53,9 @@ bool CanvasLocked = false; // Same As `CanvasMutable` but with conditions like i
 bool CanvasDidMutate = false;
 bool ShowOpenNewFileWindow = false;
 bool ShowSaveAsFileWindow = false;
+bool ShowPreferencesWindow = false;
+bool ShowLayerRenameWindow = false;
+bool ShowNewCanvasWindow = false;
 
 char FilePath[SYS_PATHNAME_MAX] = "untitled.png";
 char FileName[SYS_FILENAME_MAX] = "untitled.png";
@@ -144,6 +147,33 @@ static uint8_t* GetPixel(int x, int y);
 	} while(0)
 
 #include "api/cimgui.h"
+
+extern "C" {
+	void Show_OpenNewFileWindow(bool val) { ShowOpenNewFileWindow = val; }
+	void Show_SaveAsFileWindow(bool val) { ShowSaveAsFileWindow = val; }
+	void Show_PreferencesWindow(bool val) { ShowPreferencesWindow = val; }
+	void Show_LayerRenameWindow(bool val) { ShowLayerRenameWindow = val; }
+	void Show_NewCanvasWindow(bool val) { ShowNewCanvasWindow = val; }
+	void WriteCanvasLayersToDisk() { ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers); }
+	bool Csprite_CanUndo() {
+		return (CanvasLayers != NULL && CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->prev != NULL);
+	}
+	bool Csprite_CanRedo() {
+		return (CanvasLayers != NULL && CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->next != NULL);
+	}
+	void Csprite_Undo() { UNDO(); }
+	void Csprite_Redo() { REDO(); }
+
+	int32_t    GetPaletteArr_numOfEntries() { return PaletteArr->numOfEntries; }
+	int32_t    GetPaletteIndex() { return PaletteIndex; }
+	void       SetPaletteIndex(int32_t val) { PaletteIndex = val; }
+	Palette_T* GetPaletteAtIndex(int32_t i) { return PaletteArr->Palettes[i]; }
+
+	int32_t    GetThemeArr_numOfEntries() { return ThemeArr->numOfEntries; }
+	int32_t    GetThemeIndex() { return ThemeIndex; }
+	void       SetThemeIndex(int32_t val) { ThemeIndex = val; }
+	theme_t*   GetThemeAtIndex(int32_t i) { return ThemeArr->entries[i]; }
+}
 
 int main(int argc, char* argv[]) {
 	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
@@ -270,10 +300,6 @@ int main(int argc, char* argv[]) {
 	SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
 	SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
 
-	bool ShowPreferencesWindow = false;
-	bool ShowLayerRenameWindow = false;
-	bool ShowNewCanvasWindow = false;
-
 	Logger_Hide();
 
 	unsigned int frameStart, frameTime;
@@ -291,98 +317,6 @@ int main(int argc, char* argv[]) {
 
 		lua_getglobal(L, "_OnImGui_Render");
 		lua_call(L, 0, 0);
-
-		// if (ImGui::BeginMainMenuBar()) {
-		// 	if (ImGui::BeginMenu("File")) {
-		// 		if (ImGui::MenuItem("New")) {
-		// 			ShowNewCanvasWindow = true;
-		// 		}
-		// 		if (ImGui::MenuItem("Open", "Ctrl+O")) {
-		// 			ShowOpenNewFileWindow = true;
-		// 		}
-		// 		if (ImGui::BeginMenu("Save")) {
-		// 			if (ImGui::MenuItem("Save", "Ctrl+S")) {
-		// 				ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
-		// 			}
-		// 			if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
-		// 				ShowSaveAsFileWindow = true;
-		// 			}
-		// 			ImGui::EndMenu();
-		// 		}
-		// 		ImGui::EndMenu();
-		// 	}
-		// 	if (ImGui::BeginMenu("Edit")) {
-		// 		if (ImGui::MenuItem("Undo", "Ctrl+Z", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->prev != NULL))) {
-		// 			UNDO();
-		// 		}
-		// 		if (ImGui::MenuItem("Redo", "Ctrl+Y", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->next != NULL))) {
-		// 			REDO();
-		// 		}
-		// 		if (ImGui::BeginMenu("Palette")) {
-		// 			for (int32_t i = 0; i < PaletteArr->numOfEntries; ++i) {
-		// 				int32_t _palidx = PaletteIndex;
-
-		// 				if (ImGui::MenuItem(PaletteArr->Palettes[i]->name, NULL)) {
-		// 					PaletteIndex = i;
-		// 				}
-		// 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-		// 					ImGui::SetTooltip("%s", PaletteArr->Palettes[i]->author);
-		// 				}
-		// 				if (_palidx == i) {
-		// 					ImGui::SameLine();
-		// 					ImGui::Text("<");
-		// 				}
-		// 			}
-		// 			ImGui::EndMenu();
-		// 		}
-
-		// 		if (ImGui::BeginMenu("Theme")) {
-		// 			for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
-		// 				int32_t _themeidx = ThemeIndex;
-
-		// 				if (ImGui::MenuItem(ThemeArr->entries[i]->name, NULL)) {
-		// 					ThemeIndex = i;
-		// 					_GuiSetColors(style);
-		// 				}
-		// 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-		// 					ImGui::SetTooltip("%s", ThemeArr->entries[i]->author);
-		// 				}
-
-		// 				if (_themeidx == i) {
-		// 					ImGui::SameLine();
-		// 					ImGui::Text("<");
-		// 				}
-		// 			}
-		// 			ImGui::EndMenu();
-		// 		}
-
-		// 		if (ImGui::MenuItem("Preferences")) {
-		// 			ShowPreferencesWindow = true;
-		// 		}
-
-		// 		ImGui::EndMenu();
-		// 	}
-		// 	if (ImGui::BeginMenu("View")) {
-		// 		if (ImGui::MenuItem("Logs")) {
-		// 			if (Logger_IsHidden()) Logger_Show();
-		// 			else Logger_Hide();
-		// 		}
-		// 		ImGui::EndMenu();
-		// 	}
-		// 	if (ImGui::BeginMenu("Help")) {
-		// 		if (ImGui::MenuItem("Wiki")) {
-		// 			Sys_OpenURL("https://csprite.github.io/wiki/");
-		// 		}
-		// 		if (ImGui::MenuItem("About")) {
-		// 			Sys_OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
-		// 		}
-		// 		if (ImGui::MenuItem("GitHub")) {
-		// 			Sys_OpenURL("https://github.com/pegvin/csprite");
-		// 		}
-		// 		ImGui::EndMenu();
-		// 	}
-		// 	ImGui::EndMainMenuBar();
-		// }
 
 		if (ShowOpenNewFileWindow) {
 			ImGui::OpenPopup("Select a file##Csprite_OpenNewFileDlg");

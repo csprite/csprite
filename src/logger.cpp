@@ -136,9 +136,17 @@ void Logger::Draw(const char* title) {
 	ImGui::End();
 }
 
-extern "C" void Logger_AddLog(int level, const char* file, int line, const char* fmt, ...) {
-	va_list args;
-	va_start(args, fmt);
-	GetLogger().AddLog(level, file, line, fmt, args);
-	va_end(args);
+
+extern "C" {
+	bool Logger_IsHidden() { return GetLogger().IsHidden(); }
+	void Logger_Hide() { GetLogger().Hide(); }
+	void Logger_Show() { GetLogger().Show(); }
+	void Logger_Draw(const char* title) { GetLogger().Draw(title); }
+	void Logger_AddLog(int level, const char* file, int line, const char* fmt, ...) {
+		va_list args;
+		va_start(args, fmt);
+		GetLogger().AddLog(level, file, line, fmt, args);
+		va_end(args);
+	}
 }
+
