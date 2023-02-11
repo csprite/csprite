@@ -1551,14 +1551,14 @@ CIMGUI_API const char* igSaveIniSettingsToMemory(size_t* out_ini_size)
 {
     return ImGui::SaveIniSettingsToMemory(out_ini_size);
 }
-CIMGUI_API void igDebugTextEncoding(const char* text)
-{
-    return ImGui::DebugTextEncoding(text);
-}
-CIMGUI_API bool igDebugCheckVersionAndDataLayout(const char* version_str,size_t sz_io,size_t sz_style,size_t sz_vec2,size_t sz_vec4,size_t sz_drawvert,size_t sz_drawidx)
-{
-    return ImGui::DebugCheckVersionAndDataLayout(version_str,sz_io,sz_style,sz_vec2,sz_vec4,sz_drawvert,sz_drawidx);
-}
+// CIMGUI_API void igDebugTextEncoding(const char* text)
+// {
+//     return ImGui::DebugTextEncoding(text);
+// }
+// CIMGUI_API bool igDebugCheckVersionAndDataLayout(const char* version_str,size_t sz_io,size_t sz_style,size_t sz_vec2,size_t sz_vec4,size_t sz_drawvert,size_t sz_drawidx)
+// {
+//     return ImGui::DebugCheckVersionAndDataLayout(version_str,sz_io,sz_style,sz_vec2,sz_vec4,sz_drawvert,sz_drawidx);
+// }
 CIMGUI_API void igSetAllocatorFunctions(ImGuiMemAllocFunc alloc_func,ImGuiMemFreeFunc free_func,void* user_data)
 {
     return ImGui::SetAllocatorFunctions(alloc_func,free_func,user_data);
