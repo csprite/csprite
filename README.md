@@ -66,6 +66,7 @@ list of references & resources i used while developing csprite, might be good fo
 - Simple Alpha-Blending: https://stackoverflow.com/a/68936281/14516016
 - Talk/Coding live stream on color blending by TSoding: https://youtu.be/aKnl8-qifvE
 - Re-Orderable list in ImGui using Drag & Drop API: https://github.com/ocornut/imgui/issues/1931#issuecomment-403305945
+- LuaJIT in Csprite: https://github.com/pegvin/csprite/tree/luajit
 
 ---
 ### Credits
