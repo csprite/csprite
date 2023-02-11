@@ -82,7 +82,7 @@ else
 		LFLAGS+=-Wl,-Bstatic -Wl,--export-dynamic -lluajit-5.1 -Wl,-Bdynamic
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -Wl,-E -lluajit-5.1
+		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -Wl,--export-dynamic -lluajit-5.1
 		SDL2_LFLAGS:=-lSDL2
 	endif
 
