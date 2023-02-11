@@ -33,11 +33,6 @@ Logger& GetLogger();
 
 // A Simple Wrapper Around Logger Class & Console Logger (log/log.h)
 
-#define Logger_Hide() GetLogger().Hide()
-#define Logger_Show() GetLogger().Show()
-#define Logger_IsHidden() GetLogger().IsHidden()
-#define Logger_Draw(title) GetLogger().Draw(title)
-
 #define Logger_Trace(...) \
 	GetLogger().AddLog(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__); \
 	log_log(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__);
@@ -93,3 +88,17 @@ void Logger_AddLog(int level, const char* file, int line, const char* fmt, ...);
 	log_log(LOG_FATAL, __FILE__, __LINE__, __VA_ARGS__);
 
 #endif // __cplusplus
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void Logger_Hide();
+void Logger_Show();
+void Logger_Draw(const char* title);
+bool Logger_IsHidden();
+
+#ifdef __cplusplus
+}
+#endif
+
