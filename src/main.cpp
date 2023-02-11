@@ -88,6 +88,7 @@ char WindowTitle[WINDOW_TITLE_MAX] = "";
 Config_T* AppConfig = NULL;
 PaletteArr_T* PaletteArr = NULL;
 theme_arr_t* ThemeArr = NULL;
+lua_State* L = NULL;
 
 #ifndef CS_VERSION_MAJOR
 	#define CS_VERSION_MAJOR 0
@@ -176,7 +177,6 @@ extern "C" {
 }
 
 void InitLuaAPI() {
-	lua_State* L;
 	L = luaL_newstate();
 	luaL_openlibs(L);
 
