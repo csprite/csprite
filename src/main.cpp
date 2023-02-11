@@ -175,13 +175,7 @@ extern "C" {
 	theme_t*   GetThemeAtIndex(int32_t i) { return ThemeArr->entries[i]; }
 }
 
-int main(int argc, char* argv[]) {
-	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
-	log_add_fp(LogFilePtr, LOG_TRACE);
-
-	AppConfig = LoadConfig();
-	PaletteArr = PaletteLoadAll();
-
+void InitLuaAPI() {
 	lua_State* L;
 	L = luaL_newstate();
 	luaL_openlibs(L);
@@ -217,6 +211,14 @@ int main(int argc, char* argv[]) {
 		Logger_Error("Internal error when starting the application");
 		return EXIT_FAILURE;
 	}
+}
+
+int main(int argc, char* argv[]) {
+	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
+	log_add_fp(LogFilePtr, LOG_TRACE);
+
+	AppConfig = LoadConfig();
+	PaletteArr = PaletteLoadAll();
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
 		Logger_Error("failed to initialize SDL2: %s", SDL_GetError());
@@ -299,6 +301,8 @@ int main(int argc, char* argv[]) {
 	SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
 	SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
 	SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
+
+	InitLuaAPI();
 
 	Logger_Hide();
 
