@@ -51,6 +51,7 @@ bool CanvasLocked = false; // Same As `CanvasMutable` but with conditions like i
 bool CanvasDidMutate = false;
 bool ShowOpenNewFileWindow = false;
 bool ShowSaveAsFileWindow = false;
+bool ShowCanvasPreviewWindow = true;
 
 char FilePath[SYS_PATHNAME_MAX] = "untitled.png";
 char FileName[SYS_FILENAME_MAX] = "untitled.png";
@@ -318,6 +319,10 @@ int main(int argc, char* argv[]) {
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("View")) {
+				if (ImGui::MenuItem("Preview")) {
+					if (ShowCanvasPreviewWindow) ShowCanvasPreviewWindow = false;
+					else ShowCanvasPreviewWindow = true;
+				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Help")) {
@@ -463,7 +468,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		if (ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+		if (ShowCanvasPreviewWindow && ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
 			if (ImGui::BeginPopupContextItem()) {
 				if (ImGui::BeginMenu("Zoom")) {
 					if (ImGui::MenuItem("Increase")) { PreviewZoom++; ReCalculateZoomSize = true; }
