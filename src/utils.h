@@ -6,10 +6,10 @@
 #include <ctype.h>
 
 // Checks if a string has a suffix, case-sensitive.
-#define HAS_SUFFIX(str, ext, extLen) strncmp(str + (strlen(str) - extLen), ext, extLen) == 0
+#define HAS_SUFFIX(str, ext, extLen) (strncmp(str + (strlen(str) - extLen), ext, extLen) == 0)
 
 // Checks if a string has a suffix, case-insensitive.
-#define HAS_SUFFIX_CI(str, ext, extLen) strncmpci(str + (strlen(str) - extLen), ext, extLen) == 0
+#define HAS_SUFFIX_CI(str, ext, extLen) (strncmpci(str + (strlen(str) - extLen), ext, extLen) == 0)
 
 #ifdef __cplusplus
 extern "C" {

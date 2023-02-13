@@ -6,7 +6,7 @@
 #include "system.h"
 #include "macros.h"
 #include "system.h"
-#include "logger.h"
+#include "log/log.h"
 #include "assets.h"
 #include "imgooeystyles/imgui_styles.h"
 
@@ -22,7 +22,7 @@ int FreeTheme(theme_t* theme) {
 
 int FreeThemeArr(theme_arr_t* tArr) {
 	if (tArr == NULL) {
-		Logger_Error("Theme Array Pointer is NULL!\n");
+		log_error("Theme Array Pointer is NULL!\n");
 		return -1;
 	}
 
@@ -68,7 +68,7 @@ char* SysGetThemesDir() {
 
 	if (!*configPath) {
 		if (configdir == NULL) {
-			Logger_Error("cannot get the themes directory!\n");
+			log_error("cannot get the themes directory!\n");
 			snprintf(configPath, SYS_PATHNAME_MAX + 128, "themes");
 			Sys_MakeDirRecursive(configPath);
 		} else {
@@ -93,7 +93,7 @@ theme_arr_t* ThemeLoadAll() {
 
 	numOfThemes = Sys_ListDirContents((const char*)dir, NULL, NULL);
 	if (numOfThemes <= 0) {
-		Logger_Error("cannot extract the Themes!\n");
+		log_error("cannot extract the Themes!\n");
 		return NULL;
 	}
 
@@ -153,7 +153,7 @@ static int OnAssetMgrList(int i, const char *fname) {
 		fclose(file);
 		file = NULL;
 	} else {
-		Logger_Error("cannot open file to write\n");
+		log_error("cannot open file to write\n");
 		return -1;
 	}
 	return 0;
