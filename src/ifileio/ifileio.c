@@ -1,6 +1,6 @@
+#include "log/log.h"
 #include "ifileio.h"
 #include "../utils.h"
-#include "../logger.h"
 #include "../renderer/renderer.h"
 
 #include "stb_image.h"
@@ -52,7 +52,7 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 	if (HAS_SUFFIX_CI(filePath, ".png", 4)) {
 		_BlendedPixels = BlendPixels_Alpha(w, h, arr);
 		if (_BlendedPixels == NULL) {
-			Logger_Error("Alpha Blending Failed, BlendPixels_Alpha(...) returned NULL");
+			log_error("Alpha Blending Failed, BlendPixels_Alpha(...) returned NULL");
 			return -1;
 		} else {
 			stbi_write_png(filePath, w, h, 4, _BlendedPixels, 0);
@@ -62,7 +62,7 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 	} else if (HAS_SUFFIX_CI(filePath, ".jpeg", 5) || HAS_SUFFIX_CI(filePath, ".jpg", 4)) {
 		_BlendedPixels = BlendPixels_Alpha(w, h, arr);
 		if (_BlendedPixels == NULL) {
-			Logger_Error("Alpha Blending Failed, BlendPixels_Alpha(...) returned NULL");
+			log_error("Alpha Blending Failed, BlendPixels_Alpha(...) returned NULL");
 			return -1;
 		} else {
 			stbi_write_jpg(filePath, w, h, 4, _BlendedPixels, 100);
@@ -70,7 +70,7 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 			_BlendedPixels = NULL;
 		}
 	} else {
-		Logger_Error("Error Un-supported file format: %s\n", filePath);
+		log_error("Error Un-supported file format: %s\n", filePath);
 		return -1;
 	}
 
@@ -99,7 +99,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			return 0;
 		}
 	} else {
-		Logger_Error("Error Un-supported file format: %s\n", filePath);
+		log_error("Error Un-supported file format: %s\n", filePath);
 	}
 	return -1;
 }
