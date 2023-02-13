@@ -122,7 +122,7 @@ jobs:
           bash ./tools/BuildNInstall_Linux.sh
           echo "::endgroup::"
           echo "::group::Build Csprite"
-          make all -j4 BUILD_TARGET=release CC=clang-10 CXX=clang++
+          make all -j4 BUILD_TARGET=release CC=clang-10 CXX=clang++-10
           echo "::endgroup::"
 
     - name: Exit if file not exists
