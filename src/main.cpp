@@ -349,10 +349,10 @@ int main(int argc, char* argv[]) {
 			ShowSaveAsFileWindow = false;
 		}
 
-		if (ImFileDialog.showFileDialog("Select a file##Csprite_OpenNewFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".png,.jpg,.jpeg,.bmp")) {
+		if (ImFileDialog.showFileDialog("Select a file##Csprite_OpenNewFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".csprite,.png,.jpg,.jpeg,.bmp")) {
 			OpenNewFile(ImFileDialog.selected_path.c_str());
 		}
-		if (ImFileDialog.showFileDialog("Save file as##Csprite_SaveAsFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(0, 0), ".png,.jpg,.jpeg,.bmp")) {
+		if (ImFileDialog.showFileDialog("Save file as##Csprite_SaveAsFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(0, 0), ".csprite,.png,.jpg,.jpeg,.bmp")) {
 			/*  simple logic which appends the appropriate extension if none provided.
 				like "test1" with ".png" filter selected is converted to "test1.png" */
 			char* _fPath = (char*)ImFileDialog.selected_path.c_str();

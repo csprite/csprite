@@ -49,7 +49,25 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 	if (filePath == NULL || arr == NULL || w < 1 || h < 1) return -1;
 
 	uint8_t* _BlendedPixels = NULL;
-	if (HAS_SUFFIX_CI(filePath, ".png", 4)) {
+	if (HAS_SUFFIX_CI(filePath, ".csprite", 8)) {
+#define WRITE_CHECKED(file, src, szBytes) do { if (fwrite(src, szBytes, 1, file) != 1) { log_error("Cannot write %d bytes", szBytes); return -1; } } while(0)
+
+		FILE* fp = fopen(filePath, "wb");
+		if (fp == NULL) {
+			log_error("Cannot open the file: %s\n", filePath);
+			return -1;
+		}
+
+		int32_t numChannels = 4;
+
+		WRITE_CHECKED(fp, &w, 4);
+		WRITE_CHECKED(fp, &h, 4);
+		WRITE_CHECKED(fp, &numChannels, 4);
+		fclose(fp);
+		fp = NULL;
+
+#undef WRITE_CHECKED
+	} else if (HAS_SUFFIX_CI(filePath, ".png", 4)) {
 		_BlendedPixels = BlendPixels_Alpha(w, h, arr);
 		if (_BlendedPixels == NULL) {
 			log_error("Alpha Blending Failed, BlendPixels_Alpha(...) returned NULL");
