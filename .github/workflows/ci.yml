@@ -114,15 +114,15 @@ jobs:
       uses: paulproteus/ubuntu-18.04-x86@0.1
       with:
         command: |
-          echo "::group::Update System Repositories & Install pkg-config, git, libgtk-3-dev, llvm toolchain"
+          echo "::group::Update System Repositories & Install pkg-config, git, libgtk-3-dev, clang-10"
           apt-get update -y
-          apt-get install -y pkg-config git libgtk-3-dev llvm-toolchain-10
+          apt-get install -y pkg-config git libgtk-3-dev clang-10
           echo "::endgroup::"
           echo "::group::Build & Install SDL2"
           bash ./tools/BuildNInstall_Linux.sh
           echo "::endgroup::"
           echo "::group::Build Csprite"
-          make all -j4 BUILD_TARGET=release CC=clang CXX=clang++
+          make all -j4 BUILD_TARGET=release CC=clang-10 CXX=clang++
           echo "::endgroup::"
 
     - name: Exit if file not exists
