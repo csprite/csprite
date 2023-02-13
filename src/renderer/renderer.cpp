@@ -1,9 +1,8 @@
-#include "./renderer.h"
-#include "../logger.h"
-
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_sdlrenderer.h"
+#include "log/log.h"
+#include "./renderer.h"
 
 static SDL_Renderer* renderer = NULL;
 
@@ -17,7 +16,7 @@ int R_Init(SDL_Window* window, bool vsyncEnabled) {
 
 	renderer = SDL_CreateRenderer(window, -1, renFlags);
 	if (renderer == NULL) {
-		Logger_Error("Failed to create SDL_Renderer, SDL_CreateRenderer() returned NULL!");
+		log_error("Failed to create SDL_Renderer, SDL_CreateRenderer() returned NULL!");
 		return EXIT_FAILURE;
 	}
 

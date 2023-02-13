@@ -7,7 +7,7 @@
 #include "config.h"
 #include "system.h"
 #include "ini/ini.h"
-#include "logger.h"
+#include "log/log.h"
 
 static char* getSettingsPath() {
 	char* configdir = Sys_GetConfigDir();
@@ -15,7 +15,7 @@ static char* getSettingsPath() {
 
 	if (!*configPath) {
 		if (configdir == NULL) {
-			Logger_Error("cannot get the config directory!\n");
+			log_error("cannot get the config directory!\n");
 			snprintf(configPath, SYS_PATHNAME_MAX + 128, "config.ini");
 		} else {
 			snprintf(configPath, SYS_PATHNAME_MAX + 128, "%s/csprite", configdir);
@@ -60,13 +60,13 @@ Config_T* LoadConfig(void) {
 
 int WriteConfig(Config_T* s) {
 	if (s == NULL) {
-		Logger_Error("NULL pointer passed!\n");
+		log_error("NULL pointer passed!\n");
 		return -1;
 	}
 
 	char* configPath = getSettingsPath();
 	if (configPath == NULL) {
-		Logger_Error("getSettingsPath returned NULL pointer\n");
+		log_error("getSettingsPath returned NULL pointer\n");
 		return -1;
 	}
 

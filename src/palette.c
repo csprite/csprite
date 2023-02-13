@@ -5,7 +5,7 @@
 
 #include "system.h"
 #include "palette.h"
-#include "logger.h"
+#include "log/log.h"
 #include "assets.h"
 
 // Forward Declarations
@@ -14,7 +14,7 @@ static int OnAssetMgrList(int i, const char *fname);
 
 int FreePaletteArr(PaletteArr_T* pArr) {
 	if (pArr == NULL) {
-		Logger_Error("Palette Array Pointer is NULL!\n");
+		log_error("Palette Array Pointer is NULL!\n");
 		return -1;
 	}
 
@@ -34,12 +34,12 @@ int FreePaletteArr(PaletteArr_T* pArr) {
 
 int FreePalette(Palette_T* palette) {
 	if (palette == NULL) {
-		Logger_Error("Palette Pointer is NULL!\n");
+		log_error("Palette Pointer is NULL!\n");
 		return -1;
 	}
 
 	if (palette->Colors == NULL) {
-		Logger_Error("Palette Entries are NULL!\n");
+		log_error("Palette Entries are NULL!\n");
 		return -1;
 	}
 
@@ -51,7 +51,7 @@ int FreePalette(Palette_T* palette) {
 Palette_T* LoadCsvPalette(const char* csvText) {
 	Palette_T* newPalette = malloc(sizeof(Palette_T));
 	if (newPalette == NULL) {
-		Logger_Error("'malloc' returned NULL, cannot allocate memory for the palette!\n");
+		log_error("'malloc' returned NULL, cannot allocate memory for the palette!\n");
 		return NULL;
 	}
 
@@ -110,7 +110,7 @@ char* SysGetPaletteDir() {
 
 	if (!*configPath) {
 		if (configdir == NULL) {
-			Logger_Warn("cannot get the config directory!\n");
+			log_warn("cannot get the config directory!\n");
 			snprintf(configPath, SYS_PATHNAME_MAX + 128, "palettes");
 			Sys_MakeDirRecursive(configPath);
 		} else {
@@ -136,7 +136,7 @@ PaletteArr_T* PaletteLoadAll() {
 
 	numOfPalettes = Sys_ListDirContents((const char*)dir, NULL, NULL);
 	if (numOfPalettes <= 0) {
-		Logger_Error("cannot extract the palettes!\n");
+		log_error("cannot extract the palettes!\n");
 		return NULL;
 	}
 
@@ -194,7 +194,7 @@ static int OnAssetMgrList(int i, const char *fname) {
 		fprintf(file, "%s", data);
 		fclose(file);
 	} else {
-		Logger_Error("cannot open file to write\n");
+		log_error("cannot open file to write\n");
 		return -1;
 	}
 	return 0;

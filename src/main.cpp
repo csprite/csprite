@@ -21,7 +21,6 @@
 #include "utils.h"
 #include "log/log.h"
 #include "assets.h"
-#include "logger.h"
 #include "macros.h"
 #include "config.h"
 #include "theme.h"
@@ -150,7 +149,7 @@ int main(int argc, char* argv[]) {
 	PaletteArr = PaletteLoadAll();
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
-		Logger_Error("failed to initialize SDL2: %s", SDL_GetError());
+		log_error("failed to initialize SDL2: %s", SDL_GetError());
 		return EXIT_FAILURE;
 	}
 
@@ -159,9 +158,9 @@ int main(int argc, char* argv[]) {
 	SDL_VERSION(&compiled);
 	SDL_GetVersion(&linked);
 
-	Logger_Info("Init csprite " VERSION_STR);
-	Logger_Info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
-	Logger_Info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
+	log_info("Init csprite " VERSION_STR);
+	log_info("Compiled With SDL version %u.%u.%u", compiled.major, compiled.minor, compiled.patch);
+	log_info("Linked With SDL version %u.%u.%u", linked.major, linked.minor, linked.patch);
 
 	SDL_DisplayMode dm;
 	SDL_GetCurrentDisplayMode(0, &dm);
@@ -204,9 +203,9 @@ int main(int argc, char* argv[]) {
 		const char* filePath = (const char*)argv[1];
 		int result = Sys_IsRegularFile(filePath);
 		if (result < 0) {
-			Logger_Error("Error Trying To Valid File Path: %s", strerror(errno));
+			log_error("Error Trying To Valid File Path: %s", strerror(errno));
 		} else if (result == 0) {
-			Logger_Error("Cannot Open The File in filePath");
+			log_error("Cannot Open The File in filePath");
 		} else {
 			OpenNewFile(filePath);
 		}
@@ -234,8 +233,6 @@ int main(int argc, char* argv[]) {
 	bool ShowPreferencesWindow = false;
 	bool ShowLayerRenameWindow = false;
 	bool ShowNewCanvasWindow = false;
-
-	Logger_Hide();
 
 	unsigned int frameStart, frameTime;
 	unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
@@ -321,10 +318,6 @@ int main(int argc, char* argv[]) {
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("View")) {
-				if (ImGui::MenuItem("Logs")) {
-					if (Logger_IsHidden()) Logger_Show();
-					else Logger_Hide();
-				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Help")) {
@@ -510,9 +503,9 @@ int main(int argc, char* argv[]) {
 						SelectedLayerIndex++;
 						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 						CanvasLayers->size++;
-						Logger_Info("Resized canvas layers array to %d", newSize);
+						log_info("Resized canvas layers array to %d", newSize);
 					} else {
-						Logger_Error("Unable to resize canvas layers array!");
+						log_error("Unable to resize canvas layers array!");
 					}
 				} else {
 					SelectedLayerIndex++;
@@ -672,8 +665,6 @@ int main(int argc, char* argv[]) {
 				isFirstTime = true; // set to true cause next frame the popup will appear.
 			}
 		}
-
-		Logger_Draw("Logs");
 
 		if (CanvasLayers->size > 0) {
 			Canvas_NewFrame(renderer);
@@ -1025,7 +1016,7 @@ static inline void ProcessEvents() {
 						WindowDims[0] = w;
 						WindowDims[1] = h;
 					} else {
-						Logger_Error("invalid window size %dx%d", w, h);
+						log_error("invalid window size %dx%d", w, h);
 					}
 				}
 				break;
@@ -1107,7 +1098,7 @@ static void InitWindowIcon() {
 		0xff000000
 	);
 	if (surface == NULL) {
-		Logger_Error("Failed to set window icon: %s", SDL_GetError());
+		log_error("Failed to set window icon: %s", SDL_GetError());
 		return;
 	}
 	SDL_SetWindowIcon(window, surface);
@@ -1116,7 +1107,7 @@ static void InitWindowIcon() {
 
 static int OpenNewFile(const char* _fName) {
 	if (_fName == NULL) {
-		Logger_Error("_fName is NULL!");
+		log_error("_fName is NULL!");
 		return -1;
 	}
 

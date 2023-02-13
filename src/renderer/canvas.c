@@ -1,6 +1,6 @@
 #include <assert.h>
+#include "log/log.h"
 #include "./canvas.h"
-#include "../logger.h"
 #include "../assets.h"
 
 // Static For No Name Collisions
@@ -35,14 +35,14 @@ static int _CanvasGenBgLayer(SDL_Renderer* ren) {
 	}
 	bgLayer.texture = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, CanvasDims[0]/2, CanvasDims[1]/2);
 	if (bgLayer.texture == NULL) {
-		Logger_Error("Cannot create bgLayer, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
+		log_error("Cannot create bgLayer, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
 		_FreeCanvasBgLayer();
 		return EXIT_FAILURE;
 	}
 	SDL_UpdateTexture(bgLayer.texture, NULL, bgLayer.pixels, CanvasDims[0]/2 * sizeof(uint8_t) * 4);
 
 	if (SDL_SetTextureBlendMode(bgLayer.texture, SDL_BLENDMODE_BLEND) != 0) {
-		Logger_Error("SDL_SetTextureBlendMode() returned Non-Zero: %s", SDL_GetError());
+		log_error("SDL_SetTextureBlendMode() returned Non-Zero: %s", SDL_GetError());
 		_FreeCanvasBgLayer();
 		return EXIT_FAILURE;
 	}
@@ -57,7 +57,7 @@ static void _DestroyCanvasTex() {
 static int _InitCanvasTex(SDL_Renderer* ren) {
 	CanvasTex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, CanvasDims[0], CanvasDims[1]);
 	if (CanvasTex == NULL) {
-		Logger_Error("Cannot create CanvasTex, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
+		log_error("Cannot create CanvasTex, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
 		_FreeCanvasBgLayer();
 		return EXIT_FAILURE;
 	}
@@ -125,7 +125,7 @@ CanvasLayer_T* Canvas_CreateLayer(SDL_Renderer* ren) {
 	snprintf(c->name, LAYER_NAME_MAX, "New Layer");
 
 	if (SDL_SetTextureBlendMode(c->texture, SDL_BLENDMODE_BLEND) != 0) {
-		Logger_Error("SDL_SetTextureBlendMode() returned Non-Zero: %s", SDL_GetError());
+		log_error("SDL_SetTextureBlendMode() returned Non-Zero: %s", SDL_GetError());
 		Canvas_DestroyLayer(c);
 		c = NULL;
 	}
