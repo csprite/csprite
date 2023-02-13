@@ -10,7 +10,7 @@ CXX:=g++
 CC:=gcc
 STD:=c99
 CXX_STD:=c++11
-CCFLAGS:=-Iinclude/ -Ilibs/imgui/ -Ilibs/FileBrowser/ -Ilibs/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
+CCFLAGS:=-Iinclude/ -Ithird_party/imgui/ -Ithird_party/FileBrowser/ -Ithird_party/ -Wall -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 CFLAGS:=
 LFLAGS:=
 
@@ -31,8 +31,8 @@ $(error Invalid Build Target: "$(BUILD_TARGET)")
 	endif
 endif
 
-SRCS_C:=$(wildcard src/*.c) $(wildcard src/**/*.c) $(wildcard libs/**/*.c)
-SRCS_CPP:=$(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard libs/**/*.cpp)
+SRCS_C:=$(wildcard src/*.c) $(wildcard src/**/*.c) $(wildcard third_party/**/*.c)
+SRCS_CPP:=$(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard third_party/**/*.cpp)
 OBJS_C:=$(SRCS_C:.c=.o)
 OBJS_CPP:=$(SRCS_CPP:.cpp=.o)
 DEPENDS:=$(patsubst %.c,%.d,$(SRCS_C)) $(patsubst %.cpp,%.d,$(SRCS_CPP))
@@ -72,13 +72,9 @@ else
 		endif
 
 		_libs+=dl
-		# On POSX Use Address Sanitizers in Debug Mode
-		ifeq ($(CC),gcc)
-			ifeq ($(call lc,$(BUILD_TARGET)),debug)
-				CCFLAGS+=-fsanitize=address -fsanitize=undefined
-				LFLAGS+=-fsanitize=address -fsanitize=undefined -lasan -lubsan
-			endif
-		endif
+		# On Linux Use Address Sanitizers in Debug Mode
+		CCFLAGS+=-fsanitize=address -fsanitize=undefined
+		LFLAGS+=-fsanitize=address -fsanitize=undefined
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
@@ -119,22 +115,23 @@ run: $(bin)
 # make clean
 clean:
 	@$(RM) $(bin) $(OBJS_C) $(OBJS_CPP) $(DEPENDS) ./csprite.exe.manifest windows.rc tools/font2inl.out data/*.ico data/icons/*.png src/assets/*.inl
-	@echo Cleaned...
+	@echo - Cleaned
 
 # make gen-rc Arch=x86_64(or i686)
 gen-rc:
 	@$(PYTHON) tools/create_rc.py --arch=$(Arch) --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
-	@echo Generated RC...
+	@echo - RC generated
 
 # make gen-assets
 gen-assets:
 	@$(PYTHON) tools/create_icons.py
-	@echo Generated Icons...
+	@echo - Icons generated
 	@$(PYTHON) tools/create_assets.py --cxx=$(CXX)
-	@echo Generated Assets...
+	@echo - Assets generated
 
 # make appimage
 appimage:
-	@echo Creating AppImage...
 	@CSPRITE_VERSION=$(MajVer).$(MinVer).$(PatVer) appimage-builder --skip-test --recipe=AppImage-Builder.yml
-	@echo Done!
+	@echo - AppImage created
+
+

@@ -41,20 +41,12 @@ for item in sys.argv:
 DirPath = os.path.dirname(os.path.realpath(__file__))
 FileData = ''
 
-with open(f'{DirPath}/windows.rc.template', 'r') as f:
-	FileData = f.read()
-	FileData = FileData.replace("__MANIFEST_NAME__", f"csprite.exe.manifest")
-	FileData = FileData.replace("__ORIGINAL_FILENAME__", f"csprite.exe")
+with open(f'{DirPath}/../data/windows.rc.template', 'r') as rcTemplate:
+	FileData = rcTemplate.read()
 	FileData = FileData.replace("__PRODUCT_VERSION1__", f"{MAJVER},{MINVER},{PATVER},0")
 	FileData = FileData.replace("__PRODUCT_VERSION2__", f"{MAJVER}.{MINVER}.{PATVER}")
 
-with open(f'{DirPath}/csprite.manifest', 'r') as f:
-	with open(f"csprite.exe.manifest", 'w') as f2:
-		f2.write(f.read())
+with open('windows.rc', 'w') as rcOutput:
+	rcOutput.write(FileData)
 
-with open(f'windows.rc', 'w') as f:
-	f.write(FileData)
-
-
-print(f"Generated RC For '{ARCH}'")
 

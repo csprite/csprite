@@ -1,5 +1,5 @@
 id ICON "data/icon.ico"
-IDR_RT_MANIFEST1	RT_MANIFEST 	"__MANIFEST_NAME__"
+IDR_RT_MANIFEST1	RT_MANIFEST 	"data/csprite.exe.manifest"
 1 VERSIONINFO
 FILEVERSION     1,0,0,0
 PRODUCTVERSION  __PRODUCT_VERSION1__
@@ -11,7 +11,7 @@ BEGIN
       VALUE "FileDescription", "A tiny pixel art tool"
       VALUE "InternalName", "csprite"
       VALUE "LegalCopyright", "Aditya Mishra"
-      VALUE "OriginalFilename", "__ORIGINAL_FILENAME__"
+      VALUE "OriginalFilename", "csprite.exe"
       VALUE "ProductName", "csprite"
       VALUE "ProductVersion", "__PRODUCT_VERSION2__"
     END

@@ -23,4 +23,5 @@ todo
 .SRCINFO
 data/icons/
 data/icon.ico
-*.manifest
+
+
