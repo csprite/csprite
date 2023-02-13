@@ -35,6 +35,11 @@ jobs:
   linux-x86_64:
     needs: [generate-assets]
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config:
+        - { name: "GCC", cc: gcc, cxx: g++ }
+        - { name: "Clang", cc: clang, cxx: clang++ }
     steps:
     - uses: actions/checkout@v2
       with:
@@ -55,19 +60,15 @@ jobs:
 
     - name: Install LibFuse2 & AppImage-Builder
       run: |
-        echo "::group::Update System Repositories & Install libfuse2"
         sudo apt-get update
         sudo apt-get install libfuse2
-        echo "::endgroup::"
-        echo "::group::Install AppImage-Builder"
         wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.0.0-beta.1/appimage-builder-1.0.0-677acbd-x86_64.AppImage
         chmod +x appimage-builder-x86_64.AppImage
         sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
-        echo "::endgroup::"
 
     - name: Build & Strip (Static Linking=False;)
       run: |
-        make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=0
+        make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=0 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
         strip ./csprite
 
     - name: Build AppImage
@@ -77,6 +78,7 @@ jobs:
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
+      if: ${{ matrix.config.cc == 'clang' }}
       with:
         name: linux-x86_64-appimage
         path: csprite-x86_64.AppImage
@@ -84,6 +86,7 @@ jobs:
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
+      if: ${{ matrix.config.cc == 'clang' }}
       with:
         name: linux-x86_64
         path: ./csprite
@@ -139,6 +142,11 @@ jobs:
   windows-x86_64:
     needs: [generate-assets]
     runs-on: windows-latest
+    strategy:
+      matrix:
+        config:
+        - { name: "GCC", cc: gcc, cxx: g++ }
+        - { name: "Clang", cc: clang, cxx: clang++ }
     defaults:
       run:
         shell: msys2 {0}
@@ -151,7 +159,10 @@ jobs:
         with:
           msystem: CLANG64
           update: false
-          install: mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-python make git
+          install: |
+            make git
+            mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-gcc
+            mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-python
 
       - uses: actions/download-artifact@v2
         with:
@@ -169,10 +180,11 @@ jobs:
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
           make gen-rc Arch=x86_64
-          make all -j4 BUILD_TARGET=release WINDRES_TARGET=pe-x86-64 CC=clang CXX=clang++
+          make all -j4 BUILD_TARGET=release WINDRES_TARGET=pe-x86-64 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
+        if: ${{ matrix.config.cc == 'clang' }}
         with:
           name: win-x86_64
           path: csprite.exe
@@ -181,6 +193,11 @@ jobs:
   windows-i686:
     needs: [generate-assets]
     runs-on: windows-latest
+    strategy:
+      matrix:
+        config:
+        - { name: "GCC", cc: gcc, cxx: g++ }
+        - { name: "Clang", cc: clang, cxx: clang++ }
     defaults:
       run:
         shell: msys2 {0}
@@ -193,7 +210,10 @@ jobs:
         with:
           msystem: CLANG32
           update: false
-          install: mingw-w64-clang-i686-binutils mingw-w64-clang-i686-clang mingw-w64-clang-i686-cmake mingw-w64-clang-i686-python make git
+          install: |
+            mingw-w64-clang-i686-binutils make git
+            mingw-w64-clang-i686-gcc mingw-w64-clang-i686-clang
+            mingw-w64-clang-i686-cmake mingw-w64-clang-i686-python
 
       - uses: actions/download-artifact@v2
         with:
@@ -211,10 +231,11 @@ jobs:
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
           make gen-rc Arch=i686
-          make all -j4 BUILD_TARGET=release WINDRES_TARGET=pe-i386 CC=clang CXX=clang++
+          make all -j4 BUILD_TARGET=release WINDRES_TARGET=pe-i386 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
+        if: ${{ matrix.config.cc == 'clang' }}
         with:
           name: win-i686
           path: csprite.exe
