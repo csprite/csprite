@@ -73,8 +73,10 @@ else
 
 		_libs+=dl
 		# On Linux Use Address Sanitizers in Debug Mode
-		CCFLAGS+=-fsanitize=address -fsanitize=undefined
-		LFLAGS+=-fsanitize=address -fsanitize=undefined
+		ifeq ($(call lc,$(BUILD_TARGET)),debug)
+			CCFLAGS+=-fsanitize=address -fsanitize=undefined
+			LFLAGS+=-fsanitize=address -fsanitize=undefined
+		endif
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
