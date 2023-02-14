@@ -4,7 +4,7 @@ A tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 [![Continous Integration](https://img.shields.io/github/actions/workflow/status/pegvin/csprite/ci.yml?style=flat-square)](https://github.com/pegvin/csprite/actions/)
 [![Open Issues](https://img.shields.io/github/issues/pegvin/csprite?style=flat-square&color=%235cb85c)](https://github.com/pegvin/csprite/issues)
 [![Total Downloads](https://img.shields.io/github/downloads/pegvin/csprite/total?style=flat-square)](https://csprite.github.io/downloads/)
-[![Reddit Icon](https://img.shields.io/badge/%20-r%2Fcsprite-%23ff6314?logo=reddit&labelColor=%23EFEFEF&style=flat-square)]()
+[![Reddit Icon](https://img.shields.io/badge/%20-r%2Fcsprite-%23ff6314?logo=reddit&labelColor=%23EFEFEF&style=flat-square)](https://www.reddit.com/r/csprite/)
 [![Discord Icon](https://discordapp.com/api/guilds/1027457407732957206/embed.png)](https://discord.gg/ZKs8sm2CPA)
 
 ![program preview](https://user-images.githubusercontent.com/75035219/215963557-eade47a0-b20a-45dc-91af-b136442d9a77.png)
