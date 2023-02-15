@@ -218,6 +218,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			memcpy((*arr)->layers[i]->pixels, originalData + ((w * h * numChannels) * numLayersCopied), w * h * numChannels);
 			memcpy((*arr)->layers[i]->history->pixels, (*arr)->layers[i]->pixels, w * h * 4 * sizeof(uint8_t));
 			SaveHistory(&(*arr)->layers[i]->history, w * h * 4 * sizeof(uint8_t), (*arr)->layers[i]->pixels);
+			Canvas_UpdateLayerTexture((*arr)->layers[i]);
 			numLayersCopied++;
 		}
 
