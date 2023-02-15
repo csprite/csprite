@@ -168,8 +168,15 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 		fseek(fp, 0L, SEEK_END);
 		size_t fileSize = ftell(fp);
 		fseek(fp, 0L, SEEK_SET);
-		fread(signature, 4, 1, fp);
-		fread(&formatVersion, 2, 1, fp);
+
+		if (fileSize < 22) {
+			log_error("invalid .csprite file");
+			fclose(fp);
+			return -1;
+		}
+
+		if (fread(signature, 4, 1, fp) != 1) { log_error("failed to read .csprite signature"); fclose(fp); return -1; }
+		if (fread(&formatVersion, 2, 1, fp) != 1) { log_error("failed to read .csprite format-version"); fclose(fp); return -1; }
 
 		if (strncmp(signature, "DEEZ", 4) != 0 || formatVersion != 1) {
 			log_error("invalid .csprite format signature");
@@ -177,10 +184,10 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			return -1;
 		}
 
-		fread(&w, 4, 1, fp);
-		fread(&h, 4, 1, fp);
-		fread(&numChannels, 4, 1, fp);
-		fread(&numLayers, 4, 1, fp);
+		if (fread(&w, 4, 1, fp) != 1) { log_error("failed to read image width"); fclose(fp); return -1; }
+		if (fread(&h, 4, 1, fp) != 1) { log_error("failed to read image height"); fclose(fp); return -1; }
+		if (fread(&numChannels, 4, 1, fp) != 1) { log_error("failed to read number of channels available"); fclose(fp); return -1; }
+		if (fread(&numLayers, 4, 1, fp) != 1) { log_error("failed to read number of layers available"); fclose(fp); return -1; }
 
 		Canvas_DestroyArr(*arr);
 		Canvas_Resize(w, h, R_GetRenderer());
@@ -189,7 +196,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			char layerName[LAYER_NAME_MAX] = "";
 			memset(layerName, '\0', LAYER_NAME_MAX);
 			for (int i = 0; i < LAYER_NAME_MAX - 1; ++i) {
-				fread(&layerName[i], 1, 1, fp);
+				if (fread(&layerName[i], 1, 1, fp) != 1) { log_error("failed to read %d layer's name", currLayerIdx + 1); fclose(fp); return -1; }
 				if (layerName[i] == '\0') break;
 			}
 
@@ -201,7 +208,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 
 		size_t compressDataSize = fileSize - ftell(fp);
 		uint8_t* compressedData = malloc(compressDataSize);
-		fread(compressedData, compressDataSize, 1, fp);
+		if (fread(compressedData, compressDataSize, 1, fp) != 1) { log_error("failed to read compressed data"); fclose(fp); return -1; }
 
 		size_t originalDataSize = w * h * numChannels * numLayers * sizeof(uint8_t);
 		uint8_t* originalData = Z_DeCompressData(compressedData, compressDataSize, originalDataSize);
