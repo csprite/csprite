@@ -74,8 +74,8 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 			WRITE_CHECKED(fp, arr->layers[i]->name, strlen(arr->layers[i]->name) + 1);
 		}
 
-		ulong_t pixelArrAlignedSize = w * h * numChannels * arr->size * sizeof(uint8_t);
-		ulong_t dataSizeCompressed = 0;
+		size_t pixelArrAlignedSize = w * h * numChannels * arr->size * sizeof(uint8_t);
+		size_t dataSizeCompressed = 0;
 		uint8_t* pixelArrAligned = (uint8_t*)malloc(pixelArrAlignedSize);
 		if (pixelArrAligned == NULL) {
 			log_error("Failed to allocate memory buffer to store pixel array aligned");
@@ -83,13 +83,13 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 			return -1;
 		}
 
-		ulong_t amtCopied = 0;
+		size_t amtCopied = 0;
 		for (int i = 0; i < arr->size; ++i) {
 			memcpy(pixelArrAligned + amtCopied, arr->layers[i]->pixels, w * h * numChannels);
 			amtCopied += w * h * numChannels;
 		}
 
-		uint8_t* dataCompressed = _CompressData(pixelArrAlignedSize, &dataSizeCompressed, pixelArrAligned);
+		uint8_t* dataCompressed = Z_CompressData(pixelArrAlignedSize, &dataSizeCompressed, pixelArrAligned);
 		if (dataCompressed == NULL || dataSizeCompressed <= 0) {
 			log_error("Failed to compress data!");
 			fclose(fp);
@@ -166,7 +166,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 		}
 
 		fseek(fp, 0L, SEEK_END);
-		ulong_t fileSize = ftell(fp);
+		size_t fileSize = ftell(fp);
 		fseek(fp, 0L, SEEK_SET);
 		fread(signature, 4, 1, fp);
 		fread(&formatVersion, 2, 1, fp);
@@ -181,7 +181,6 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 		fread(&h, 4, 1, fp);
 		fread(&numChannels, 4, 1, fp);
 		fread(&numLayers, 4, 1, fp);
-		log_info("%dx%d with %d channels and %d layers", w, h, numChannels, numLayers);
 
 		Canvas_DestroyArr(*arr);
 		Canvas_Resize(w, h, R_GetRenderer());
@@ -200,12 +199,12 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			(*arr)->layers[currLayerIdx] = layer;
 		}
 
-		ulong_t compressDataSize = fileSize - ftell(fp);
+		size_t compressDataSize = fileSize - ftell(fp);
 		uint8_t* compressedData = malloc(compressDataSize);
 		fread(compressedData, compressDataSize, 1, fp);
 
-		ulong_t originalDataSize = w * h * numChannels * numLayers * sizeof(uint8_t);
-		uint8_t* originalData = _DeCompressData(compressedData, compressDataSize, originalDataSize);
+		size_t originalDataSize = w * h * numChannels * numLayers * sizeof(uint8_t);
+		uint8_t* originalData = Z_DeCompressData(compressedData, compressDataSize, originalDataSize);
 
 		int32_t numLayersCopied = 0;
 		for (int i = 0; i < (*arr)->size; ++i) {
