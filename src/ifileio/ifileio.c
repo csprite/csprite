@@ -1,5 +1,6 @@
 #include "log/log.h"
 #include "ifileio.h"
+#include "zlib_wrapper.h"
 #include "../utils.h"
 #include "../renderer/renderer.h"
 #include "../renderer/canvas.h"
@@ -72,6 +73,35 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 		for (int i = 0; i < arr->size; ++i) {
 			WRITE_CHECKED(fp, arr->layers[i]->name, strlen(arr->layers[i]->name) + 1);
 		}
+
+		ulong_t pixelArrAlignedSize = w * h * numChannels * arr->size * sizeof(uint8_t);
+		ulong_t dataSizeCompressed = 0;
+		uint8_t* pixelArrAligned = (uint8_t*)malloc(pixelArrAlignedSize);
+		if (pixelArrAligned == NULL) {
+			log_error("Failed to allocate memory buffer to store pixel array aligned");
+			fclose(fp);
+			return -1;
+		}
+
+		ulong_t amtCopied = 0;
+		for (int i = 0; i < arr->size; ++i) {
+			memcpy(pixelArrAligned + amtCopied, arr->layers[i]->pixels, w * h * numChannels);
+			amtCopied += w * h * numChannels;
+		}
+
+		uint8_t* dataCompressed = _CompressData(pixelArrAlignedSize, &dataSizeCompressed, pixelArrAligned);
+		if (dataCompressed == NULL || dataSizeCompressed <= 0) {
+			log_error("Failed to compress data!");
+			fclose(fp);
+			return -1;
+		}
+
+		WRITE_CHECKED(fp, dataCompressed, dataSizeCompressed);
+		free(dataCompressed);
+		free(pixelArrAligned);
+		dataCompressed = NULL;
+		pixelArrAligned = NULL;
+
 		fclose(fp);
 		fp = NULL;
 
@@ -134,6 +164,10 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			log_error("Cannot open the file: %s\n", filePath);
 			return -1;
 		}
+
+		fseek(fp, 0L, SEEK_END);
+		ulong_t fileSize = ftell(fp);
+		fseek(fp, 0L, SEEK_SET);
 		fread(signature, 4, 1, fp);
 		fread(&formatVersion, 2, 1, fp);
 
@@ -161,14 +195,31 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			}
 
 			CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer());
-			layer->pixels = malloc(w * h * 4 * sizeof(uint8_t));
-			memset(layer->pixels, 0, w * h * 4 * sizeof(uint8_t));
-			memcpy(layer->history->pixels, layer->pixels, w * h * 4 * sizeof(uint8_t));
-			SaveHistory(&layer->history, w * h * 4 * sizeof(uint8_t), layer->pixels);
 			strncpy(layer->name, layerName, LAYER_NAME_MAX);
 			(*arr)->size++;
 			(*arr)->layers[currLayerIdx] = layer;
 		}
+
+		ulong_t compressDataSize = fileSize - ftell(fp);
+		uint8_t* compressedData = malloc(compressDataSize);
+		fread(compressedData, compressDataSize, 1, fp);
+
+		ulong_t originalDataSize = w * h * numChannels * numLayers * sizeof(uint8_t);
+		uint8_t* originalData = _DeCompressData(compressedData, compressDataSize, originalDataSize);
+
+		int32_t numLayersCopied = 0;
+		for (int i = 0; i < (*arr)->size; ++i) {
+			memcpy((*arr)->layers[i]->pixels, originalData + ((w * h * numChannels) * numLayersCopied), w * h * numChannels);
+			memcpy((*arr)->layers[i]->history->pixels, (*arr)->layers[i]->pixels, w * h * 4 * sizeof(uint8_t));
+			SaveHistory(&(*arr)->layers[i]->history, w * h * 4 * sizeof(uint8_t), (*arr)->layers[i]->pixels);
+			numLayersCopied++;
+		}
+
+		free(compressedData);
+		free(originalData);
+		compressedData = NULL;
+		originalData = NULL;
+
 		fclose(fp);
 		fp = NULL;
 	} else {
