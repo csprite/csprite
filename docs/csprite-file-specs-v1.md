@@ -34,6 +34,7 @@ A 22-byte header:
 
 ```
 uint8_t[4] Magic (DEEZ)
+uint16_t   File-Format Version (1 in this case)
 int32_t    Width in pixels
 int32_t    Height in pixels
 int32_t    Number of channels
