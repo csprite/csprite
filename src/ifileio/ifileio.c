@@ -2,6 +2,7 @@
 #include "ifileio.h"
 #include "../utils.h"
 #include "../renderer/renderer.h"
+#include "../renderer/canvas.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -59,10 +60,18 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 		}
 
 		int32_t numChannels = 4;
+		char signature[4] = "DEEZ";
+		uint16_t formatVersion = 1; // max uint16_t 65535
 
+		WRITE_CHECKED(fp, signature, 4);
+		WRITE_CHECKED(fp, &formatVersion, 2);
 		WRITE_CHECKED(fp, &w, 4);
 		WRITE_CHECKED(fp, &h, 4);
 		WRITE_CHECKED(fp, &numChannels, 4);
+		WRITE_CHECKED(fp, &arr->size, 4);
+		for (int i = 0; i < arr->size; ++i) {
+			WRITE_CHECKED(fp, arr->layers[i]->name, strlen(arr->layers[i]->name) + 1);
+		}
 		fclose(fp);
 		fp = NULL;
 
@@ -116,6 +125,52 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			SaveHistory(&layer->history, w * h * 4 * sizeof(uint8_t), layer->pixels);
 			return 0;
 		}
+	} else if (HAS_SUFFIX_CI(filePath, ".csprite", 8)) {
+		int32_t w = 0, h = 0, numChannels = 0, numLayers = 0;
+		uint16_t formatVersion = 0;
+		char signature[4] = "";
+		FILE* fp = fopen(filePath, "rb");
+		if (fp == NULL) {
+			log_error("Cannot open the file: %s\n", filePath);
+			return -1;
+		}
+		fread(signature, 4, 1, fp);
+		fread(&formatVersion, 2, 1, fp);
+
+		if (strncmp(signature, "DEEZ", 4) != 0 || formatVersion != 1) {
+			log_error("invalid .csprite format signature");
+			fclose(fp);
+			return -1;
+		}
+
+		fread(&w, 4, 1, fp);
+		fread(&h, 4, 1, fp);
+		fread(&numChannels, 4, 1, fp);
+		fread(&numLayers, 4, 1, fp);
+		log_info("%dx%d with %d channels and %d layers", w, h, numChannels, numLayers);
+
+		Canvas_DestroyArr(*arr);
+		Canvas_Resize(w, h, R_GetRenderer());
+		*arr = Canvas_CreateArr(numLayers > 100 ? numLayers + 50 : 100);
+		for (int currLayerIdx = 0; currLayerIdx < numLayers; ++currLayerIdx) {
+			char layerName[LAYER_NAME_MAX] = "";
+			memset(layerName, '\0', LAYER_NAME_MAX);
+			for (int i = 0; i < LAYER_NAME_MAX - 1; ++i) {
+				fread(&layerName[i], 1, 1, fp);
+				if (layerName[i] == '\0') break;
+			}
+
+			CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer());
+			layer->pixels = malloc(w * h * 4 * sizeof(uint8_t));
+			memset(layer->pixels, 0, w * h * 4 * sizeof(uint8_t));
+			memcpy(layer->history->pixels, layer->pixels, w * h * 4 * sizeof(uint8_t));
+			SaveHistory(&layer->history, w * h * 4 * sizeof(uint8_t), layer->pixels);
+			strncpy(layer->name, layerName, LAYER_NAME_MAX);
+			(*arr)->size++;
+			(*arr)->layers[currLayerIdx] = layer;
+		}
+		fclose(fp);
+		fp = NULL;
 	} else {
 		log_error("Error Un-supported file format: %s\n", filePath);
 	}
