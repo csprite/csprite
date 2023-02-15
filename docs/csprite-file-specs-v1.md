@@ -10,7 +10,7 @@
 ---
 ## References
 
-.csprite files use some-endian byte order.
+.csprite files uses big-endian byte order.
 
 * `uint8_t`:  An 8-bit unsigned integer value
 * `uint16_t`: A 16-bit unsigned integer value
@@ -54,3 +54,5 @@ after the [Layer Names](#layer-names) comes the layers pixel data, the pixel dat
 after de-compressing the pixel data, your data size should become `width * height * number of channels * number of layers` which can be used to check if data isn't broken.
 
 when you've de-compressed the data, your pixel data will be aligned as the layer names, so after one layer data comes another layer data upto total number of layers.
+
+
