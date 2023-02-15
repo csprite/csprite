@@ -133,6 +133,10 @@ CanvasLayer_T* Canvas_CreateLayer(SDL_Renderer* ren) {
 	return c;
 }
 
+void Canvas_UpdateLayerTexture(CanvasLayer_T* c) {
+	SDL_UpdateTexture(c->texture, NULL, c->pixels, CanvasDims[0] * sizeof(uint8_t) * 4);
+}
+
 void Canvas_DestroyLayer(CanvasLayer_T* c) {
 	if (c == NULL) return;
 	if (c->texture != 0) {
