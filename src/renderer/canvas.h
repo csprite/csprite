@@ -36,6 +36,7 @@ CanvasLayerArr_T* Canvas_CreateArr(int32_t capacity);
 void              Canvas_DestroyArr(CanvasLayerArr_T* arr);
 void              Canvas_ResizeArr(CanvasLayerArr_T* arr, int32_t newCapacity); // if newCapacity is less than arr's capacity, all the extra layers will be destroyed with "Canvas_DestroyLayer" and memory with newCapacity size will be allocated.
 CanvasLayer_T*    Canvas_CreateLayer(SDL_Renderer* ren);
+void              Canvas_UpdateLayerTexture(CanvasLayer_T* c); // you need to call this function after you update CanvasLayer_T's "pixel" member
 void              Canvas_DestroyLayer(CanvasLayer_T* c);
 
 #ifdef __cplusplus
