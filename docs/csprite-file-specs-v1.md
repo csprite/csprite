@@ -7,6 +7,7 @@
     1. [Layer names](#layer-names)
     1. [Layers pixel data](#layers-pixel-data)
 
+---
 ## References
 
 .csprite files use some-endian byte order.
