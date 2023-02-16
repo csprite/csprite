@@ -10,7 +10,7 @@
 ---
 ## References
 
-.csprite files uses big-endian byte order.
+.csprite files uses little-endian byte order.
 
 * `uint8_t`:  An 8-bit unsigned integer value
 * `uint16_t`: A 16-bit unsigned integer value
