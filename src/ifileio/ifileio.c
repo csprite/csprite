@@ -4,7 +4,7 @@
 #include "../utils.h"
 #include "../renderer/renderer.h"
 #include "../renderer/canvas.h"
-#include "endian.h"
+#include "ifileio_endian.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"

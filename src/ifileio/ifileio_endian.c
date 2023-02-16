@@ -1,4 +1,4 @@
-#include "endian.h"
+#include "ifileio_endian.h"
 
 uint16_t swap_uint16(uint16_t val) {
 	return (val << 8) | (val >> 8);
