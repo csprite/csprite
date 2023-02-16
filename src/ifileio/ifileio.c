@@ -4,6 +4,7 @@
 #include "../utils.h"
 #include "../renderer/renderer.h"
 #include "../renderer/canvas.h"
+#include "endian.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -65,11 +66,13 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 		uint16_t formatVersion = 1; // max uint16_t 65535
 
 		WRITE_CHECKED(fp, signature, 4);
-		WRITE_CHECKED(fp, &formatVersion, 2);
-		WRITE_CHECKED(fp, &w, 4);
-		WRITE_CHECKED(fp, &h, 4);
-		WRITE_CHECKED(fp, &numChannels, 4);
-		WRITE_CHECKED(fp, &arr->size, 4);
+
+		// htonX function converts the value to a big-endian value
+		{ uint16_t b_formatVersion = SWAP_ONLY_BIGE_u16(formatVersion); WRITE_CHECKED(fp, &b_formatVersion, 2); }
+		{ int32_t b_w = SWAP_ONLY_BIGE_i32(w); WRITE_CHECKED(fp, &b_w, 4); }
+		{ int32_t b_h = SWAP_ONLY_BIGE_i32(h); WRITE_CHECKED(fp, &b_h, 4); }
+		{ int32_t b_numChannels = SWAP_ONLY_BIGE_i32(numChannels); WRITE_CHECKED(fp, &b_numChannels, 4); }
+		{ int32_t b_numLayers = SWAP_ONLY_BIGE_i32(arr->size); WRITE_CHECKED(fp, &b_numLayers, 4); }
 		for (int i = 0; i < arr->size; ++i) {
 			WRITE_CHECKED(fp, arr->layers[i]->name, strlen(arr->layers[i]->name) + 1);
 		}
@@ -177,17 +180,25 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 
 		if (fread(signature, 4, 1, fp) != 1) { log_error("failed to read .csprite signature"); fclose(fp); return -1; }
 		if (fread(&formatVersion, 2, 1, fp) != 1) { log_error("failed to read .csprite format-version"); fclose(fp); return -1; }
+		formatVersion = SWAP_ONLY_BIGE_u16(formatVersion);
 
 		if (strncmp(signature, "DEEZ", 4) != 0 || formatVersion != 1) {
-			log_error("invalid .csprite format signature");
+			log_error("invalid .csprite format signature, formatVersion: %d", formatVersion);
 			fclose(fp);
 			return -1;
 		}
 
 		if (fread(&w, 4, 1, fp) != 1) { log_error("failed to read image width"); fclose(fp); return -1; }
+		w = SWAP_ONLY_BIGE_i32(w);
+
 		if (fread(&h, 4, 1, fp) != 1) { log_error("failed to read image height"); fclose(fp); return -1; }
+		h = SWAP_ONLY_BIGE_i32(h);
+
 		if (fread(&numChannels, 4, 1, fp) != 1) { log_error("failed to read number of channels available"); fclose(fp); return -1; }
+		numChannels = SWAP_ONLY_BIGE_i32(numChannels);
+
 		if (fread(&numLayers, 4, 1, fp) != 1) { log_error("failed to read number of layers available"); fclose(fp); return -1; }
+		numLayers = SWAP_ONLY_BIGE_i32(numLayers);
 
 		Canvas_DestroyArr(*arr);
 		Canvas_Resize(w, h, R_GetRenderer());
