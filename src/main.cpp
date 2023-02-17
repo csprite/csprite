@@ -513,7 +513,7 @@ int main(int argc, char* argv[]) {
 						log_error("Unable to resize canvas layers array!");
 					}
 				} else {
-					SelectedLayerIndex++;
+					if (CURR_CANVAS_LAYER != NULL) SelectedLayerIndex++; // when opening a .csprite file with no layers CURR_CANVAS_LAYER might be NULL
 					CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 					CanvasLayers->size++;
 				}
