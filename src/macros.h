@@ -21,7 +21,3 @@
 	)
 #endif
 
-// Clamps The Given Integer A Between min & max
-#define CLAMP_INT(a, min, max) \
-	(a < min ? min : a) > max ? max : (a < min ? min : a)
-
