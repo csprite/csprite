@@ -253,8 +253,12 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			originalData = NULL;
 		}
 
+		*w_ptr = w;
+		*h_ptr = h;
+
 		fclose(fp);
 		fp = NULL;
+		return 0;
 	} else {
 		log_error("Error Un-supported file format: %s\n", filePath);
 	}
