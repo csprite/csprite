@@ -200,43 +200,58 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 		if (fread(&numLayers, 4, 1, fp) != 1) { log_error("failed to read number of layers available"); fclose(fp); return -1; }
 		numLayers = SWAP_ONLY_BIGE_i32(numLayers);
 
+		if (w < 1 || h < 1) {
+			log_error("invalid width or height, %dx%d", w, h);
+			fclose(fp);
+			return -1;
+		} else if (numChannels != 4) {
+			log_error("invalid number of channels: %d, only 4 number of channels is support now", numChannels);
+			fclose(fp);
+			return -1;
+		} else if (numLayers < 1) {
+			log_warn("no layers found!");
+		}
+
 		Canvas_DestroyArr(*arr);
 		Canvas_Resize(w, h, R_GetRenderer());
 		*arr = Canvas_CreateArr(numLayers > 100 ? numLayers + 50 : 100);
-		for (int currLayerIdx = 0; currLayerIdx < numLayers; ++currLayerIdx) {
-			char layerName[LAYER_NAME_MAX] = "";
-			memset(layerName, '\0', LAYER_NAME_MAX);
-			for (int i = 0; i < LAYER_NAME_MAX - 1; ++i) {
-				if (fread(&layerName[i], 1, 1, fp) != 1) { log_error("failed to read %d layer's name", currLayerIdx + 1); fclose(fp); return -1; }
-				if (layerName[i] == '\0') break;
+
+		if (numLayers > 0) {
+			for (int currLayerIdx = 0; currLayerIdx < numLayers; ++currLayerIdx) {
+				char layerName[LAYER_NAME_MAX] = "";
+				memset(layerName, '\0', LAYER_NAME_MAX);
+				for (int i = 0; i < LAYER_NAME_MAX - 1; ++i) {
+					if (fread(&layerName[i], 1, 1, fp) != 1) { log_error("failed to read %d layer's name", currLayerIdx + 1); fclose(fp); return -1; }
+					if (layerName[i] == '\0') break;
+				}
+
+				CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer());
+				strncpy(layer->name, layerName, LAYER_NAME_MAX);
+				(*arr)->size++;
+				(*arr)->layers[currLayerIdx] = layer;
 			}
 
-			CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer());
-			strncpy(layer->name, layerName, LAYER_NAME_MAX);
-			(*arr)->size++;
-			(*arr)->layers[currLayerIdx] = layer;
+			size_t compressDataSize = fileSize - ftell(fp);
+			uint8_t* compressedData = malloc(compressDataSize);
+			if (fread(compressedData, compressDataSize, 1, fp) != 1) { log_error("failed to read compressed data"); fclose(fp); return -1; }
+
+			size_t originalDataSize = w * h * numChannels * numLayers * sizeof(uint8_t);
+			uint8_t* originalData = Z_DeCompressData(compressedData, compressDataSize, originalDataSize);
+
+			int32_t numLayersCopied = 0;
+			for (int i = 0; i < (*arr)->size; ++i) {
+				memcpy((*arr)->layers[i]->pixels, originalData + ((w * h * numChannels) * numLayersCopied), w * h * numChannels);
+				memcpy((*arr)->layers[i]->history->pixels, (*arr)->layers[i]->pixels, w * h * 4 * sizeof(uint8_t));
+				SaveHistory(&(*arr)->layers[i]->history, w * h * 4 * sizeof(uint8_t), (*arr)->layers[i]->pixels);
+				Canvas_UpdateLayerTexture((*arr)->layers[i]);
+				numLayersCopied++;
+			}
+
+			free(compressedData);
+			free(originalData);
+			compressedData = NULL;
+			originalData = NULL;
 		}
-
-		size_t compressDataSize = fileSize - ftell(fp);
-		uint8_t* compressedData = malloc(compressDataSize);
-		if (fread(compressedData, compressDataSize, 1, fp) != 1) { log_error("failed to read compressed data"); fclose(fp); return -1; }
-
-		size_t originalDataSize = w * h * numChannels * numLayers * sizeof(uint8_t);
-		uint8_t* originalData = Z_DeCompressData(compressedData, compressDataSize, originalDataSize);
-
-		int32_t numLayersCopied = 0;
-		for (int i = 0; i < (*arr)->size; ++i) {
-			memcpy((*arr)->layers[i]->pixels, originalData + ((w * h * numChannels) * numLayersCopied), w * h * numChannels);
-			memcpy((*arr)->layers[i]->history->pixels, (*arr)->layers[i]->pixels, w * h * 4 * sizeof(uint8_t));
-			SaveHistory(&(*arr)->layers[i]->history, w * h * 4 * sizeof(uint8_t), (*arr)->layers[i]->pixels);
-			Canvas_UpdateLayerTexture((*arr)->layers[i]);
-			numLayersCopied++;
-		}
-
-		free(compressedData);
-		free(originalData);
-		compressedData = NULL;
-		originalData = NULL;
 
 		fclose(fp);
 		fp = NULL;
