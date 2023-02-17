@@ -1,7 +1,10 @@
 #include "log/log.h"
 #include "ifileio.h"
+#include "zlib_wrapper.h"
 #include "../utils.h"
 #include "../renderer/renderer.h"
+#include "../renderer/canvas.h"
+#include "ifileio_endian.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -49,7 +52,64 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 	if (filePath == NULL || arr == NULL || w < 1 || h < 1) return -1;
 
 	uint8_t* _BlendedPixels = NULL;
-	if (HAS_SUFFIX_CI(filePath, ".png", 4)) {
+	if (HAS_SUFFIX_CI(filePath, ".csprite", 8)) {
+#define WRITE_CHECKED(file, src, szBytes) do { if (fwrite(src, szBytes, 1, file) != 1) { log_error("Cannot write %d bytes", szBytes); return -1; } } while(0)
+
+		FILE* fp = fopen(filePath, "wb");
+		if (fp == NULL) {
+			log_error("Cannot open the file: %s\n", filePath);
+			return -1;
+		}
+
+		int32_t numChannels = 4;
+		char signature[4] = "DEEZ";
+		uint16_t formatVersion = 1; // max uint16_t 65535
+
+		WRITE_CHECKED(fp, signature, 4);
+
+		// htonX function converts the value to a big-endian value
+		{ uint16_t b_formatVersion = SWAP_ONLY_BIGE_u16(formatVersion); WRITE_CHECKED(fp, &b_formatVersion, 2); }
+		{ int32_t b_w = SWAP_ONLY_BIGE_i32(w); WRITE_CHECKED(fp, &b_w, 4); }
+		{ int32_t b_h = SWAP_ONLY_BIGE_i32(h); WRITE_CHECKED(fp, &b_h, 4); }
+		{ int32_t b_numChannels = SWAP_ONLY_BIGE_i32(numChannels); WRITE_CHECKED(fp, &b_numChannels, 4); }
+		{ int32_t b_numLayers = SWAP_ONLY_BIGE_i32(arr->size); WRITE_CHECKED(fp, &b_numLayers, 4); }
+		for (int i = 0; i < arr->size; ++i) {
+			WRITE_CHECKED(fp, arr->layers[i]->name, strlen(arr->layers[i]->name) + 1);
+		}
+
+		size_t pixelArrAlignedSize = w * h * numChannels * arr->size * sizeof(uint8_t);
+		size_t dataSizeCompressed = 0;
+		uint8_t* pixelArrAligned = (uint8_t*)malloc(pixelArrAlignedSize);
+		if (pixelArrAligned == NULL) {
+			log_error("Failed to allocate memory buffer to store pixel array aligned");
+			fclose(fp);
+			return -1;
+		}
+
+		size_t amtCopied = 0;
+		for (int i = 0; i < arr->size; ++i) {
+			memcpy(pixelArrAligned + amtCopied, arr->layers[i]->pixels, w * h * numChannels);
+			amtCopied += w * h * numChannels;
+		}
+
+		uint8_t* dataCompressed = Z_CompressData(pixelArrAlignedSize, &dataSizeCompressed, pixelArrAligned);
+		if (dataCompressed == NULL || dataSizeCompressed <= 0) {
+			log_error("Failed to compress data!");
+			fclose(fp);
+			return -1;
+		}
+
+		WRITE_CHECKED(fp, dataCompressed, dataSizeCompressed);
+		free(dataCompressed);
+		free(pixelArrAligned);
+		dataCompressed = NULL;
+		pixelArrAligned = NULL;
+
+		fclose(fp);
+		fp = NULL;
+
+#undef WRITE_CHECKED
+	} else if (HAS_SUFFIX_CI(filePath, ".png", 4)) {
 		_BlendedPixels = BlendPixels_Alpha(w, h, arr);
 		if (_BlendedPixels == NULL) {
 			log_error("Alpha Blending Failed, BlendPixels_Alpha(...) returned NULL");
@@ -98,6 +158,103 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			SaveHistory(&layer->history, w * h * 4 * sizeof(uint8_t), layer->pixels);
 			return 0;
 		}
+	} else if (HAS_SUFFIX_CI(filePath, ".csprite", 8)) {
+		int32_t w = 0, h = 0, numChannels = 0, numLayers = 0;
+		uint16_t formatVersion = 0;
+		char signature[4] = "";
+		FILE* fp = fopen(filePath, "rb");
+		if (fp == NULL) {
+			log_error("Cannot open the file: %s\n", filePath);
+			return -1;
+		}
+
+		fseek(fp, 0L, SEEK_END);
+		size_t fileSize = ftell(fp);
+		fseek(fp, 0L, SEEK_SET);
+
+		if (fileSize < 22) {
+			log_error("invalid .csprite file");
+			fclose(fp);
+			return -1;
+		}
+
+		if (fread(signature, 4, 1, fp) != 1) { log_error("failed to read .csprite signature"); fclose(fp); return -1; }
+		if (fread(&formatVersion, 2, 1, fp) != 1) { log_error("failed to read .csprite format-version"); fclose(fp); return -1; }
+		formatVersion = SWAP_ONLY_BIGE_u16(formatVersion);
+
+		if (strncmp(signature, "DEEZ", 4) != 0 || formatVersion != 1) {
+			log_error("invalid .csprite format signature, formatVersion: %d", formatVersion);
+			fclose(fp);
+			return -1;
+		}
+
+		if (fread(&w, 4, 1, fp) != 1) { log_error("failed to read image width"); fclose(fp); return -1; }
+		w = SWAP_ONLY_BIGE_i32(w);
+
+		if (fread(&h, 4, 1, fp) != 1) { log_error("failed to read image height"); fclose(fp); return -1; }
+		h = SWAP_ONLY_BIGE_i32(h);
+
+		if (fread(&numChannels, 4, 1, fp) != 1) { log_error("failed to read number of channels available"); fclose(fp); return -1; }
+		numChannels = SWAP_ONLY_BIGE_i32(numChannels);
+
+		if (fread(&numLayers, 4, 1, fp) != 1) { log_error("failed to read number of layers available"); fclose(fp); return -1; }
+		numLayers = SWAP_ONLY_BIGE_i32(numLayers);
+
+		if (w < 1 || h < 1) {
+			log_error("invalid width or height, %dx%d", w, h);
+			fclose(fp);
+			return -1;
+		} else if (numChannels != 4) {
+			log_error("invalid number of channels: %d, only 4 number of channels is support now", numChannels);
+			fclose(fp);
+			return -1;
+		} else if (numLayers < 1) {
+			log_warn("no layers found!");
+		}
+
+		Canvas_DestroyArr(*arr);
+		Canvas_Resize(w, h, R_GetRenderer());
+		*arr = Canvas_CreateArr(numLayers > 100 ? numLayers + 50 : 100);
+
+		if (numLayers > 0) {
+			for (int currLayerIdx = 0; currLayerIdx < numLayers; ++currLayerIdx) {
+				char layerName[LAYER_NAME_MAX] = "";
+				memset(layerName, '\0', LAYER_NAME_MAX);
+				for (int i = 0; i < LAYER_NAME_MAX - 1; ++i) {
+					if (fread(&layerName[i], 1, 1, fp) != 1) { log_error("failed to read %d layer's name", currLayerIdx + 1); fclose(fp); return -1; }
+					if (layerName[i] == '\0') break;
+				}
+
+				CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer());
+				strncpy(layer->name, layerName, LAYER_NAME_MAX);
+				(*arr)->size++;
+				(*arr)->layers[currLayerIdx] = layer;
+			}
+
+			size_t compressDataSize = fileSize - ftell(fp);
+			uint8_t* compressedData = malloc(compressDataSize);
+			if (fread(compressedData, compressDataSize, 1, fp) != 1) { log_error("failed to read compressed data"); fclose(fp); return -1; }
+
+			size_t originalDataSize = w * h * numChannels * numLayers * sizeof(uint8_t);
+			uint8_t* originalData = Z_DeCompressData(compressedData, compressDataSize, originalDataSize);
+
+			int32_t numLayersCopied = 0;
+			for (int i = 0; i < (*arr)->size; ++i) {
+				memcpy((*arr)->layers[i]->pixels, originalData + ((w * h * numChannels) * numLayersCopied), w * h * numChannels);
+				memcpy((*arr)->layers[i]->history->pixels, (*arr)->layers[i]->pixels, w * h * 4 * sizeof(uint8_t));
+				SaveHistory(&(*arr)->layers[i]->history, w * h * 4 * sizeof(uint8_t), (*arr)->layers[i]->pixels);
+				Canvas_UpdateLayerTexture((*arr)->layers[i]);
+				numLayersCopied++;
+			}
+
+			free(compressedData);
+			free(originalData);
+			compressedData = NULL;
+			originalData = NULL;
+		}
+
+		fclose(fp);
+		fp = NULL;
 	} else {
 		log_error("Error Un-supported file format: %s\n", filePath);
 	}

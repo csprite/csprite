@@ -15,6 +15,7 @@ CFLAGS:=
 LFLAGS:=
 
 PYTHON:=python3
+ZLIB_STATIC_LINK:=1
 SDL2_STATIC_LINK:=1
 SDL2_LFLAGS:=
 SDL2_CFLAGS:=-DSDL_MAIN_HANDLED=1
@@ -50,6 +51,12 @@ ifeq ($(OS),Windows_NT)
 	else
 		SDL2_LFLAGS+=-lSDL2main -lSDL2
 	endif
+	ifeq ($(ZLIB_STATIC_LINK),1)
+		LFLAGS+=-Wl,-Bstatic -lz -Wl,-Bdynamic
+	else
+		LFLAGS+=-lz
+	endif
+
 	LFLAGS+=-lopengl32
 	SDL2_LFLAGS+=$(addprefix -l,winmm gdi32 imm32 ole32 oleaut32 shell32 version uuid setupapi)
 	ifeq ($(call lc,$(BUILD_TARGET)),debug)
@@ -70,6 +77,11 @@ else
 		else
 			SDL2_LFLAGS+=-lSDL2
 		endif
+		ifeq ($(ZLIB_STATIC_LINK),1)
+			LFLAGS+=-Wl,-Bstatic -lz -Wl,-Bdynamic
+		else
+			LFLAGS+=-lz
+		endif
 
 		_libs+=dl
 		# On Linux Use Address Sanitizers in Debug Mode
@@ -79,7 +91,7 @@ else
 		endif
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		LFLAGS+=$(addprefix -framework , OpenGL Cocoa)
+		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -lz
 		SDL2_LFLAGS:=-lSDL2
 	endif
 

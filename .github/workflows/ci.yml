@@ -58,17 +58,17 @@ jobs:
     - name: Build & Install SDL2
       run: bash ./tools/BuildNInstall_Linux.sh
 
-    - name: Install LibFuse2 & AppImage-Builder
+    - name: Install ZLib, LibFuse2 & AppImage-Builder
       run: |
         sudo apt-get update
-        sudo apt-get install libfuse2
+        sudo apt-get install zlib1g zlib1g-dev libfuse2
         wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.0.0-beta.1/appimage-builder-1.0.0-677acbd-x86_64.AppImage
         chmod +x appimage-builder-x86_64.AppImage
         sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
 
     - name: Build & Strip (Static Linking=False;)
       run: |
-        make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=0 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
+        make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=0 ZLIB_STATIC_LINK=1 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
         strip ./csprite
 
     - name: Build AppImage
@@ -114,15 +114,15 @@ jobs:
       uses: paulproteus/ubuntu-18.04-x86@0.1
       with:
         command: |
-          echo "::group::Update System Repositories & Install pkg-config, git, libgtk-3-dev, clang-10"
+          echo "::group::Update System Repositories & Install pkg-config, git, libgtk-3-dev, zlib & clang-10"
           apt-get update -y
-          apt-get install -y pkg-config git libgtk-3-dev clang-10
+          apt-get install -y pkg-config git libgtk-3-dev zlib1g zlib1g-dev clang-10
           echo "::endgroup::"
           echo "::group::Build & Install SDL2"
           bash ./tools/BuildNInstall_Linux.sh
           echo "::endgroup::"
           echo "::group::Build Csprite"
-          make all -j4 BUILD_TARGET=release CC=clang-10 CXX=clang++-10
+          make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=1 ZLIB_STATIC_LINK=1 CC=clang-10 CXX=clang++-10
           echo "::endgroup::"
 
     - name: Exit if file not exists
@@ -161,6 +161,7 @@ jobs:
           update: false
           install: |
             make git
+            mingw-w64-clang-x86_64-zlib
             mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-gcc
             mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-python
 
@@ -180,7 +181,7 @@ jobs:
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
           make gen-rc Arch=x86_64
-          make all -j4 BUILD_TARGET=release WINDRES_TARGET=pe-x86-64 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
+          make all -j4 BUILD_TARGET=release ZLIB_STATIC_LINK=1 WINDRES_TARGET=pe-x86-64 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
@@ -211,6 +212,7 @@ jobs:
           msystem: CLANG32
           update: false
           install: |
+            mingw-w64-clang-i686-zlib
             mingw-w64-clang-i686-binutils make git
             mingw-w64-clang-i686-gcc mingw-w64-clang-i686-clang
             mingw-w64-clang-i686-cmake mingw-w64-clang-i686-python
@@ -231,7 +233,7 @@ jobs:
       - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
         run: |
           make gen-rc Arch=i686
-          make all -j4 BUILD_TARGET=release WINDRES_TARGET=pe-i386 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
+          make all -j4 BUILD_TARGET=release ZLIB_STATIC_LINK=1 WINDRES_TARGET=pe-i386 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
@@ -249,9 +251,9 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install dylibbundler & SDL2
+    - name: Install dylibbundler, SDL2 & zlib
       run: |
-        brew install dylibbundler sdl2
+        brew install dylibbundler sdl2 zlib
 
     - uses: actions/download-artifact@v2
       with:
@@ -264,7 +266,7 @@ jobs:
         path: ./data/
 
     - name: Build
-      run: make all -j4 BUILD_TARGET=release
+      run: make all -j4 BUILD_TARGET=release ZLIB_STATIC_LINK=0
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
