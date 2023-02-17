@@ -9,13 +9,6 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 
-static uint8_t clamp_u16_to_u8(uint16_t val) {
-	if (val > -1 && val < 256) return val;
-	else if (val > 255) return 255;
-
-	return 0;
-}
-
 static uint8_t* BlendPixels_Alpha(int32_t w, int32_t h, CanvasLayerArr_T* arr) {
 	uint8_t* canvas_data = (uint8_t*) malloc(w * h * 4 * sizeof(uint8_t));
 	memset(canvas_data, 0, w * h * 4 * sizeof(uint8_t));
@@ -36,10 +29,10 @@ static uint8_t* BlendPixels_Alpha(int32_t w, int32_t h, CanvasLayerArr_T* arr) {
 						uint16_t outBlue = ((uint16_t)src1Blue * src1Alpha + (uint16_t)src2Blue * (255 - src1Alpha) / 255 * src2Alpha) / 255;
 						uint16_t outAlpha = src1Alpha + (uint16_t)src2Alpha * (255 - src1Alpha) / 255;
 
-						*(destPixel + 0) = clamp_u16_to_u8(outRed);
-						*(destPixel + 1) = clamp_u16_to_u8(outGreen);
-						*(destPixel + 2) = clamp_u16_to_u8(outBlue);
-						*(destPixel + 3) = clamp_u16_to_u8(outAlpha);
+						*(destPixel + 0) = CLAMP_NUM(outRed,   0, 255);
+						*(destPixel + 1) = CLAMP_NUM(outGreen, 0, 255);
+						*(destPixel + 2) = CLAMP_NUM(outBlue,  0, 255);
+						*(destPixel + 3) = CLAMP_NUM(outAlpha, 0, 255);
 					}
 				}
 			}
