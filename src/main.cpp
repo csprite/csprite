@@ -30,7 +30,6 @@
 #include "ifileio/ifileio.h"
 
 int32_t WindowDims[2] = { 700, 500 };
-int32_t CanvasDims[2] = { 64, 64 };
 
 int32_t MousePos[2] = { 0, 0 };
 int32_t MousePosDown[2] = { 0, 0 };
@@ -110,7 +109,7 @@ theme_arr_t* ThemeArr = NULL;
 // two macros for assembling the structure of window title on compile time and appending the filename when needed.
 #define VERSION_STR "v" STR(CS_VERSION_MAJOR) "." STR(CS_VERSION_MINOR) "." STR(CS_VERSION_PATCH) "-" CS_BUILD_TYPE
 #define GEN_WIN_TITLE() do {\
-		if (FileName[0] != 0) { snprintf(WindowTitle, WINDOW_TITLE_MAX, "%s - csprite " VERSION_STR, FileName); }\
+		if (FileName[0] != 0 && CanvasLayers != NULL) { snprintf(WindowTitle, WINDOW_TITLE_MAX, "%s (%dx%d) - csprite " VERSION_STR, FileName, CanvasLayers->dims[0], CanvasLayers->dims[1]); }\
 		else { snprintf(WindowTitle, WINDOW_TITLE_MAX, "csprite " VERSION_STR); }\
 	} while(0)
 
@@ -129,10 +128,10 @@ static uint8_t* GetPixel(int x, int y);
 #define GetSelectedPalette() PaletteArr->Palettes[PaletteIndex]
 
 #define UNDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
+	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
 
 #define REDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
+	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
 
 #define UPDATE_WINDOW_TITLE() do {\
 		GEN_WIN_TITLE();\
@@ -172,7 +171,6 @@ int main(int argc, char* argv[]) {
 		WindowDims[0], WindowDims[1],
 		SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_MAXIMIZED
 	);
-	UpdateViewportPos();
 
 	InitWindowIcon();
 	SDL_ShowWindow(window);
@@ -183,16 +181,16 @@ int main(int argc, char* argv[]) {
 	}
 	SDL_Renderer* renderer = R_GetRenderer();
 
-	UpdateViewportPos();
-	UpdateViewportSize();
-	Canvas_Init(CanvasDims[0], CanvasDims[1]);
-
-	CanvasLayers = Canvas_CreateArr(100);
+	CanvasLayers = Canvas_CreateArr(100, 64, 64);
 	if (CanvasLayers == NULL) return EXIT_FAILURE;
 
-	CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
+	CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer, CanvasLayers->dims[0], CanvasLayers->dims[1]);
 	if (CURR_CANVAS_LAYER == NULL) return EXIT_FAILURE;
 	CanvasLayers->size++;
+
+	UPDATE_WINDOW_TITLE();
+	UpdateViewportPos();
+	UpdateViewportSize();
 
 	if (argc > 1) {
 		const char* filePath = (const char*)argv[1];
@@ -252,7 +250,7 @@ int main(int argc, char* argv[]) {
 				}
 				if (ImGui::BeginMenu("Save")) {
 					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
+						ifio_write(FilePath, CanvasLayers->dims[0], CanvasLayers->dims[1], CanvasLayers);
 					}
 					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
 						ShowSaveAsFileWindow = true;
@@ -359,7 +357,7 @@ int main(int argc, char* argv[]) {
 			char* _fName = Sys_GetBasename(_fPath);
 			snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
 			UPDATE_WINDOW_TITLE();
-			ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
+			ifio_write(FilePath, CanvasLayers->dims[0], CanvasLayers->dims[1], CanvasLayers);
 			free(_fName);
 			_fName = NULL;
 			_fPath = NULL;
@@ -435,7 +433,7 @@ int main(int argc, char* argv[]) {
 				for (int i = 0; i < CanvasLayers->size; ++i) {
 					if (CanvasLayers->layers[i] != NULL) {
 						FreeHistory(&CanvasLayers->layers[i]->history);
-						SaveHistory(&CanvasLayers->layers[i]->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CanvasLayers->layers[i]->pixels);
+						SaveHistory(&CanvasLayers->layers[i]->history, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t), CanvasLayers->layers[i]->pixels);
 					}
 				}
 			}
@@ -476,8 +474,8 @@ int main(int argc, char* argv[]) {
 			}
 
 			if (ReCalculateZoomSize) {
-				PreviewImageSize.x = CanvasDims[0] * PreviewZoom;
-				PreviewImageSize.y = CanvasDims[1] * PreviewZoom;
+				PreviewImageSize.x = CanvasLayers->dims[0] * PreviewZoom;
+				PreviewImageSize.y = CanvasLayers->dims[1] * PreviewZoom;
 				ReCalculateZoomSize = false;
 			}
 			if (ResetPreviewWindowPos == true) {
@@ -500,7 +498,7 @@ int main(int argc, char* argv[]) {
 					Canvas_ResizeArr(CanvasLayers, newSize);
 					if (CanvasLayers->capacity == newSize) {
 						SelectedLayerIndex++;
-						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
+						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer, CanvasLayers->dims[0], CanvasLayers->dims[1]);
 						CanvasLayers->size++;
 						log_info("Resized canvas layers array to %d", newSize);
 					} else {
@@ -508,7 +506,7 @@ int main(int argc, char* argv[]) {
 					}
 				} else {
 					if (CURR_CANVAS_LAYER != NULL) SelectedLayerIndex++; // when opening a .csprite file with no layers CURR_CANVAS_LAYER might be NULL
-					CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
+					CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer, CanvasLayers->dims[0], CanvasLayers->dims[1]);
 					CanvasLayers->size++;
 				}
 			}
@@ -572,14 +570,12 @@ int main(int argc, char* argv[]) {
 				if (ImGui::Button("Create")) {
 					if (NewDims[0] > 0 && NewDims[1] > 0) {
 						Canvas_DestroyArr(CanvasLayers);
-						CanvasLayers = Canvas_CreateArr(100);
+						CanvasLayers = Canvas_CreateArr(100, NewDims[0], NewDims[1]);
 						SelectedLayerIndex = 0;
-						Canvas_Resize(NewDims[0], NewDims[1]);
-						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
+						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer, NewDims[0], NewDims[1]);
 						CanvasLayers->size++;
-						CanvasDims[0] = NewDims[0];
-						CanvasDims[1] = NewDims[1];
 						CurrViewportZoom = 1.0f;
+						UPDATE_WINDOW_TITLE();
 						UpdateViewportSize();
 						UpdateViewportPos();
 					}
@@ -687,7 +683,6 @@ int main(int argc, char* argv[]) {
 	}
 
 	Canvas_DestroyArr(CanvasLayers);
-	Canvas_Destroy();
 	R_Destroy();
 	SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -735,9 +730,9 @@ static inline bool CanMutateCanvas() {
 		!CanvasLocked                   &&
 		CURR_CANVAS_LAYER != NULL       &&
 		MousePosRel[0] >= 0             &&
-		MousePosRel[0] < CanvasDims[0]  &&
+		MousePosRel[0] < CanvasLayers->dims[0]  &&
 		MousePosRel[1] >= 0             &&
-		MousePosRel[1] < CanvasDims[1]
+		MousePosRel[1] < CanvasLayers->dims[1]
 	);
 }
 
@@ -747,7 +742,7 @@ static void MutateCanvas(bool LmbJustReleased) {
 		switch (Tool) {
 			case BRUSH_COLOR:
 			case BRUSH_ERASER: {
-				CanvasDidMutate = Tool_Line(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, MousePosRelLast[0], MousePosRelLast[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]) || CanvasDidMutate;
+				CanvasDidMutate = Tool_Line(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, MousePosRelLast[0], MousePosRelLast[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]) || CanvasDidMutate;
 				break;
 			}
 			case SHAPE_RECT:
@@ -756,19 +751,19 @@ static void MutateCanvas(bool LmbJustReleased) {
 				if (LmbJustReleased) {
 					CanvasDidMutate = CanvasDidMutate || (Tool == SHAPE_LINE || Tool == SHAPE_RECT || Tool == SHAPE_CIRCLE);
 					if (CanvasDidMutate == true) {
-						SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
+						SaveHistory(&CURR_CANVAS_LAYER->history, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
 						CanvasDidMutate = false;
 					}
 				} else if (IsLMBDown) {
 					if (CURR_CANVAS_LAYER->history->prev != NULL) {
-						memcpy(CURR_CANVAS_LAYER->pixels, CURR_CANVAS_LAYER->history->pixels, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t));
+						memcpy(CURR_CANVAS_LAYER->pixels, CURR_CANVAS_LAYER->history->pixels, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t));
 					} else {
-						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t));
+						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t));
 					}
 					if (Tool == SHAPE_RECT) {
-						Tool_Rect(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
+						Tool_Rect(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]);
 					} else if (Tool == SHAPE_LINE) {
-						Tool_Line(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
+						Tool_Line(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]);
 					} else if (Tool == SHAPE_CIRCLE) {
 						Tool_Circle(
 							CURR_CANVAS_LAYER->pixels,
@@ -778,7 +773,7 @@ static void MutateCanvas(bool LmbJustReleased) {
 								(MousePosRel[0] - MousePosDownRel[0]) * (MousePosRel[0] - MousePosDownRel[0]) +
 								(MousePosRel[1] - MousePosDownRel[1]) * (MousePosRel[1] - MousePosDownRel[1])
 							),
-							CanvasDims[0], CanvasDims[1]
+							CanvasLayers->dims[0], CanvasLayers->dims[1]
 						);
 					}
 				}
@@ -789,13 +784,13 @@ static void MutateCanvas(bool LmbJustReleased) {
 			}
 			case TOOL_FLOODFILL: {
 				if (LmbJustReleased) {
-					unsigned char* pixel = GetCharData(CURR_CANVAS_LAYER->pixels, MousePosRel[0], MousePosRel[1], CanvasDims[0], CanvasDims[1]);
+					unsigned char* pixel = GetCharData(CURR_CANVAS_LAYER->pixels, MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]);
 					unsigned char OldColor[4] = { *(pixel + 0), *(pixel + 1), *(pixel + 2), *(pixel + 3) };
 					CanvasDidMutate = Tool_FloodFill(
 						CURR_CANVAS_LAYER->pixels,
 						OldColor, SelectedColor,
 						MousePosRel[0], MousePosRel[1],
-						CanvasDims[0], CanvasDims[1]
+						CanvasLayers->dims[0], CanvasLayers->dims[1]
 					) || CanvasDidMutate;
 				}
 				break;
@@ -872,7 +867,7 @@ static inline void OnEvent_KeyUp(SDL_Event* e) {
 				if (IsShiftDown) {
 					ShowSaveAsFileWindow = true;
 				} else {
-					ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
+					ifio_write(FilePath, CanvasLayers->dims[0], CanvasLayers->dims[1], CanvasLayers);
 				}
 			}
 			break;
@@ -1034,19 +1029,19 @@ static inline void ProcessEvents() {
 	}
 
 	if (CanvasDidMutate == true && IsLMBDown == false) {
-		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasDims[0] * CanvasDims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
+		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
 		CanvasDidMutate = false;
 	}
 }
 
 static void UpdateViewportSize() {
-	ViewportLoc.w = (int)CanvasDims[0] * CurrViewportZoom;
-	ViewportLoc.h = (int)CanvasDims[1] * CurrViewportZoom;
+	ViewportLoc.w = (int)CanvasLayers->dims[0] * CurrViewportZoom;
+	ViewportLoc.h = (int)CanvasLayers->dims[1] * CurrViewportZoom;
 }
 
 static void UpdateViewportPos() {
-	ViewportLoc.x = (int)(WindowDims[0] / 2) - (CanvasDims[0] * CurrViewportZoom / 2);
-	ViewportLoc.y = (int)(WindowDims[1] / 2) - (CanvasDims[1] * CurrViewportZoom / 2);
+	ViewportLoc.x = (int)(WindowDims[0] / 2) - (CanvasLayers->dims[0] * CurrViewportZoom / 2);
+	ViewportLoc.y = (int)(WindowDims[1] / 2) - (CanvasLayers->dims[1] * CurrViewportZoom / 2);
 }
 
 static void ZoomViewport(int increase) {
@@ -1066,8 +1061,8 @@ static void ZoomViewport(int increase) {
 	// This Ensures That The Canvas Is Zoomed From It's Center And Not From The Bottom Left Position
 	int32_t CurrRectCenter[2] = { (ViewportLoc.w / 2) + ViewportLoc.x, (ViewportLoc.h / 2) + ViewportLoc.y };
 	int32_t NewRectCenter[2] = {
-		(int32_t)(CanvasDims[0] * CurrViewportZoom / 2) + ViewportLoc.x,
-		(int32_t)(CanvasDims[1] * CurrViewportZoom / 2) + ViewportLoc.y
+		(int32_t)(CanvasLayers->dims[0] * CurrViewportZoom / 2) + ViewportLoc.x,
+		(int32_t)(CanvasLayers->dims[1] * CurrViewportZoom / 2) + ViewportLoc.y
 	};
 	ViewportLoc.x -= NewRectCenter[0] - CurrRectCenter[0];
 	ViewportLoc.y -= NewRectCenter[1] - CurrRectCenter[1];
@@ -1076,7 +1071,7 @@ static void ZoomViewport(int increase) {
 
 static uint8_t* GetPixel(int x, int y) {
 	if (CURR_CANVAS_LAYER == NULL) return NULL;
-	return CURR_CANVAS_LAYER->pixels + ((y * CanvasDims[0] + x) * 4);
+	return CURR_CANVAS_LAYER->pixels + ((y * CanvasLayers->dims[0] + x) * 4);
 }
 
 static void InitWindowIcon() {
@@ -1105,8 +1100,6 @@ static int OpenNewFile(const char* _fName) {
 
 	int32_t w = 0, h = 0;
 	if (ifio_read(_fName, &w, &h, &CanvasLayers) == 0 && w > 0 && h > 0) {
-		CanvasDims[0] = w;
-		CanvasDims[1] = h;
 		CurrViewportZoom = 1.0f;
 		SelectedLayerIndex = 0;
 		UpdateViewportSize();
