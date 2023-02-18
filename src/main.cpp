@@ -32,6 +32,8 @@
 #include "renderer/renderer.h"
 #include "ifileio/ifileio.h"
 
+#include "ui/new_canvas.h"
+
 int32_t WindowDims[2] = { 700, 500 };
 int32_t CanvasDims[2] = { 64, 64 };
 
@@ -142,6 +144,20 @@ static uint8_t* GetPixel(int x, int y);
 		SDL_SetWindowTitle(window, WindowTitle);\
 	} while(0)
 
+void SetCanvasDims(int32_t w, int32_t h) {
+	Canvas_DestroyArr(CanvasLayers);
+	CanvasLayers = Canvas_CreateArr(100);
+	SelectedLayerIndex = 0;
+	Canvas_Resize(w, h, R_GetRenderer());
+	CURR_CANVAS_LAYER = Canvas_CreateLayer(R_GetRenderer());
+	CanvasLayers->size++;
+	CanvasDims[0] = w;
+	CanvasDims[1] = h;
+	CurrViewportZoom = 1.0f;
+	UpdateViewportSize();
+	UpdateViewportPos();
+}
+
 int main(int argc, char* argv[]) {
 	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
@@ -233,7 +249,6 @@ int main(int argc, char* argv[]) {
 
 	bool ShowPreferencesWindow = false;
 	bool ShowLayerRenameWindow = false;
-	bool ShowNewCanvasWindow = false;
 
 	unsigned int frameStart, frameTime;
 	unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
@@ -243,7 +258,7 @@ int main(int argc, char* argv[]) {
 		ProcessEvents();
 
 		frameStart = SDL_GetTicks();
-		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
+		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || NewCanvasUI_IsOpen();
 
 		R_Clear(); // Clear The Screen, This Is Required To Done Before The Canvas Is Drawn Because Rendered Canvas Is Directly Copied Onto Screen & Clearing The screen After Copying It Will Not Show The Canvas
 		R_NewFrame(); // All The Calls To ImGui Will Be Recorded After This Function
@@ -251,7 +266,7 @@ int main(int argc, char* argv[]) {
 		if (ImGui::BeginMainMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
 				if (ImGui::MenuItem("New")) {
-					ShowNewCanvasWindow = true;
+					NewCanvasUI_Open();
 				}
 				if (ImGui::MenuItem("Open", "Ctrl+O")) {
 					ShowOpenNewFileWindow = true;
@@ -370,6 +385,8 @@ int main(int argc, char* argv[]) {
 			_fName = NULL;
 			_fPath = NULL;
 		}
+
+		NewCanvasUI_Draw();
 
 		ImVec2 PalWinSize;
 		if (ImGui::Begin("Palettes", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
@@ -567,40 +584,6 @@ int main(int argc, char* argv[]) {
 			}
 
 			ImGui::End();
-		}
-
-		if (ShowNewCanvasWindow) {
-			if (ImGui::BeginPopupModal("Create New###NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
-				static int32_t NewDims[2] = { 64, 64 };
-				ImGui::InputInt("Width", &NewDims[0], 1, 5);
-				ImGui::InputInt("Height", &NewDims[1], 1, 5);
-
-				if (ImGui::Button("Create")) {
-					if (NewDims[0] > 0 && NewDims[1] > 0) {
-						Canvas_DestroyArr(CanvasLayers);
-						CanvasLayers = Canvas_CreateArr(100);
-						SelectedLayerIndex = 0;
-						Canvas_Resize(NewDims[0], NewDims[1], R_GetRenderer());
-						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
-						CanvasLayers->size++;
-						CanvasDims[0] = NewDims[0];
-						CanvasDims[1] = NewDims[1];
-						CurrViewportZoom = 1.0f;
-						UpdateViewportSize();
-						UpdateViewportPos();
-					}
-					ShowNewCanvasWindow = false;
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel")) {
-					NewDims[0] = 64;
-					NewDims[1] = 64;
-					ShowNewCanvasWindow = false;
-				}
-				ImGui::EndPopup();
-			} else {
-				ImGui::OpenPopup("Create New###NewCanvasWindow");
-			}
 		}
 
 		if (ShowPreferencesWindow) {
