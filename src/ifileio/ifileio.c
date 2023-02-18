@@ -140,15 +140,14 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			*w_ptr = (uint32_t)w;
 			*h_ptr = (uint32_t)h;
 			Canvas_DestroyArr(*arr);
-			Canvas_Resize(w, h);
-			CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer());
-			*arr = Canvas_CreateArr(100);
+			CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer(), w, h);
+			*arr = Canvas_CreateArr(100, w, h);
 			(*arr)->size++;
 			(*arr)->layers[0] = layer;
 
-			memcpy(layer->pixels, _data, w * h * 4 * sizeof(uint8_t));
-			memcpy(layer->history->pixels, _data, w * h * 4 * sizeof(uint8_t));
-			SaveHistory(&layer->history, w * h * 4 * sizeof(uint8_t), layer->pixels);
+			memcpy(layer->pixels, _data, w * h * 4);
+			memcpy(layer->history->pixels, _data, w * h * 4);
+			SaveHistory(&layer->history, w * h * 4, layer->pixels);
 			return 0;
 		}
 	} else if (HAS_SUFFIX_CI(filePath, ".csprite", 8)) {
@@ -206,8 +205,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 		}
 
 		Canvas_DestroyArr(*arr);
-		Canvas_Resize(w, h);
-		*arr = Canvas_CreateArr(numLayers > 100 ? numLayers + 50 : 100);
+		*arr = Canvas_CreateArr(numLayers > 100 ? numLayers + 50 : 100, w, h);
 
 		if (numLayers > 0) {
 			for (int currLayerIdx = 0; currLayerIdx < numLayers; ++currLayerIdx) {
@@ -218,7 +216,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 					if (layerName[i] == '\0') break;
 				}
 
-				CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer());
+				CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer(), w, h);
 				strncpy(layer->name, layerName, LAYER_NAME_MAX);
 				(*arr)->size++;
 				(*arr)->layers[currLayerIdx] = layer;
@@ -236,7 +234,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 				memcpy((*arr)->layers[i]->pixels, originalData + ((w * h * numChannels) * numLayersCopied), w * h * numChannels);
 				memcpy((*arr)->layers[i]->history->pixels, (*arr)->layers[i]->pixels, w * h * 4 * sizeof(uint8_t));
 				SaveHistory(&(*arr)->layers[i]->history, w * h * 4 * sizeof(uint8_t), (*arr)->layers[i]->pixels);
-				Canvas_UpdateLayerTexture((*arr)->layers[i]);
+				Canvas_UpdateLayerTexture((*arr)->layers[i], w);
 				numLayersCopied++;
 			}
 
