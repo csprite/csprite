@@ -22,14 +22,14 @@ typedef struct {
 	int32_t size; // num of "slots" used
 	int32_t capacity; // total num of "slots"
 	CanvasLayer_T** layers;
+	SDL_Texture* renderTex; // all of the layers will be written on this
+	SDL_Texture* patternTex; // bg checkerboard pattern
 } CanvasLayerArr_T;
 
-int  Canvas_Init(int32_t w, int32_t h, SDL_Renderer* ren); // Initialize Canvas
+void Canvas_Init(int32_t w, int32_t h); // Initialize Canvas
 void Canvas_Destroy(void); // Destroy Canvas
-void Canvas_NewFrame(SDL_Renderer* ren); // Call Before All Of The Calls To Canvas_Layer();
-void Canvas_Layer(CanvasLayer_T* c, bool UpdateTexture, SDL_Renderer* ren); // Specify What Layers To Render
-void Canvas_FrameEnd(SDL_Renderer* ren, SDL_Rect* r); // Must be called after Canvas_NewFrame & Canvas_Layer calls are done.
-void Canvas_Resize(int32_t w, int32_t h, SDL_Renderer* ren); // Resize Canvas
+void Canvas_Draw(SDL_Renderer* ren, CanvasLayerArr_T* layers, SDL_Rect* r, int32_t layerToUpdateIndex); // layerToUpdateIndex is a index which is equal to the index of the layer you want to update texture data of
+void Canvas_Resize(int32_t w, int32_t h); // Resize Canvas
 
 SDL_Texture*      Canvas_GetTex();
 CanvasLayerArr_T* Canvas_CreateArr(int32_t capacity);

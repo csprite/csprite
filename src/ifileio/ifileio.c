@@ -140,7 +140,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 			*w_ptr = (uint32_t)w;
 			*h_ptr = (uint32_t)h;
 			Canvas_DestroyArr(*arr);
-			Canvas_Resize(w, h, R_GetRenderer());
+			Canvas_Resize(w, h);
 			CanvasLayer_T* layer = Canvas_CreateLayer(R_GetRenderer());
 			*arr = Canvas_CreateArr(100);
 			(*arr)->size++;
@@ -206,7 +206,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 		}
 
 		Canvas_DestroyArr(*arr);
-		Canvas_Resize(w, h, R_GetRenderer());
+		Canvas_Resize(w, h);
 		*arr = Canvas_CreateArr(numLayers > 100 ? numLayers + 50 : 100);
 
 		if (numLayers > 0) {
