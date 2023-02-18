@@ -15,9 +15,8 @@
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
-#include "imgui_extension.h"
-#include "ImGuiFileBrowser.h"
 
+#include "main.h"
 #include "utils.h"
 #include "log/log.h"
 #include "assets.h"
@@ -32,7 +31,11 @@
 #include "renderer/renderer.h"
 #include "ifileio/ifileio.h"
 
+#include "ui/menu.h"
 #include "ui/new_canvas.h"
+#include "ui/filedialog.h"
+#include "ui/preferences.h"
+#include "ui/preview.h"
 
 int32_t WindowDims[2] = { 700, 500 };
 int32_t CanvasDims[2] = { 64, 64 };
@@ -119,7 +122,6 @@ theme_arr_t* ThemeArr = NULL;
 		else { snprintf(WindowTitle, WINDOW_TITLE_MAX, "csprite " VERSION_STR); }\
 	} while(0)
 
-static int  OpenNewFile(const char* fileName);
 static void InitWindowIcon();
 static void _GuiSetColors(ImGuiStyle& style);
 static void _GuiSetToolText();
@@ -144,6 +146,28 @@ static uint8_t* GetPixel(int x, int y);
 		SDL_SetWindowTitle(window, WindowTitle);\
 	} while(0)
 
+void GetCanvasDims(int32_t* w, int32_t* h) {
+	if (w != NULL) *w = CanvasDims[0];
+	if (h != NULL) *h = CanvasDims[1];
+}
+
+CanvasLayerArr_T* GetCanvasLayers() {
+	return CanvasLayers;
+}
+
+void SetFilePath(const char* _fPath) {
+	snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fPath);
+	char* _fName = Sys_GetBasename(_fPath);
+	snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
+	UPDATE_WINDOW_TITLE();
+	free(_fName);
+	_fName = NULL;
+}
+
+const char* GetFilePath() {
+	return FilePath;
+}
+
 void SetCanvasDims(int32_t w, int32_t h) {
 	Canvas_DestroyArr(CanvasLayers);
 	CanvasLayers = Canvas_CreateArr(100);
@@ -156,6 +180,28 @@ void SetCanvasDims(int32_t w, int32_t h) {
 	CurrViewportZoom = 1.0f;
 	UpdateViewportSize();
 	UpdateViewportPos();
+}
+
+void Canvas_Undo() { UNDO(); }
+void Canvas_Redo() { REDO(); }
+
+bool CanUndo() {
+	return (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->prev != NULL);
+}
+
+bool CanRedo() {
+	return (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->next != NULL);
+}
+
+Config_T* GetAppConfig(void) {
+	return AppConfig;
+}
+
+unsigned int frameStart, frameTime;
+unsigned int frameDelay = 1000 / 30;
+
+void SetFrameRate(int32_t fps) {
+	frameDelay = 1000 / fps;
 }
 
 int main(int argc, char* argv[]) {
@@ -250,10 +296,8 @@ int main(int argc, char* argv[]) {
 	bool ShowPreferencesWindow = false;
 	bool ShowLayerRenameWindow = false;
 
-	unsigned int frameStart, frameTime;
-	unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
-
-	imgui_addons::ImGuiFileBrowser ImFileDialog;
+	FileDialogUI_Init();
+	SetFrameRate(AppConfig->FramesUpdateRate);
 	while (!ShouldClose) {
 		ProcessEvents();
 
@@ -263,32 +307,9 @@ int main(int argc, char* argv[]) {
 		R_Clear(); // Clear The Screen, This Is Required To Done Before The Canvas Is Drawn Because Rendered Canvas Is Directly Copied Onto Screen & Clearing The screen After Copying It Will Not Show The Canvas
 		R_NewFrame(); // All The Calls To ImGui Will Be Recorded After This Function
 
+#if 0
 		if (ImGui::BeginMainMenuBar()) {
-			if (ImGui::BeginMenu("File")) {
-				if (ImGui::MenuItem("New")) {
-					NewCanvasUI_Open();
-				}
-				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					ShowOpenNewFileWindow = true;
-				}
-				if (ImGui::BeginMenu("Save")) {
-					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
-					}
-					if (ImGui::MenuItem("Save As", "Ctrl+Shift+S")) {
-						ShowSaveAsFileWindow = true;
-					}
-					ImGui::EndMenu();
-				}
-				ImGui::EndMenu();
-			}
 			if (ImGui::BeginMenu("Edit")) {
-				if (ImGui::MenuItem("Undo", "Ctrl+Z", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->prev != NULL))) {
-					UNDO();
-				}
-				if (ImGui::MenuItem("Redo", "Ctrl+Y", false, (CURR_CANVAS_LAYER != NULL && CURR_CANVAS_LAYER->history->next != NULL))) {
-					REDO();
-				}
 				if (ImGui::BeginMenu("Palette")) {
 					for (int32_t i = 0; i < PaletteArr->numOfEntries; ++i) {
 						int32_t _palidx = PaletteIndex;
@@ -327,66 +348,16 @@ int main(int argc, char* argv[]) {
 					ImGui::EndMenu();
 				}
 
-				if (ImGui::MenuItem("Preferences")) {
-					ShowPreferencesWindow = true;
-				}
-
 				ImGui::EndMenu();
 			}
-			if (ImGui::BeginMenu("View")) {
-				if (ImGui::MenuItem("Preview")) {
-					if (ShowCanvasPreviewWindow) ShowCanvasPreviewWindow = false;
-					else ShowCanvasPreviewWindow = true;
-				}
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Help")) {
-				if (ImGui::MenuItem("Wiki")) {
-					Sys_OpenURL("https://csprite.github.io/wiki/");
-				}
-				if (ImGui::MenuItem("About")) {
-					Sys_OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
-				}
-				if (ImGui::MenuItem("GitHub")) {
-					Sys_OpenURL("https://github.com/pegvin/csprite");
-				}
-				ImGui::EndMenu();
-			}
-			ImGui::EndMainMenuBar();
 		}
+#endif // 0
 
-		if (ShowOpenNewFileWindow) {
-			ImGui::OpenPopup("Select a file##Csprite_OpenNewFileDlg");
-			ShowOpenNewFileWindow = false;
-		}
-		if (ShowSaveAsFileWindow) {
-			ImGui::OpenPopup("Save file as##Csprite_SaveAsFileDlg");
-			ShowSaveAsFileWindow = false;
-		}
-
-		if (ImFileDialog.showFileDialog("Select a file##Csprite_OpenNewFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".csprite,.png,.jpg,.jpeg,.bmp")) {
-			OpenNewFile(ImFileDialog.selected_path.c_str());
-		}
-		if (ImFileDialog.showFileDialog("Save file as##Csprite_SaveAsFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(0, 0), ".csprite,.png,.jpg,.jpeg,.bmp")) {
-			/*  simple logic which appends the appropriate extension if none provided.
-				like "test1" with ".png" filter selected is converted to "test1.png" */
-			char* _fPath = (char*)ImFileDialog.selected_path.c_str();
-			if (!HAS_SUFFIX_CI(_fPath, ImFileDialog.ext.c_str(), ImFileDialog.ext.length())) {
-				int newStrLen = ImFileDialog.selected_path.length() + ImFileDialog.ext.length() + 1;
-				_fPath = (char*)malloc(newStrLen);
-				snprintf(_fPath, newStrLen, "%s%s", ImFileDialog.selected_path.c_str(), ImFileDialog.ext.c_str());
-			}
-			snprintf(FilePath, SYS_PATHNAME_MAX, "%s", _fPath);
-			char* _fName = Sys_GetBasename(_fPath);
-			snprintf(FileName, SYS_FILENAME_MAX, "%s", _fName);
-			UPDATE_WINDOW_TITLE();
-			ifio_write(FilePath, CanvasDims[0], CanvasDims[1], CanvasLayers);
-			free(_fName);
-			_fName = NULL;
-			_fPath = NULL;
-		}
-
+		Menu_Draw();
 		NewCanvasUI_Draw();
+		FileDialogUI_Draw();
+		PreferencesUI_Draw();
+		PreviewUI_Draw();
 
 		ImVec2 PalWinSize;
 		if (ImGui::Begin("Palettes", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
@@ -466,52 +437,6 @@ int main(int argc, char* argv[]) {
 			ImGui::End();
 		}
 
-		static int32_t PreviewZoom = 2;
-		static ImVec2  PreviewImageSize;
-		static bool ResetPreviewWindowPos = true;
-		static bool ReCalculateZoomSize = true;
-
-		{
-			// simple condition that set ResetPreviewWindowPos to true, so that Preview window position can be updated after the window width is calculated
-			static int FramesPassed = 0;
-			static bool LockCond = false;
-			if (!LockCond) {
-				if (FramesPassed != 3) {
-					FramesPassed++;
-				} else {
-					LockCond = true;
-					ResetPreviewWindowPos = true;
-				}
-			}
-		}
-
-		if (ShowCanvasPreviewWindow && ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
-			if (ImGui::BeginPopupContextItem()) {
-				if (ImGui::BeginMenu("Zoom")) {
-					if (ImGui::MenuItem("Increase")) { PreviewZoom++; ReCalculateZoomSize = true; }
-					if (ImGui::MenuItem("Decrease")) { if (PreviewZoom > 1) { PreviewZoom--; ReCalculateZoomSize = true; } }
-					ImGui::EndMenu();
-				}
-				if (ImGui::MenuItem("Reset Position")) {
-					ResetPreviewWindowPos = true;
-				}
-				ImGui::EndPopup();
-			}
-
-			if (ReCalculateZoomSize) {
-				PreviewImageSize.x = CanvasDims[0] * PreviewZoom;
-				PreviewImageSize.y = CanvasDims[1] * PreviewZoom;
-				ReCalculateZoomSize = false;
-			}
-			if (ResetPreviewWindowPos == true) {
-				ImGui::SetWindowPos({ io.DisplaySize.x - ImGui::GetWindowSize().x - 20, io.DisplaySize.y - ImGui::GetWindowSize().y - 20, }); // Move Window To Bottom Right With 20 pixel padding
-				ResetPreviewWindowPos = false;
-			}
-
-			ImGui::Image(reinterpret_cast<ImTextureID>(Canvas_GetTex()), PreviewImageSize);
-			ImGui::End();
-		}
-
 		if (ImGui::Begin("Layer", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
 			ImVec2 WinSize = { 200, 300 };
 			ImGui::SetWindowPos({ io.DisplaySize.x - WinSize.x - 10, 40, }); // Move Window To Bottom Right With 20 pixel padding
@@ -586,33 +511,6 @@ int main(int argc, char* argv[]) {
 			ImGui::End();
 		}
 
-		if (ShowPreferencesWindow) {
-			if (ImGui::BeginPopupModal("Preferences###PreferencesWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
-				ImGui::Text("VSync (%s)", AppConfig->vsync ? "Enabled" : "Disabled");
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Vertical Sync - Synchronize App's FPS To Your Monitor's FPS");
-				ImGui::SameLine();
-				ImGui::Ext_ToggleButton("VSync_Toggle", &AppConfig->vsync);
-
-				ImGui::InputInt("FPS", &AppConfig->FramesUpdateRate, 1, 5, AppConfig->vsync == true ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Frames Per Second");
-
-				AppConfig->FramesUpdateRate = AppConfig->FramesUpdateRate < 5 ? 5 : AppConfig->FramesUpdateRate;
-				if (ImGui::Button("Save")) {
-					WriteConfig(AppConfig);
-					frameDelay = 1000 / AppConfig->FramesUpdateRate;
-					ShowPreferencesWindow = false;
-				}
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("please restart the app after saving");
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel")) {
-					ShowPreferencesWindow = false;
-				}
-				ImGui::EndPopup();
-			} else {
-				ImGui::OpenPopup("Preferences###PreferencesWindow");
-			}
-		}
-
 		if (ShowLayerRenameWindow) {
 			// This Variable is only true when the popup first appears & is needed to be set to false after the first time of the popup appearing & is needed to be set to true again after the window closes
 			static bool isFirstTime = true;
@@ -682,6 +580,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	FileDialogUI_DeInit();
 	Canvas_DestroyArr(CanvasLayers);
 	Canvas_Destroy();
 	R_Destroy();
@@ -1093,7 +992,7 @@ static void InitWindowIcon() {
 	SDL_FreeSurface(surface);
 }
 
-static int OpenNewFile(const char* _fName) {
+int OpenNewFile(const char* _fName) {
 	if (_fName == NULL) {
 		log_error("_fName is NULL!");
 		return -1;
