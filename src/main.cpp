@@ -185,10 +185,7 @@ int main(int argc, char* argv[]) {
 
 	UpdateViewportPos();
 	UpdateViewportSize();
-
-	if (Canvas_Init(CanvasDims[0], CanvasDims[1], renderer) != EXIT_SUCCESS) {
-		return EXIT_FAILURE;
-	}
+	Canvas_Init(CanvasDims[0], CanvasDims[1]);
 
 	CanvasLayers = Canvas_CreateArr(100);
 	if (CanvasLayers == NULL) return EXIT_FAILURE;
@@ -488,7 +485,7 @@ int main(int argc, char* argv[]) {
 				ResetPreviewWindowPos = false;
 			}
 
-			ImGui::Image(reinterpret_cast<ImTextureID>(Canvas_GetTex()), PreviewImageSize);
+			ImGui::Image(reinterpret_cast<ImTextureID>(CanvasLayers->renderTex), PreviewImageSize);
 			ImGui::End();
 		}
 
@@ -577,7 +574,7 @@ int main(int argc, char* argv[]) {
 						Canvas_DestroyArr(CanvasLayers);
 						CanvasLayers = Canvas_CreateArr(100);
 						SelectedLayerIndex = 0;
-						Canvas_Resize(NewDims[0], NewDims[1], R_GetRenderer());
+						Canvas_Resize(NewDims[0], NewDims[1]);
 						CURR_CANVAS_LAYER = Canvas_CreateLayer(renderer);
 						CanvasLayers->size++;
 						CanvasDims[0] = NewDims[0];
@@ -669,14 +666,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		if (CanvasLayers->size > 0) {
-			Canvas_NewFrame(renderer);
-			for (int32_t i = 0; i < CanvasLayers->size; ++i) {
-				if (CanvasLayers->layers[i] != NULL) {
-					Canvas_Layer(CanvasLayers->layers[i], SelectedLayerIndex == i, renderer);
-				}
-			}
-			Canvas_FrameEnd(renderer, &ViewportLoc);
-
+			Canvas_Draw(renderer, CanvasLayers, &ViewportLoc, SelectedLayerIndex);
 			SDL_SetRenderDrawColor(
 				renderer,
 				style.Colors[ImGuiCol_Border].x * 255,
