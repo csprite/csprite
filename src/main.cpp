@@ -213,9 +213,11 @@ int main(int argc, char* argv[]) {
 	_GuiSetColors(style);
 
 	{
-		int defaultUiFontSize = 0;
-		const void* defaultUiFont = Assets_Get("data/fonts/bm-mini.ttf", &defaultUiFontSize);
-		if (defaultUiFont) io.Fonts->AddFontFromMemoryCompressedTTF(defaultUiFont, defaultUiFontSize, 16.0f);
+		ImFontConfig fontConfig;
+		fontConfig.RasterizerMultiply = 2.0f;
+		int bmMiniFontSize = 0;
+		const void* bmMiniFont = Assets_Get("data/fonts/bm-mini.ttf", &bmMiniFontSize);
+		if (bmMiniFont) io.Fonts->AddFontFromMemoryCompressedTTF(bmMiniFont, bmMiniFontSize, 16.0f, &fontConfig);
 	}
 
 	SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
