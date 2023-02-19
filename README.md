@@ -25,7 +25,7 @@ A tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 
 ---
 ### Todo
-- [ ] "Custom" File Format
+- [x] Custom File Format (.csprite)
 - [ ] Configurable Alpha For Each Layer
 - [ ] Configurable Blend Mode For Each Layer
 - [x] ReFactor Code
