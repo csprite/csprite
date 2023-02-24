@@ -242,6 +242,13 @@ int main(int argc, char* argv[]) {
 		R_Clear(); // Clear The Screen, This Is Required To Done Before The Canvas Is Drawn Because Rendered Canvas Is Directly Copied Onto Screen & Clearing The screen After Copying It Will Not Show The Canvas
 		R_NewFrame(); // All The Calls To ImGui Will Be Recorded After This Function
 
+#if(CS_BUILD_STABLE == 0)
+		static bool metricsWinVisible = false;
+		if (metricsWinVisible) {
+			ImGui::ShowMetricsWindow(NULL);
+		}
+#endif
+
 		static ImVec2 MainMenuPos;
 		static ImVec2 MainMenuSize;
 		if (ImGui::BeginMainMenuBar()) {
@@ -319,6 +326,12 @@ int main(int argc, char* argv[]) {
 					if (ShowCanvasPreviewWindow) ShowCanvasPreviewWindow = false;
 					else ShowCanvasPreviewWindow = true;
 				}
+#if(CS_BUILD_STABLE == 0)
+				if (ImGui::MenuItem("Metrics")) {
+					if (metricsWinVisible) metricsWinVisible = false;
+					else metricsWinVisible = true;
+				}
+#endif
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Help")) {
