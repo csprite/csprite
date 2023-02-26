@@ -45,6 +45,7 @@ bool IsShiftDown = false;
 bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
 bool CanvasLocked = false; // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
+bool ShowAboutWindow = false;
 bool ShowOpenNewFileWindow = false;
 bool ShowSaveAsFileWindow = false;
 bool ShowCanvasPreviewWindow = true;
@@ -339,10 +340,13 @@ int main(int argc, char* argv[]) {
 					Sys_OpenURL("https://csprite.github.io/wiki/");
 				}
 				if (ImGui::MenuItem("About")) {
-					Sys_OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
+					ShowAboutWindow = true;
 				}
 				if (ImGui::MenuItem("GitHub")) {
 					Sys_OpenURL("https://github.com/pegvin/csprite");
+				}
+				if (ImGui::MenuItem("Contributors")) {
+					Sys_OpenURL("https://github.com/pegvin/csprite/graphs/contributors");
 				}
 				ImGui::EndMenu();
 			}
@@ -381,6 +385,22 @@ int main(int argc, char* argv[]) {
 			free(_fName);
 			_fName = NULL;
 			_fPath = NULL;
+		}
+
+		if (ShowAboutWindow) {
+			if (ImGui::BeginPopupModal("About##Csprite_AboutWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
+				ImGui::Text("Csprite " VERSION_STR);
+				ImGui::Separator();
+				ImGui::Text("A simple yet feature rich pixel art tool");
+
+				if (ImGui::Button("Close")) {
+					ImGui::CloseCurrentPopup();
+					ShowAboutWindow = false;
+				}
+				ImGui::EndPopup();
+			} else {
+				ImGui::OpenPopup("About##Csprite_AboutWindow");
+			}
 		}
 
 		static ImVec2 LeftSideBarPos;
