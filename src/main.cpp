@@ -654,12 +654,14 @@ int main(int argc, char* argv[]) {
 						UpdateViewportPos();
 					}
 					ShowNewCanvasWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
 					NewDims[0] = 64;
 					NewDims[1] = 64;
 					ShowNewCanvasWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::EndPopup();
 			} else {
@@ -682,11 +684,13 @@ int main(int argc, char* argv[]) {
 					WriteConfig(AppConfig);
 					frameDelay = 1000 / AppConfig->FramesUpdateRate;
 					ShowPreferencesWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("please restart the app after saving");
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
 					ShowPreferencesWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::EndPopup();
 			} else {
@@ -721,12 +725,14 @@ int main(int argc, char* argv[]) {
 					memset(TempBuff, 0, LAYER_NAME_MAX);
 					ShowLayerRenameWindow = false;
 					LayerRenamed = false;
+					ImGui::CloseCurrentPopup();
 				}
 
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
 					memset(TempBuff, 0, LAYER_NAME_MAX);
 					ShowLayerRenameWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::EndPopup();
 			} else {
