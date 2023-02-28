@@ -45,6 +45,7 @@ bool IsShiftDown = false;
 bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
 bool CanvasLocked = false; // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
+bool ShowAboutWindow = false;
 bool ShowOpenNewFileWindow = false;
 bool ShowSaveAsFileWindow = false;
 bool ShowCanvasPreviewWindow = true;
@@ -242,6 +243,15 @@ int main(int argc, char* argv[]) {
 		R_Clear(); // Clear The Screen, This Is Required To Done Before The Canvas Is Drawn Because Rendered Canvas Is Directly Copied Onto Screen & Clearing The screen After Copying It Will Not Show The Canvas
 		R_NewFrame(); // All The Calls To ImGui Will Be Recorded After This Function
 
+#if(CS_BUILD_STABLE == 0)
+		static bool metricsWinVisible = false;
+		if (metricsWinVisible) {
+			ImGui::ShowMetricsWindow(NULL);
+		}
+#endif
+
+		static ImVec2 MainMenuPos;
+		static ImVec2 MainMenuSize;
 		if (ImGui::BeginMainMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
 				if (ImGui::MenuItem("New")) {
@@ -317,6 +327,12 @@ int main(int argc, char* argv[]) {
 					if (ShowCanvasPreviewWindow) ShowCanvasPreviewWindow = false;
 					else ShowCanvasPreviewWindow = true;
 				}
+#if(CS_BUILD_STABLE == 0)
+				if (ImGui::MenuItem("Metrics")) {
+					if (metricsWinVisible) metricsWinVisible = false;
+					else metricsWinVisible = true;
+				}
+#endif
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Help")) {
@@ -324,13 +340,19 @@ int main(int argc, char* argv[]) {
 					Sys_OpenURL("https://csprite.github.io/wiki/");
 				}
 				if (ImGui::MenuItem("About")) {
-					Sys_OpenURL("https://github.com/pegvin/csprite/wiki/About-CSprite");
+					ShowAboutWindow = true;
 				}
 				if (ImGui::MenuItem("GitHub")) {
 					Sys_OpenURL("https://github.com/pegvin/csprite");
 				}
+				if (ImGui::MenuItem("Contributors")) {
+					Sys_OpenURL("https://github.com/pegvin/csprite/graphs/contributors");
+				}
 				ImGui::EndMenu();
 			}
+
+			MainMenuPos = ImGui::GetWindowPos();
+			MainMenuSize = ImGui::GetWindowSize();
 			ImGui::EndMainMenuBar();
 		}
 
@@ -343,10 +365,10 @@ int main(int argc, char* argv[]) {
 			ShowSaveAsFileWindow = false;
 		}
 
-		if (ImFileDialog.showFileDialog("Select a file##Csprite_OpenNewFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, ImVec2(0, 0), ".csprite,.png,.jpg,.jpeg,.bmp")) {
+		if (ImFileDialog.showFileDialog("Select a file##Csprite_OpenNewFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::OPEN, { io.DisplaySize.x * 0.9f, io.DisplaySize.y * 0.9f }, ".csprite,.png,.jpg,.jpeg,.bmp")) {
 			OpenNewFile(ImFileDialog.selected_path.c_str());
 		}
-		if (ImFileDialog.showFileDialog("Save file as##Csprite_SaveAsFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, ImVec2(0, 0), ".csprite,.png,.jpg,.jpeg,.bmp")) {
+		if (ImFileDialog.showFileDialog("Save file as##Csprite_SaveAsFileDlg", imgui_addons::ImGuiFileBrowser::DialogMode::SAVE, { io.DisplaySize.x * 0.9f, io.DisplaySize.y * 0.9f }, ".csprite,.png,.jpg,.jpeg,.bmp")) {
 			/*  simple logic which appends the appropriate extension if none provided.
 				like "test1" with ".png" filter selected is converted to "test1.png" */
 			char* _fPath = (char*)ImFileDialog.selected_path.c_str();
@@ -365,11 +387,44 @@ int main(int argc, char* argv[]) {
 			_fPath = NULL;
 		}
 
-		ImVec2 PalWinSize;
-		if (ImGui::Begin("Palettes", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
-			ImGui::SetWindowPos({ 3.0f, 30.0f });
+		if (ShowAboutWindow) {
+			if (ImGui::BeginPopupModal("About##Csprite_AboutWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
+				ImGui::Text("Csprite " VERSION_STR);
+				ImGui::Separator();
+				ImGui::Text("A simple yet feature rich pixel art tool");
+
+				if (ImGui::Button("Close")) {
+					ImGui::CloseCurrentPopup();
+					ShowAboutWindow = false;
+				}
+				ImGui::EndPopup();
+			} else {
+				ImGui::OpenPopup("About##Csprite_AboutWindow");
+			}
+		}
+
+		static ImVec2 LeftSideBarPos;
+		static ImVec2 LeftSideBarSize;
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::SetNextWindowSizeConstraints({ 50, -1 }, { (float)WindowDims[0], -1 });
+		ImGui::PushStyleColor(ImGuiCol_ResizeGrip, 0);
+		ImGui::PushStyleColor(ImGuiCol_ResizeGripHovered, 0);
+		ImGui::PushStyleColor(ImGuiCol_ResizeGripActive, 0);
+		if (ImGui::Begin("LeftSideBar", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
+			LeftSideBarPos = { -1, MainMenuPos.y + MainMenuSize.y };
+			LeftSideBarSize = { (float)WindowDims[0] / 8, WindowDims[1] - (MainMenuPos.y + MainMenuSize.y) };
+
+			ImGui::SetWindowPos(LeftSideBarPos);
+			ImGui::SetWindowSize(LeftSideBarSize, ImGuiCond_Once);
+
+			ImVec2 newFramePadding = { style.FramePadding.x * 4.0f, style.FramePadding.y * 4.0f };
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, newFramePadding);
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
+
+			float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
 			for (unsigned int i = 0; i < GetSelectedPalette()->numOfEntries; i++) {
-				if (i != 0 && i % 2 != 0) ImGui::SameLine();
+				ImGui::PushID(i);
+
 				static char ColorButtonId[20] = "";
 				if (PaletteColorIndex != i) { snprintf(ColorButtonId, 20, "Color##%d", i); }
 
@@ -392,32 +447,67 @@ int main(int argc, char* argv[]) {
 					(PaletteColorIndex == i && COLOR_EQUAL(SelectedColor, GetSelectedPalette()->Colors[i])) ? 0xFFFFFFFF : 0x000000FF,
 					0, 0, 1
 				);
+
+				float lastBtnSizeX = ImGui::GetItemRectMax().x;
+				float nextBtnSizeX = lastBtnSizeX + style.ItemSpacing.x + ImGui::GetItemRectSize().x; // Expected position if next button was on same line
+				if (i + 1 < GetSelectedPalette()->numOfEntries && nextBtnSizeX < window_visible_x2) ImGui::SameLine();
+				ImGui::PopID();
 			};
+			ImGui::PopStyleVar(2);
 
-			ImGui::SetWindowSize({0.0f, 0.0f}); // This Will Make the window adjust size according to children
-			PalWinSize = ImGui::GetWindowSize();
-			ImGui::End();
-		}
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
 
-		if (ImGui::Begin("###ColorPickerWindow", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBackground)) {
-			ImGui::SetWindowPos({ 0, PalWinSize.y + 40.0f });
 			float ImColPicker[4] = { (float)(SelectedColor[0]) / 255, (float)(SelectedColor[1]) / 255, (float)(SelectedColor[2]) / 255, (float)(SelectedColor[3]) / 255 };
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8, 8));
-			ImGui::ColorEdit4(
+			ImGui::SetNextItemWidth(-FLT_MIN); // right align
+			ImGui::ColorPicker4(
 				"##ColorPickerWidget", (float*)&ImColPicker,
-				ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel
+				ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview
 			);
-			ImGui::PopStyleVar();
-
 			SelectedColor[0] = ImColPicker[0] * 255;
 			SelectedColor[1] = ImColPicker[1] * 255;
 			SelectedColor[2] = ImColPicker[2] * 255;
 			SelectedColor[3] = ImColPicker[3] * 255;
 
-			ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), 0xFFFFFFFF, 0, 0, 1);
-			ImGui::SetWindowSize({ 0, 0 });
+			LeftSideBarSize = ImGui::GetWindowSize();
 			ImGui::End();
 		}
+
+		static ImVec2 TopBarSize, TopBarPos;
+		if (ImGui::Begin("TopBar", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
+			ImGui::Text("%s", SelectedToolText);
+			if (ImGui::BeginPopupContextItem("##TopBarPopupContext1")) {
+				if (ImGui::BeginMenu("Brush")) {
+					if (ImGui::MenuItem("Square")) { Tools_SetBrushShape(BRUSH_SHAPE_SQUARE); }
+					if (ImGui::MenuItem("Circle")) { Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE); }
+					ImGui::EndMenu();
+				}
+				int32_t bSize = Tools_GetBrushSize();
+				if (ImGui::SliderInt("##BrushSize", &bSize, 1, CanvasLayers->dims[0])) {
+					Tools_SetBrushSize(bSize);
+				}
+				ImGui::EndPopup();
+			}
+
+			TopBarPos = { LeftSideBarPos.x + LeftSideBarSize.x, MainMenuPos.y + MainMenuSize.y };
+			TopBarSize = { (float)WindowDims[0] - ImGui::GetWindowPos().x, ImGui::GetTextLineHeightWithSpacing() };
+			ImGui::SetWindowPos(TopBarPos);
+			ImGui::SetWindowSize(TopBarSize);
+			ImGui::End();
+		}
+
+		static ImVec2 BottomBarSize, BottomBarPos;
+		if (ImGui::Begin("BottomBar", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
+			ImGui::Text("Zoom: %d%%", (int)(CurrViewportZoom * 100));
+
+			BottomBarPos = { LeftSideBarPos.x + LeftSideBarSize.x, (float)WindowDims[1] - (ImGui::GetTextLineHeightWithSpacing() + style.WindowPadding.y + style.FramePadding.y) };
+			BottomBarSize = { (float)WindowDims[0] - ImGui::GetWindowPos().x, ImGui::GetTextLineHeightWithSpacing() + style.WindowPadding.y + style.FramePadding.y };
+			ImGui::SetWindowPos(BottomBarPos);
+			ImGui::SetWindowSize(BottomBarSize);
+			ImGui::End();
+		}
+		ImGui::PopStyleVar();
 
 		if (ImGui::Begin(
 			"Debug Window", NULL,
@@ -426,9 +516,8 @@ int main(int argc, char* argv[]) {
 			| ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground
 #endif
 		)) {
-			ImVec2 WinSize = ImGui::GetWindowSize();
-			ImGui::SetWindowPos({ 5, io.DisplaySize.y - WinSize.y - 10 });
-			ImGui::Text("%s\nZoom: %d%%", SelectedToolText, (int)(CurrViewportZoom * 100));
+			ImVec2 DebugWinSize = ImGui::GetWindowSize();
+			ImGui::SetWindowPos({ ((float)WindowDims[0] / 2) - (DebugWinSize.x / 2), io.DisplaySize.y - DebugWinSize.y - BottomBarSize.y });
 #if(CS_BUILD_STABLE == 0)
 			ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			if (ImGui::Button("Clear Undo/Redo Buffers")) {
@@ -445,32 +534,14 @@ int main(int argc, char* argv[]) {
 
 		static int32_t PreviewZoom = 2;
 		static ImVec2  PreviewImageSize;
-		static bool ResetPreviewWindowPos = true;
 		static bool ReCalculateZoomSize = true;
 
-		{
-			// simple condition that set ResetPreviewWindowPos to true, so that Preview window position can be updated after the window width is calculated
-			static int FramesPassed = 0;
-			static bool LockCond = false;
-			if (!LockCond) {
-				if (FramesPassed != 3) {
-					FramesPassed++;
-				} else {
-					LockCond = true;
-					ResetPreviewWindowPos = true;
-				}
-			}
-		}
-
-		if (ShowCanvasPreviewWindow && ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
+		if (ShowCanvasPreviewWindow && ImGui::Begin("Preview", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
 			if (ImGui::BeginPopupContextItem()) {
 				if (ImGui::BeginMenu("Zoom")) {
 					if (ImGui::MenuItem("Increase")) { PreviewZoom++; ReCalculateZoomSize = true; }
 					if (ImGui::MenuItem("Decrease")) { if (PreviewZoom > 1) { PreviewZoom--; ReCalculateZoomSize = true; } }
 					ImGui::EndMenu();
-				}
-				if (ImGui::MenuItem("Reset Position")) {
-					ResetPreviewWindowPos = true;
 				}
 				ImGui::EndPopup();
 			}
@@ -480,20 +551,16 @@ int main(int argc, char* argv[]) {
 				PreviewImageSize.y = CanvasLayers->dims[1] * PreviewZoom;
 				ReCalculateZoomSize = false;
 			}
-			if (ResetPreviewWindowPos == true) {
-				ImGui::SetWindowPos({ io.DisplaySize.x - ImGui::GetWindowSize().x - 20, io.DisplaySize.y - ImGui::GetWindowSize().y - 20, }); // Move Window To Bottom Right With 20 pixel padding
-				ResetPreviewWindowPos = false;
-			}
 
+			ImGui::SetWindowPos({ io.DisplaySize.x - ImGui::GetWindowSize().x - 10, io.DisplaySize.y - ImGui::GetWindowSize().y - (BottomBarSize.y + 10) });
 			ImGui::Image(reinterpret_cast<ImTextureID>(CanvasLayers->renderTex), PreviewImageSize);
 			ImGui::End();
 		}
 
-		if (ImGui::Begin("Layer", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
-			ImVec2 WinSize = { 200, 300 };
-			ImGui::SetWindowPos({ io.DisplaySize.x - WinSize.x - 10, 40, }); // Move Window To Bottom Right With 20 pixel padding
-			ImGui::SetWindowSize(WinSize, ImGuiCond_FirstUseEver);
-
+		static ImVec2 LayerWinSize;
+		ImGui::SetNextWindowSizeConstraints({ 200, 300 }, { io.DisplaySize.y / 1.5f, io.DisplaySize.y / 2.0f });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		if (ImGui::Begin("Layer", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar)) {
 			if (ImGui::Button("+")) {
 				if (SelectedLayerIndex + 1 >= CanvasLayers->capacity) {
 					int32_t newSize = CanvasLayers->capacity + 50;
@@ -560,8 +627,13 @@ int main(int argc, char* argv[]) {
 				ImGui::SetDragDropPayload("LayersDNDId", &move_to, sizeof(int));
 			}
 
+			LayerWinSize = ImGui::GetWindowSize();
+			ImGui::SetWindowSize(LayerWinSize, ImGuiCond_Once);
+			ImGui::SetWindowPos({ io.DisplaySize.x - LayerWinSize.x + 1, TopBarPos.y + TopBarSize.y + style.WindowPadding.y + style.FramePadding.y });
 			ImGui::End();
 		}
+		ImGui::PopStyleVar(); // ImGuiStyleVar_WindowBorderSize
+		ImGui::PopStyleColor(3); // ImGuiCol_ResizeGrip, ImGuiCol_ResizeGripHovered, ImGuiCol_ResizeGripActive
 
 		if (ShowNewCanvasWindow) {
 			if (ImGui::BeginPopupModal("Create New###NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -582,12 +654,14 @@ int main(int argc, char* argv[]) {
 						UpdateViewportPos();
 					}
 					ShowNewCanvasWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
 					NewDims[0] = 64;
 					NewDims[1] = 64;
 					ShowNewCanvasWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::EndPopup();
 			} else {
@@ -610,11 +684,13 @@ int main(int argc, char* argv[]) {
 					WriteConfig(AppConfig);
 					frameDelay = 1000 / AppConfig->FramesUpdateRate;
 					ShowPreferencesWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("please restart the app after saving");
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
 					ShowPreferencesWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::EndPopup();
 			} else {
@@ -649,12 +725,14 @@ int main(int argc, char* argv[]) {
 					memset(TempBuff, 0, LAYER_NAME_MAX);
 					ShowLayerRenameWindow = false;
 					LayerRenamed = false;
+					ImGui::CloseCurrentPopup();
 				}
 
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
 					memset(TempBuff, 0, LAYER_NAME_MAX);
 					ShowLayerRenameWindow = false;
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::EndPopup();
 			} else {
