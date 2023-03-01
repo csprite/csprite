@@ -122,8 +122,6 @@ static inline bool CanMutateCanvas();
 static inline void ProcessEvents();
 static uint8_t* GetPixel(int x, int y);
 
-#define GetSelectedPalette() (*PaletteArr)[PaletteIndex]
-
 #define UNDO() \
 	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
 
