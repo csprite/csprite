@@ -1,3 +1,4 @@
+#include <zlib.h> // for uLongf
 #include "log/log.h"
 #include "ifileio.h"
 #include "zlib_wrapper.h"
@@ -70,8 +71,8 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 			WRITE_CHECKED(fp, arr->layers[i]->name, strlen(arr->layers[i]->name) + 1);
 		}
 
-		size_t pixelArrAlignedSize = w * h * numChannels * arr->size * sizeof(uint8_t);
-		size_t dataSizeCompressed = 0;
+		uLongf pixelArrAlignedSize = w * h * numChannels * arr->size * sizeof(uint8_t);
+		uLongf dataSizeCompressed = 0;
 		uint8_t* pixelArrAligned = (uint8_t*)malloc(pixelArrAlignedSize);
 		if (pixelArrAligned == NULL) {
 			log_error("Failed to allocate memory buffer to store pixel array aligned");
@@ -79,7 +80,7 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 			return -1;
 		}
 
-		size_t amtCopied = 0;
+		uLongf amtCopied = 0;
 		for (int i = 0; i < arr->size; ++i) {
 			memcpy(pixelArrAligned + amtCopied, arr->layers[i]->pixels, w * h * numChannels);
 			amtCopied += w * h * numChannels;
@@ -161,7 +162,7 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 		}
 
 		fseek(fp, 0L, SEEK_END);
-		size_t fileSize = ftell(fp);
+		uLongf fileSize = ftell(fp);
 		fseek(fp, 0L, SEEK_SET);
 
 		if (fileSize < 22) {
@@ -222,11 +223,11 @@ int32_t ifio_read(const char* filePath, int32_t* w_ptr, int32_t* h_ptr, CanvasLa
 				(*arr)->layers[currLayerIdx] = layer;
 			}
 
-			size_t compressDataSize = fileSize - ftell(fp);
+			uLongf compressDataSize = fileSize - ftell(fp);
 			uint8_t* compressedData = malloc(compressDataSize);
 			if (fread(compressedData, compressDataSize, 1, fp) != 1) { log_error("failed to read compressed data"); fclose(fp); return -1; }
 
-			size_t originalDataSize = w * h * numChannels * numLayers * sizeof(uint8_t);
+			uLongf originalDataSize = w * h * numChannels * numLayers * sizeof(uint8_t);
 			uint8_t* originalData = Z_DeCompressData(compressedData, compressDataSize, originalDataSize);
 
 			int32_t numLayersCopied = 0;
