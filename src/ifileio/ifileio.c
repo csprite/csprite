@@ -73,7 +73,10 @@ int32_t ifio_write(const char* filePath, int32_t w, int32_t h, CanvasLayerArr_T*
 
 		uLongf pixelArrAlignedSize = w * h * numChannels * arr->size * sizeof(uint8_t);
 		uLongf dataSizeCompressed = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Walloc-size-larger-than"
 		uint8_t* pixelArrAligned = (uint8_t*)malloc(pixelArrAlignedSize);
+#pragma GCC diagnostic pop
 		if (pixelArrAligned == NULL) {
 			log_error("Failed to allocate memory buffer to store pixel array aligned");
 			fclose(fp);
