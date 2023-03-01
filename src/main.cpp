@@ -268,7 +268,7 @@ int main(int argc, char* argv[]) {
 					REDO();
 				}
 				if (ImGui::BeginMenu("Palette")) {
-					for (int32_t i = 0; i < pMgr->presets->size(); ++i) {
+					for (int32_t i = 0; i < (int32_t)pMgr->presets->size(); ++i) {
 						if (ImGui::MenuItem((*pMgr->presets)[i].name.c_str(), NULL)) {
 							pMgr->SetPreset((*pMgr->presets)[i]);
 						}
@@ -405,7 +405,7 @@ int main(int argc, char* argv[]) {
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
 
 			float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-			for (unsigned int i = 0; i < pMgr->palette.colors.size(); i++) {
+			for (int32_t i = 0; i < (int32_t)pMgr->palette.colors.size(); i++) {
 				ImGui::PushID(i);
 
 				static char ColorButtonId[20] = "";
@@ -434,7 +434,7 @@ int main(int argc, char* argv[]) {
 
 				float lastBtnSizeX = ImGui::GetItemRectMax().x;
 				float nextBtnSizeX = lastBtnSizeX + style.ItemSpacing.x + ImGui::GetItemRectSize().x; // Expected position if next button was on same line
-				if (i + 1 < pMgr->palette.colors.size() && nextBtnSizeX < window_visible_x2) ImGui::SameLine();
+				if (i + 1 < (int32_t)pMgr->palette.colors.size() && nextBtnSizeX < window_visible_x2) ImGui::SameLine();
 				ImGui::PopID();
 			};
 			ImGui::PopStyleVar(2);
