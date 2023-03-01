@@ -7,7 +7,7 @@ uint8_t* Z_CompressData(uLongf dataToCompressSize, uLongf* sizeDataCompressed, u
 	uint8_t* dataCompressed = (uint8_t*)malloc(*sizeDataCompressed);
 
 	int32_t z_result = compress(
-		dataCompressed, (uLongf*)sizeDataCompressed,
+		dataCompressed, sizeDataCompressed,
 		dataToCompress, dataToCompressSize
 	);
 
@@ -33,7 +33,7 @@ uint8_t* Z_DeCompressData(uint8_t* dataToDecompress, uLongf dataToDecompressSize
 	uint8_t* dataUncompressed = (uint8_t*)malloc(sizeDataUncompressed);
 
 	int32_t z_result = uncompress(
-		dataUncompressed, (uLongf*)&sizeDataUncompressed,
+		dataUncompressed, &sizeDataUncompressed,
 		dataToDecompress, dataToDecompressSize
 	);
 
