@@ -20,6 +20,27 @@ void Palette::RemoveColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 	}
 }
 
+PaletteManager::PaletteManager() {
+	presets = Palette_LoadAll();
+	palette.AddColor(0, 0, 0);
+	palette.AddColor(255, 255, 255);
+	SelectedColorIdx = 0;
+	PrimaryColor = palette.colors[SelectedColorIdx];
+}
+
+PaletteManager::~PaletteManager() {
+	Palette_ReleaseAll(presets);
+}
+
+void PaletteManager::SetPreset(Palette& p) {
+	palette = p;
+}
+
+void PaletteManager::SetSelectedColorIdx(int32_t idx) {
+	SelectedColorIdx = idx;
+	PrimaryColor = palette.colors[idx];
+}
+
 std::vector<Palette>* Palette_LoadAll() {
 	char* pallete_dir_path = Palettes_GetDir();
 	char dir[SYS_PATHNAME_MAX] = "";
