@@ -65,7 +65,6 @@ float PreviewWindowZoom = 1.0f;
 float CurrViewportZoom = 1.0f;
 SDL_Rect ViewportLoc = { 0, 0, 0, 0 };
 
-int32_t PaletteIndex = 0;
 int32_t ThemeIndex = 0;
 uint16_t PaletteColorIndex = 2;
 uint8_t EraseColor[4] = { 0, 0, 0, 0 };
@@ -79,7 +78,9 @@ SDL_Window* window = NULL;
 char WindowTitle[WINDOW_TITLE_MAX] = "";
 
 Config_T* AppConfig = NULL;
-PaletteArr_T* PaletteArr = NULL;
+
+int32_t PaletteIndex = 0;
+std::vector<Palette>* PaletteArr = NULL;
 theme_arr_t* ThemeArr = NULL;
 
 #ifndef CS_VERSION_MAJOR
@@ -126,7 +127,7 @@ static inline bool CanMutateCanvas();
 static inline void ProcessEvents();
 static uint8_t* GetPixel(int x, int y);
 
-#define GetSelectedPalette() PaletteArr->Palettes[PaletteIndex]
+#define GetSelectedPalette() (*PaletteArr)[PaletteIndex]
 
 #define UNDO() \
 	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
@@ -143,8 +144,8 @@ int main(int argc, char* argv[]) {
 	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
 
+	PaletteArr = Palette_LoadAll();
 	AppConfig = LoadConfig();
-	PaletteArr = PaletteLoadAll();
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
 		log_error("failed to initialize SDL2: %s", SDL_GetError());
@@ -221,10 +222,10 @@ int main(int argc, char* argv[]) {
 		if (bmMiniFont) io.Fonts->AddFontFromMemoryCompressedTTF(bmMiniFont, bmMiniFontSize, 16.0f, &fontConfig);
 	}
 
-	SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
-	SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
-	SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
-	SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
+	SelectedColor[0] = GetSelectedPalette().colors[PaletteColorIndex].r;
+	SelectedColor[1] = GetSelectedPalette().colors[PaletteColorIndex].g;
+	SelectedColor[2] = GetSelectedPalette().colors[PaletteColorIndex].b;
+	SelectedColor[3] = GetSelectedPalette().colors[PaletteColorIndex].a;
 
 	bool ShowPreferencesWindow = false;
 	bool ShowLayerRenameWindow = false;
@@ -279,14 +280,14 @@ int main(int argc, char* argv[]) {
 					REDO();
 				}
 				if (ImGui::BeginMenu("Palette")) {
-					for (int32_t i = 0; i < PaletteArr->numOfEntries; ++i) {
+					for (int32_t i = 0; i < PaletteArr->size(); ++i) {
 						int32_t _palidx = PaletteIndex;
 
-						if (ImGui::MenuItem(PaletteArr->Palettes[i]->name, NULL)) {
+						if (ImGui::MenuItem((*PaletteArr)[i].name.c_str(), NULL)) {
 							PaletteIndex = i;
 						}
 						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-							ImGui::SetTooltip("%s", PaletteArr->Palettes[i]->author);
+							ImGui::SetTooltip("%s", (*PaletteArr)[i].author.c_str());
 						}
 						if (_palidx == i) {
 							ImGui::SameLine();
@@ -422,35 +423,40 @@ int main(int argc, char* argv[]) {
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
 
 			float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-			for (unsigned int i = 0; i < GetSelectedPalette()->numOfEntries; i++) {
+			for (unsigned int i = 0; i < GetSelectedPalette().colors.size(); i++) {
 				ImGui::PushID(i);
 
 				static char ColorButtonId[20] = "";
 				if (PaletteColorIndex != i) { snprintf(ColorButtonId, 20, "Color##%d", i); }
 
 				if (ImGui::ColorButton(PaletteColorIndex == i ? "Selected Color" : ColorButtonId, {
-					((float)(GetSelectedPalette()->Colors[i][0]) / 255),
-					((float)(GetSelectedPalette()->Colors[i][1]) / 255),
-					((float)(GetSelectedPalette()->Colors[i][2]) / 255),
-					((float)(GetSelectedPalette()->Colors[i][3]) / 255)
+					((float)(GetSelectedPalette().colors[i].r) / 255),
+					((float)(GetSelectedPalette().colors[i].g) / 255),
+					((float)(GetSelectedPalette().colors[i].b) / 255),
+					((float)(GetSelectedPalette().colors[i].a) / 255)
 				})) {
 					PaletteColorIndex = i;
-					SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
-					SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
-					SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
-					SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
+					SelectedColor[0] = GetSelectedPalette().colors[PaletteColorIndex].r;
+					SelectedColor[1] = GetSelectedPalette().colors[PaletteColorIndex].g;
+					SelectedColor[2] = GetSelectedPalette().colors[PaletteColorIndex].b;
+					SelectedColor[3] = GetSelectedPalette().colors[PaletteColorIndex].a;
 				}
 
 				ImGui::GetWindowDrawList()->AddRect(
 					ImGui::GetItemRectMin(),
 					ImGui::GetItemRectMax(),
-					(PaletteColorIndex == i && COLOR_EQUAL(SelectedColor, GetSelectedPalette()->Colors[i])) ? 0xFFFFFFFF : 0x000000FF,
+					(PaletteColorIndex == i && (
+						SelectedColor[0] == GetSelectedPalette().colors[i].r  &&
+						SelectedColor[1] == GetSelectedPalette().colors[i].g  &&
+						SelectedColor[2] == GetSelectedPalette().colors[i].b  &&
+						SelectedColor[3] == GetSelectedPalette().colors[i].a)
+					) ? 0xFFFFFFFF : 0x000000FF,
 					0, 0, 1
 				);
 
 				float lastBtnSizeX = ImGui::GetItemRectMax().x;
 				float nextBtnSizeX = lastBtnSizeX + style.ItemSpacing.x + ImGui::GetItemRectSize().x; // Expected position if next button was on same line
-				if (i + 1 < GetSelectedPalette()->numOfEntries && nextBtnSizeX < window_visible_x2) ImGui::SameLine();
+				if (i + 1 < GetSelectedPalette().colors.size() && nextBtnSizeX < window_visible_x2) ImGui::SameLine();
 				ImGui::PopID();
 			};
 			ImGui::PopStyleVar(2);
@@ -766,7 +772,7 @@ int main(int argc, char* argv[]) {
 	R_Destroy();
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-	FreePaletteArr(PaletteArr);
+	Palette_ReleaseAll(PaletteArr);
 
 	window = NULL;
 	PaletteArr = NULL;
@@ -880,13 +886,18 @@ static void MutateCanvas(bool LmbJustReleased) {
 					uint8_t* pixel = GetPixel(MousePosRel[0], MousePosRel[1]);
 					if (pixel != NULL && *(pixel + 3) != 0) {
 						bool foundEntry = false;
-						for (unsigned int i = 0; i < GetSelectedPalette()->numOfEntries; i++) {
-							if (COLOR_EQUAL(GetSelectedPalette()->Colors[i], pixel)) {
+						for (unsigned int i = 0; i < GetSelectedPalette().colors.size(); i++) {
+							if (
+								GetSelectedPalette().colors[i].r == pixel[0] &&
+								GetSelectedPalette().colors[i].b == pixel[1] &&
+								GetSelectedPalette().colors[i].g == pixel[2] &&
+								GetSelectedPalette().colors[i].a == pixel[3]
+							) {
 								PaletteColorIndex = i;
-								SelectedColor[0] = GetSelectedPalette()->Colors[PaletteColorIndex][0];
-								SelectedColor[1] = GetSelectedPalette()->Colors[PaletteColorIndex][1];
-								SelectedColor[2] = GetSelectedPalette()->Colors[PaletteColorIndex][2];
-								SelectedColor[3] = GetSelectedPalette()->Colors[PaletteColorIndex][3];
+								SelectedColor[0] = GetSelectedPalette().colors[PaletteColorIndex].r;
+								SelectedColor[1] = GetSelectedPalette().colors[PaletteColorIndex].g;
+								SelectedColor[2] = GetSelectedPalette().colors[PaletteColorIndex].b;
+								SelectedColor[3] = GetSelectedPalette().colors[PaletteColorIndex].a;
 								foundEntry = true;
 								break;
 							}
