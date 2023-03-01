@@ -66,9 +66,6 @@ float CurrViewportZoom = 1.0f;
 SDL_Rect ViewportLoc = { 0, 0, 0, 0 };
 
 int32_t ThemeIndex = 0;
-uint16_t PaletteColorIndex = 2;
-uint8_t EraseColor[4] = { 0, 0, 0, 0 };
-uint8_t SelectedColor[4] = { 255, 255, 255, 255 };
 
 #define MAX_SELECTEDTOOLTEXT_SIZE 512
 char SelectedToolText[MAX_SELECTEDTOOLTEXT_SIZE] = "";
@@ -77,11 +74,9 @@ SDL_Window* window = NULL;
 #define WINDOW_TITLE_MAX 512 + SYS_FILENAME_MAX
 char WindowTitle[WINDOW_TITLE_MAX] = "";
 
-Config_T* AppConfig = NULL;
-
-int32_t PaletteIndex = 0;
-std::vector<Palette>* PaletteArr = NULL;
-theme_arr_t* ThemeArr = NULL;
+PaletteManager* pMgr      = NULL;
+theme_arr_t*    ThemeArr  = NULL;
+Config_T*       AppConfig = NULL;
 
 #ifndef CS_VERSION_MAJOR
 	#define CS_VERSION_MAJOR 0
@@ -144,8 +139,8 @@ int main(int argc, char* argv[]) {
 	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
 
-	PaletteArr = Palette_LoadAll();
 	AppConfig = LoadConfig();
+	pMgr = new PaletteManager;
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
 		log_error("failed to initialize SDL2: %s", SDL_GetError());
@@ -222,11 +217,6 @@ int main(int argc, char* argv[]) {
 		if (bmMiniFont) io.Fonts->AddFontFromMemoryCompressedTTF(bmMiniFont, bmMiniFontSize, 16.0f, &fontConfig);
 	}
 
-	SelectedColor[0] = GetSelectedPalette().colors[PaletteColorIndex].r;
-	SelectedColor[1] = GetSelectedPalette().colors[PaletteColorIndex].g;
-	SelectedColor[2] = GetSelectedPalette().colors[PaletteColorIndex].b;
-	SelectedColor[3] = GetSelectedPalette().colors[PaletteColorIndex].a;
-
 	bool ShowPreferencesWindow = false;
 	bool ShowLayerRenameWindow = false;
 	bool ShowNewCanvasWindow = false;
@@ -280,18 +270,12 @@ int main(int argc, char* argv[]) {
 					REDO();
 				}
 				if (ImGui::BeginMenu("Palette")) {
-					for (int32_t i = 0; i < PaletteArr->size(); ++i) {
-						int32_t _palidx = PaletteIndex;
-
-						if (ImGui::MenuItem((*PaletteArr)[i].name.c_str(), NULL)) {
-							PaletteIndex = i;
+					for (int32_t i = 0; i < pMgr->presets->size(); ++i) {
+						if (ImGui::MenuItem((*pMgr->presets)[i].name.c_str(), NULL)) {
+							pMgr->SetPreset((*pMgr->presets)[i]);
 						}
 						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-							ImGui::SetTooltip("%s", (*PaletteArr)[i].author.c_str());
-						}
-						if (_palidx == i) {
-							ImGui::SameLine();
-							ImGui::Text("<");
+							ImGui::SetTooltip("%s", (*pMgr->presets)[i].author.c_str());
 						}
 					}
 					ImGui::EndMenu();
@@ -423,40 +407,36 @@ int main(int argc, char* argv[]) {
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
 
 			float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-			for (unsigned int i = 0; i < GetSelectedPalette().colors.size(); i++) {
+			for (unsigned int i = 0; i < pMgr->palette.colors.size(); i++) {
 				ImGui::PushID(i);
 
 				static char ColorButtonId[20] = "";
-				if (PaletteColorIndex != i) { snprintf(ColorButtonId, 20, "Color##%d", i); }
+				if (pMgr->SelectedColorIdx != i) { snprintf(ColorButtonId, 20, "Color##%d", i); }
 
-				if (ImGui::ColorButton(PaletteColorIndex == i ? "Selected Color" : ColorButtonId, {
-					((float)(GetSelectedPalette().colors[i].r) / 255),
-					((float)(GetSelectedPalette().colors[i].g) / 255),
-					((float)(GetSelectedPalette().colors[i].b) / 255),
-					((float)(GetSelectedPalette().colors[i].a) / 255)
+				if (ImGui::ColorButton(pMgr->SelectedColorIdx == i ? "Selected Color" : ColorButtonId, {
+					((float)(pMgr->palette.colors[i].r) / 255),
+					((float)(pMgr->palette.colors[i].g) / 255),
+					((float)(pMgr->palette.colors[i].b) / 255),
+					((float)(pMgr->palette.colors[i].a) / 255)
 				})) {
-					PaletteColorIndex = i;
-					SelectedColor[0] = GetSelectedPalette().colors[PaletteColorIndex].r;
-					SelectedColor[1] = GetSelectedPalette().colors[PaletteColorIndex].g;
-					SelectedColor[2] = GetSelectedPalette().colors[PaletteColorIndex].b;
-					SelectedColor[3] = GetSelectedPalette().colors[PaletteColorIndex].a;
+					pMgr->SetSelectedColorIdx(i);
 				}
 
 				ImGui::GetWindowDrawList()->AddRect(
 					ImGui::GetItemRectMin(),
 					ImGui::GetItemRectMax(),
-					(PaletteColorIndex == i && (
-						SelectedColor[0] == GetSelectedPalette().colors[i].r  &&
-						SelectedColor[1] == GetSelectedPalette().colors[i].g  &&
-						SelectedColor[2] == GetSelectedPalette().colors[i].b  &&
-						SelectedColor[3] == GetSelectedPalette().colors[i].a)
+					(pMgr->SelectedColorIdx == i && (
+						pMgr->PrimaryColor.r == pMgr->palette.colors[i].r  &&
+						pMgr->PrimaryColor.g == pMgr->palette.colors[i].g  &&
+						pMgr->PrimaryColor.b == pMgr->palette.colors[i].b  &&
+						pMgr->PrimaryColor.a == pMgr->palette.colors[i].a)
 					) ? 0xFFFFFFFF : 0x000000FF,
 					0, 0, 1
 				);
 
 				float lastBtnSizeX = ImGui::GetItemRectMax().x;
 				float nextBtnSizeX = lastBtnSizeX + style.ItemSpacing.x + ImGui::GetItemRectSize().x; // Expected position if next button was on same line
-				if (i + 1 < GetSelectedPalette().colors.size() && nextBtnSizeX < window_visible_x2) ImGui::SameLine();
+				if (i + 1 < pMgr->palette.colors.size() && nextBtnSizeX < window_visible_x2) ImGui::SameLine();
 				ImGui::PopID();
 			};
 			ImGui::PopStyleVar(2);
@@ -465,16 +445,22 @@ int main(int argc, char* argv[]) {
 			ImGui::Separator();
 			ImGui::Spacing();
 
-			float ImColPicker[4] = { (float)(SelectedColor[0]) / 255, (float)(SelectedColor[1]) / 255, (float)(SelectedColor[2]) / 255, (float)(SelectedColor[3]) / 255 };
+			float ImColPicker[4] = {
+				(float)(pMgr->PrimaryColor.r) / 255,
+				(float)(pMgr->PrimaryColor.g) / 255,
+				(float)(pMgr->PrimaryColor.b) / 255,
+				(float)(pMgr->PrimaryColor.a) / 255
+			};
 			ImGui::SetNextItemWidth(-FLT_MIN); // right align
-			ImGui::ColorPicker4(
+			if (ImGui::ColorPicker4(
 				"##ColorPickerWidget", (float*)&ImColPicker,
 				ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview
-			);
-			SelectedColor[0] = ImColPicker[0] * 255;
-			SelectedColor[1] = ImColPicker[1] * 255;
-			SelectedColor[2] = ImColPicker[2] * 255;
-			SelectedColor[3] = ImColPicker[3] * 255;
+			)) {
+				pMgr->PrimaryColor.r = ImColPicker[0] * 255;
+				pMgr->PrimaryColor.g = ImColPicker[1] * 255;
+				pMgr->PrimaryColor.b = ImColPicker[2] * 255;
+				pMgr->PrimaryColor.a = ImColPicker[3] * 255;
+			}
 
 			LeftSideBarSize = ImGui::GetWindowSize();
 			ImGui::End();
@@ -772,10 +758,10 @@ int main(int argc, char* argv[]) {
 	R_Destroy();
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-	Palette_ReleaseAll(PaletteArr);
+	delete pMgr;
 
 	window = NULL;
-	PaletteArr = NULL;
+	pMgr = NULL;
 	CanvasLayers = NULL;
 	return EXIT_SUCCESS;
 }
@@ -825,10 +811,18 @@ static inline bool CanMutateCanvas() {
 // Drawing And Stuff Is Done Here
 static void MutateCanvas(bool LmbJustReleased) {
 	if (CanMutateCanvas() && (LmbJustReleased || IsLMBDown)) {
+		uint8_t SelectedColor[4] = { 0, 0, 0, 0 };
+		if (Tool != BRUSH_ERASER) {
+			SelectedColor[0] = pMgr->PrimaryColor.r;
+			SelectedColor[1] = pMgr->PrimaryColor.g;
+			SelectedColor[2] = pMgr->PrimaryColor.b;
+			SelectedColor[3] = pMgr->PrimaryColor.a;
+		}
+
 		switch (Tool) {
 			case BRUSH_COLOR:
 			case BRUSH_ERASER: {
-				CanvasDidMutate = Tool_Line(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? SelectedColor : EraseColor, MousePosRelLast[0], MousePosRelLast[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]) || CanvasDidMutate;
+				CanvasDidMutate = Tool_Line(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosRelLast[0], MousePosRelLast[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]) || CanvasDidMutate;
 				break;
 			}
 			case SHAPE_RECT:
@@ -885,29 +879,22 @@ static void MutateCanvas(bool LmbJustReleased) {
 				if (LmbJustReleased) {
 					uint8_t* pixel = GetPixel(MousePosRel[0], MousePosRel[1]);
 					if (pixel != NULL && *(pixel + 3) != 0) {
-						bool foundEntry = false;
-						for (unsigned int i = 0; i < GetSelectedPalette().colors.size(); i++) {
+						for (unsigned int i = 0; i < pMgr->palette.colors.size(); i++) {
 							if (
-								GetSelectedPalette().colors[i].r == pixel[0] &&
-								GetSelectedPalette().colors[i].b == pixel[1] &&
-								GetSelectedPalette().colors[i].g == pixel[2] &&
-								GetSelectedPalette().colors[i].a == pixel[3]
+								pMgr->PrimaryColor.r == pixel[0] &&
+								pMgr->PrimaryColor.g == pixel[1] &&
+								pMgr->PrimaryColor.b == pixel[2] &&
+								pMgr->PrimaryColor.a == pixel[3]
 							) {
-								PaletteColorIndex = i;
-								SelectedColor[0] = GetSelectedPalette().colors[PaletteColorIndex].r;
-								SelectedColor[1] = GetSelectedPalette().colors[PaletteColorIndex].g;
-								SelectedColor[2] = GetSelectedPalette().colors[PaletteColorIndex].b;
-								SelectedColor[3] = GetSelectedPalette().colors[PaletteColorIndex].a;
-								foundEntry = true;
+								pMgr->SetSelectedColorIdx(i);
 								break;
 							}
 						}
-						if (!foundEntry) {
-							SelectedColor[0] = *(pixel + 0);
-							SelectedColor[1] = *(pixel + 1);
-							SelectedColor[2] = *(pixel + 2);
-							SelectedColor[3] = *(pixel + 3);
-						}
+						pMgr->PrimaryColor.r = *(pixel + 0);
+						pMgr->PrimaryColor.g = *(pixel + 1);
+						pMgr->PrimaryColor.b = *(pixel + 2);
+						pMgr->PrimaryColor.a = *(pixel + 3);
+
 						Tool = LastTool;
 						_GuiSetToolText();
 					}

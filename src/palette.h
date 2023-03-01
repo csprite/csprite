@@ -19,6 +19,19 @@ struct Palette {
 	void RemoveColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255); // removes the duplicate colors too if found.
 };
 
+struct PaletteManager {
+	std::vector<Palette>* presets;
+	Palette palette;
+	int32_t SelectedColorIdx;
+	Color_T PrimaryColor;
+
+	PaletteManager();
+	~PaletteManager();
+
+	void SetPreset(Palette& p);
+	void SetSelectedColorIdx(int32_t idx);
+};
+
 std::vector<Palette>* Palette_LoadAll();
 void Palette_ReleaseAll(std::vector<Palette>* palettes);
 
