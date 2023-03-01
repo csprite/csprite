@@ -12,7 +12,7 @@ void Palette::AddColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
 }
 
 void Palette::RemoveColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-	for (int32_t i = 0; i < colors.size(); ++i) {
+	for (int32_t i = 0; i < (int32_t)colors.size(); ++i) {
 		Color_T color = colors[i];
 		if (color.r == r && color.g == g && color.b == b && color.a == a) {
 			colors.erase(colors.begin() + i);
