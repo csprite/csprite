@@ -23,7 +23,7 @@ struct PaletteManager {
 	std::vector<Palette>* presets;
 	Palette palette;
 	int32_t SelectedColorIdx;
-	Color_T PrimaryColor;
+	uint8_t PrimaryColor[4];
 
 	PaletteManager();
 	~PaletteManager();

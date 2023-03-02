@@ -424,10 +424,10 @@ int main(int argc, char* argv[]) {
 					ImGui::GetItemRectMin(),
 					ImGui::GetItemRectMax(),
 					(pMgr->SelectedColorIdx == i && (
-						pMgr->PrimaryColor.r == pMgr->palette.colors[i].r  &&
-						pMgr->PrimaryColor.g == pMgr->palette.colors[i].g  &&
-						pMgr->PrimaryColor.b == pMgr->palette.colors[i].b  &&
-						pMgr->PrimaryColor.a == pMgr->palette.colors[i].a)
+						pMgr->PrimaryColor[0] == pMgr->palette.colors[i].r  &&
+						pMgr->PrimaryColor[1] == pMgr->palette.colors[i].g  &&
+						pMgr->PrimaryColor[2] == pMgr->palette.colors[i].b  &&
+						pMgr->PrimaryColor[3] == pMgr->palette.colors[i].a)
 					) ? 0xFFFFFFFF : 0x000000FF,
 					0, 0, 1
 				);
@@ -444,20 +444,20 @@ int main(int argc, char* argv[]) {
 			ImGui::Spacing();
 
 			float ImColPicker[4] = {
-				(float)(pMgr->PrimaryColor.r) / 255,
-				(float)(pMgr->PrimaryColor.g) / 255,
-				(float)(pMgr->PrimaryColor.b) / 255,
-				(float)(pMgr->PrimaryColor.a) / 255
+				(float)(pMgr->PrimaryColor[0]) / 255,
+				(float)(pMgr->PrimaryColor[1]) / 255,
+				(float)(pMgr->PrimaryColor[2]) / 255,
+				(float)(pMgr->PrimaryColor[3]) / 255
 			};
 			ImGui::SetNextItemWidth(-FLT_MIN); // right align
 			if (ImGui::ColorPicker4(
 				"##ColorPickerWidget", (float*)&ImColPicker,
 				ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview
 			)) {
-				pMgr->PrimaryColor.r = ImColPicker[0] * 255;
-				pMgr->PrimaryColor.g = ImColPicker[1] * 255;
-				pMgr->PrimaryColor.b = ImColPicker[2] * 255;
-				pMgr->PrimaryColor.a = ImColPicker[3] * 255;
+				pMgr->PrimaryColor[0] = ImColPicker[0] * 255;
+				pMgr->PrimaryColor[1] = ImColPicker[1] * 255;
+				pMgr->PrimaryColor[2] = ImColPicker[2] * 255;
+				pMgr->PrimaryColor[3] = ImColPicker[3] * 255;
 			}
 
 			LeftSideBarSize = ImGui::GetWindowSize();
@@ -809,18 +809,12 @@ static inline bool CanMutateCanvas() {
 // Drawing And Stuff Is Done Here
 static void MutateCanvas(bool LmbJustReleased) {
 	if (CanMutateCanvas() && (LmbJustReleased || IsLMBDown)) {
-		uint8_t SelectedColor[4] = { 0, 0, 0, 0 };
-		if (Tool != BRUSH_ERASER) {
-			SelectedColor[0] = pMgr->PrimaryColor.r;
-			SelectedColor[1] = pMgr->PrimaryColor.g;
-			SelectedColor[2] = pMgr->PrimaryColor.b;
-			SelectedColor[3] = pMgr->PrimaryColor.a;
-		}
+		static uint8_t EraseColor[4] = { 0, 0, 0, 0 };
 
 		switch (Tool) {
 			case BRUSH_COLOR:
 			case BRUSH_ERASER: {
-				CanvasDidMutate = Tool_Line(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosRelLast[0], MousePosRelLast[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]) || CanvasDidMutate;
+				CanvasDidMutate = Tool_Line(CURR_CANVAS_LAYER->pixels, Tool == BRUSH_COLOR ? pMgr->PrimaryColor : EraseColor, MousePosRelLast[0], MousePosRelLast[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]) || CanvasDidMutate;
 				break;
 			}
 			case SHAPE_RECT:
@@ -839,13 +833,13 @@ static void MutateCanvas(bool LmbJustReleased) {
 						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasLayers->dims[0] * CanvasLayers->dims[1] * 4 * sizeof(uint8_t));
 					}
 					if (Tool == SHAPE_RECT) {
-						Tool_Rect(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]);
+						Tool_Rect(CURR_CANVAS_LAYER->pixels, pMgr->PrimaryColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]);
 					} else if (Tool == SHAPE_LINE) {
-						Tool_Line(CURR_CANVAS_LAYER->pixels, SelectedColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]);
+						Tool_Line(CURR_CANVAS_LAYER->pixels, pMgr->PrimaryColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasLayers->dims[0], CanvasLayers->dims[1]);
 					} else if (Tool == SHAPE_CIRCLE) {
 						Tool_Circle(
 							CURR_CANVAS_LAYER->pixels,
-							SelectedColor,
+							pMgr->PrimaryColor,
 							MousePosDownRel[0], MousePosDownRel[1],
 							(int)sqrt( // Calculates Distance Between 2 x, y points
 								(MousePosRel[0] - MousePosDownRel[0]) * (MousePosRel[0] - MousePosDownRel[0]) +
@@ -866,7 +860,7 @@ static void MutateCanvas(bool LmbJustReleased) {
 					unsigned char OldColor[4] = { *(pixel + 0), *(pixel + 1), *(pixel + 2), *(pixel + 3) };
 					CanvasDidMutate = Tool_FloodFill(
 						CURR_CANVAS_LAYER->pixels,
-						OldColor, SelectedColor,
+						OldColor, pMgr->PrimaryColor,
 						MousePosRel[0], MousePosRel[1],
 						CanvasLayers->dims[0], CanvasLayers->dims[1]
 					) || CanvasDidMutate;
@@ -879,19 +873,19 @@ static void MutateCanvas(bool LmbJustReleased) {
 					if (pixel != NULL && *(pixel + 3) != 0) {
 						for (unsigned int i = 0; i < pMgr->palette.colors.size(); i++) {
 							if (
-								pMgr->PrimaryColor.r == pixel[0] &&
-								pMgr->PrimaryColor.g == pixel[1] &&
-								pMgr->PrimaryColor.b == pixel[2] &&
-								pMgr->PrimaryColor.a == pixel[3]
+								pMgr->PrimaryColor[0] == pixel[0] &&
+								pMgr->PrimaryColor[1] == pixel[1] &&
+								pMgr->PrimaryColor[2] == pixel[2] &&
+								pMgr->PrimaryColor[3] == pixel[3]
 							) {
 								pMgr->SetSelectedColorIdx(i);
 								break;
 							}
 						}
-						pMgr->PrimaryColor.r = *(pixel + 0);
-						pMgr->PrimaryColor.g = *(pixel + 1);
-						pMgr->PrimaryColor.b = *(pixel + 2);
-						pMgr->PrimaryColor.a = *(pixel + 3);
+						pMgr->PrimaryColor[0] = *(pixel + 0);
+						pMgr->PrimaryColor[1] = *(pixel + 1);
+						pMgr->PrimaryColor[2] = *(pixel + 2);
+						pMgr->PrimaryColor[3] = *(pixel + 3);
 
 						Tool = LastTool;
 						_GuiSetToolText();
