@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include <cstdint>
 #include <SDL2/SDL.h>
 #include "../history.h"
@@ -10,11 +12,12 @@ struct CanvasLayer {
 	uint8_t*    pixels;
 	History_T* history;
 
-	CanvasLayer(std::string name = "New Layer", SDL_Renderer* ren, int32_t w, int32_t h);
+	CanvasLayer(SDL_Renderer* ren, int32_t w, int32_t h, std::string name = "New Layer");
 	~CanvasLayer();
-}
+};
 
 class CanvasLayer_Manager {
+public:
 	std::vector<CanvasLayer> layers;
 	SDL_Texture*  render;
 	SDL_Texture*  pattern;
@@ -28,5 +31,5 @@ class CanvasLayer_Manager {
 
 	void AddLayer(std::string name = "New Layer");
 	void Draw(SDL_Rect* r, int32_t layerToUpdateIdx);
-}
+};
 

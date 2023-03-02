@@ -1,6 +1,7 @@
 #include "canvas.hh"
+#include "log/log.h"
 
-CanvasLayer::CanvasLayer(std::string name = "New Layer", SDL_Renderer* ren, int32_t w, int32_t h) {
+CanvasLayer::CanvasLayer(SDL_Renderer* ren, int32_t w, int32_t h, std::string name) {
 	this->name = name;
 	this->pixels = new uint8_t[w * h * 4];
 	this->tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
@@ -13,7 +14,7 @@ CanvasLayer::CanvasLayer(std::string name = "New Layer", SDL_Renderer* ren, int3
 }
 
 CanvasLayer::~CanvasLayer() {
-	delete this->pixels;
+	delete[] this->pixels;
 	SDL_DestroyTexture(this->tex);
 	FreeHistory(&this->history);
 }
@@ -50,35 +51,36 @@ CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h
 		log_error("SDL_SetTextureBlendMode() returned Non-Zero: %s", SDL_GetError());
 	}
 
-	delete pixels;
+	delete[] pixels;
 }
 
 CanvasLayer_Manager::~CanvasLayer_Manager() {
-	SDL_DestroyTexture(render);
-	SDL_DestroyTexture(pattern);
+	SDL_DestroyTexture(this->render);
+	SDL_DestroyTexture(this->pattern);
 }
 
 void CanvasLayer_Manager::AddLayer(std::string name) {
-	this->layers.emplace_back({ name, this->ren, this->dims[0], this->dims[1] });
+	this->layers.emplace_back(this->ren, this->dims[0], this->dims[1], name);
 }
 
 void CanvasLayer_Manager::Draw(SDL_Rect* r, int32_t layerToUpdateIdx) {
 	SDL_SetRenderTarget(this->ren, this->render);
-	SDL_RenderCopy(this->ren, layers->pattern, NULL, NULL);
+	SDL_RenderCopy(this->ren, this->pattern, NULL, NULL);
 
 	for (int32_t i = 0; i < this->layers.size(); ++i) {
 		if (layerToUpdateIdx == i) {
-			SDL_UpdateTexture(this->layers[i]->tex, NULL, this->layers[i]->pixels, this->dims[0] * 4);
+			SDL_UpdateTexture(this->layers[i].tex, NULL, this->layers[i].pixels, this->dims[0] * 4);
 		}
-		SDL_RenderCopy(this->ren, this->layers[i]->tex, NULL, NULL);
+		SDL_RenderCopy(this->ren, this->layers[i].tex, NULL, NULL);
 	}
 
 	SDL_SetRenderTarget(this->ren, NULL);
-	SDL_RenderCopy(this->ren, layers->render, NULL, r);
+	SDL_RenderCopy(this->ren, this->render, NULL, r);
 }
 
 CanvasLayer_Manager* Canvas_CreateManager(SDL_Renderer* ren, int32_t w, int32_t h) {
 	CanvasLayer_Manager* mgr = new CanvasLayer_Manager(ren, w, h);
+	return mgr;
 }
 
 
