@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "zlib_wrapper.h"
 
-uint8_t* Z_CompressData(size_t dataToCompressSize, size_t* sizeDataCompressed, uint8_t* dataToCompress) {
+uint8_t* Z_CompressData(uLongf dataToCompressSize, uLongf* sizeDataCompressed, uint8_t* dataToCompress) {
 	*sizeDataCompressed = (dataToCompressSize * 1.1) + 12;
 	uint8_t* dataCompressed = (uint8_t*)malloc(*sizeDataCompressed);
 
@@ -28,8 +28,8 @@ uint8_t* Z_CompressData(size_t dataToCompressSize, size_t* sizeDataCompressed, u
 	return dataCompressed;
 }
 
-uint8_t* Z_DeCompressData(uint8_t* dataToDecompress, size_t dataToDecompressSize, size_t originalDataSize) {
-	size_t sizeDataUncompressed = originalDataSize;
+uint8_t* Z_DeCompressData(uint8_t* dataToDecompress, uLongf dataToDecompressSize, uLongf originalDataSize) {
+	uLongf sizeDataUncompressed = originalDataSize;
 	uint8_t* dataUncompressed = (uint8_t*)malloc(sizeDataUncompressed);
 
 	int32_t z_result = uncompress(
