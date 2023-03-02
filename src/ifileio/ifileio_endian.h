@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-// macro requires C99 compound literals support
-#define IS_BIG_ENDIAN (!*(unsigned char *)&(uint16_t){1})
+// https://gist.github.com/hamsham/9849411
+#define IS_BIG_ENDIAN ((0xFFFFFFFF & 1) == 0x01000000)
 
 // swap_xxxxxx functions simple swap bytes, can be usefully for converting between endianness
 int16_t  swap_int16(int16_t val);
