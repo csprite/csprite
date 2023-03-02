@@ -10,7 +10,7 @@ CXX:=g++
 CC:=gcc
 STD:=c99
 CXX_STD:=c++11
-CCFLAGS:=-Wall -Iinclude/ -Ithird_party/imgui/ -Ithird_party/FileBrowser/ -Ithird_party/ -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
+CCFLAGS:=-Wall -Wno-unknown-warning-option -Iinclude/ -Ithird_party/imgui/ -Ithird_party/FileBrowser/ -Ithird_party/ -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 CFLAGS:=
 LFLAGS:=
 
