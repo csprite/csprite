@@ -43,7 +43,6 @@ bool IsLMBDown = false;
 bool IsCtrlDown = false;
 bool IsShiftDown = false;
 bool CanvasMutable = true; // If Canvas's Data Can Be Changed Or Not
-bool CanvasLocked = false; // Same As `CanvasMutable` but with conditions like if any window is being hover or not
 bool CanvasDidMutate = false;
 bool ShowAboutWindow = false;
 bool ShowOpenNewFileWindow = false;
@@ -203,6 +202,8 @@ int main(int argc, char* argv[]) {
 	ImGuiStyle& style = ImGui::GetStyle();
 	io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
+	io.WantCaptureMouse = false;
+	io.WantCaptureKeyboard = false;
 	ImGui::StyleColorsDark();
 	ThemeArr = ThemeLoadAll();
 	_GuiSetColors(style);
@@ -225,9 +226,7 @@ int main(int argc, char* argv[]) {
 	imgui_addons::ImGuiFileBrowser ImFileDialog;
 	while (!ShouldClose) {
 		ProcessEvents();
-
 		frameStart = SDL_GetTicks();
-		CanvasLocked = !CanvasMutable || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || ImGui::IsAnyItemHovered() || ImGui::IsAnyItemActive() || ShowLayerRenameWindow || ShowPreferencesWindow || ShowNewCanvasWindow;
 
 		R_Clear(); // Clear The Screen, This Is Required To Done Before The Canvas Is Drawn Because Rendered Canvas Is Directly Copied Onto Screen & Clearing The screen After Copying It Will Not Show The Canvas
 		R_NewFrame(); // All The Calls To ImGui Will Be Recorded After This Function
@@ -851,7 +850,7 @@ static void _GuiSetColors(ImGuiStyle& style) {
 // Basically Checks if Canvas Is Not Locked, Current Layer isn't NULL, Mouse Positons Are In Bound
 static inline bool CanMutateCanvas() {
 	return (
-		!CanvasLocked                   &&
+		CanvasMutable                   &&
 		CURR_CANVAS_LAYER != NULL       &&
 		MousePosRel[0] >= 0             &&
 		MousePosRel[0] < CanvasLayers->dims[0]  &&
@@ -1112,6 +1111,7 @@ static inline void ProcessEvents() {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		ImGui_ImplSDL2_ProcessEvent(&event);
+		ImGuiIO& io = ImGui::GetIO();
 		switch (event.type) {
 			case SDL_QUIT:
 				ShouldClose = true;
@@ -1132,22 +1132,28 @@ static inline void ProcessEvents() {
 				}
 				break;
 			case SDL_KEYDOWN:
-				OnEvent_KeyDown(&event);
+				if (!io.WantCaptureKeyboard)
+					OnEvent_KeyDown(&event);
 				break;
 			case SDL_KEYUP:
-				OnEvent_KeyUp(&event);
+				if (!io.WantCaptureKeyboard)
+					OnEvent_KeyUp(&event);
 				break;
 			case SDL_MOUSEWHEEL:
-				OnEvent_MouseWheel(&event);
+				if (!io.WantCaptureMouse)
+					OnEvent_MouseWheel(&event);
 				break;
 			case SDL_MOUSEMOTION:
-				OnEvent_MouseMotion(&event);
+				if (!io.WantCaptureMouse)
+					OnEvent_MouseMotion(&event);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				OnEvent_MouseButtonDown(&event);
+				if (!io.WantCaptureMouse)
+					OnEvent_MouseButtonDown(&event);
 				break;
 			case SDL_MOUSEBUTTONUP:
-				OnEvent_MouseButtonUp(&event);
+				if (!io.WantCaptureMouse)
+					OnEvent_MouseButtonUp(&event);
 				break;
 		}
 	}
@@ -1169,7 +1175,6 @@ static void UpdateViewportPos() {
 }
 
 static void ZoomViewport(int increase) {
-	if (CanvasLocked) return;
 	if (increase > 0) {
 		if (CurrViewportZoom < 1.0f) CurrViewportZoom += 0.25f;
 		else CurrViewportZoom += 1.0f;
