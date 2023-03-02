@@ -405,6 +405,7 @@ int main(int argc, char* argv[]) {
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
 
 			float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+			static bool primaryIsInPalette = true;
 			for (int32_t i = 0; i < (int32_t)pMgr->palette.colors.size(); i++) {
 				ImGui::PushID(i);
 
@@ -420,15 +421,17 @@ int main(int argc, char* argv[]) {
 					pMgr->SetSelectedColorIdx(i);
 				}
 
+				primaryIsInPalette = primaryIsInPalette || (
+					pMgr->PrimaryColor[0] == pMgr->palette.colors[i].r  &&
+					pMgr->PrimaryColor[1] == pMgr->palette.colors[i].g  &&
+					pMgr->PrimaryColor[2] == pMgr->palette.colors[i].b  &&
+					pMgr->PrimaryColor[3] == pMgr->palette.colors[i].a
+				);
+
 				ImGui::GetWindowDrawList()->AddRect(
 					ImGui::GetItemRectMin(),
 					ImGui::GetItemRectMax(),
-					(pMgr->SelectedColorIdx == i && (
-						pMgr->PrimaryColor[0] == pMgr->palette.colors[i].r  &&
-						pMgr->PrimaryColor[1] == pMgr->palette.colors[i].g  &&
-						pMgr->PrimaryColor[2] == pMgr->palette.colors[i].b  &&
-						pMgr->PrimaryColor[3] == pMgr->palette.colors[i].a)
-					) ? 0xFFFFFFFF : 0x000000FF,
+					(pMgr->SelectedColorIdx == i && primaryIsInPalette) ? 0xFFFFFFFF : 0x000000FF,
 					0, 0, 1
 				);
 
@@ -442,6 +445,57 @@ int main(int argc, char* argv[]) {
 			ImGui::Spacing();
 			ImGui::Separator();
 			ImGui::Spacing();
+
+			if (primaryIsInPalette) {
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, style.Alpha * 0.5f);
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_Button]);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[ImGuiCol_Button]);
+			}
+
+			if (ImGui::Button("Add") && !primaryIsInPalette) {
+				pMgr->palette.AddColor(
+					pMgr->PrimaryColor[0],
+					pMgr->PrimaryColor[1],
+					pMgr->PrimaryColor[2],
+					pMgr->PrimaryColor[3]
+				);
+			}
+
+			if (primaryIsInPalette) {
+				ImGui::PopStyleVar(); // ImGuiStyleVar_Alpha
+				ImGui::PopStyleColor(2); // ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered
+			}
+
+			ImGui::SameLine();
+
+			/* storing the size makes sure that we for sure pop
+			   the pushed styles & colors, as RemoveColor() can change
+			   the colors.size() thus affecting the pop operation not being executed */
+			int32_t pSize = pMgr->palette.colors.size();
+			if (pSize <= 0) {
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, style.Alpha * 0.5f);
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_Button]);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[ImGuiCol_Button]);
+			}
+
+			if (ImGui::Button("Remove") && pSize > 0 && primaryIsInPalette) {
+				pMgr->palette.RemoveColor(
+					pMgr->PrimaryColor[0],
+					pMgr->PrimaryColor[1],
+					pMgr->PrimaryColor[2],
+					pMgr->PrimaryColor[3]
+				);
+				pMgr->SetSelectedColorIdx(
+					CLAMP_NUM(pMgr->SelectedColorIdx, 0, pSize - 1)
+				);
+			}
+
+			if (pSize <= 0) {
+				ImGui::PopStyleVar(); // ImGuiStyleVar_Alpha
+				ImGui::PopStyleColor(2); // ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered
+			}
+
+			primaryIsInPalette = false;
 
 			float ImColPicker[4] = {
 				(float)(pMgr->PrimaryColor[0]) / 255,
