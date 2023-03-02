@@ -1,39 +1,43 @@
 #ifndef PALETTE_H
 #define PALETTE_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define PaletteNameSize 512
-#define PaletteAuthorSize 512 + 17 // The Extra 19 Are For "Awesome Palette By ", so the actual name starts after 19 Characters
-
-typedef unsigned char palette_entry_t[4];
+#include <vector>
+#include <string>
+#include <cstdint>
+#include <cstring>
 
 typedef struct {
-	char             name[PaletteNameSize];
-	char             author[PaletteAuthorSize];
-	unsigned int     numOfEntries;
-	palette_entry_t*  Colors;
-} Palette_T;
+	uint8_t r, g, b, a;
+} Color_T;
 
-typedef struct {
-	int32_t        numOfEntries;
-	Palette_T**    Palettes;
-} PaletteArr_T;
+struct Palette {
+	std::string name;
+	std::string author;
+	std::vector<Color_T> colors;
 
-int FreePalette(Palette_T* palette);
-int FreePaletteArr(PaletteArr_T* pArr);
-Palette_T* LoadCsvPalette(const char* csvText);
-PaletteArr_T* PaletteLoadAll();
+	void AddColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
+	void RemoveColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255); // removes the duplicate colors too if found.
+};
 
-#ifdef __cplusplus
-}
-#endif
+struct PaletteManager {
+	std::vector<Palette>* presets;
+	Palette palette;
+	int32_t SelectedColorIdx;
+	uint8_t PrimaryColor[4];
+
+	PaletteManager();
+	~PaletteManager();
+
+	void SetPreset(Palette& p);
+	void SetSelectedColorIdx(int32_t idx);
+};
+
+std::vector<Palette>* Palette_LoadAll();
+void Palette_ReleaseAll(std::vector<Palette>* palettes);
+
+Palette* Palette_LoadCsv(const char* csvText); // Load lospec format .csv palettes
+char* Palettes_GetDir(); // directory where csprite loads the palettes from
 
 #endif // PALETTE_H
+
+
