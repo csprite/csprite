@@ -99,13 +99,17 @@ char* Sys_GetConfigDir(void) {
 
 // get the filename where csprite's log will be writen to.
 char* Sys_GetLogFileName(void) {
+	// TODO: make sure Sys_GetConfigDir() doesn't return string more than size of SYS_PATHNAME_MAX
 	static char path[SYS_PATHNAME_MAX] = "";
 	/* only executed if variable path is empty.
 	   since it's a static variable there's no need to append,
 	   the same information again as it will persist till the life-time of the program */
 	if (path[0] == 0) {
 		char* configDir = Sys_GetConfigDir();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
 		snprintf(path, SYS_PATHNAME_MAX, "%s/csprite/csprite.log", configDir);
+#pragma GCC diagnostic pop
 	}
 	return path;
 }
