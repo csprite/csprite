@@ -602,7 +602,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		static ImVec2 LayerWinSize;
-		ImGui::SetNextWindowSizeConstraints({ 200, 300 }, { io.DisplaySize.y / 1.5f, io.DisplaySize.y / 2.0f });
+		ImGui::SetNextWindowSizeConstraints({ 100.0f, 50.0f }, { io.DisplaySize.x / 2.5f, io.DisplaySize.y / 2.5f });
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 		if (ImGui::Begin("Layer", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar)) {
 			if (ImGui::Button("+")) {
@@ -672,7 +672,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			LayerWinSize = ImGui::GetWindowSize();
-			ImGui::SetWindowSize(LayerWinSize, ImGuiCond_Once);
+			ImGui::SetWindowSize({ 200.0f, 300.0f }, ImGuiCond_Once);
 			ImGui::SetWindowPos({ io.DisplaySize.x - LayerWinSize.x + 1, TopBarPos.y + TopBarSize.y + style.WindowPadding.y + style.FramePadding.y });
 			ImGui::End();
 		}
