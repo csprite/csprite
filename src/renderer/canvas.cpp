@@ -1,9 +1,9 @@
-#include "canvas.hh"
+#include "canvas.h"
 #include "log/log.h"
 
 CanvasLayer::CanvasLayer(SDL_Renderer* ren, int32_t w, int32_t h, std::string name) {
 	this->name = name;
-	this->pixels = new uint8_t[w * h * 4];
+	this->pixels = new uint8_t[w * h * 4]();
 	this->tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
 	this->history = NULL;
 	SaveHistory(&this->history, w * h * 4, this->pixels);
@@ -23,6 +23,9 @@ CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h
 	this->dims[0] = w;
 	this->dims[1] = h;
 	this->ren = ren;
+	this->layers.reserve(50);
+	this->layer = NULL;
+	this->CurrentLayerIdx = 0;
 
 	this->render = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
 	if (this->render == NULL) {
@@ -55,12 +58,38 @@ CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h
 }
 
 CanvasLayer_Manager::~CanvasLayer_Manager() {
+	for (auto layer_ptr : this->layers) delete layer_ptr;
 	SDL_DestroyTexture(this->render);
 	SDL_DestroyTexture(this->pattern);
 }
 
 void CanvasLayer_Manager::AddLayer(std::string name) {
-	this->layers.emplace_back(this->ren, this->dims[0], this->dims[1], name);
+	auto layer_ptr = new CanvasLayer(this->ren, this->dims[0], this->dims[1], name);
+	this->layers.push_back(layer_ptr);
+}
+
+void CanvasLayer_Manager::RemoveLayer(int32_t idx) {
+	if (idx < this->layers.size()) {
+		auto layer_ptr = this->layers[idx];
+		this->layers.erase(this->layers.begin() + idx);
+		delete layer_ptr;
+	}
+	if (this->layers.size() == 0) {
+		this->layer = NULL;
+	}
+}
+
+void CanvasLayer_Manager::SetCurrentLayerIdx(int32_t idx) {
+	if (this->layers.size() > 0) {
+		CurrentLayerIdx = idx;
+		this->layer = layers[idx];
+	}
+}
+
+void CanvasLayer_Manager::ReUploadTexture(int32_t idx) {
+	if (this->layers.size() > 0 && idx < this->layers.size()) {
+		SDL_UpdateTexture(this->layers[idx]->tex, NULL, this->layers[idx]->pixels, this->dims[0] * 4);
+	}
 }
 
 void CanvasLayer_Manager::Draw(SDL_Rect* r, int32_t layerToUpdateIdx) {
@@ -69,18 +98,12 @@ void CanvasLayer_Manager::Draw(SDL_Rect* r, int32_t layerToUpdateIdx) {
 
 	for (int32_t i = 0; i < this->layers.size(); ++i) {
 		if (layerToUpdateIdx == i) {
-			SDL_UpdateTexture(this->layers[i].tex, NULL, this->layers[i].pixels, this->dims[0] * 4);
+			SDL_UpdateTexture(this->layers[i]->tex, NULL, this->layers[i]->pixels, this->dims[0] * 4);
 		}
-		SDL_RenderCopy(this->ren, this->layers[i].tex, NULL, NULL);
+		SDL_RenderCopy(this->ren, this->layers[i]->tex, NULL, NULL);
 	}
 
 	SDL_SetRenderTarget(this->ren, NULL);
 	SDL_RenderCopy(this->ren, this->render, NULL, r);
 }
-
-CanvasLayer_Manager* Canvas_CreateManager(SDL_Renderer* ren, int32_t w, int32_t h) {
-	CanvasLayer_Manager* mgr = new CanvasLayer_Manager(ren, w, h);
-	return mgr;
-}
-
 
