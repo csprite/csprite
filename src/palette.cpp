@@ -25,7 +25,10 @@ PaletteManager::PaletteManager() {
 	palette.AddColor(0, 0, 0);
 	palette.AddColor(255, 255, 255);
 	SelectedColorIdx = 0;
-	PrimaryColor = palette.colors[SelectedColorIdx];
+	PrimaryColor[0] = palette.colors[SelectedColorIdx].r;
+	PrimaryColor[1] = palette.colors[SelectedColorIdx].g;
+	PrimaryColor[2] = palette.colors[SelectedColorIdx].b;
+	PrimaryColor[3] = palette.colors[SelectedColorIdx].a;
 }
 
 PaletteManager::~PaletteManager() {
@@ -38,7 +41,10 @@ void PaletteManager::SetPreset(Palette& p) {
 
 void PaletteManager::SetSelectedColorIdx(int32_t idx) {
 	SelectedColorIdx = idx;
-	PrimaryColor = palette.colors[idx];
+	PrimaryColor[0] = palette.colors[SelectedColorIdx].r;
+	PrimaryColor[1] = palette.colors[SelectedColorIdx].g;
+	PrimaryColor[2] = palette.colors[SelectedColorIdx].b;
+	PrimaryColor[3] = palette.colors[SelectedColorIdx].a;
 }
 
 std::vector<Palette>* Palette_LoadAll() {
