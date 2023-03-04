@@ -383,6 +383,49 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+		if (ImGui::Begin("Settings", NULL, ImGuiWindowFlags_NoCollapse)) {
+			static int32_t CurrentSelection = 0;
+			ImGui::BeginTable("##SettingsTable", 2, ImGuiTableFlags_BordersInnerV);
+			ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthFixed, 120.0f, 0);
+			ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthStretch, 0.0f, 1);
+
+			// set the row height to maximum available content height in the window
+			auto vMin_y = ImGui::GetWindowContentRegionMin().y + ImGui::GetWindowPos().y;
+			auto vMax_y = ImGui::GetWindowContentRegionMax().y + ImGui::GetWindowPos().y;
+			ImGui::TableNextRow(ImGuiTableRowFlags_None, vMax_y - vMin_y);
+
+			ImGui::TableNextColumn();
+			if (ImGui::Selectable("General", CurrentSelection == 0)) CurrentSelection = 0;
+			if (ImGui::Selectable("Background", CurrentSelection == 1)) CurrentSelection = 1;
+			if (ImGui::Selectable("Theme", CurrentSelection == 2)) CurrentSelection = 2;
+
+			ImGui::TableNextColumn();
+			switch (CurrentSelection) {
+				case 0: {
+					ImGui::Text("General Section");
+					break;
+				}
+				case 1: {
+					ImGui::Text("Background Section");
+					break;
+				}
+				case 2: {
+					ImGui::Text("Theme Section");
+					break;
+				}
+				default: {
+					ImGui::Text("Not-Reachable Section: %d, Please Report This To The Developer", CurrentSelection);
+					break;
+				}
+			}
+
+			ImGui::EndTable();
+
+			ImGui::SetWindowPos({ 300, 150 }, ImGuiCond_Once);
+			ImGui::SetWindowSize({ 400, 250 }, ImGuiCond_Once);
+			ImGui::End();
+		}
+
 		static ImVec2 LeftSideBarPos;
 		static ImVec2 LeftSideBarSize;
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
