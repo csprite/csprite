@@ -12,7 +12,7 @@ STD:=c99
 CXX_STD:=c++11
 CCFLAGS:=-Wall -Wno-unknown-warning-option -Iinclude/ -Ithird_party/imgui/ -Ithird_party/FileBrowser/ -Ithird_party/ -MMD -MP -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer) -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 CFLAGS:=
-LFLAGS:=
+LFLAGS:=-Wl,-Wno-unknown-warning-option
 
 PYTHON:=python3
 ZLIB_STATIC_LINK:=1
@@ -43,7 +43,7 @@ ifeq ($(call lc,$(BUILD_TARGET)),debug)
 	CCFLAGS+=-O0 -g
 else
 	CCFLAGS+=-O3 -fdata-sections -ffunction-sections -flto
-	LFLAGS+=-Wl,--gc-sections -flto
+	LFLAGS+=-Wl,--gc-sections -flto # on mac this is replaced with -dead_strip below.
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -93,6 +93,7 @@ else
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -lz
+		LFLAGS+=$(subst -Wl,--gc-sections,-Wl,-dead_strip,$(LFLAGS)) # replace -Wl,--gc-sections with -Wl,-dead_strip
 		SDL2_LFLAGS:=-lSDL2
 	endif
 
