@@ -42,7 +42,8 @@ bin:=csprite
 ifeq ($(call lc,$(BUILD_TARGET)),debug)
 	CCFLAGS+=-O0 -g
 else
-	CCFLAGS+=-O3
+	CCFLAGS+=-O3 -fdata-sections -ffunction-sections -flto
+	LFLAGS+=-Wl,--gc-sections -flto
 endif
 
 ifeq ($(OS),Windows_NT)
