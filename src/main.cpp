@@ -170,12 +170,12 @@ int main(int argc, char* argv[]) {
 	SDL_ShowWindow(window);
 	_GuiSetToolText();
 
-	if (R_Init(window, AppConfig->vsync) != EXIT_SUCCESS) {
+	if (R_Init(window) != EXIT_SUCCESS) {
 		return EXIT_FAILURE;
 	}
 	SDL_Renderer* renderer = R_GetRenderer();
 
-	CanvasLayerMgr = new CanvasLayer_Manager(renderer, 64, 64);
+	CanvasLayerMgr = new CanvasLayer_Manager(renderer, 64, 64, AppConfig->CheckerboardColor1, AppConfig->CheckerboardColor2);
 	CanvasLayerMgr->AddLayer();
 	CanvasLayerMgr->SetCurrentLayerIdx(0);
 
@@ -202,7 +202,14 @@ int main(int argc, char* argv[]) {
 	io.WantCaptureMouse = false;
 	io.WantCaptureKeyboard = false;
 	ImGui::StyleColorsDark();
+
 	ThemeArr = ThemeLoadAll();
+	for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
+		if (strcmp(AppConfig->Theme_Name.c_str(), ThemeArr->entries[i]->name) == 0) {
+			ThemeIndex = i;
+			break;
+		}
+	}
 	_GuiSetColors(style);
 
 	{
@@ -218,7 +225,7 @@ int main(int argc, char* argv[]) {
 	bool ShowNewCanvasWindow = false;
 
 	unsigned int frameStart, frameTime;
-	unsigned int frameDelay = 1000 / AppConfig->FramesUpdateRate;
+	unsigned int frameDelay = 1000 / AppConfig->Max_FPS;
 
 	imgui_addons::ImGuiFileBrowser ImFileDialog;
 	while (!ShouldClose) {
@@ -270,26 +277,6 @@ int main(int argc, char* argv[]) {
 						}
 						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
 							ImGui::SetTooltip("%s", (*pMgr->presets)[i].author.c_str());
-						}
-					}
-					ImGui::EndMenu();
-				}
-
-				if (ImGui::BeginMenu("Theme")) {
-					for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
-						int32_t _themeidx = ThemeIndex;
-
-						if (ImGui::MenuItem(ThemeArr->entries[i]->name, NULL)) {
-							ThemeIndex = i;
-							_GuiSetColors(style);
-						}
-						if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-							ImGui::SetTooltip("%s", ThemeArr->entries[i]->author);
-						}
-
-						if (_themeidx == i) {
-							ImGui::SameLine();
-							ImGui::Text("<");
 						}
 					}
 					ImGui::EndMenu();
@@ -383,7 +370,8 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		if (ImGui::Begin("Settings", NULL, ImGuiWindowFlags_NoCollapse)) {
+		if (ShowPreferencesWindow && ImGui::Begin("Settings", NULL, ImGuiWindowFlags_NoCollapse)) {
+			static Config_T tempConfig = *AppConfig;
 			static int32_t CurrentSelection = 0;
 			ImGui::BeginTable("##SettingsTable", 2, ImGuiTableFlags_BordersInnerV);
 			ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthFixed, 120.0f, 0);
@@ -392,31 +380,57 @@ int main(int argc, char* argv[]) {
 			// set the row height to maximum available content height in the window
 			auto vMin_y = ImGui::GetWindowContentRegionMin().y + ImGui::GetWindowPos().y;
 			auto vMax_y = ImGui::GetWindowContentRegionMax().y + ImGui::GetWindowPos().y;
-			ImGui::TableNextRow(ImGuiTableRowFlags_None, vMax_y - vMin_y);
+			ImGui::TableNextRow(ImGuiTableRowFlags_None, (vMax_y - vMin_y) - ImGui::GetFrameHeightWithSpacing());
 
 			ImGui::TableNextColumn();
 			if (ImGui::Selectable("General", CurrentSelection == 0)) CurrentSelection = 0;
-			if (ImGui::Selectable("Background", CurrentSelection == 1)) CurrentSelection = 1;
+			if (ImGui::Selectable("Colors", CurrentSelection == 1)) CurrentSelection = 1;
 			if (ImGui::Selectable("Theme", CurrentSelection == 2)) CurrentSelection = 2;
 
 			ImGui::TableNextColumn();
 			switch (CurrentSelection) {
 				case 0: {
-					ImGui::Text("General Section");
+					static int32_t _maxFPS = tempConfig.Max_FPS;
+					ImGui::InputInt("FPS", &_maxFPS, 1, 5, ImGuiInputTextFlags_None);
+					tempConfig.Max_FPS = static_cast<uint16_t>(CLAMP_NUM(_maxFPS, 5, UINT16_MAX));
 					break;
 				}
 				case 1: {
-					ImGui::Text("Background Section");
+					ImGui::Text("Checkerboard Pattern");
+					ImGui::ColorEdit3("##CheckerboardColor1", tempConfig.CheckerboardColor1, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
+					ImGui::ColorEdit3("##CheckerboardColor2", tempConfig.CheckerboardColor2, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
+					ImGui::Separator();
 					break;
 				}
 				case 2: {
-					ImGui::Text("Theme Section");
+					for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
+						if (ImGui::Selectable(ThemeArr->entries[i]->name, i == ThemeIndex)) {
+							ThemeIndex = i;
+							_GuiSetColors(style);
+						}
+					}
 					break;
 				}
 				default: {
 					ImGui::Text("Not-Reachable Section: %d, Please Report This To The Developer", CurrentSelection);
 					break;
 				}
+			}
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+
+			if (ImGui::Button("Save")) {
+				tempConfig.Theme_Name = std::string(ThemeArr->entries[ThemeIndex]->name);
+				*AppConfig = tempConfig;
+				frameDelay = 1000 / AppConfig->Max_FPS;
+				ShowPreferencesWindow = false;
+				WriteConfig(AppConfig);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel")) {
+				tempConfig = *AppConfig;
+				ShowPreferencesWindow = false;
 			}
 
 			ImGui::EndTable();
@@ -706,7 +720,7 @@ int main(int argc, char* argv[]) {
 				if (ImGui::Button("Create")) {
 					if (NewDims[0] > 0 && NewDims[1] > 0) {
 						delete CanvasLayerMgr;
-						CanvasLayerMgr = new CanvasLayer_Manager(renderer, NewDims[0], NewDims[1]);
+						CanvasLayerMgr = new CanvasLayer_Manager(renderer, NewDims[0], NewDims[1], AppConfig->CheckerboardColor1, AppConfig->CheckerboardColor2);
 						CanvasLayerMgr->AddLayer();
 						CanvasLayerMgr->SetCurrentLayerIdx(0);
 						CurrViewportZoom = 1.0f;
@@ -727,35 +741,6 @@ int main(int argc, char* argv[]) {
 				ImGui::EndPopup();
 			} else {
 				ImGui::OpenPopup("Create New###NewCanvasWindow");
-			}
-		}
-
-		if (ShowPreferencesWindow) {
-			if (ImGui::BeginPopupModal("Preferences###PreferencesWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)) {
-				ImGui::Text("VSync (%s)", AppConfig->vsync ? "Enabled" : "Disabled");
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Vertical Sync - Synchronize App's FPS To Your Monitor's FPS");
-				ImGui::SameLine();
-				ImGui::Ext_ToggleButton("VSync_Toggle", &AppConfig->vsync);
-
-				ImGui::InputInt("FPS", &AppConfig->FramesUpdateRate, 1, 5, AppConfig->vsync == true ? ImGuiInputTextFlags_ReadOnly : ImGuiInputTextFlags_None);
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("Frames Per Second");
-
-				AppConfig->FramesUpdateRate = AppConfig->FramesUpdateRate < 5 ? 5 : AppConfig->FramesUpdateRate;
-				if (ImGui::Button("Save")) {
-					WriteConfig(AppConfig);
-					frameDelay = 1000 / AppConfig->FramesUpdateRate;
-					ShowPreferencesWindow = false;
-					ImGui::CloseCurrentPopup();
-				}
-				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) ImGui::SetTooltip("please restart the app after saving");
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel")) {
-					ShowPreferencesWindow = false;
-					ImGui::CloseCurrentPopup();
-				}
-				ImGui::EndPopup();
-			} else {
-				ImGui::OpenPopup("Preferences###PreferencesWindow");
 			}
 		}
 
@@ -816,11 +801,9 @@ int main(int argc, char* argv[]) {
 
 		R_Present();
 
-		if (!AppConfig->vsync) {
-			frameTime = SDL_GetTicks() - frameStart;
-			if (frameDelay > frameTime) SDL_Delay(frameDelay - frameTime);
-			frameStart = SDL_GetTicks();
-		}
+		frameTime = SDL_GetTicks() - frameStart;
+		if (frameDelay > frameTime) SDL_Delay(frameDelay - frameTime);
+		frameStart = SDL_GetTicks();
 	}
 
 	R_Destroy();
@@ -1245,7 +1228,7 @@ static int OpenNewFile(const char* _fName) {
 		return -1;
 	}
 
-	if (ifio_read(_fName, &CanvasLayerMgr) == 0 && CanvasLayerMgr->dims[0] > 0 && CanvasLayerMgr->dims[1] > 0) {
+	if (ifio_read(_fName, &CanvasLayerMgr, AppConfig->CheckerboardColor1, AppConfig->CheckerboardColor2) == 0 && CanvasLayerMgr->dims[0] > 0 && CanvasLayerMgr->dims[1] > 0) {
 		CurrViewportZoom = 1.0f;
 		UpdateViewportSize();
 		UpdateViewportPos();

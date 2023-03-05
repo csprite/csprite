@@ -19,7 +19,7 @@ CanvasLayer::~CanvasLayer() {
 	FreeHistory(&this->history);
 }
 
-CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h) {
+CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h, uint8_t pCol1[3], uint8_t pCol2[3]) {
 	this->dims[0] = w;
 	this->dims[1] = h;
 	this->ren = ren;
@@ -35,13 +35,13 @@ CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h
 	uint8_t* pixels = new uint8_t[(w/2) * (h/2) * 4];
 	for (int32_t y = 0; y < h/2; y++) {
 		for (int32_t x = 0; x < w/2; x++) {
-			uint8_t r = 0xC0, g = 0xC0, b = 0xC0, a = 0xFF;
-			if ((x + y) % 2) { r = 0x80; g = 0x80; b = 0x80; a = 0xFF; }
+			uint8_t r = pCol1[0], g = pCol1[1], b = pCol1[2];
+			if ((x + y) % 2) { r = pCol2[0]; g = pCol2[1]; b = pCol2[2]; }
 			uint8_t* pixel = &pixels[(y * (int)(w/2) + x) * 4];
 			*(pixel + 0) = r;
 			*(pixel + 1) = g;
 			*(pixel + 2) = b;
-			*(pixel + 3) = a;
+			*(pixel + 3) = 255;
 		}
 	}
 	this->pattern = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, w/2, h/2);
