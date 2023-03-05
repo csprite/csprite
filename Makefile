@@ -92,9 +92,11 @@ else
 		endif
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		__comma=,
+		ifeq ($(call lc,$(BUILD_TARGET)),release)
+			__comma=,
+			LFLAGS=$(subst -Wl$(__comma)--gc-sections,-Wl$(__comma)-dead_strip,$(LFLAGS)) # replace -Wl,--gc-sections with -Wl,-dead_strip
+		endif
 		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -lz
-		LFLAGS+=$(subst -Wl$(__comma)--gc-sections,-Wl$(__comma)-dead_strip,$(LFLAGS)) # replace -Wl,--gc-sections with -Wl,-dead_strip
 		SDL2_LFLAGS:=-lSDL2
 	endif
 
