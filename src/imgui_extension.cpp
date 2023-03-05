@@ -43,3 +43,26 @@ IMGUI_API void ImGui::Ext_ToggleButton(const char* str_id, bool* v) {
 	draw_list->AddCircleFilled(ImVec2(p.x + radius + t * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
 }
 
+IMGUI_API bool ImGui::ColorEdit3(const char* label, uint8_t col[3], ImGuiColorEditFlags flags) {
+	float col_flt[3] = { col[0]/255.0f, col[1]/255.0f, col[2]/255.0f };
+	if (ImGui::ColorEdit3(label, col_flt, flags)) {
+		col[0] = col_flt[0] * 255;
+		col[1] = col_flt[1] * 255;
+		col[2] = col_flt[2] * 255;
+		return true;
+	}
+	return false;
+}
+
+IMGUI_API bool ImGui::ColorEdit4(const char* label, uint8_t col[4], ImGuiColorEditFlags flags) {
+	float col_flt[4] = { col[0]/255.0f, col[1]/255.0f, col[2]/255.0f, col[3]/255.0f };
+	if (ImGui::ColorEdit4(label, col_flt, flags)) {
+		col[0] = col_flt[0] * 255;
+		col[1] = col_flt[1] * 255;
+		col[2] = col_flt[2] * 255;
+		col[3] = col_flt[3] * 255;
+		return true;
+	}
+	return false;
+}
+
