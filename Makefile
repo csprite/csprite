@@ -93,7 +93,7 @@ else
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		LFLAGS+=$(addprefix -framework , OpenGL Cocoa) -lz
-		LFLAGS+=$(subst -Wl,--gc-sections,-Wl,-dead_strip,$(LFLAGS)) # replace -Wl,--gc-sections with -Wl,-dead_strip
+		LFLAGS+=$(subst --gc-sections,-dead_strip,$(LFLAGS)) # replace -Wl,--gc-sections with -Wl,-dead_strip
 		SDL2_LFLAGS:=-lSDL2
 	endif
 
