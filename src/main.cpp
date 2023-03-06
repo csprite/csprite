@@ -370,74 +370,76 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		if (ShowPreferencesWindow && ImGui::Begin("Preferences", NULL, ImGuiWindowFlags_NoCollapse)) {
-			static Config_T tempConfig = *AppConfig;
-			static int32_t CurrentSelection = 0;
-			ImGui::BeginTable("##PreferencesTable", 2, ImGuiTableFlags_BordersInnerV);
-			ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthFixed, 120.0f, 0);
-			ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthStretch, 0.0f, 1);
+		if (ShowPreferencesWindow) {
+			ImGui::SetNextWindowPos({ io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f }, ImGuiCond_Once, { 0.5f, 0.5f });
+			if (ImGui::Begin("Preferences", NULL, ImGuiWindowFlags_NoCollapse)) {
+				static Config_T tempConfig = *AppConfig;
+				static int32_t CurrentSelection = 0;
+				ImGui::BeginTable("##PreferencesTable", 2, ImGuiTableFlags_BordersInnerV);
+				ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthFixed, 120.0f, 0);
+				ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthStretch, 0.0f, 1);
 
-			// set the row height to maximum available content height in the window
-			auto vMin_y = ImGui::GetWindowContentRegionMin().y + ImGui::GetWindowPos().y;
-			auto vMax_y = ImGui::GetWindowContentRegionMax().y + ImGui::GetWindowPos().y;
-			ImGui::TableNextRow(ImGuiTableRowFlags_None, (vMax_y - vMin_y) - ImGui::GetFrameHeightWithSpacing());
+				// set the row height to maximum available content height in the window
+				auto vMin_y = ImGui::GetWindowContentRegionMin().y + ImGui::GetWindowPos().y;
+				auto vMax_y = ImGui::GetWindowContentRegionMax().y + ImGui::GetWindowPos().y;
+				ImGui::TableNextRow(ImGuiTableRowFlags_None, (vMax_y - vMin_y) - ImGui::GetFrameHeightWithSpacing());
 
-			ImGui::TableNextColumn();
-			if (ImGui::Selectable("General", CurrentSelection == 0)) CurrentSelection = 0;
-			if (ImGui::Selectable("Colors", CurrentSelection == 1)) CurrentSelection = 1;
-			if (ImGui::Selectable("Theme", CurrentSelection == 2)) CurrentSelection = 2;
+				ImGui::TableNextColumn();
+				if (ImGui::Selectable("General", CurrentSelection == 0)) CurrentSelection = 0;
+				if (ImGui::Selectable("Colors", CurrentSelection == 1)) CurrentSelection = 1;
+				if (ImGui::Selectable("Theme", CurrentSelection == 2)) CurrentSelection = 2;
 
-			ImGui::TableNextColumn();
-			switch (CurrentSelection) {
-				case 0: {
-					static int32_t _maxFPS = tempConfig.Max_FPS;
-					ImGui::InputInt("FPS", &_maxFPS, 1, 5, ImGuiInputTextFlags_None);
-					tempConfig.Max_FPS = static_cast<uint16_t>(CLAMP_NUM(_maxFPS, 5, UINT16_MAX));
-					break;
-				}
-				case 1: {
-					ImGui::Text("Checkerboard Pattern");
-					ImGui::ColorEdit3("##CheckerboardColor1", tempConfig.CheckerboardColor1, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
-					ImGui::ColorEdit3("##CheckerboardColor2", tempConfig.CheckerboardColor2, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
-					ImGui::Separator();
-					break;
-				}
-				case 2: {
-					for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
-						if (ImGui::Selectable(ThemeArr->entries[i]->name, i == ThemeIndex)) {
-							ThemeIndex = i;
-							_GuiSetColors(style);
-						}
+				ImGui::TableNextColumn();
+				switch (CurrentSelection) {
+					case 0: {
+						static int32_t _maxFPS = tempConfig.Max_FPS;
+						ImGui::InputInt("FPS", &_maxFPS, 1, 5, ImGuiInputTextFlags_None);
+						tempConfig.Max_FPS = static_cast<uint16_t>(CLAMP_NUM(_maxFPS, 5, UINT16_MAX));
+						break;
 					}
-					break;
+					case 1: {
+						ImGui::Text("Checkerboard Pattern");
+						ImGui::ColorEdit3("##CheckerboardColor1", tempConfig.CheckerboardColor1, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
+						ImGui::ColorEdit3("##CheckerboardColor2", tempConfig.CheckerboardColor2, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
+						ImGui::Separator();
+						break;
+					}
+					case 2: {
+						for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
+							if (ImGui::Selectable(ThemeArr->entries[i]->name, i == ThemeIndex)) {
+								ThemeIndex = i;
+								_GuiSetColors(style);
+							}
+						}
+						break;
+					}
+					default: {
+						ImGui::Text("Not-Reachable Section: %d, Please Report This To The Developer", CurrentSelection);
+						break;
+					}
 				}
-				default: {
-					ImGui::Text("Not-Reachable Section: %d, Please Report This To The Developer", CurrentSelection);
-					break;
+
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+
+				if (ImGui::Button("Save")) {
+					tempConfig.Theme_Name = std::string(ThemeArr->entries[ThemeIndex]->name);
+					*AppConfig = tempConfig;
+					frameDelay = 1000 / AppConfig->Max_FPS;
+					ShowPreferencesWindow = false;
+					WriteConfig(AppConfig);
 				}
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel")) {
+					tempConfig = *AppConfig;
+					ShowPreferencesWindow = false;
+				}
+
+				ImGui::EndTable();
+
+				ImGui::SetWindowSize({ 400, 250 }, ImGuiCond_Once);
+				ImGui::End();
 			}
-
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-
-			if (ImGui::Button("Save")) {
-				tempConfig.Theme_Name = std::string(ThemeArr->entries[ThemeIndex]->name);
-				*AppConfig = tempConfig;
-				frameDelay = 1000 / AppConfig->Max_FPS;
-				ShowPreferencesWindow = false;
-				WriteConfig(AppConfig);
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel")) {
-				tempConfig = *AppConfig;
-				ShowPreferencesWindow = false;
-			}
-
-			ImGui::EndTable();
-
-			ImGui::SetWindowPos({ 300, 150 }, ImGuiCond_Once);
-			ImGui::SetWindowSize({ 400, 250 }, ImGuiCond_Once);
-			ImGui::End();
 		}
 
 		static ImVec2 LeftSideBarPos;
