@@ -129,15 +129,15 @@ int32_t ifio_write(const char* filePath, CanvasLayer_Manager* mgr) {
 
 	return 0;
 }
-#include <iostream>
-int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr) {
+
+int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, uint8_t checkBg1[4], uint8_t checkBg2[4]) {
 	if (filePath == NULL || mgr_ptr == NULL || *mgr_ptr == NULL) return -1;
 
 	if (HAS_SUFFIX_CI(filePath, ".png", 4) || HAS_SUFFIX_CI(filePath, ".jpeg", 5) || HAS_SUFFIX_CI(filePath, ".jpg", 4)) {
 		int32_t w = 0, h = 0, channels = 0;
 		uint8_t* _data = stbi_load(filePath, &w, &h, &channels, 4);
 		if (w > 0 && h > 0 && _data) {
-			CanvasLayer_Manager* mgr = new CanvasLayer_Manager((*mgr_ptr)->ren, w, h);
+			CanvasLayer_Manager* mgr = new CanvasLayer_Manager((*mgr_ptr)->ren, w, h, checkBg1, checkBg2);
 			mgr->AddLayer();
 			mgr->SetCurrentLayerIdx(0);
 			CanvasLayer* layer = mgr->layer;
@@ -203,7 +203,7 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr) {
 			log_warn("no layers found!");
 		}
 
-		CanvasLayer_Manager* mgr = new CanvasLayer_Manager((*mgr_ptr)->ren, w, h);
+		CanvasLayer_Manager* mgr = new CanvasLayer_Manager((*mgr_ptr)->ren, w, h, checkBg1, checkBg2);
 
 		if (numLayers > 0) {
 			for (int currLayerIdx = 0; currLayerIdx < numLayers; ++currLayerIdx) {
