@@ -10,9 +10,8 @@ SDL_Renderer* R_GetRenderer() {
 	return renderer;
 }
 
-int R_Init(SDL_Window* window, bool vsyncEnabled) {
+int R_Init(SDL_Window* window) {
 	uint32_t renFlags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
-	if (vsyncEnabled) renFlags |= SDL_RENDERER_PRESENTVSYNC;
 
 	renderer = SDL_CreateRenderer(window, -1, renFlags);
 	if (renderer == NULL) {

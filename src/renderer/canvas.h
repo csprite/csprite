@@ -28,7 +28,7 @@ public:
 
 	/* ren is an instance of SDL_Renderer that should exist for the lime time of the class.
 	   w, h is the width & height of the canvas. */
-	CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h);
+	CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h, uint8_t pCol1[3], uint8_t pCol2[3]);
 	~CanvasLayer_Manager();
 
 	void AddLayer(std::string name = "New Layer");
