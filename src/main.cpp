@@ -370,10 +370,10 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		if (ShowPreferencesWindow && ImGui::Begin("Settings", NULL, ImGuiWindowFlags_NoCollapse)) {
+		if (ShowPreferencesWindow && ImGui::Begin("Preferences", NULL, ImGuiWindowFlags_NoCollapse)) {
 			static Config_T tempConfig = *AppConfig;
 			static int32_t CurrentSelection = 0;
-			ImGui::BeginTable("##SettingsTable", 2, ImGuiTableFlags_BordersInnerV);
+			ImGui::BeginTable("##PreferencesTable", 2, ImGuiTableFlags_BordersInnerV);
 			ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthFixed, 120.0f, 0);
 			ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthStretch, 0.0f, 1);
 
