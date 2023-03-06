@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-int R_Init(SDL_Window* window, bool vsyncEnabled); // Initializes OpenGL Context & ImGui Context
+int R_Init(SDL_Window* window); // Initializes SDL_Renderer
 void R_Destroy(void); // Destroy ImGui & OpenGL Contexts
 void R_Clear(void); // Clear The Screen
 void R_NewFrame(void); // Call Before Calling Any ImGui Functions For Rendering The Gui
