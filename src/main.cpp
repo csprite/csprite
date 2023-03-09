@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
 	SDL_ShowWindow(window);
 	_GuiSetToolText();
 
-	if (R_Init(window) != EXIT_SUCCESS) {
+	if (R_Init(window, AppConfig->RenderDriver) != EXIT_SUCCESS) {
 		return EXIT_FAILURE;
 	}
 	SDL_Renderer* renderer = R_GetRenderer();
@@ -395,6 +395,24 @@ int main(int argc, char* argv[]) {
 						static int32_t _maxFPS = tempConfig.Max_FPS;
 						ImGui::InputInt("FPS", &_maxFPS, 1, 5, ImGuiInputTextFlags_None);
 						tempConfig.Max_FPS = static_cast<uint16_t>(CLAMP_NUM(_maxFPS, 5, UINT16_MAX));
+
+						ImGui::SetNextItemWidth(-FLT_MIN); // right align
+						if (ImGui::BeginChild("##FixedWidthRenderDriverCombo", { ImGui::CalcTextSize("MMMMMMMMMM").x + style.FramePadding.x * 2.0f, ImGui::GetTextLineHeightWithSpacing() * 1.1f })) {
+							if (ImGui::BeginCombo("##RenderDriverCombo", R_RendererApiToString(tempConfig.RenderDriver).c_str(), ImGuiComboFlags_None)) {
+								for (int32_t api = 0; api < R_API_COUNT; ++api) {
+									if (ImGui::Selectable(R_RendererApiToString((Renderer_API)api).c_str(), tempConfig.RenderDriver == (Renderer_API)api)) {
+										tempConfig.RenderDriver = (Renderer_API)api;
+									}
+									if (tempConfig.RenderDriver == (Renderer_API)api) ImGui::SetItemDefaultFocus();
+								}
+								ImGui::EndCombo();
+							}
+							ImGui::EndChild();
+						}
+						ImGui::SameLine();
+						ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5.0f); // align text with combo
+						ImGui::Text("Render driver");
+
 						break;
 					}
 					case 1: {
@@ -428,6 +446,9 @@ int main(int argc, char* argv[]) {
 					frameDelay = 1000 / AppConfig->Max_FPS;
 					ShowPreferencesWindow = false;
 					WriteConfig(AppConfig);
+				}
+				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+					ImGui::SetTooltip("Restart app to apply these changes");
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
