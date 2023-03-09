@@ -42,6 +42,9 @@ Config_T* LoadConfig(void) {
 		c->Max_FPS = Max_FPS_Str == NULL ? 60 : atoi(Max_FPS_Str);
 		c->Max_FPS = c->Max_FPS < 5 ? 5 : c->Max_FPS;
 
+		const char* RenderDriver_Str = ini_get(config, "csprite", "RenderDriver");
+		c->RenderDriver = R_StringToRendererApi(RenderDriver_Str == NULL ? R_RendererApiToString(R_API_OPENGL) : RenderDriver_Str);
+
 		const char* Theme_Name_Str = ini_get(config, "theme", "name");
 		c->Theme_Name = Theme_Name_Str == NULL ? "Noice Blue" : std::string(Theme_Name_Str);
 
@@ -76,6 +79,7 @@ Config_T* LoadConfig(void) {
 		return c;
 	} else {
 		c->Max_FPS = 60;
+		c->RenderDriver = R_API_OPENGL;
 		c->Theme_Name = "Noice Blue";
 		WriteConfig(c);
 		return c;
@@ -101,8 +105,9 @@ int WriteConfig(Config_T* s) {
 
 	FILE* f = fopen(configPath, "w");
 	fprintf(
-		f, "[csprite]\nMax_FPS = %d\n\n[theme]\nname = %s\n\n[colors]\nCheckerColor1 = %02X%02X%02X\nCheckerColor2 = %02X%02X%02X\n",
+		f, "[csprite]\nMax_FPS = %d\nRenderDriver = %s\n\n[theme]\nname = %s\n\n[colors]\nCheckerColor1 = %02X%02X%02X\nCheckerColor2 = %02X%02X%02X\n",
 		s->Max_FPS,
+		R_RendererApiToString(s->RenderDriver).c_str(),
 		s->Theme_Name.c_str(),
 		s->CheckerboardColor1[0], s->CheckerboardColor1[1], s->CheckerboardColor1[2],
 		s->CheckerboardColor2[0], s->CheckerboardColor2[1], s->CheckerboardColor2[2]
