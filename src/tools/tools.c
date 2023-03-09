@@ -181,37 +181,3 @@ bool Tool_FloodFill(
 	return didChange;
 }
 
-/*
-bool Tool_FloodFill(
-	uint8_t* Pixels,
-	uint8_t* OldColor,
-	uint8_t* NewColor,
-	uint32_t x, uint32_t y,
-	uint32_t w, uint32_t h
-) {
-	bool didChange = false;
-	if (
-		x >= 0 && y >= 0 && x < w && y < h &&
-		Pixels != NULL && OldColor != NULL && NewColor != NULL &&
-		!COLOR_EQUAL(NewColor, OldColor)
-	) {
-		uint8_t* pixel = GetCharData(Pixels, x, y, w, h);
-
-		if (pixel != NULL) {
-			if (COLOR_EQUAL(pixel, OldColor) == 1) {
-				*pixel = NewColor[0];
-				*(pixel + 1) = NewColor[1];
-				*(pixel + 2) = NewColor[2];
-				*(pixel + 3) = NewColor[3];
-				didChange = true;
-
-				if (x + 1 < w)  didChange = Tool_FloodFill(Pixels, OldColor, NewColor, x + 1, y, w, h) || didChange;
-				if (x - 1 >= 0) didChange = Tool_FloodFill(Pixels, OldColor, NewColor, x - 1, y, w, h) || didChange;
-				if (y + 1 < h)  didChange = Tool_FloodFill(Pixels, OldColor, NewColor, x, y + 1, w, h) || didChange;
-				if (x + 1 >= 0) didChange = Tool_FloodFill(Pixels, OldColor, NewColor, x, y - 1, w, h) || didChange;
-			}
-		}
-	}
-	return didChange;
-}*/
-
