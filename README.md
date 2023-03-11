@@ -72,9 +72,14 @@ list of references & resources i used while developing csprite, might be good fo
 ---
 ### Credits
 
-CSprite Uses [Aseprite Font](https://github.com/aseprite/aseprite/blob/main/data/fonts/aseprite_font.png) Designed By David Capello & Licensed Under [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
+#### Palettes
+csprite comes with some default palette presets created by awesome people!
+- [BitterSweet16](https://lospec.com/palette-list/bittersweet16) & [GB-Remixed [2-Bit]](https://lospec.com/palette-list/gb-remixed-2-bit) By [SoundsDotZip](https://lospec.com/soundsdotzip)
 
-**Note**: the font was in Bitmap format and was re-drawn by me in [FontStruct](https://fontstruct.com/fontstructions/show/2260539/aseprite-9) to be used in this program, if you wish to use to TTF format too please credit David Capello for the hardwork.
+#### UI Font
+csprite uses [Aseprite Font](https://github.com/aseprite/aseprite/blob/main/data/fonts/aseprite_font.png) Designed By David Capello.
+
+**Note**: the font was in Bitmap (PNG) format and was re-drawn by me in [FontStruct](https://fontstruct.com/fontstructions/show/2260539/aseprite-9) to be used in this program, if you wish to use to TTF version too please credit David Capello for the hardwork.
 
 ---
 ### Thanks
