@@ -399,7 +399,7 @@ int main(int argc, char* argv[]) {
 						tempConfig.Max_FPS = static_cast<uint16_t>(CLAMP_NUM(_maxFPS, 5, UINT16_MAX));
 
 						ImGui::SetNextItemWidth(-FLT_MIN); // right align
-						if (ImGui::BeginChild("##FixedWidthRenderDriverCombo", { ImGui::CalcTextSize("MMMMMMMMMM").x + style.FramePadding.x * 2.0f, ImGui::GetTextLineHeightWithSpacing() * 1.1f })) {
+						if (ImGui::BeginChild("##FixedWidthRenderDriverCombo", { (ImGui::CalcTextSize("MMMMMMMMMM").x * 1.5f) + (style.FramePadding.x * 2.0f), ImGui::GetTextLineHeightWithSpacing() * 1.2f })) {
 							if (ImGui::BeginCombo("##RenderDriverCombo", R_RendererApiToString(tempConfig.RenderDriver).c_str(), ImGuiComboFlags_None)) {
 								for (int32_t api = 0; api < R_API_COUNT; ++api) {
 									if (ImGui::Selectable(R_RendererApiToString((Renderer_API)api).c_str(), tempConfig.RenderDriver == (Renderer_API)api)) {
@@ -412,7 +412,7 @@ int main(int argc, char* argv[]) {
 							ImGui::EndChild();
 						}
 						ImGui::SameLine();
-						ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5.0f); // align text with combo
+						ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (fontSizePx / 4.0f)); // align text with combo
 						ImGui::Text("Render driver");
 
 						break;
