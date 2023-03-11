@@ -479,12 +479,8 @@ int main(int argc, char* argv[]) {
 			ImGui::SetWindowPos(LeftSideBarPos);
 			ImGui::SetWindowSize(LeftSideBarSize, ImGuiCond_Once);
 
-			ImVec2 newFramePadding = { style.FramePadding.x * 4.0f, style.FramePadding.y * 4.0f };
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, newFramePadding);
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 0 });
-
-			float window_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
-			static bool primaryIsInPalette = true;
+			bool primaryIsInPalette = false;
 			for (int32_t i = 0; i < (int32_t)pMgr->palette.colors.size(); i++) {
 				ImGui::PushID(i);
 
@@ -496,6 +492,8 @@ int main(int argc, char* argv[]) {
 					((float)(pMgr->palette.colors[i].g) / 255),
 					((float)(pMgr->palette.colors[i].b) / 255),
 					((float)(pMgr->palette.colors[i].a) / 255)
+				}, ImGuiColorEditFlags_NoTooltip, {
+					ImGui::GetTextLineHeight() * 2.f, ImGui::GetTextLineHeight() * 2.f
 				})) {
 					pMgr->SetSelectedColorIdx(i);
 				}
@@ -507,19 +505,46 @@ int main(int argc, char* argv[]) {
 					pMgr->PrimaryColor[3] == pMgr->palette.colors[i].a
 				);
 
-				ImGui::GetWindowDrawList()->AddRect(
-					ImGui::GetItemRectMin(),
-					ImGui::GetItemRectMax(),
-					(pMgr->SelectedColorIdx == i && primaryIsInPalette) ? 0xFFFFFFFF : 0x000000FF,
-					0, 0, 1
-				);
+				if (pMgr->SelectedColorIdx == i && primaryIsInPalette) {
+					ImVec2 rSz = ImGui::GetItemRectSize();
+					uint8_t r = pMgr->palette.colors[i].r;
+					uint8_t g = pMgr->palette.colors[i].g;
+					uint8_t b = pMgr->palette.colors[i].b;
+					/* This Value Will Be Subtracted From Triangle's Positions
+					   Because Of Some Extra "Marginal" Space The Button Takes */
+					#define NEGATIVE_OFFSET 1.0f
+					ImGui::GetWindowDrawList()->AddTriangleFilled(
+						ImVec2(
+							ImGui::GetItemRectMax().x - NEGATIVE_OFFSET,
+							ImGui::GetItemRectMin().y + (rSz.y / 2.5f) - NEGATIVE_OFFSET
+						),
+						ImVec2(
+							ImGui::GetItemRectMin().x + (rSz.x / 2.5f) - NEGATIVE_OFFSET,
+							ImGui::GetItemRectMax().y - NEGATIVE_OFFSET
+						),
+						ImVec2(
+							ImGui::GetItemRectMax().x - NEGATIVE_OFFSET,
+							ImGui::GetItemRectMax().y - NEGATIVE_OFFSET
+						),
+						IM_COL32(
+							CLAMP_NUM((r > 127 ? r - 125 : r + 125), 0, 255),
+							CLAMP_NUM((g > 127 ? g - 125 : g + 125), 0, 255),
+							CLAMP_NUM((b > 127 ? b - 125 : b + 125), 0, 255),
+							200
+						)
+					);
+					#undef NEGATIVE_OFFSET
+				}
 
-				float lastBtnSizeX = ImGui::GetItemRectMax().x;
-				float nextBtnSizeX = lastBtnSizeX + style.ItemSpacing.x + ImGui::GetItemRectSize().x; // Expected position if next button was on same line
-				if (i + 1 < (int32_t)pMgr->palette.colors.size() && nextBtnSizeX < window_visible_x2) ImGui::SameLine();
+				// Expected position if next button was on same line
+				float nextBtnSizeX =
+					ImGui::GetItemRectMax().x     // Last Button Lower Left Corner (Screen Space)
+					// + style.ItemSpacing.x         // Button Spacing (Commented Out Because We Don't Use Any Spacing)
+					+ ImGui::GetItemRectSize().x; // Last Button Width
+				if (i + 1 < (int32_t)pMgr->palette.colors.size() && nextBtnSizeX < (ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x)) ImGui::SameLine();
 				ImGui::PopID();
 			};
-			ImGui::PopStyleVar(2);
+			ImGui::PopStyleVar();
 
 			ImGui::Spacing();
 			ImGui::Separator();
