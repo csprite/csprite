@@ -13,7 +13,7 @@ C_FLAGS:=--std=c99
 CPP_FLAGS:=--std=c++11 -Ithird_party/imgui/ -Ithird_party/FileBrowser/
 LD_FLAGS:=
 
-FLAGS = -Wall -Iinclude/ -Ithird_party/ -MMD -MP
+FLAGS = -MMD -MP -Wall -Iinclude/ -Ithird_party/
 FLAGS += -DCS_VERSION_MAJOR=$(MajVer) -DCS_VERSION_MINOR=$(MinVer) -DCS_VERSION_PATCH=$(PatVer)
 FLAGS += -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1 -DLOG_USE_COLOR=1
 
