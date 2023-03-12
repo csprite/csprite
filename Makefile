@@ -5,7 +5,6 @@ MajVer:=1
 MinVer:=0
 PatVer:=0
 
-LD:=g++
 CC:=gcc
 CXX:=g++
 
@@ -124,7 +123,7 @@ $(ODIR)/%.o: %.cpp
 
 $(BIN): $(OBJECTS)
 	@echo Linking $@
-	@$(LD) -o $@ $(OBJECTS) $(LD_FLAGS) $(SDL2_LDFLAGS)
+	@$(CXX) -o $@ $(OBJECTS) $(LD_FLAGS) $(SDL2_LDFLAGS)
 
 # make all WINDRES_TARGET=pe-x86-64(or pe-i386, WINDRES_TARGET is only needed on windows builds, this also requires make gen-rc)
 all: $(BIN)
