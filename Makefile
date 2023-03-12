@@ -69,7 +69,7 @@ ifeq ($(OS),Windows_NT)
 		LD_FLAGS+=-mwindows
 	endif
 	SRCS_C+=windows.rc
-	OBJECTS+=windows.rc.o
+	OBJECTS+=$(ODIR)/windows.rc.o
 	BIN=csprite.exe
 else
 	UNAME_S:=$(shell uname -s)
