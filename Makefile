@@ -38,8 +38,8 @@ ODIR     = build
 BIN      = csprite
 SRCS_C   = $(wildcard src/*.c) $(wildcard src/**/*.c) $(wildcard third_party/**/*.c)
 SRCS_CPP = $(wildcard src/*.cpp) $(wildcard src/**/*.cpp) $(wildcard third_party/**/*.cpp)
-OBJECTS  = $(patsubst %,$(ODIR)/%.o,$(SRCS_C))
-OBJECTS += $(patsubst %,$(ODIR)/%.o,$(SRCS_CPP))
+OBJECTS  = $(SRCS_C:.c=.o) $(SRCS_CPP:.cpp=.o)
+OBJECTS := $(patsubst %,$(ODIR)/%,$(OBJECTS))
 DEPENDS := $(OBJECTS:.o=.d)
 
 ifeq ($(call lc,$(BUILD_TARGET)),debug)
@@ -69,7 +69,7 @@ ifeq ($(OS),Windows_NT)
 		LD_FLAGS+=-mwindows
 	endif
 	SRCS_C+=windows.rc
-	OBJECTS+=$(ODIR)/windows.rc.o
+	OBJECTS+=$(ODIR)/windows.o
 	BIN=csprite.exe
 else
 	UNAME_S:=$(shell uname -s)
@@ -107,17 +107,17 @@ endif
 
 -include $(DEPENDS)
 
-$(ODIR)/%.rc.o: %.rc
+$(ODIR)/%.o: %.rc
 	@echo "WR  -" $<
 	@mkdir -p "$$(dirname "$@")"
 	@windres.exe -i $< -o $@ -O COFF -F $(WINDRES_TARGET)
 
-$(ODIR)/%.c.o: %.c
+$(ODIR)/%.o: %.c
 	@echo "CC  -" $<
 	@mkdir -p "$$(dirname "$@")"
 	@$(CC) -c $< -o $@ $(FLAGS) $(C_FLAGS) $(SDL2_CFLAGS)
 
-$(ODIR)/%.cpp.o: %.cpp
+$(ODIR)/%.o: %.cpp
 	@echo "CXX -" $<
 	@mkdir -p "$$(dirname "$@")"
 	@$(CXX) -c $< -o $@ $(FLAGS) $(CPP_FLAGS) $(SDL2_CFLAGS)
