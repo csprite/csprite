@@ -75,6 +75,13 @@ list of references & resources i used while developing csprite, might be good fo
 #### Palettes
 csprite comes with some default palette presets created by awesome people!
 - [BitterSweet16](https://lospec.com/palette-list/bittersweet16) & [GB-Remixed [2-Bit]](https://lospec.com/palette-list/gb-remixed-2-bit) By [SoundsDotZip](https://lospec.com/soundsdotzip)
+- [1Bit Monitor Glow](https://lospec.com/palette-list/1bit-monitor-glow) By [Polyducks](https://lospec.com/polyducks)
+- [FunkyFuture 8](https://lospec.com/palette-list/funkyfuture-8) By [Shamaboy](https://lospec.com/shamaboy11)
+- [Megaman V (SGB)](https://lospec.com/palette-list/megaman-v-sgb)
+- [Metallic GB](https://lospec.com/palette-list/metallic-gb) By [Isa](https://lospec.com/isas-studio)
+- [Pear36](https://lospec.com/palette-list/pear36) By [🍍PineappleOnPizza🍍(Comissions Open)](https://lospec.com/pinetreepizza)
+- [Sweetie 16](https://lospec.com/palette-list/sweetie-16) By [GrafxKid](http://grafxkid.tumblr.com/palettes)
+- [Twilight 5](https://lospec.com/palette-list/twilight-5) By [Star](https://lospec.com/starlane)
 
 #### UI Font
 csprite uses [Aseprite Font](https://github.com/aseprite/aseprite/blob/main/data/fonts/aseprite_font.png) Designed By David Capello.
