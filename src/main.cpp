@@ -318,90 +318,90 @@ int main(int argc, char* argv[]) {
 				}
 				ImGui::EndMenu();
 			}
-			if (ImGui::BeginMenu("KeyboardControl")) {
-				if (ImGui::MenuItem("B : Circle Brush")) {
+			if (ImGui::BeginMenu("KeyboardControls")) {
+				if (ImGui::MenuItem("Circle Brush", "B")) {
 					Tool = BRUSH_COLOR;
 					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("Shift+B: Square Brush")) {
+				if (ImGui::MenuItem("Square Brush", "Shift+B")) {
 					Tool = BRUSH_COLOR;
 					Tools_SetBrushShape(BRUSH_SHAPE_SQUARE);
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("E : Circle Eraser")) {
+				if (ImGui::MenuItem("Circle Eraser", "E")) {
 					Tool = BRUSH_ERASER;
 					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("L : Rounded Line")){
-					Tool = SHAPE_LINE;
-					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
-					_GuiSetToolText();
-				}
-				if (ImGui::MenuItem("Shift+L : Square Line")){
-					Tool = SHAPE_LINE;
-					Tools_SetBrushShape(BRUSH_SHAPE_SQUARE);
-					_GuiSetToolText();
-				}
-				if (ImGui::MenuItem("Shift+E : Square Eraser")){
+				if (ImGui::MenuItem("Square Eraser", "Shift+E")){
 					Tool = BRUSH_ERASER;
 					Tools_SetBrushShape(BRUSH_SHAPE_SQUARE);
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("R : Rounded Rectangle")) {
+				if (ImGui::MenuItem("Rounded Line", "L")){
+					Tool = SHAPE_LINE;
+					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Square Line", "Shift+L")){
+					Tool = SHAPE_LINE;
+					Tools_SetBrushShape(BRUSH_SHAPE_SQUARE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Rounded Rectangle", "R")) {
 					Tool = SHAPE_RECT;
 					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("Shift+R : Square Rectangle")) {
+				if (ImGui::MenuItem("Square Rectangle", "Shift+R")) {
 					Tool = SHAPE_RECT;
 					Tools_SetBrushShape(BRUSH_SHAPE_SQUARE);
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("C : Circle")) {
+				if (ImGui::MenuItem("Circle", "C")) {
 					Tool = SHAPE_CIRCLE;
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("F : Flood Fill")) {
+				if (ImGui::MenuItem("Flood Fill", "F")) {
 					Tool = TOOL_FLOODFILL;
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("I : InkDropper")) {
+				if (ImGui::MenuItem("InkDropper", "I")) {
 					Tool = TOOL_INKDROPPER;
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("Space+Move Mouse : Pan")) {
+				if (ImGui::MenuItem("Pan", "Space+Move Mouse")) {
 					Tool = TOOL_PAN;
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("Left Mouse : Draw/Erase/Fill/InkDropper")) {
-					
-				}
-				if (ImGui::MenuItem("Scroll Up : Brush Size Increase")) {
+				if (ImGui::MenuItem("Brush Size Increase", "Scroll Up")) {
 					uint32_t bSize = Tools_GetBrushSize();
 					Tools_SetBrushSize(bSize+1);
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("Scroll Down : Brush Size Decrease")) {
+				if (ImGui::MenuItem("Brush Size Decrease", "Scroll Down")) {
 					uint32_t bSize = Tools_GetBrushSize();
 					if(bSize > 1)
 						Tools_SetBrushSize(bSize-1);
 					_GuiSetToolText();
 				}
-				if (ImGui::MenuItem("Ctrl+Scroll Up : Zoom In")) {
+				if (ImGui::MenuItem("Zoom In", "Ctrl+Scroll Up")) {
 					ZoomViewport(1);
 				}
-				if (ImGui::MenuItem("Ctrl+Scroll Down : Zoom Out")) {
+				if (ImGui::MenuItem("Zoom Out", "Ctrl+Scroll Down")) {
 					ZoomViewport(0);
 				}
-				if (ImGui::MenuItem("Ctrl+Z : Undo")) {
+				if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
 					if (CURR_CANVAS_LAYER != NULL)
 						UNDO();
 				}
-				if (ImGui::MenuItem("Ctrl+Y : Redo")) {
+				if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
 					if (CURR_CANVAS_LAYER != NULL)
 						REDO();
+				}
+				if (ImGui::MenuItem("Draw/Erase/Fill/InkDropper", "Left Mouse", false, 0)) {
+					
 				}
 				ImGui::EndMenu();
 			}
