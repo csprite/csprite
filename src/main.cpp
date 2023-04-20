@@ -318,6 +318,93 @@ int main(int argc, char* argv[]) {
 				}
 				ImGui::EndMenu();
 			}
+			if (ImGui::BeginMenu("KeyboardControl")) {
+				if (ImGui::MenuItem("B : Circle Brush")) {
+					Tool = BRUSH_COLOR;
+					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Shift+B: Square Brush")) {
+					Tool = BRUSH_COLOR;
+					Tools_SetBrushShape(BRUSH_SHAPE_SQUARE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("E : Circle Eraser")) {
+					Tool = BRUSH_ERASER;
+					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("L : Rounded Line")){
+					Tool = SHAPE_LINE;
+					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Shift+L : Square Line")){
+					Tool = SHAPE_LINE;
+					Tools_SetBrushShape(BRUSH_SHAPE_SQUARE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Shift+E : Square Eraser")){
+					Tool = BRUSH_ERASER;
+					Tools_SetBrushShape(BRUSH_SHAPE_SQUARE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("R : Rounded Rectangle")) {
+					Tool = SHAPE_RECT;
+					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Shift+R : Square Rectangle")) {
+					Tool = SHAPE_RECT;
+					Tools_SetBrushShape(BRUSH_SHAPE_SQUARE);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("C : Circle")) {
+					Tool = SHAPE_CIRCLE;
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("F : Flood Fill")) {
+					Tool = TOOL_FLOODFILL;
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("I : InkDropper")) {
+					Tool = TOOL_INKDROPPER;
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Space+Move Mouse : Pan")) {
+					Tool = TOOL_PAN;
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Left Mouse : Draw/Erase/Fill/InkDropper")) {
+					
+				}
+				if (ImGui::MenuItem("Scroll Up : Brush Size Increase")) {
+					uint32_t bSize = Tools_GetBrushSize();
+					Tools_SetBrushSize(bSize+1);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Scroll Down : Brush Size Decrease")) {
+					uint32_t bSize = Tools_GetBrushSize();
+					if(bSize > 1)
+						Tools_SetBrushSize(bSize-1);
+					_GuiSetToolText();
+				}
+				if (ImGui::MenuItem("Ctrl+Scroll Up : Zoom In")) {
+					ZoomViewport(1);
+				}
+				if (ImGui::MenuItem("Ctrl+Scroll Down : Zoom Out")) {
+					ZoomViewport(0);
+				}
+				if (ImGui::MenuItem("Ctrl+Z : Undo")) {
+					if (CURR_CANVAS_LAYER != NULL)
+						UNDO();
+				}
+				if (ImGui::MenuItem("Ctrl+Y : Redo")) {
+					if (CURR_CANVAS_LAYER != NULL)
+						REDO();
+				}
+				ImGui::EndMenu();
+			}
 
 			MainMenuPos = ImGui::GetWindowPos();
 			MainMenuSize = ImGui::GetWindowSize();
