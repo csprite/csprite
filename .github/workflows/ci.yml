@@ -26,5 +26,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: csprite-dev-linux-x86_64
-        path: ./csprite
+        path: ./build/csprite
 
