@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install cmake libsdl2-dev libsdl2
+        sudo apt-get install cmake libsdl2-dev libsdl2-2.0-0
 
     - name: Generate Build Files & Build
       run: mkdir build && cd build && cmake .. && cmake --build ../build/
