@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libsdl2-dev libsdl2
+
+    - name: Generate Build Files & Build
+      run: mkdir build && cd build && cmake .. && cmake --build ../build/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: csprite-dev-linux-x86_64
+        path: csprite-x86_64
+
