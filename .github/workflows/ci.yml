@@ -17,10 +17,12 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install cmake libsdl2-dev libsdl2-2.0-0
+        sudo apt-get install cmake ninja-build libsdl2-dev libsdl2-2.0-0
 
     - name: Generate Build Files & Build
-      run: mkdir build && cd build && cmake .. && cmake --build ../build/
+      run: |
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -G "Ninja"
+        cmake --build ./build/
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
