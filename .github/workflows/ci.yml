@@ -58,5 +58,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: csprite-${{ matrix.architecture }}-${matrix.generator// /_}
-        path: ./build/csprite.exe
+        path: ./build/Release/csprite.exe
 
