@@ -45,8 +45,8 @@ jobs:
       run: |
         git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
         cd SDL/
-        cmake -S ./ -B ./build/
-        cmake --build ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -A "${{ matrix.architecture }}"
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -A "${{ matrix.architecture }}"
+        cmake --build ./build/
         cmake --install ./build/ --strip
 
     - name: Generate Build Files & Build
