@@ -41,6 +41,14 @@ jobs:
       with:
         submodules: 'true'
 
+    - name: Instal SDL2
+      run: |
+        git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
+        cd SDL/
+        cmake -S ./ -B ./build/
+        cmake --build ./build/
+        cmake --install ./build/
+
     - name: Generate Build Files & Build
       run: |
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -A "${{ matrix.architecture }}"
