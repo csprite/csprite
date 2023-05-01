@@ -38,3 +38,8 @@ if(TARGET SDL2::SDL2main) # Required on Windows
 endif()
 
 target_link_libraries(csprite PUBLIC SDL2::SDL2)
+
+add_custom_command(TARGET csprite POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:csprite> $<TARGET_RUNTIME_DLLS:csprite>
+  COMMAND_EXPAND_LISTS
+)

@@ -58,7 +58,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: csprite-win-${{ matrix.architecture }}-${{ matrix.generator.short_name }}
-        path: ./build/Release/csprite.exe
+        path: |
+          ./build/Release/csprite.exe
+          ./build/Release/*.dll
 
   macos-x86_64:
     runs-on: macos-12 # Monterey
