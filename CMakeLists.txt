@@ -14,11 +14,11 @@ add_definitions(-DSDL_MAIN_HANDLED)
 
 # Debug C/C++ flags
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-    add_compile_options(-fsanitize=address)
-    add_link_options(-fsanitize=address)
-    add_definitions(-D_DEBUG)
+	add_compile_options(-fsanitize=address)
+	add_link_options(-fsanitize=address)
+	add_definitions(-D_DEBUG)
 else()
-    add_definitions(-D_NDEBUG)
+	add_definitions(-D_NDEBUG)
 endif()
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
@@ -34,12 +34,14 @@ find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
 
 if(TARGET SDL2::SDL2main) # Required on Windows
-    target_link_libraries(csprite PUBLIC SDL2::SDL2main)
+	target_link_libraries(csprite PUBLIC SDL2::SDL2main)
 endif()
 
 target_link_libraries(csprite PUBLIC SDL2::SDL2)
 
-add_custom_command(TARGET csprite POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:csprite> $<TARGET_RUNTIME_DLLS:csprite>
-  COMMAND_EXPAND_LISTS
-)
+if(WIN32)
+	add_custom_command(TARGET csprite POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:csprite> $<TARGET_RUNTIME_DLLS:csprite>
+		COMMAND_EXPAND_LISTS
+	)
+endif()
