@@ -8,7 +8,7 @@ on:
 
 jobs:
   linux-x86_64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -31,7 +31,7 @@ jobs:
         path: ./build/csprite
 
   windows-x86_64:
-    runs-on: windows-latest
+    runs-on: windows-2022
     strategy:
       matrix:
         architecture: [x64, Win32]
@@ -61,7 +61,7 @@ jobs:
         path: ./build/Release/csprite.exe
 
   macos-x86_64:
-    runs-on: macos-latest
+    runs-on: macos-12 # Monterey
     strategy:
       matrix:
         architecture: [x86_64, arm64]
@@ -71,13 +71,18 @@ jobs:
       with:
         submodules: 'true'
 
-    - name: Instal SDL2
+    - name: Install SDL2
       run: |
-        git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
-        cd SDL/
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
-        cmake --build ./build/ --config Release --parallel
-        cmake --install ./build/ --strip --config Release
+        formulaResult=$(brew --cache --bottle-tag=arm64_monterey sdl2)
+        brew install $formulaResult
+
+#     - name: Instal SDL2
+#       run: |
+#         git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
+#         cd SDL/
+#         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
+#         cmake --build ./build/ --config Release --parallel
+#         cmake --install ./build/ --strip --config Release
 
     - name: Generate Build Files & Build
       run: |
