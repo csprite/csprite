@@ -46,13 +46,13 @@ jobs:
         git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
         cd SDL/
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -A "${{ matrix.architecture }}"
-        cmake --build ./build/
-        cmake --install ./build/ --strip
+        cmake --build ./build/ --config Release --parallel
+        cmake --install ./build/ --strip --config Release
 
     - name: Generate Build Files & Build
       run: |
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -A "${{ matrix.architecture }}"
-        cmake --build ./build/
+        cmake --build ./build/ --config Release
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
