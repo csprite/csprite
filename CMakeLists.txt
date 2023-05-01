@@ -13,6 +13,7 @@ project(csprite VERSION 0.1)
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 add_executable(csprite ${SRC_FILES})
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
