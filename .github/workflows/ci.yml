@@ -30,3 +30,25 @@ jobs:
         name: csprite-dev-linux-x86_64
         path: ./build/csprite
 
+  windows-x86_64:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        generator: ["Visual Studio 14 2015", "Visual Studio 15 2017", "Visual Studio 16 2019", "Visual Studio 17 2022"]
+        architecture: [x64, Win32]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
+
+    - name: Generate Build Files & Build
+      run: |
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G ${{ matrix.generator }} -A ${{ matrix.architecture }}
+        cmake --build ./build/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: csprite-${{ matrix.architecture }}-${{matrix.generator// /_}}
+        path: ./build/csprite.exe
+
