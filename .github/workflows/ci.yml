@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  linux-x86_64 (x86_64, GNU Toolchain):
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -21,7 +21,7 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -G "Ninja"
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
         cmake --build ./build/
 
     - name: Upload artifacts
