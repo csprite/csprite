@@ -1,10 +1,13 @@
-#include <stdio.h>
+#include "log.hpp"
+#include "ini/ini.h"
+#include "window/window.hpp"
+#include <SDL_timer.h>
 
 int main(void) {
-#ifdef _DEBUG
-	printf("Hello Debug!\n");
-#else
-	printf("Hello Release!\n");
-#endif
+	AppWindow_Init(640, 420);
+
+	SDL_Delay(5000);
+
+	AppWindow_Destroy();
 	return 0;
 }

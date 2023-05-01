@@ -21,8 +21,12 @@ endif()
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 add_executable(csprite ${SRC_FILES})
-target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
+target_link_libraries(csprite PUBLIC third_party)
+
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
