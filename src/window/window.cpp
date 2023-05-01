@@ -5,8 +5,10 @@
 
 #include "log.hpp"
 #include "window/window.hpp"
+#include "window/renderer.hpp"
 
-Window* win = NULL;
+static Window* win = NULL;
+static Renderer* ren = NULL;
 
 Window* AppWindow_Init(u32 width, u32 height) {
 	SDL_SetMainReady();
@@ -28,6 +30,8 @@ Window* AppWindow_Init(u32 width, u32 height) {
 		return NULL;
 	}
 
+	AppRenderer_Init(win);
+
 	SDL_ShowWindow(win);
 	return win;
 }
@@ -38,6 +42,7 @@ Window* AppWindow_Get() {
 
 void AppWindow_Destroy() {
 	if (win != NULL) {
+		AppRenderer_Destroy();
 		SDL_DestroyWindow(win);
 		SDL_Quit();
 		win = NULL;
