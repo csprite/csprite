@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-project(csprite VERSION 0.1)
+project(csprite C CXX)
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 add_executable(csprite ${SRC_FILES})
