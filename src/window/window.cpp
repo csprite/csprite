@@ -1,16 +1,18 @@
 #include <SDL.h>
 #include <SDL_error.h>
 #include <SDL_main.h>
+#include <SDL_timer.h>
 #include <SDL_video.h>
 
 #include "log.hpp"
+#include "types.hpp"
 #include "window/window.hpp"
 #include "window/renderer.hpp"
 
-static Window* win = NULL;
-static Renderer* ren = NULL;
+static WindowNS::Window* win = NULL;
+static RendererNS::Renderer* ren = NULL;
 
-Window* AppWindow_Init(u32 width, u32 height) {
+WindowNS::Window* WindowNS::Init(u32 width, u32 height) {
 	SDL_SetMainReady();
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
@@ -30,19 +32,50 @@ Window* AppWindow_Init(u32 width, u32 height) {
 		return NULL;
 	}
 
-	AppRenderer_Init(win);
+	RendererNS::Init(win);
 
 	SDL_ShowWindow(win);
 	return win;
 }
 
-Window* AppWindow_Get() {
+WindowNS::Window* WindowNS::Get() {
 	return win;
 }
 
-void AppWindow_Destroy() {
+void WindowNS::ProcessEvents() {
+	bool ShouldClose = false;
+	SDL_Event event;
+	u32 frameStart = SDL_GetTicks(), // needs to be initialzed with some starting value or SDL_Delay will sleep for seconds passed since Unix Epoch
+		frameTime = 0,
+		frameDelay = 1000 / 50;
+
+	while (!ShouldClose) {
+		while (SDL_PollEvent(&event)) {
+			switch (event.type) {
+				case SDL_QUIT:
+					ShouldClose = true;
+					break;
+				case SDL_WINDOWEVENT:
+					if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
+						ShouldClose = true;
+					}
+					break;
+			}
+		}
+
+		RendererNS::NewFrame();
+
+		RendererNS::Render();
+
+		frameTime = SDL_GetTicks() - frameStart;
+		if (frameTime > frameStart) SDL_Delay(frameDelay - frameTime);
+		frameStart = SDL_GetTicks();
+	}
+}
+
+void WindowNS::Destroy() {
 	if (win != NULL) {
-		AppRenderer_Destroy();
+		RendererNS::Destroy();
 		SDL_DestroyWindow(win);
 		SDL_Quit();
 		win = NULL;

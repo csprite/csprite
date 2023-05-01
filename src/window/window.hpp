@@ -5,10 +5,13 @@
 #include <SDL.h>
 #include "types.hpp"
 
-using Window = SDL_Window;
+namespace WindowNS {
+	using Window = SDL_Window;
 
-Window* AppWindow_Init(u32 width, u32 height);
-Window* AppWindow_Get();
-void AppWindow_Destroy();
+	Window* Init(u32 width, u32 height);
+	Window* Get();
+	void ProcessEvents();
+	void Destroy();
+}
 
 #endif // CSP_WINDOW_WINDOW_HPP_INCLUDED_

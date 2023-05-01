@@ -4,10 +4,8 @@
 #include <SDL_timer.h>
 
 int main(void) {
-	AppWindow_Init(640, 420);
-
-	SDL_Delay(5000);
-
-	AppWindow_Destroy();
+	WindowNS::Init(640, 420);
+	WindowNS::ProcessEvents();
+	WindowNS::Destroy();
 	return 0;
 }

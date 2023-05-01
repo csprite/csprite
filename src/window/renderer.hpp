@@ -5,10 +5,14 @@
 #include <SDL.h>
 #include "window/window.hpp"
 
-using Renderer = SDL_Renderer;
+namespace RendererNS {
+	using Renderer = SDL_Renderer;
 
-Renderer* AppRenderer_Init(Window* win);
-Renderer* AppRenderer_Get();
-void AppRenderer_Destroy();
+	Renderer* Init(WindowNS::Window* win);
+	Renderer* Get();
+	void NewFrame();
+	void Render();
+	void Destroy();
+}
 
 #endif // CSP_WINDOW_RENDERER_HPP_INCLUDED_
