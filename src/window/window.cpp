@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <SDL_error.h>
+#include <SDL_main.h>
 #include <SDL_video.h>
 
 #include "log.hpp"
@@ -8,6 +9,8 @@
 Window* win = NULL;
 
 Window* AppWindow_Init(u32 width, u32 height) {
+	SDL_SetMainReady();
+
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
 		LOG_E("Failed to initialize SDL2: %s", SDL_GetError());
 		return NULL;

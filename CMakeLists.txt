@@ -10,6 +10,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 project(csprite C CXX)
 
+add_definitions(-DSDL_MAIN_HANDLED)
+
 # Debug C/C++ flags
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
     add_compile_options(-fsanitize=address)
