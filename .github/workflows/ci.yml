@@ -27,7 +27,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: csprite-dev-linux-x86_64
+        name: csprite-linux-x86_64
         path: ./build/csprite
 
   windows-x86_64:
@@ -57,6 +57,37 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: csprite-${{ matrix.architecture }}-${{ matrix.generator.short_name }}
+        name: csprite-win-${{ matrix.architecture }}-${{ matrix.generator.short_name }}
         path: ./build/Release/csprite.exe
+
+  macos-x86_64:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        architecture: [x86_64, arm64]
+        generator: [Xcode]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'true'
+
+    - name: Instal SDL2
+      run: |
+        git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
+        cd SDL/
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
+        cmake --build ./build/ --config Release --parallel
+        cmake --install ./build/ --strip --config Release
+
+    - name: Generate Build Files & Build
+      run: |
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
+        cmake --build ./build/ --config Release
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: csprite-osx-${{ matrix.architecture }}-${{ matrix.generator }}
+        path: ./build/Release/csprite
+
 
