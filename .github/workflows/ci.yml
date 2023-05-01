@@ -35,9 +35,7 @@ jobs:
     strategy:
       matrix:
         architecture: [x64, Win32]
-        generator:
-          - short_name: "vs17_2022"
-          - cmake_name: "Visual Studio 17 2022"
+        generator: [ { short_name: "vs17_2022", cmake_name: "Visual Studio 17 2022" } ]
     steps:
     - uses: actions/checkout@v2
       with:
