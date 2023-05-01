@@ -10,6 +10,15 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 project(csprite C CXX)
 
+# Debug C/C++ flags
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+    add_definitions(-D_DEBUG)
+else()
+    add_definitions(-D_NDEBUG)
+endif()
+
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 add_executable(csprite ${SRC_FILES})
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

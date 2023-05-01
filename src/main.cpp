@@ -1,6 +1,10 @@
 #include <stdio.h>
 
 int main(void) {
-	printf("Hello World!\n");
+#ifdef _DEBUG
+	printf("Hello Debug!\n");
+#else
+	printf("Hello Release!\n");
+#endif
 	return 0;
 }
