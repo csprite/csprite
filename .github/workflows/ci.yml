@@ -73,7 +73,7 @@ jobs:
 
     - name: Install SDL2
       run: |
-        formulaResult=$(brew --cache --bottle-tag=arm64_monterey sdl2)
+        formulaResult=$(brew --cache --bottle-tag=${{ matrix.architecture }}_monterey sdl2)
         brew install $formulaResult
 
 #     - name: Instal SDL2
