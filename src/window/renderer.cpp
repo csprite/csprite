@@ -4,9 +4,9 @@
 #include "log.hpp"
 #include "window/renderer.hpp"
 
-static RendererNS::Renderer* ren = NULL;
+static Renderer::Renderer* ren = NULL;
 
-RendererNS::Renderer* RendererNS::Init(WindowNS::Window* win) {
+Renderer::Renderer* Renderer::Init(Window::Window* win) {
 	ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
 	if (ren == NULL) {
 		LOG_E("Failed to initialize renderer: %s", SDL_GetError());
@@ -16,20 +16,20 @@ RendererNS::Renderer* RendererNS::Init(WindowNS::Window* win) {
 	return ren;
 }
 
-RendererNS::Renderer* RendererNS::Get() {
+Renderer::Renderer* Renderer::Get() {
 	return ren;
 }
 
-void RendererNS::NewFrame() {
+void Renderer::NewFrame() {
 	SDL_SetRenderDrawColor(ren, 20, 20, 20, 255);
 	SDL_RenderClear(ren);
 }
 
-void RendererNS::Render() {
+void Renderer::Render() {
 	SDL_RenderPresent(ren);
 }
 
-void RendererNS::Destroy() {
+void Renderer::Destroy() {
 	if (ren) {
 		SDL_DestroyRenderer(ren);
 		ren = NULL;

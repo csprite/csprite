@@ -5,7 +5,7 @@
 #include <SDL.h>
 #include "types.hpp"
 
-namespace WindowNS {
+namespace Window {
 	using Window = SDL_Window;
 
 	Window* Init(u32 width, u32 height);

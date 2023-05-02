@@ -9,10 +9,10 @@
 #include "window/window.hpp"
 #include "window/renderer.hpp"
 
-static WindowNS::Window* win = NULL;
-static RendererNS::Renderer* ren = NULL;
+static Window::Window* win = NULL;
+static Renderer::Renderer* ren = NULL;
 
-WindowNS::Window* WindowNS::Init(u32 width, u32 height) {
+Window::Window* Window::Init(u32 width, u32 height) {
 	SDL_SetMainReady();
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
@@ -32,17 +32,17 @@ WindowNS::Window* WindowNS::Init(u32 width, u32 height) {
 		return NULL;
 	}
 
-	RendererNS::Init(win);
+	Renderer::Init(win);
 
 	SDL_ShowWindow(win);
 	return win;
 }
 
-WindowNS::Window* WindowNS::Get() {
+Window::Window* Window::Get() {
 	return win;
 }
 
-void WindowNS::ProcessEvents() {
+void Window::ProcessEvents() {
 	bool ShouldClose = false;
 	SDL_Event event;
 	u32 frameStart = SDL_GetTicks(), // needs to be initialzed with some starting value or SDL_Delay will sleep for seconds passed since Unix Epoch
@@ -63,9 +63,9 @@ void WindowNS::ProcessEvents() {
 			}
 		}
 
-		RendererNS::NewFrame();
+		Renderer::NewFrame();
 
-		RendererNS::Render();
+		Renderer::Render();
 
 		frameTime = SDL_GetTicks() - frameStart;
 		if (frameTime > frameStart) SDL_Delay(frameDelay - frameTime);
@@ -73,9 +73,9 @@ void WindowNS::ProcessEvents() {
 	}
 }
 
-void WindowNS::Destroy() {
+void Window::Destroy() {
 	if (win != NULL) {
-		RendererNS::Destroy();
+		Renderer::Destroy();
 		SDL_DestroyWindow(win);
 		SDL_Quit();
 		win = NULL;

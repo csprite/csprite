@@ -5,10 +5,10 @@
 #include <SDL.h>
 #include "window/window.hpp"
 
-namespace RendererNS {
+namespace Renderer {
 	using Renderer = SDL_Renderer;
 
-	Renderer* Init(WindowNS::Window* win);
+	Renderer* Init(Window::Window* win);
 	Renderer* Get();
 	void NewFrame();
 	void Render();
