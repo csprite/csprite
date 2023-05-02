@@ -6,6 +6,7 @@
 
 #include "log.hpp"
 #include "types.hpp"
+#include "window/gui.hpp"
 #include "window/window.hpp"
 #include "window/renderer.hpp"
 
@@ -33,6 +34,7 @@ Window::Window* Window::Init(u32 width, u32 height) {
 	}
 
 	Renderer::Init(win);
+	Gui::Init();
 
 	SDL_ShowWindow(win);
 	return win;
@@ -51,6 +53,7 @@ void Window::ProcessEvents() {
 
 	while (!ShouldClose) {
 		while (SDL_PollEvent(&event)) {
+			Gui::ProcessEvents(&event);
 			switch (event.type) {
 				case SDL_QUIT:
 					ShouldClose = true;
@@ -64,7 +67,7 @@ void Window::ProcessEvents() {
 		}
 
 		Renderer::NewFrame();
-
+		Gui::BuildCmdBuffer();
 		Renderer::Render();
 
 		frameTime = SDL_GetTicks() - frameStart;
@@ -75,6 +78,7 @@ void Window::ProcessEvents() {
 
 void Window::Destroy() {
 	if (win != NULL) {
+		Gui::Destroy();
 		Renderer::Destroy();
 		SDL_DestroyWindow(win);
 		SDL_Quit();

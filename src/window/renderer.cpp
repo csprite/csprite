@@ -2,6 +2,7 @@
 #include <SDL_render.h>
 
 #include "log.hpp"
+#include "window/gui.hpp"
 #include "window/renderer.hpp"
 
 static Renderer::Renderer* ren = NULL;
@@ -23,6 +24,7 @@ Renderer::Renderer* Renderer::Get() {
 void Renderer::NewFrame() {
 	SDL_SetRenderDrawColor(ren, 20, 20, 20, 255);
 	SDL_RenderClear(ren);
+    SDL_RenderSetScale(ren, Gui::GetDisplayFbScaleX(), Gui::GetDisplayFbScaleY());
 }
 
 void Renderer::Render() {

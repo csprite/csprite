@@ -39,6 +39,7 @@ if(TARGET SDL2::SDL2main) # Required on Windows
 	target_link_libraries(csprite PUBLIC SDL2::SDL2main)
 endif()
 
+target_link_libraries(third_party PUBLIC SDL2::SDL2)
 target_link_libraries(csprite PUBLIC SDL2::SDL2)
 
 if(WIN32)

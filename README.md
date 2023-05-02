@@ -5,7 +5,7 @@
 
 | Feature                             | Status                   | Version | Notes                           |
 | ----------------------------------- | ------------------------ | ------- | ------------------------------- |
-| Basic GUI                           | <ul><li>- [ ] </li></ul> | 0.1     | Normal Drawing                  |
+| Basic GUI                           | <ul><li>- [ ] </li></ul> | 0.1     |                                 |
 | Basic Sprite Editing                | <ul><li>- [ ] </li></ul> | 0.1     | Normal Drawing                  |
 | Basic IO                            | <ul><li>- [ ] </li></ul> | 0.1     | Saving-To/Opening-From PNG      |
 | Basic Palette System                | <ul><li>- [ ] </li></ul> | 0.2     |                                 |

@@ -1,3 +1,4 @@
+#include <SDL_events.h>
 #include <SDL_video.h>
 #ifndef CSP_WINDOW_WINDOW_HPP_INCLUDED_
 #define CSP_WINDOW_WINDOW_HPP_INCLUDED_ 1
@@ -7,6 +8,7 @@
 
 namespace Window {
 	using Window = SDL_Window;
+	using Event = SDL_Event;
 
 	Window* Init(u32 width, u32 height);
 	Window* Get();
