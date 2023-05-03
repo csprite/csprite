@@ -1,5 +1,6 @@
 #ifndef CSP_WINDOW_GUI_HPP_INCLUDED_
 #define CSP_WINDOW_GUI_HPP_INCLUDED_ 1
+#pragma once
 
 #include "window/window.hpp"
 

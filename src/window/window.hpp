@@ -2,6 +2,7 @@
 #include <SDL_video.h>
 #ifndef CSP_WINDOW_WINDOW_HPP_INCLUDED_
 #define CSP_WINDOW_WINDOW_HPP_INCLUDED_ 1
+#pragma once
 
 #include <SDL.h>
 #include "types.hpp"

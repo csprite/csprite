@@ -1,5 +1,6 @@
 #ifndef CSP_LOG_HPP_INCLUDED_
 #define CSP_LOG_HPP_INCLUDED_ 1
+#pragma once
 
 #include <cstdio>
 
