@@ -7,9 +7,10 @@
 | ----------------------------------- | ------------------------ | ------- | ------------------------------- |
 | Basic GUI                           | <ul><li>- [ ] </li></ul> | 0.1     |                                 |
 | Basic Sprite Editing                | <ul><li>- [ ] </li></ul> | 0.1     | Normal Drawing                  |
+| Basic Layers System                 | <ul><li>- [ ] </li></ul> | 0.1     |                                 |
+| Basic Layer Blending                | <ul><li>- [ ] </li></ul> | 0.1     |                                 |
 | Basic IO                            | <ul><li>- [ ] </li></ul> | 0.1     | Saving-To/Opening-From PNG      |
 | Basic Palette System                | <ul><li>- [ ] </li></ul> | 0.2     |                                 |
-| Basic Layers System                 | <ul><li>- [ ] </li></ul> | 0.2     |                                 |
 | Keyboard Bind Mapper                | <ul><li>- [ ] </li></ul> | 0.3     | Simple Window To Remap Keybinds |
 | More Tools Like Elipse & Rectangle  | <ul><li>- [ ] </li></ul> | 0.4     |                                 |
 | Flood Fill                          | <ul><li>- [ ] </li></ul> | 0.4     |                                 |
