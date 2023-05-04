@@ -44,6 +44,12 @@ endif()
 target_link_libraries(third_party PUBLIC SDL2::SDL2)
 target_link_libraries(csprite PUBLIC SDL2::SDL2)
 
+if(CMAKE_CXX_BYTE_ORDER STREQUAL "BIG_ENDIAN")
+	add_definitions(-DTARGET_IS_BIGENDIAN=1)
+else()
+	add_definitions(-DTARGET_IS_BIGENDIAN=0)
+endif()
+
 if(WIN32)
 	add_custom_command(TARGET csprite POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:csprite> $<TARGET_RUNTIME_DLLS:csprite>

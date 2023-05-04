@@ -6,30 +6,18 @@
 
 #include "types.hpp"
 #include "pixel/pixel.hpp"
-#include "canvas/render.hpp"
+#include "window/renderer.hpp"
 
-namespace Bitmap {
-	enum BlendMode {
-		NORMAL = 0
-	};
+struct Bitmap {
+	u16 width;
+	u16 height;
+	Pixel* pixels;
+	Bitmap(u16 w, u16 h);
+	~Bitmap();
+	void Draw(Rect& OutputContainer, Rect& dirtyArea);
 
-	struct BitmapLayer {
-		String name;
-		Pixel* pixels;
-		BlendMode bMode;
-		f32 opacity;
-
-		BitmapLayer(String& _name, u16 _w, u16 _h, f32 _transparency);
-		~BitmapLayer();
-	};
-
-	struct Bitmap {
-		u16 width;
-		u16 height;
-		Canvas::Render finalRender;
-		Vector<BitmapLayer> layers;
-		Bitmap(u16 w, u16 h);
-	};
-}
+private:
+	Renderer::Texture* _gpuTex;
+};
 
 #endif // CSP_DOC_BITMAP_HPP_INCLUDED_

@@ -1,4 +1,3 @@
-#include "canvas/canvas.hpp"
 #include "log.hpp"
 #include "pixel/pixel.hpp"
 #include "window/gui.hpp"
@@ -8,11 +7,10 @@
 #include "imgui/imgui_impl_sdl2.h"
 #include "imgui/imgui_impl_sdlrenderer.h"
 
-#include "doc/bitmap.hpp"
-#include "canvas/render.hpp"
 #include <cstring>
+#include "doc/bitmap.hpp"
 
-Bitmap::Bitmap* myImg = NULL;
+Bitmap* myImg = NULL;
 
 void Gui::Init() {
     IMGUI_CHECKVERSION();
@@ -31,9 +29,13 @@ void Gui::Init() {
     ImGui_ImplSDL2_InitForSDLRenderer(Window::Get(), Renderer::Get());
     ImGui_ImplSDLRenderer_Init(Renderer::Get());
 
-    myImg = new Bitmap::Bitmap(32, 32);
-    // myImg->layers.push_back(Bitmap::BitmapLayer{});
-    memset(myImg->finalRender.pixels, 127, (myImg->width * myImg->height) * sizeof(Pixel));
+    myImg = new Bitmap(32, 32);
+    for (u16 i = 0; i < myImg->height * myImg->width; ++i) {
+        myImg->pixels[i].r = 0;
+        myImg->pixels[i].g = 0;
+        myImg->pixels[i].b = 255;
+        myImg->pixels[i].a = 255;
+    }
 }
 
 void Gui::ProcessEvents(Window::Event* e) {
@@ -51,7 +53,8 @@ void Gui::Draw() {
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
     Rect dirtyArea = { 0, 0, 32, 32 };
-    Canvas::Blend(*myImg, dirtyArea);
+    Rect OutputContainer = { 250, 100, 32 * 8, 32 * 8 };
+    myImg->Draw(OutputContainer, dirtyArea);
 }
 
 float Gui::GetDisplayFbScaleX() {

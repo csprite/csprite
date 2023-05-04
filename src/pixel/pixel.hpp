@@ -5,7 +5,11 @@
 #include "types.hpp"
 
 struct Pixel {
+#if TARGET_IS_BIGENDIAN == 0
 	u8 r, g, b, a;
+#else
+	u8 a, b, g, r;
+#endif
 
 	Pixel& operator = (Pixel& rhs);
 	inline bool operator == (const Pixel& rhs) const;
