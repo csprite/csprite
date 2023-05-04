@@ -8,11 +8,11 @@ Pixel& Pixel::operator = (Pixel& rhs) {
 	return *this;
 }
 
-bool Pixel::operator == (const Pixel& rhs) {
+inline bool Pixel::operator == (const Pixel& rhs) const {
 	return (r == rhs.r && g == rhs.g && b == rhs.b && a == rhs.a);
 }
 
-bool Pixel::operator != (const Pixel& rhs) {
+inline bool Pixel::operator != (const Pixel& rhs) const {
 	return !(*this == rhs);
 }
 

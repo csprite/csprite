@@ -4,18 +4,29 @@
 
 #include "types.hpp"
 
-typedef struct Pixel {
+struct Pixel {
 	u8 r, g, b, a;
 
 	Pixel& operator = (Pixel& rhs);
-	bool operator == (const Pixel& rhs);
-	bool operator != (const Pixel& rhs);
-} Pixel;
+	inline bool operator == (const Pixel& rhs) const;
+	inline bool operator != (const Pixel& rhs) const;
+};
 
-typedef struct {
+enum BlendMode {
+	NORMAL = 0
+};
+
+struct BitmapLayer {
+	String name;
 	Pixel* pixels;
+	BlendMode bMode;
+};
+
+struct Bitmap {
 	u16 width;
 	u16 height;
-} Bitmap;
+	Pixel* render;
+	Vector<BitmapLayer> layers;
+};
 
 #endif // CSP_DOC_BITMAP_HPP_INCLUDED_

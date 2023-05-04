@@ -6,12 +6,4 @@
 #include "doc/bitmap.hpp"
 #include "window/renderer.hpp"
 
-typedef struct CanvasLayer : Bitmap {
-	String name;
-} CanvasLayer;
-
-typedef struct Canvas {
-	Vector<CanvasLayer> Layers;
-} Canvas;
-
 #endif
