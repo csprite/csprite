@@ -14,7 +14,7 @@ struct Bitmap {
 	Pixel* pixels;
 	Bitmap(u16 w, u16 h);
 	~Bitmap();
-	void Draw(Rect& OutputContainer, Rect& dirtyArea);
+	void Draw(const Rect& OutputContainer, const Rect& dirtyArea);
 
 private:
 	Renderer::Texture* _gpuTex;

@@ -32,8 +32,8 @@ void Gui::Init() {
     myImg = new Bitmap(32, 32);
     for (u16 i = 0; i < myImg->height * myImg->width; ++i) {
         myImg->pixels[i].r = 0;
-        myImg->pixels[i].g = 0;
-        myImg->pixels[i].b = 255;
+        myImg->pixels[i].g = 255;
+        myImg->pixels[i].b = 0;
         myImg->pixels[i].a = 255;
     }
 }
@@ -47,7 +47,13 @@ void Gui::Draw() {
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::Text("Hello Bitchess!!!");
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
 
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());

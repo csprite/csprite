@@ -25,7 +25,7 @@ using Vector = std::vector<Type>;
 
 struct Rect {
 	u16 x, y, w, h;
-	explicit operator SDL_Rect() {
+	explicit operator SDL_Rect() const {
 		return { x, y, w, h };
 	}
 };

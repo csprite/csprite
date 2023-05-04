@@ -23,10 +23,10 @@ Bitmap::~Bitmap() {
 	SDL_DestroyTexture(_gpuTex);
 }
 
-void Bitmap::Draw(Rect &OutputContainer, Rect &dirtyArea) {
+void Bitmap::Draw(const Rect &OutputContainer, const Rect &dirtyArea) {
 	const i32 scaleX = OutputContainer.w / dirtyArea.w;
 	const i32 scaleY = OutputContainer.h / dirtyArea.h;
-	const SDL_Rect src = static_cast<const SDL_Rect>(dirtyArea);
+	const SDL_Rect src = static_cast<SDL_Rect>(dirtyArea);
 	const SDL_Rect dest = {
 		OutputContainer.x + (dirtyArea.x * scaleX),
 		OutputContainer.y + (dirtyArea.y * scaleY),
@@ -47,4 +47,3 @@ void Bitmap::Draw(Rect &OutputContainer, Rect &dirtyArea) {
 		&dest
 	);
 }
-
