@@ -58,8 +58,9 @@ void Gui::Draw() {
     ImGui::Render();
     ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
 
-    Rect dirtyArea = { 0, 0, 32, 32 };
-    Rect OutputContainer = { 250, 100, 32 * 8, 32 * 8 };
+    static Rect dirtyArea = { 0, 0, 32, 32 };
+    static Rect OutputContainer = { 250, 100, 32 * 8, 32 * 8 };
+
     myImg->Draw(OutputContainer, dirtyArea);
 }
 
