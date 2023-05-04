@@ -7,7 +7,7 @@
 namespace Gui {
 	void Init();
 	void ProcessEvents(Window::Event* e);
-	void BuildCmdBuffer();
+	void Draw();
 	void Destroy();
 
 	float GetDisplayFbScaleX();

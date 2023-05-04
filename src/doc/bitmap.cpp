@@ -1,18 +1,19 @@
 #include "doc/bitmap.hpp"
+#include "pixel/pixel.hpp"
 
-Pixel& Pixel::operator = (Pixel& rhs) {
-	r = rhs.r;
-	g = rhs.g;
-	b = rhs.b;
-	a = rhs.a;
-	return *this;
+Bitmap::BitmapLayer::BitmapLayer(String& _name, u16 _w, u16 _h, f32 _transparency) {
+	name = _name;
+	pixels = new Pixel[_w * _h];
+	opacity = _transparency;
+	bMode = BlendMode::NORMAL;
 }
 
-inline bool Pixel::operator == (const Pixel& rhs) const {
-	return (r == rhs.r && g == rhs.g && b == rhs.b && a == rhs.a);
+Bitmap::BitmapLayer::~BitmapLayer() {
+	delete[] pixels;
 }
 
-inline bool Pixel::operator != (const Pixel& rhs) const {
-	return !(*this == rhs);
+Bitmap::Bitmap::Bitmap(u16 w, u16 h) : finalRender(w, h) {
+	width = w;
+	height = h;
 }
 

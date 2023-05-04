@@ -4,6 +4,11 @@
 
 #include "types.hpp"
 #include "doc/bitmap.hpp"
-#include "window/renderer.hpp"
+
+// Functions For Managing Bitmap Renderer
+
+namespace Canvas {
+	void Blend(Bitmap::Bitmap& bitmap, Rect& dirtyArea);
+}
 
 #endif

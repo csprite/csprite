@@ -67,7 +67,7 @@ void Window::ProcessEvents() {
 		}
 
 		Renderer::NewFrame();
-		Gui::BuildCmdBuffer();
+		Gui::Draw();
 		Renderer::Render();
 
 		frameTime = SDL_GetTicks() - frameStart;

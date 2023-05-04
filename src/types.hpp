@@ -1,3 +1,4 @@
+#include <SDL_rect.h>
 #ifndef CSP_TYPES_HPP_INCLUDED_
 #define CSP_TYPES_HPP_INCLUDED_ 1
 #pragma once
@@ -24,6 +25,9 @@ using Vector = std::vector<Type>;
 
 struct Rect {
 	u16 x, y, w, h;
+	explicit operator SDL_Rect() {
+		return { x, y, w, h };
+	}
 };
 
 #endif // CSP_TYPES_HPP_INCLUDED_
