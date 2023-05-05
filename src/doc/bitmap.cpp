@@ -12,12 +12,12 @@
 Bitmap::Bitmap(fs::path path) {
 	if (fs::is_regular_file(path)) {
 		i32 w = 0, h = 0, c = 0;
-		u8* data = stbi_load(path.c_str(), &w, &h, &c, 4);
+		u8* data = stbi_load(static_cast<const char*>(path.c_str()), &w, &h, &c, 4);
 
 		width = static_cast<u16>(w);
 		height = static_cast<u16>(h);
 		pixels = new Pixel[w * h];
-		LOG_I("%s: %dx%d - %d", path.filename().c_str(), width, height, c);
+		LOG_I("%s: %hux%hu - %d", path.filename().c_str(), width, height, c);
 
 		GenerateTexture();
 		UpdateTexture();
