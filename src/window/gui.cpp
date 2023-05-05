@@ -29,13 +29,7 @@ void Gui::Init() {
     ImGui_ImplSDL2_InitForSDLRenderer(Window::Get(), Renderer::Get());
     ImGui_ImplSDLRenderer_Init(Renderer::Get());
 
-    myImg = new Bitmap(32, 32);
-    for (u16 i = 0; i < myImg->height * myImg->width; ++i) {
-        myImg->pixels[i].r = 0;
-        myImg->pixels[i].g = 255;
-        myImg->pixels[i].b = 0;
-        myImg->pixels[i].a = 255;
-    }
+    myImg = new Bitmap(String("/home/adityam/Desktop/cat-sleeping.png"));
 }
 
 void Gui::ProcessEvents(Window::Event* e) {
@@ -61,7 +55,8 @@ void Gui::Draw() {
     static Rect dirtyArea = { 0, 0, 32, 32 };
     static Rect OutputContainer = { 250, 100, 32 * 8, 32 * 8 };
 
-    myImg->Draw(OutputContainer, dirtyArea);
+    myImg->SetBoundingBox(OutputContainer);
+    myImg->Draw(dirtyArea);
 }
 
 float Gui::GetDisplayFbScaleX() {
