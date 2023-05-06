@@ -60,6 +60,8 @@ jobs:
 
     - name: Build & Install SDL2
       run: |
+        set CC=gcc
+        set CXX=g++
         git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
         cd SDL/
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
@@ -68,6 +70,8 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
+        set CC=gcc
+        set CXX=g++
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
         cmake --build ./build/ --config Release --parallel 3
         mv ./build/csprite ./
@@ -135,14 +139,17 @@ jobs:
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
         cmake --build ./build/ --config Release --parallel 3
 
+    - name: Zip Binaries
+      run:
+        mv ./build/Release/ ./build/csprite/
+        zip -r ./build/csprite/ ./csprite.zip
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
         name: win-${{ matrix.architecture }}-${{ matrix.generator.short_name }}
         if-no-files-found: error
-        path: |
-          ./build/Release/csprite.exe
-          ./build/Release/*.dll
+        path: ./csprite.zip
 
   osx_x86_64:
     needs: [generate-assets]
@@ -226,6 +233,47 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - uses: actions/download-artifact@v2
+      with:
+        name: win-x86_64-vs17_2022
+        path: ./win-x86_64-vs17_2022/
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: win-Win32-vs17_2022
+        path: ./win-Win32-vs17_2022/
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: linux-x86_64-appimage
+        path: ./linux-x86_64-appimage/
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: linux-x86_64
+        path: ./linux-x86_64/
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: osx-arm64-Xcode
+        path: ./osx-arm64-Xcode/
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: osx-x86_64-Xcode
+        path: ./osx-x86_64-Xcode/
+
+    - name: Rename
+      run: |
+        mv ./win-x86_64-vs17_2022/csprite.zip ./win-x64-vs17_2022.zip
+        mv ./win-Win32-vs17_2022/csprite.zip ./win-x86-vs17_2022.zip
+
+        mv ./linux-x86_64-appimage/*.appimage ./csprite-x64-gnutoolchain.appimage
+        mv ./linux-x86_64/csprite ./linux-x64-gnutoolchain
+
+        mv ./osx-arm64-Xcode/csprite.zip ./osx-arm64-Xcode.zip
+        mv ./osx-x86_64-Xcode/csprite.zip ./osx-x64-Xcode.zip
+
     - uses: ncipollo/release-action@v1
       with:
         name: "Csprite Latest Git"
@@ -236,4 +284,11 @@ jobs:
         allowUpdates: true
         generateReleaseNotes: true
         artifactErrorsFailBuild: true
+        artifacts: |
+          ./win-x64-vs17_2022.zip
+          ./win-x86-vs17_2022.zip
+          ./csprite-x64-gnutoolchain.appimage
+          ./linux-x64-gnutoolchain
+          ./osx-arm64-Xcode.zip
+          ./osx-x64-Xcode.zip
 
