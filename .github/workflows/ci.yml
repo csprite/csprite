@@ -147,7 +147,7 @@ jobs:
     - name: Zip Binaries
       uses: vimtor/action-zip@v1
       with:
-        files: ./build/Release/*.exe ./build/Release/*.dll
+        files: ./build/Release/
         recursive: true
         dest: ./csprite.zip
 
