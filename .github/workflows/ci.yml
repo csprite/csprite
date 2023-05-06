@@ -155,6 +155,9 @@ jobs:
         name: data
         path: ./data/
 
+    - name: Lint Info.plist
+      run: plutil data/Info.plist
+
     - name: Install dylibbundler, SDL2 & zlib
       run: |
         PACKAGES=(dylibbundler sdl2 zlib)
