@@ -19,7 +19,7 @@ file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.c)
 # On Windows, Enable RC Language & Add It To Sources
 if(WIN32)
 	enable_language(RC)
-	set(SRC_FILES ${SRC_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/windows.rc)
+	set(SRC_FILES ${SRC_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/data/windows.rc)
 endif()
 
 if(APPLE AND BUILD_APPLE_BUNDLE)
