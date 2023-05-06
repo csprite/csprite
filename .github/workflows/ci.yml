@@ -51,7 +51,12 @@ jobs:
         path: ./data/
 
     - name: Build & Install SDL2
-      run: bash ./tools/BuildNInstall_Linux.sh
+      run: |
+        git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
+        cd SDL/
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
+        cmake --build ./build/ --config Release --parallel 3
+        cmake --install ./build/ --strip --config Release
 
     - name: Install Deps
       run: |
