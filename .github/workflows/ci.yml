@@ -64,7 +64,7 @@ jobs:
         cd SDL/
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
         cmake --build ./build/ --config Release --parallel 3
-        cmake --install ./build/ --strip --config Release
+        sudo cmake --install ./build/ --strip --config Release
 
     - name: Generate Build Files & Build
       run: |
