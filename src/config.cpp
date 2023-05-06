@@ -1,8 +1,4 @@
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <ctype.h>
 
 #include "utils.h"
 #include "config.h"
@@ -20,8 +16,7 @@ static char* getSettingsPath() {
 			snprintf(configPath, SYS_PATHNAME_MAX + 128, "config.ini");
 		} else {
 			snprintf(configPath, SYS_PATHNAME_MAX + 128, "%s/csprite", configdir);
-			struct stat st = {0};
-			if (stat(configPath, &st) == -1) Sys_MakeDirRecursive(configPath);
+			if (Sys_IsRegularDir(configPath) != 0) Sys_MakeDirRecursive(configPath);
 			memset(configPath, 0, sizeof(configPath));
 			snprintf(configPath, SYS_PATHNAME_MAX + 128, "%s/csprite/config.ini", configdir);
 		}
@@ -35,7 +30,7 @@ static char* getSettingsPath() {
 Config_T* LoadConfig(void) {
 	Config_T* c = new Config_T;
 	char* configPath = getSettingsPath();
-	if (access(configPath, F_OK) == 0) {
+	if (Sys_IsRegularFile(configPath) == 0) {
 		ini_t* config = ini_load(configPath);
 
 		const char* Max_FPS_Str = ini_get(config, "csprite", "Max_FPS");
@@ -117,4 +112,3 @@ int WriteConfig(Config_T* s) {
 
 	return 0;
 }
-
