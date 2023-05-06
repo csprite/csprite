@@ -148,7 +148,7 @@ jobs:
     - name: Zip Binaries
       run: |
         mv ./build/Release/ ./build/csprite/
-        zip -r ./build/csprite/ ./csprite.zip
+        tar.exe -a -c -f ./csprite.zip ./build/csprite/
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
