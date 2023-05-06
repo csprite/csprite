@@ -10,6 +10,8 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+option(BUILD_APPLE_BUNDLE "Build Apple Bundle, Used For Releases & Is Ignored On Non-Apple Target" OFF)
+
 project(csprite C CXX)
 add_definitions(-DSDL_MAIN_HANDLED)
 
@@ -23,7 +25,20 @@ else()
 endif()
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.c)
-add_executable(csprite ${SRC_FILES})
+
+if(APPLE AND BUILD_APPLE_BUNDLE)
+	add_executable(csprite MACOSX_BUNDLE ${SRC_FILES})
+	set_source_files_properties(
+		${CMAKE_CURRENT_SOURCE_DIR}/csprite.icns PROPERTIES
+		MACOSX_PACKAGE_LOCATION "Resources"
+	)
+	set_target_properties(
+		csprite PROPERTIES BUNDLE True
+		MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/data/Info.plist
+	)
+else()
+	add_executable(csprite ${SRC_FILES})
+endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
 target_link_libraries(csprite PUBLIC third_party)
