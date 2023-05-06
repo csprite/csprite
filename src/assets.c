@@ -12,7 +12,13 @@ typedef struct {
 #endif
 } asset_t;
 
-static asset_t ASSETS[]; // Defined in assets.inl
+static asset_t ASSETS[] = {
+	#include "assets/palettes.inl"
+	#include "assets/themes.inl"
+	#include "assets/fonts.inl"
+	#include "assets/icons.inl"
+	{ NULL, 0, NULL } // NULL asset at the end of the list.
+};
 
 const void* Assets_Get(const char *filePath, int *size) {
 	int i;
@@ -38,11 +44,3 @@ int Assets_List(const char* directoryPath, int (*callback)(int i, const char *pa
 	}
 	return j;
 }
-
-static asset_t ASSETS[] = {
-	#include "assets/palettes.inl"
-	#include "assets/themes.inl"
-	#include "assets/fonts.inl"
-	#include "assets/icons.inl"
-	{ NULL, 0, NULL } // NULL asset at the end of the list.
-};
