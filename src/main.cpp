@@ -1,4 +1,4 @@
-#if defined(_WIN32) && defined(_MSC_VER)
+#ifdef TARGET_WINDOWS
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #endif
 
@@ -10,11 +10,11 @@
 #include <limits.h>
 #include <SDL2/SDL.h>
 
-#include "imgui.h"
-#include "imgui_stdlib.h"
-#include "imgui_impl_sdl.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_stdlib.h"
+#include "imgui/imgui_impl_sdl.h"
 #include "imgui_extension.h"
-#include "ImGuiFileBrowser.h"
+#include "FileBrowser/ImGuiFileBrowser.h"
 
 #include "utils.h"
 #include "log/log.h"
@@ -81,11 +81,11 @@ Config_T*       AppConfig = NULL;
 	#define CS_VERSION_MAJOR 0
 #endif
 
-#ifndef CS_VERSION_MAJOR
+#ifndef CS_VERSION_MINOR
 	#define CS_VERSION_MINOR 0
 #endif
 
-#ifndef CS_VERSION_MAJOR
+#ifndef CS_VERSION_PATCH
 	#define CS_VERSION_PATCH 0
 #endif
 
