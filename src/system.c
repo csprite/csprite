@@ -1,18 +1,19 @@
 #include "system.h"
 
-#include <dirent.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 
-#if defined(__unix__) || defined(__linux__)
-	#include <unistd.h>
-	#include <pwd.h>
-#elif defined(_WIN32)
+#if defined(TARGET_WINDOWS)
 	#include <windows.h>
 	#include <shellapi.h>
+	#include <FileBrowser/Dirent/dirent.h>
+#else
+	#include <unistd.h>
+	#include <pwd.h>
+	#include <dirent.h>
 #endif
 
 // On Windows Mkdir Only Takes Path So We Don't Pass Path
