@@ -146,9 +146,11 @@ jobs:
         cmake --build ./build/ --config Release --parallel 3
 
     - name: Zip Binaries
-      run: |
-        mv ./build/Release/ ./build/csprite/
-        tar.exe -a -c -f ./csprite.zip ./build/csprite/
+    - uses: vimtor/action-zip@v1
+      with:
+        files: ./build/Release/*
+        recursive: true
+        dest: ./csprite.zip
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
