@@ -185,18 +185,16 @@ jobs:
       run: |
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -DBUILD_APPLE_BUNDLE=ON -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
         cmake --build ./build/ --config Release
-        ls build/
-        ls build/Release/
 
-    # - name: Create Zip
-    #   run: zip -r csprite-osx.zip ./csprite.app
+    - name: Create Zip
+      run: zip -r csprite.zip ./build/Release/csprite.app/
 
-    # - name: Upload Artifacts
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: osx_binary
-    #     path: ./csprite-osx.zip
-    #     if-no-files-found: error
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: csprite-osx-${{ matrix.architecture }}-${{ matrix.generator }}
+        path: ./csprite.zip
+        if-no-files-found: error
 
   update-ci-release:
     needs: [linux-x86_64, windows-x86_64, osx_x86_64]

@@ -34,6 +34,13 @@ if(APPLE AND BUILD_APPLE_BUNDLE)
 	)
 	set_target_properties(
 		csprite PROPERTIES BUNDLE True
+		MACOSX_BUNDLE_BUNDLE_NAME "csprite"                  # CFBundleName
+		MACOSX_BUNDLE_BUNDLE_VERSION "0.0.1"                 # CFBundleVersion
+		MACOSX_BUNDLE_LONG_VERSION_STRING "0.0.1"            # CFBundleLongVersionString
+		MACOSX_BUNDLE_SHORT_VERSION_STRING "0.0.1"           # CFBundleShortVersionString
+		MACOSX_BUNDLE_COPYRIGHT "adityaraj"                  # NSHumanReadableCopyright
+		MACOSX_BUNDLE_GUI_IDENTIFIER "pegvin.csprite.github" # CFBundleIdentifier
+		MACOSX_BUNDLE_ICON_FILE "csprite.icns"               # CFBundleIconFile
 		MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/data/Info.plist
 	)
 else()
