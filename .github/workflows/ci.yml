@@ -243,8 +243,8 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
-        name: win-x86_64-vs17_2022
-        path: ./win-x86_64-vs17_2022/
+        name: win-x64-vs17_2022
+        path: ./win-x64-vs17_2022/
 
     - uses: actions/download-artifact@v2
       with:
