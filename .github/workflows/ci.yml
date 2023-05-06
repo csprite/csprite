@@ -146,7 +146,7 @@ jobs:
         cmake --build ./build/ --config Release --parallel 3
 
     - name: Zip Binaries
-    - uses: vimtor/action-zip@v1
+      uses: vimtor/action-zip@v1
       with:
         files: ./build/Release/*
         recursive: true
