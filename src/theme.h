@@ -1,6 +1,6 @@
 #pragma once
 
-#include "imgui.h"
+#include "imgui/imgui.h"
 #include <cstdint>
 
 #define THEME_NAME_SIZE_MAX 512

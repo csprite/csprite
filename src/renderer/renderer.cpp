@@ -1,8 +1,8 @@
 #include <algorithm>
 
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_sdlrenderer.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_sdl.h"
+#include "imgui/imgui_impl_sdlrenderer.h"
 #include "log/log.h"
 #include "./renderer.h"
 
