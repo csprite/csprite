@@ -24,4 +24,6 @@ todo
 data/icons/
 data/icon.ico
 
+build/
+.cache/
 

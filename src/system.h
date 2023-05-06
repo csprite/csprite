@@ -8,7 +8,7 @@
 #define SYS_FILENAME_MAX 1024
 #define SYS_URL_MAX      2048
 
-#if defined(_WIN32) || defined(WIN32)
+#ifdef TARGET_WINDOWS
 	#define SYS_PATH_SEP '\\'
 #else
 	#define SYS_PATH_SEP '/'
