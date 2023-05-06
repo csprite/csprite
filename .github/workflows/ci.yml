@@ -308,12 +308,9 @@ jobs:
         artifacts: |
           ./win-x64-vs17_2022.zip
           ./win-x86-vs17_2022.zip
-
           ./linux-x64-gnutoolchain.AppImage
           ./linux-x64-gnutoolchain
-
           ./linux-x64-clangtoolchain.AppImage
           ./linux-x64-clangtoolchain
-
           ./osx-arm64-Xcode.zip
           ./osx-x64-Xcode.zip
