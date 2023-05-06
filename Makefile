@@ -7,13 +7,6 @@ all:
 run: all
 	@./build/csprite
 
-# make gen-rc ARCH=x86_64(or i686) PYTHON=python3
-gen-rc:
-	$(eval ARCH := $(if $(ARCH),$(ARCH),x86_64))
-	$(eval PYTHON := $(if $(PYTHON),$(PYTHON),python3))
-	@$(PYTHON) tools/create_rc.py --arch=$(ARCH) --majver=$(MajVer) --minver=$(MinVer) --patver=$(PatVer)
-	@echo - RC generated
-
 # make gen-assets PYTHON=python3
 gen-assets:
 	$(eval PYTHON := $(if $(PYTHON),$(PYTHON),python3))
