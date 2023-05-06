@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <limits.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
