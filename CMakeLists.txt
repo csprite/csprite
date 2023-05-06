@@ -13,18 +13,14 @@ set(CMAKE_C_EXTENSIONS OFF)
 option(BUILD_APPLE_BUNDLE "Build Apple Bundle, Used For Releases & Is Ignored On Non-Apple Target" OFF)
 
 project(csprite C CXX)
-add_definitions(-DSDL_MAIN_HANDLED)
-
-# Debug C/C++ flags
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-	add_compile_options(-fsanitize=address)
-	add_link_options(-fsanitize=address)
-	add_definitions(-D_DEBUG)
-else()
-	add_definitions(-D_NDEBUG)
-endif()
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.c)
+
+# On Windows, Enable RC Language & Add It To Sources
+if(WIN32)
+	enable_language(RC)
+	set(SRC_FILES ${SRC_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/windows.rc)
+endif()
 
 if(APPLE AND BUILD_APPLE_BUNDLE)
 	add_executable(csprite MACOSX_BUNDLE ${SRC_FILES})
@@ -45,6 +41,17 @@ if(APPLE AND BUILD_APPLE_BUNDLE)
 	)
 else()
 	add_executable(csprite ${SRC_FILES})
+endif()
+
+add_definitions(-DSDL_MAIN_HANDLED)
+
+# Debug C/C++ flags
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+	add_compile_options(-fsanitize=address)
+	add_link_options(-fsanitize=address)
+	add_definitions(-D_DEBUG)
+else()
+	add_definitions(-D_NDEBUG)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)

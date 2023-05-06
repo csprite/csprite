@@ -10,9 +10,9 @@ PATVER = 0
 
 for item in sys.argv:
 	if (item.startswith("--arch=")):
-		item = item.replace("--arch=", '')
-		if not (item == 'x86_64' or item == 'i686'):
-			print(f"Invalid '--arch' value: '{item}', accepted values are 'x86_64' & 'i686'.")
+		item = item.replace("--arch=", '').lower()
+		if not (item == 'x64' or item == 'win32'):
+			print(f"Invalid '--arch' value: '{item}', accepted values are 'x64' & 'win32'. (case-insensitive)")
 			sys.exit(-1)
 		else:
 			ARCH = item
