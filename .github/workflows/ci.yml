@@ -165,19 +165,6 @@ jobs:
           brew install $formulaResult
         done
 
-    - name: Generate Build Files & Build
-      run: |
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
-        cmake --build ./build/ --config Release
-        mv ./build/Release/csprite ./
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: osx_executable
-        path: ./csprite
-        if-no-files-found: error
-
     - name: Generate .icns
       run: |
         mkdir csprite.iconset
@@ -194,30 +181,22 @@ jobs:
         iconutil -c icns -o csprite.icns csprite.iconset
         rm -R csprite.iconset
 
-    - name: Create Apple Bundle
+    - name: Generate Build Files & Build
       run: |
-        mkdir csprite.app
-        mkdir csprite.app/Contents
-        mkdir csprite.app/Contents/libs
-        mkdir csprite.app/Contents/MacOS
-        mkdir csprite.app/Contents/Resources
-        cp ./csprite ./csprite.app/Contents/MacOS/
-        cp ./csprite.icns ./csprite.app/Contents/Resources/csprite.icns
-        cp ./data/Info.plist ./csprite.app/Contents/
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -DBUILD_APPLE_BUNDLE=ON -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
+        cmake --build ./build/ --config Release
+        ls build/
+        ls build/Release/
 
-    - name: Put Dylibs
-      run: |
-        dylibbundler -od -b -ns -x ./csprite.app/Contents/MacOS/csprite -d ./csprite.app/Contents/libs/
+    # - name: Create Zip
+    #   run: zip -r csprite-osx.zip ./csprite.app
 
-    - name: Create Zip
-      run: zip -r csprite-osx.zip ./csprite.app
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: osx_binary
-        path: ./csprite-osx.zip
-        if-no-files-found: error
+    # - name: Upload Artifacts
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: osx_binary
+    #     path: ./csprite-osx.zip
+    #     if-no-files-found: error
 
   update-ci-release:
     needs: [linux-x86_64, windows-x86_64, osx_x86_64]

@@ -4,16 +4,25 @@
 <dict>
 	<key>CFBundleName</key>
 	<string>CSprite</string>
+
 	<key>CFBundleIcon</key>
 	<string>CSprite</string>
+
 	<key>CFBundleExecutable</key>
 	<string>CSprite</string>
+
+	<key>CFBundleIdentifier</key>
+	<string>pegvin.csprite.github</string>
+
 	<key>CFBundleIconFile</key>
 	<string>csprite.icns</string>
+
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 
