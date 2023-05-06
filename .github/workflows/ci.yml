@@ -35,11 +35,6 @@ jobs:
   linux-x86_64:
     needs: [generate-assets]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        config:
-        - { name: "GCC", cc: gcc, cxx: g++ }
-        - { name: "Clang", cc: clang, cxx: clang++ }
     steps:
     - uses: actions/checkout@v2
       with:
@@ -58,18 +53,19 @@ jobs:
     - name: Build & Install SDL2
       run: bash ./tools/BuildNInstall_Linux.sh
 
-    - name: Install ZLib, LibFuse2 & AppImage-Builder
+    - name: Install Deps
       run: |
         sudo apt-get update
-        sudo apt-get install zlib1g zlib1g-dev libfuse2
+        sudo apt-get install cmake ninja-build zlib1g zlib1g-dev libfuse2
         wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.0.0-beta.1/appimage-builder-1.0.0-677acbd-x86_64.AppImage
         chmod +x appimage-builder-x86_64.AppImage
         sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
 
-    - name: Build & Strip (Static Linking=False;)
+    - name: Generate Build Files & Build
       run: |
-        make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=0 ZLIB_STATIC_LINK=1 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
-        strip ./csprite
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
+        cmake --build ./build/
+        mv ./build/csprite ./
 
     - name: Build AppImage
       run: |
@@ -78,7 +74,6 @@ jobs:
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
-      if: ${{ matrix.config.cc == 'clang' }}
       with:
         name: linux-x86_64-appimage
         path: csprite-x86_64.AppImage
@@ -92,9 +87,13 @@ jobs:
         path: ./csprite
         if-no-files-found: error
 
-  linux-i686:
+  windows-x86_64:
     needs: [generate-assets]
-    runs-on: ubuntu-latest
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        architecture: [x64, Win32]
+        generator: [ { short_name: "vs17_2022", cmake_name: "Visual Studio 17 2022" } ]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -110,150 +109,41 @@ jobs:
         name: data
         path: ./data/
 
-    - name: Build (Setup Ubuntu 18.04 x86) (Build & Install SDL2) (Compiler = Clang;)
-      uses: paulproteus/ubuntu-18.04-x86@0.1
-      with:
-        command: |
-          echo "::group::Update System Repositories & Install pkg-config, git, libgtk-3-dev, zlib & clang-10"
-          apt-get update -y
-          apt-get install -y pkg-config git libgtk-3-dev zlib1g zlib1g-dev clang-10
-          echo "::endgroup::"
-          echo "::group::Build & Install SDL2"
-          bash ./tools/BuildNInstall_Linux.sh
-          echo "::endgroup::"
-          echo "::group::Build Csprite"
-          make all -j4 BUILD_TARGET=release SDL2_STATIC_LINK=1 ZLIB_STATIC_LINK=1 CC=clang-10 CXX=clang++-10
-          echo "::endgroup::"
-
-    - name: Exit if file not exists
+    - name: Build & Install ZLib
       run: |
-        if [ ! -e ./csprite ]; then
-            echo "'csprite' executable not found"
-            exit 1
-        fi
+        git clone https://github.com/madler/zlib/ --recursive -b v1.2.13
+        cd zlib/
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
+        cmake --build ./build/ --config Release --parallel
+        cmake --install ./build/ --strip --config Release
 
-    - name: Upload Artifacts
+    - name: Build & Install SDL2
+      run: |
+        git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
+        cd SDL/
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
+        cmake --build ./build/ --config Release --parallel
+        cmake --install ./build/ --strip --config Release
+
+    - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: linux-i686
-        path: ./csprite
-        if-no-files-found: error
-
-  windows-x86_64:
-    needs: [generate-assets]
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        config:
-        - { name: "GCC", cc: gcc, cxx: g++ }
-        - { name: "Clang", cc: clang, cxx: clang++ }
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: CLANG64
-          update: false
-          install: |
-            make git
-            mingw-w64-clang-x86_64-zlib
-            mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-gcc
-            mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-python
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: src-assets
-          path: ./src/assets/
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: data
-          path: ./data/
-
-      - name: Build & Install SDL2
-        run: bash ./tools/BuildNInstall_Windows.sh clang64
-
-      - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
-        run: |
-          make gen-rc Arch=x86_64
-          make all -j4 BUILD_TARGET=release ZLIB_STATIC_LINK=1 WINDRES_TARGET=pe-x86-64 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        if: ${{ matrix.config.cc == 'clang' }}
-        with:
-          name: win-x86_64
-          path: csprite.exe
-          if-no-files-found: error
-
-  windows-i686:
-    needs: [generate-assets]
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        config:
-        - { name: "GCC", cc: gcc, cxx: g++ }
-        - { name: "Clang", cc: clang, cxx: clang++ }
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: CLANG32
-          update: false
-          install: |
-            mingw-w64-clang-i686-zlib
-            mingw-w64-clang-i686-binutils make git
-            mingw-w64-clang-i686-gcc mingw-w64-clang-i686-clang
-            mingw-w64-clang-i686-cmake mingw-w64-clang-i686-python
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: src-assets
-          path: ./src/assets/
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: data
-          path: ./data/
-
-      - name: Build & Install SDL2
-        run: bash ./tools/BuildNInstall_Windows.sh clang32
-
-      - name: Build (Compiler = Clang; Enabled Manifest & Icon = True;)
-        run: |
-          make gen-rc Arch=i686
-          make all -j4 BUILD_TARGET=release ZLIB_STATIC_LINK=1 WINDRES_TARGET=pe-i386 CC=${{ matrix.config.cc }} CXX=${{ matrix.config.cxx }}
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        if: ${{ matrix.config.cc == 'clang' }}
-        with:
-          name: win-i686
-          path: csprite.exe
-          if-no-files-found: error
+        name: win-${{ matrix.architecture }}-${{ matrix.generator.short_name }}
+        path: |
+          ./build/Release/csprite.exe
+          ./build/Release/*.dll
 
   osx_x86_64:
     needs: [generate-assets]
-    runs-on: macos-11
+    runs-on: macos-12 # Monterey
+    strategy:
+      matrix:
+        architecture: [x86_64, arm64]
+        generator: [Xcode]
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-
-    - name: Install dylibbundler, SDL2 & zlib
-      run: |
-        brew install dylibbundler sdl2 zlib
 
     - uses: actions/download-artifact@v2
       with:
@@ -265,8 +155,21 @@ jobs:
         name: data
         path: ./data/
 
-    - name: Build
-      run: make all -j4 BUILD_TARGET=release ZLIB_STATIC_LINK=0
+    - name: Install dylibbundler, SDL2 & zlib
+      run: |
+        PACKAGES=(dylibbundler sdl2 zlib)
+        for PACKAGE in "${PACKAGES[@]}"
+        do
+          formulaResult=$(brew --cache --bottle-tag=${{ matrix.architecture }}_monterey $PACKAGE)
+          brew fetch --force --bottle-tag=${{ matrix.architecture }}_monterey $PACKAGE
+          brew install $formulaResult
+        done
+
+    - name: Generate Build Files & Build
+      run: |
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
+        cmake --build ./build/ --config Release
+        mv ./build/Release/csprite ./
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
@@ -317,7 +220,7 @@ jobs:
         if-no-files-found: error
 
   update-ci-release:
-    needs: [linux-x86_64, linux-i686, windows-x86_64, windows-i686, osx_x86_64]
+    needs: [linux-x86_64, windows-x86_64, osx_x86_64]
     permissions:
       contents: write
     if: |
@@ -325,51 +228,6 @@ jobs:
       github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v2
-      with:
-        name: win-x86_64
-        path: ./win-x86_64
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: win-i686
-        path: ./win-i686
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: linux-x86_64
-        path: ./linux-x86_64
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: linux-i686
-        path: ./linux-i686
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: linux-x86_64-appimage
-        path: ./linux-x86_64-AppImage
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: osx_executable
-        path: ./osx-x86_64
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: osx_binary
-        path: ./osx-x86_64
-
-    - name: rename
-      run: |
-        mv win-x86_64/csprite.exe csprite-win-x86_64.exe
-        mv win-i686/csprite.exe csprite-win-i686.exe
-        mv linux-x86_64/csprite csprite-linux-x86_64
-        mv linux-i686/csprite csprite-linux-i686
-        mv linux-x86_64-AppImage/csprite-x86_64.AppImage csprite-linux-x86_64.appimage
-        mv osx-x86_64/csprite csprite-osx-x86_64
-        mv osx-x86_64/csprite-osx.zip csprite-osx-x86_64.zip
-
     - uses: dev-drprasad/delete-tag-and-release@v0.2.1
       with:
         tag_name: latest-git
@@ -380,13 +238,11 @@ jobs:
     - uses: ncipollo/release-action@v1
       with:
         name: "Csprite Latest Git"
-        body: "this build provides latest features but the features might be un-documented & the builds might be unstable."
+        body: "this release is not for daily use."
         tag: "latest-git"
         commit: "master"
         prerelease: true
         allowUpdates: true
         generateReleaseNotes: true
         artifactErrorsFailBuild: true
-        artifacts: "csprite-win-*.exe,csprite-linux-*,csprite-osx-*"
-
 
