@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.24)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -60,7 +60,10 @@ target_link_libraries(csprite PUBLIC third_party)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-find_package(ZLIB)
+if(WIN32)
+	set(ZLIB_USE_STATIC_LIBS ON)
+endif()
+find_package(ZLIB REQUIRED)
 target_link_libraries(csprite PUBLIC ZLIB::ZLIB)
 
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
