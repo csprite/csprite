@@ -16,15 +16,15 @@
 
 #include <sys/stat.h>
 
-#if defined (WIN32) || defined (_WIN32) || defined (__WIN32)
-#define OSWIN
-#ifndef NOMINMAX
-	#define NOMINMAX
-#endif
-#include <Dirent/dirent.h>
-#include <windows.h>
+#ifdef TARGET_WINDOWS
+	#define OSWIN
+	#ifndef NOMINMAX
+		#define NOMINMAX
+	#endif
+	#include <FileBrowser/Dirent/dirent.h>
+	#include <windows.h>
 #else
-#include <dirent.h>
+	#include <dirent.h>
 #endif // defined (WIN32) || defined (_WIN32)
 
 namespace imgui_addons
