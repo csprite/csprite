@@ -64,7 +64,7 @@ jobs:
     - name: Generate Build Files & Build
       run: |
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
-        cmake --build ./build/
+        cmake --build ./build/ --config Release --parallel 3
         mv ./build/csprite ./
 
     - name: Build AppImage
@@ -81,7 +81,6 @@ jobs:
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
-      if: ${{ matrix.config.cc == 'clang' }}
       with:
         name: linux-x86_64
         path: ./csprite
@@ -114,7 +113,7 @@ jobs:
         git clone https://github.com/madler/zlib/ --recursive -b v1.2.13
         cd zlib/
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
-        cmake --build ./build/ --config Release --parallel
+        cmake --build ./build/ --config Release --parallel 3
         cmake --install ./build/ --strip --config Release
 
     - name: Build & Install SDL2
@@ -122,13 +121,19 @@ jobs:
         git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
         cd SDL/
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
-        cmake --build ./build/ --config Release --parallel
+        cmake --build ./build/ --config Release --parallel 3
         cmake --install ./build/ --strip --config Release
+
+    - name: Generate Build Files & Build
+      run: |
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
+        cmake --build ./build/ --config Release --parallel 3
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
         name: win-${{ matrix.architecture }}-${{ matrix.generator.short_name }}
+        if-no-files-found: error
         path: |
           ./build/Release/csprite.exe
           ./build/Release/*.dll
