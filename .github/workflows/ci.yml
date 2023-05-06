@@ -148,7 +148,7 @@ jobs:
     - name: Zip Binaries
       uses: vimtor/action-zip@v1
       with:
-        files: ./build/Release/*
+        files: ./build/Release/*.exe ./build/Release/*.dll
         recursive: true
         dest: ./csprite.zip
 
@@ -283,7 +283,7 @@ jobs:
 
     - name: Rename
       run: |
-        mv ./win-x86_64-vs17_2022/csprite.zip ./win-x64-vs17_2022.zip
+        mv ./win-x64-vs17_2022/csprite.zip ./win-x64-vs17_2022.zip
         mv ./win-Win32-vs17_2022/csprite.zip ./win-x86-vs17_2022.zip
 
         mv ./linux_appimage-x86_64-clang/*.appimage ./linux-x64-clangtoolchain.appimage
