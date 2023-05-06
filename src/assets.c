@@ -5,7 +5,11 @@
 typedef struct {
 	const char*     path;
 	int             size;
+#ifdef TARGET_WINDOWS
+	const void*     data __declspec((align(4)));
+#else
 	const void*     data __attribute__((aligned(4)));
+#endif
 } asset_t;
 
 static asset_t ASSETS[]; // Defined in assets.inl
