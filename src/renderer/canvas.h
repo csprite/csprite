@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include "../history.h"
 
 struct CanvasLayer {
