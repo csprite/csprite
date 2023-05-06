@@ -3,7 +3,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-dev-drprasad/delete-tag-and-release
+
 jobs:
   generate-assets:
     runs-on: ubuntu-latest
