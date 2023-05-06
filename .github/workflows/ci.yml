@@ -59,7 +59,7 @@ jobs:
     - name: Install Deps
       run: |
         sudo apt-get update
-        sudo apt-get install gcc clang cmake ninja-build zlib1g zlib1g-dev libfuse2
+        sudo apt-get install gcc clang cmake ninja-build libfuse2
         wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.0.0-beta.1/appimage-builder-1.0.0-677acbd-x86_64.AppImage
         chmod +x appimage-builder-x86_64.AppImage
         sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
@@ -123,14 +123,6 @@ jobs:
         name: data
         path: ./data/
 
-    - name: Build & Install ZLib
-      run: |
-        git clone https://github.com/madler/zlib/ --recursive -b v1.2.13
-        cd zlib/
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
-        cmake --build ./build/ --config Release --parallel 3
-        cmake --install ./build/ --strip --config Release
-
     - name: Build & Install SDL2
       run: |
         git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
@@ -183,9 +175,9 @@ jobs:
     - name: Lint Info.plist
       run: plutil data/Info.plist
 
-    - name: Install dylibbundler, SDL2 & zlib
+    - name: Install SDL2
       run: |
-        PACKAGES=(dylibbundler sdl2 zlib)
+        PACKAGES=(sdl2)
         for PACKAGE in "${PACKAGES[@]}"
         do
           formulaResult=$(brew --cache --bottle-tag=${{ matrix.architecture }}_monterey $PACKAGE)
