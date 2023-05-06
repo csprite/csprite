@@ -22,6 +22,8 @@ if(WIN32)
 	set(SRC_FILES ${SRC_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/data/windows.rc)
 endif()
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/common_defs.txt)
+
 if(APPLE AND BUILD_APPLE_BUNDLE)
 	add_executable(csprite MACOSX_BUNDLE ${SRC_FILES})
 	set_source_files_properties(
@@ -43,28 +45,11 @@ else()
 	add_executable(csprite ${SRC_FILES})
 endif()
 
-add_definitions(-DSDL_MAIN_HANDLED)
-
-# Debug C/C++ flags
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-	add_compile_options(-fsanitize=address)
-	add_link_options(-fsanitize=address)
-	add_definitions(-D_DEBUG)
-else()
-	add_definitions(-D_NDEBUG)
-endif()
-
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
 target_link_libraries(csprite PUBLIC third_party)
 
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-if(WIN32)
-	set(ZLIB_USE_STATIC_LIBS ON)
-endif()
-find_package(ZLIB REQUIRED)
-target_link_libraries(csprite PUBLIC ZLIB::ZLIB)
 
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
@@ -75,8 +60,6 @@ endif()
 
 target_link_libraries(third_party PUBLIC SDL2::SDL2)
 target_link_libraries(csprite PUBLIC SDL2::SDL2)
-
-include(${CMAKE_CURRENT_SOURCE_DIR}/common_defs.txt)
 
 if(WIN32)
 	add_custom_command(TARGET csprite POST_BUILD
