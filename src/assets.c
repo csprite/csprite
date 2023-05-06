@@ -6,7 +6,7 @@ typedef struct {
 	const char*     path;
 	int             size;
 #ifdef TARGET_WINDOWS
-	const void*     data __declspec((align(4)));
+	__declspec(align(4)) const void*     data;
 #else
 	const void*     data __attribute__((aligned(4)));
 #endif
