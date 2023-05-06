@@ -66,8 +66,8 @@ jobs:
 
     - name: Build & Install SDL2
       run: |
-        set CC=${{ matrix.compile.cc }}
-        set CXX=${{ matrix.compile.cxx }}
+        set CC=${{ matrix.compiler.cc }}
+        set CXX=${{ matrix.compiler.cxx }}
         git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
         cd SDL/
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
@@ -76,8 +76,8 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
-        set CC=${{ matrix.compile.cc }}
-        set CXX=${{ matrix.compile.cxx }}
+        set CC=${{ matrix.compiler.cc }}
+        set CXX=${{ matrix.compiler.cxx }}
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
         cmake --build ./build/ --config Release --parallel 3
         mv ./build/csprite ./
@@ -90,14 +90,14 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: linux_appimage-x86_64-${{ matrix.compile.toolchain }}
+        name: linux_appimage-x86_64-${{ matrix.compiler.toolchain }}
         path: csprite-x86_64.AppImage
         if-no-files-found: error
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: linux-x86_64-${{ matrix.compile.toolchain }}
+        name: linux-x86_64-${{ matrix.compiler.toolchain }}
         path: ./csprite
         if-no-files-found: error
 
