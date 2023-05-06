@@ -126,6 +126,7 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
+        make gen-rc ARCH=${{ matrix.architecture }}
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
         cmake --build ./build/ --config Release --parallel 3
 
