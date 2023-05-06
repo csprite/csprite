@@ -286,10 +286,10 @@ jobs:
         mv ./win-x64-vs17_2022/csprite.zip ./win-x64-vs17_2022.zip
         mv ./win-Win32-vs17_2022/csprite.zip ./win-x86-vs17_2022.zip
 
-        mv ./linux_appimage-x86_64-clang/*.appimage ./linux-x64-clangtoolchain.appimage
+        mv ./linux_appimage-x86_64-clang/*.AppImage ./linux-x64-clangtoolchain.AppImage
         mv ./linux-x86_64-clang/csprite ./linux-x64-clangtoolchain
 
-        mv ./linux_appimage-x86_64-gnu/*.appimage ./linux-x64-gnutoolchain.appimage
+        mv ./linux_appimage-x86_64-gnu/*.AppImage ./linux-x64-gnutoolchain.AppImage
         mv ./linux-x86_64-gnu/csprite ./linux-x64-gnutoolchain
 
         mv ./osx-arm64-Xcode/csprite.zip ./osx-arm64-Xcode.zip
@@ -309,10 +309,10 @@ jobs:
           ./win-x64-vs17_2022.zip
           ./win-x86-vs17_2022.zip
 
-          ./linux-x64-gnutoolchain.appimage
+          ./linux-x64-gnutoolchain.AppImage
           ./linux-x64-gnutoolchain
 
-          ./linux-x64-clangtoolchain.appimage
+          ./linux-x64-clangtoolchain.AppImage
           ./linux-x64-clangtoolchain
 
           ./osx-arm64-Xcode.zip
