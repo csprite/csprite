@@ -20,7 +20,7 @@
 #include "log/log.h"
 #include "assets.h"
 #include "macros.h"
-#include "config.h"
+#include "config.hpp"
 #include "theme.h"
 #include "palette.h"
 #include "history.h"
