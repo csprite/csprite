@@ -254,13 +254,13 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
-        name: linux_appimage-x86_64-gnu
-        path: ./linux_appimage-x86_64-gnu/
+        name: linux_appimage-x86_64-gcc
+        path: ./linux_appimage-x86_64-gcc/
 
     - uses: actions/download-artifact@v2
       with:
-        name: linux-x86_64-gnu
-        path: ./linux-x86_64-gnu/
+        name: linux-x86_64-gcc
+        path: ./linux-x86_64-gcc/
 
     - uses: actions/download-artifact@v2
       with:
