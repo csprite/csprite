@@ -50,10 +50,6 @@
 #  define close _close
 #endif
 
-#ifdef Z_HAVE_UNISTD_H
-    #include <unistd.h>
-#endif
-
 #ifdef NO_DEFLATE       /* for compatibility with old definition */
 #  define NO_GZCOMPRESS
 #endif
