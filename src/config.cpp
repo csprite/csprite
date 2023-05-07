@@ -1,10 +1,11 @@
 #include <stdio.h>
 
 #include "utils.h"
-#include "config.h"
+#include "log/log.h"
+
 #include "system.h"
 #include "ini/ini.h"
-#include "log/log.h"
+#include "config.hpp"
 
 static char* getSettingsPath() {
 	char* configdir = Sys_GetConfigDir();
@@ -111,4 +112,18 @@ int WriteConfig(Config_T* s) {
 	f = NULL;
 
 	return 0;
+}
+
+Config_T& Config_T::operator = (const Config_T& rhs) {
+	Max_FPS = rhs.Max_FPS;
+	Theme_Name = rhs.Theme_Name;
+	RenderDriver = rhs.RenderDriver;
+	CheckerboardColor1[0] = rhs.CheckerboardColor1[0];
+	CheckerboardColor1[1] = rhs.CheckerboardColor1[1];
+	CheckerboardColor1[2] = rhs.CheckerboardColor1[2];
+
+	CheckerboardColor2[0] = rhs.CheckerboardColor2[0];
+	CheckerboardColor2[1] = rhs.CheckerboardColor2[1];
+	CheckerboardColor2[2] = rhs.CheckerboardColor2[2];
+	return *this;
 }
