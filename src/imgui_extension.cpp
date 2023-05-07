@@ -1,14 +1,34 @@
-#include "imgui_extension.h"
+#include "imgui_extension.hpp"
 
-#define U32_TO_RGBA(color)                         \
-	ImVec4(                                        \
-		(float)((color & 0xff000000) >> 24) / 255, \
-		(float)((color & 0x00ff0000) >> 16) / 255, \
-		(float)((color & 0x0000ff00) >> 8)  / 255, \
-		(float)((color & 0x000000ff)) / 255        \
+#ifndef TARGET_IS_BIGENDIAN
+	#define _R_MASK 0xFF000000
+	#define _G_MASK 0x00FF0000
+	#define _B_MASK 0x0000FF00
+	#define _A_MASK 0x000000FF
+
+	#define _R_SHIFT 24
+	#define _G_SHIFT 16
+	#define _B_SHIFT 8
+	#define _A_SHIFT 0
+#else
+	#define _R_MASK 0x000000FF
+	#define _G_MASK 0x0000FF00
+	#define _B_MASK 0x00FF0000
+	#define _A_MASK 0xFF000000
+
+	#define _R_SHIFT 0
+	#define _G_SHIFT 8
+	#define _B_SHIFT 16
+	#define _A_SHIFT 24
+#endif
+
+#define U32_TO_RGBA(color)                            \
+	ImVec4(                                           \
+		(float)((color & _R_MASK) >> _R_SHIFT) / 255, \
+		(float)((color & _G_MASK) >> _G_SHIFT) / 255, \
+		(float)((color & _B_MASK) >> _B_SHIFT) / 255, \
+		(float)((color & _A_MASK) >> _A_SHIFT) / 255  \
 	)
-
-#define SCALE_RGBA_ARRAY(r, g, b, a) (float)(r) / 255, (float)(g) / 255, (float)(b) / 255, (float)(a) / 255
 
 IMGUI_API void ImGui::Ext_ToggleButton(const char* str_id, bool* v) {
 	ImVec2 p = ImGui::GetCursorScreenPos();
@@ -65,4 +85,3 @@ IMGUI_API bool ImGui::ColorEdit4(const char* label, uint8_t col[4], ImGuiColorEd
 	}
 	return false;
 }
-

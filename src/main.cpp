@@ -13,7 +13,7 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
 #include "imgui/imgui_impl_sdl.h"
-#include "imgui_extension.h"
+#include "imgui_extension.hpp"
 #include "FileBrowser/ImGuiFileBrowser.h"
 
 #include "utils.h"
