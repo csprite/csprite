@@ -1,7 +1,6 @@
 #include <stdlib.h>
 
 #include "log/log.h"
-#include "zlib/zlib.h"
 #include "zlib_wrapper.h"
 
 uint8_t* Z_CompressData(uLongf dataToCompressSize, uLongf* sizeDataCompressed, uint8_t* dataToCompress) {
@@ -67,4 +66,3 @@ uint8_t* Z_DeCompressData(uint8_t* dataToDecompress, uLongf dataToDecompressSize
 
 	return dataUncompressed;
 }
-
