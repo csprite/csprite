@@ -75,7 +75,7 @@ char WindowTitle[WINDOW_TITLE_MAX] = "";
 
 PaletteManager* pMgr      = NULL;
 theme_arr_t*    ThemeArr  = NULL;
-Config_T*       AppConfig = NULL;
+AppConfig*      Config = NULL;
 
 #ifndef CS_VERSION_MAJOR
 	#define CS_VERSION_MAJOR 0
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
 	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
 	log_add_fp(LogFilePtr, LOG_TRACE);
 
-	AppConfig = LoadConfig();
+	Config = LoadConfig();
 	pMgr = new PaletteManager;
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_TIMER) != 0) {
@@ -170,12 +170,12 @@ int main(int argc, char* argv[]) {
 	SDL_ShowWindow(window);
 	_GuiSetToolText();
 
-	if (R_Init(window, AppConfig->RenderDriver) != EXIT_SUCCESS) {
+	if (R_Init(window, Config->RenderDriver) != EXIT_SUCCESS) {
 		return EXIT_FAILURE;
 	}
 	SDL_Renderer* renderer = R_GetRenderer();
 
-	CanvasLayerMgr = new CanvasLayer_Manager(renderer, 64, 64, AppConfig->CheckerboardColor1, AppConfig->CheckerboardColor2);
+	CanvasLayerMgr = new CanvasLayer_Manager(renderer, 64, 64, static_cast<u8*>(Config->CheckerboardColor1), static_cast<u8*>(Config->CheckerboardColor2));
 	CanvasLayerMgr->AddLayer();
 	CanvasLayerMgr->SetCurrentLayerIdx(0);
 
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
 
 	ThemeArr = ThemeLoadAll();
 	for (int32_t i = 0; i < ThemeArr->numOfEntries; ++i) {
-		if (strcmp(AppConfig->Theme_Name.c_str(), ThemeArr->entries[i]->name) == 0) {
+		if (strcmp(Config->ThemeName.c_str(), ThemeArr->entries[i]->name) == 0) {
 			ThemeIndex = i;
 			break;
 		}
@@ -227,7 +227,7 @@ int main(int argc, char* argv[]) {
 	bool ShowNewCanvasWindow = false;
 
 	unsigned int frameStart, frameTime;
-	unsigned int frameDelay = 1000 / AppConfig->Max_FPS;
+	unsigned int frameDelay = 1000 / Config->FramesPerSecond;
 
 	imgui_addons::ImGuiFileBrowser ImFileDialog;
 	while (!ShouldClose) {
@@ -462,7 +462,7 @@ int main(int argc, char* argv[]) {
 		if (ShowPreferencesWindow) {
 			ImGui::SetNextWindowPos({ io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f }, ImGuiCond_Once, { 0.5f, 0.5f });
 			if (ImGui::Begin("Preferences", NULL, ImGuiWindowFlags_NoCollapse)) {
-				static Config_T tempConfig = *AppConfig;
+				static AppConfig tempConfig = *Config;
 				static int32_t CurrentSelection = 0;
 				ImGui::BeginTable("##PreferencesTable", 2, ImGuiTableFlags_BordersInnerV);
 				ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthFixed, 120.0f, 0);
@@ -481,9 +481,9 @@ int main(int argc, char* argv[]) {
 				ImGui::TableNextColumn();
 				switch (CurrentSelection) {
 					case 0: {
-						static int32_t _maxFPS = tempConfig.Max_FPS;
+						static int32_t _maxFPS = tempConfig.FramesPerSecond;
 						ImGui::InputInt("FPS", &_maxFPS, 1, 5, ImGuiInputTextFlags_None);
-						tempConfig.Max_FPS = static_cast<uint16_t>(CLAMP_NUM(_maxFPS, 5, UINT16_MAX));
+						tempConfig.FramesPerSecond = static_cast<uint16_t>(CLAMP_NUM(_maxFPS, 5, UINT16_MAX));
 
 						ImGui::SetNextItemWidth(-FLT_MIN); // right align
 						if (ImGui::BeginChild("##FixedWidthRenderDriverCombo", { (ImGui::CalcTextSize("MMMMMMMMMM").x * 1.5f) + (style.FramePadding.x * 2.0f), ImGui::GetTextLineHeightWithSpacing() * 1.2f })) {
@@ -506,8 +506,8 @@ int main(int argc, char* argv[]) {
 					}
 					case 1: {
 						ImGui::Text("Checkerboard Pattern");
-						ImGui::ColorEdit3("##CheckerboardColor1", tempConfig.CheckerboardColor1, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
-						ImGui::ColorEdit3("##CheckerboardColor2", tempConfig.CheckerboardColor2, ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
+						ImGui::ColorEdit3("##CheckerboardColor1", static_cast<u8*>(tempConfig.CheckerboardColor1), ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
+						ImGui::ColorEdit3("##CheckerboardColor2", static_cast<u8*>(tempConfig.CheckerboardColor2), ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoDragDrop);
 						ImGui::Separator();
 						break;
 					}
@@ -530,18 +530,18 @@ int main(int argc, char* argv[]) {
 				ImGui::TableNextColumn();
 
 				if (ImGui::Button("Save")) {
-					tempConfig.Theme_Name = std::string(ThemeArr->entries[ThemeIndex]->name);
-					*AppConfig = tempConfig;
-					frameDelay = 1000 / AppConfig->Max_FPS;
+					tempConfig.ThemeName = std::string(ThemeArr->entries[ThemeIndex]->name);
+					*Config = tempConfig;
+					frameDelay = 1000 / Config->FramesPerSecond;
 					ShowPreferencesWindow = false;
-					WriteConfig(AppConfig);
+					WriteConfig(Config);
 				}
 				if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
 					ImGui::SetTooltip("Restart app to apply these changes");
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
-					tempConfig = *AppConfig;
+					tempConfig = *Config;
 					ShowPreferencesWindow = false;
 				}
 
@@ -857,7 +857,7 @@ int main(int argc, char* argv[]) {
 				if (ImGui::Button("Create")) {
 					if (NewDims[0] > 0 && NewDims[1] > 0) {
 						delete CanvasLayerMgr;
-						CanvasLayerMgr = new CanvasLayer_Manager(renderer, NewDims[0], NewDims[1], AppConfig->CheckerboardColor1, AppConfig->CheckerboardColor2);
+						CanvasLayerMgr = new CanvasLayer_Manager(renderer, NewDims[0], NewDims[1], static_cast<u8*>(Config->CheckerboardColor1), static_cast<u8*>(Config->CheckerboardColor2));
 						CanvasLayerMgr->AddLayer();
 						CanvasLayerMgr->SetCurrentLayerIdx(0);
 						CurrViewportZoom = 1.0f;
@@ -1365,7 +1365,7 @@ static int OpenNewFile(const char* _fName) {
 		return -1;
 	}
 
-	if (ifio_read(_fName, &CanvasLayerMgr, AppConfig->CheckerboardColor1, AppConfig->CheckerboardColor2) == 0 && CanvasLayerMgr->dims[0] > 0 && CanvasLayerMgr->dims[1] > 0) {
+	if (ifio_read(_fName, &CanvasLayerMgr, static_cast<u8*>(Config->CheckerboardColor1), static_cast<u8*>(Config->CheckerboardColor2)) == 0 && CanvasLayerMgr->dims[0] > 0 && CanvasLayerMgr->dims[1] > 0) {
 		CurrViewportZoom = 1.0f;
 		UpdateViewportSize();
 		UpdateViewportPos();
