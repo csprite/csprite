@@ -48,7 +48,9 @@
 #  define read _read
 #  define write _write
 #  define close _close
-#else
+#endif
+
+#ifdef Z_HAVE_UNISTD_H
     #include <unistd.h>
 #endif
 

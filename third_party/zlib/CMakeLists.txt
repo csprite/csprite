@@ -1,18 +1,16 @@
-cmake_minimum_required(VERSION 2.4.4)
-set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
+cmake_minimum_required(VERSION 3.0)
 
 project(zlib C)
-
 set(VERSION "1.2.13")
 
 include(CheckTypeSize)
 include(CheckFunctionExists)
-include(CheckIncludeFile)
+include(CheckIncludeFiles)
 include(CheckCSourceCompiles)
 
-check_include_file(sys/types.h HAVE_SYS_TYPES_H)
-check_include_file(stdint.h    HAVE_STDINT_H)
-check_include_file(stddef.h    HAVE_STDDEF_H)
+CHECK_INCLUDE_FILE(sys/types.h HAVE_SYS_TYPES_H)
+CHECK_INCLUDE_FILE(stdint.h    HAVE_STDINT_H)
+CHECK_INCLUDE_FILE(stddef.h    HAVE_STDDEF_H)
 
 #
 # Check to see if we have large file support
@@ -36,18 +34,13 @@ if(HAVE_OFF64_T)
 endif()
 set(CMAKE_REQUIRED_DEFINITIONS) # clear variable
 
-#
 # Check for fseeko
-#
 check_function_exists(fseeko HAVE_FSEEKO)
 if(NOT HAVE_FSEEKO)
     add_definitions(-DNO_FSEEKO)
 endif()
 
-#
-# Check for unistd.h
-#
-check_include_file(unistd.h Z_HAVE_UNISTD_H)
+CHECK_INCLUDE_FILE(unistd.h Z_HAVE_UNISTD_H)
 
 if(MSVC)
     set(CMAKE_DEBUG_POSTFIX "d")
@@ -59,50 +52,23 @@ endif()
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR})
 
 
-#============================================================================
 # zlib
-#============================================================================
-
-set(ZLIB_PUBLIC_HDRS
-    zconf.h
-    zlib.h
-)
+set(ZLIB_PUBLIC_HDRS zconf.h zlib.h)
 set(ZLIB_PRIVATE_HDRS
-    crc32.h
-    deflate.h
-    gzguts.h
-    inffast.h
-    inffixed.h
-    inflate.h
-    inftrees.h
-    trees.h
-    zutil.h
+    crc32.h deflate.h gzguts.h inffast.h inffixed.h
+    inflate.h inftrees.h trees.h zutil.h
 )
 set(ZLIB_SRCS
-    adler32.c
-    compress.c
-    crc32.c
-    deflate.c
-    gzclose.c
-    gzlib.c
-    gzread.c
-    gzwrite.c
-    inflate.c
-    infback.c
-    inftrees.c
-    inffast.c
-    trees.c
-    uncompr.c
-    zutil.c
+    adler32.c compress.c crc32.c deflate.c gzclose.c gzlib.c gzread.c
+    gzwrite.c inflate.c infback.c inftrees.c inffast.c trees.c uncompr.c zutil.c
 )
 
 # parse the full version number from zlib.h and include in ZLIB_FULL_VERSION
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/zlib.h _zlib_h_contents)
 string(REGEX REPLACE ".*#define[ \t]+ZLIB_VERSION[ \t]+\"([-0-9A-Za-z.]+)\".*" "\\1" ZLIB_FULL_VERSION ${_zlib_h_contents})
 
-add_library(zlibstatic STATIC ${ZLIB_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+add_library(zlib STATIC ${ZLIB_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
 
 if(UNIX)
-    # On unix-like platforms the library is almost always called libz
-    set_target_properties(zlibstatic PROPERTIES OUTPUT_NAME z)
+    set_target_properties(zlib PROPERTIES OUTPUT_NAME z)
 endif()
