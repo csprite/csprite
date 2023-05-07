@@ -53,7 +53,7 @@ static char* getSettingsPath() {
 AppConfig* LoadConfig(void) {
 	AppConfig* c = new AppConfig;
 	char* configPath = getSettingsPath();
-	if (Sys_IsRegularFile(configPath) == 0) {
+	if (Sys_IsRegularFile(configPath) == 1) {
 		ini_t* config = ini_load(configPath);
 
 		const char* Max_FPS_Str = ini_get(config, "csprite", "Max_FPS");
