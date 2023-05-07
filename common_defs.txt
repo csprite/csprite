@@ -13,8 +13,6 @@ endif()
 
 if(CMAKE_CXX_BYTE_ORDER STREQUAL "BIG_ENDIAN")
 	add_definitions(-DTARGET_IS_BIGENDIAN=1)
-else()
-	add_definitions(-DTARGET_IS_BIGENDIAN=0)
 endif()
 
 if(WIN32)
