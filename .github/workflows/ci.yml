@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         compiler: [
-          { cc: gcc, cxx: g++, toolchain: gnu },
+          { cc: gcc, cxx: g++, toolchain: gcc },
           { cc: clang, cxx: clang++, toolchain: clang }
         ]
     steps:
@@ -277,11 +277,11 @@ jobs:
         mv ./win-x64-vs17_2022/csprite.zip ./win-x64-vs17_2022.zip
         mv ./win-Win32-vs17_2022/csprite.zip ./win-x86-vs17_2022.zip
 
-        mv ./linux_appimage-x86_64-clang/*.AppImage ./linux-x64-clangtoolchain.AppImage
-        mv ./linux-x86_64-clang/csprite ./linux-x64-clangtoolchain
+        mv ./linux_appimage-x86_64-clang/*.AppImage ./linux-x64-clang.AppImage
+        mv ./linux-x86_64-clang/csprite ./linux-x64-clang
 
-        mv ./linux_appimage-x86_64-gnu/*.AppImage ./linux-x64-gnutoolchain.AppImage
-        mv ./linux-x86_64-gnu/csprite ./linux-x64-gnutoolchain
+        mv ./linux_appimage-x86_64-gcc/*.AppImage ./linux-x64-gcc.AppImage
+        mv ./linux-x86_64-gcc/csprite ./linux-x64-gcc
 
         mv ./osx-arm64-Xcode/csprite.zip ./osx-arm64-Xcode.zip
         mv ./osx-x86_64-Xcode/csprite.zip ./osx-x64-Xcode.zip
@@ -299,9 +299,9 @@ jobs:
         artifacts: |
           ./win-x64-vs17_2022.zip
           ./win-x86-vs17_2022.zip
-          ./linux-x64-gnutoolchain.AppImage
-          ./linux-x64-gnutoolchain
-          ./linux-x64-clangtoolchain.AppImage
-          ./linux-x64-clangtoolchain
+          ./linux-x64-gcc.AppImage
+          ./linux-x64-gcc
+          ./linux-x64-clang.AppImage
+          ./linux-x64-clang
           ./osx-arm64-Xcode.zip
           ./osx-x64-Xcode.zip
