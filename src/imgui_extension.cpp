@@ -1,33 +1,12 @@
 #include "imgui_extension.hpp"
+#include "pixel/pixel.hpp"
 
-#ifndef TARGET_IS_BIGENDIAN
-	#define _R_MASK 0xFF000000
-	#define _G_MASK 0x00FF0000
-	#define _B_MASK 0x0000FF00
-	#define _A_MASK 0x000000FF
-
-	#define _R_SHIFT 24
-	#define _G_SHIFT 16
-	#define _B_SHIFT 8
-	#define _A_SHIFT 0
-#else
-	#define _R_MASK 0x000000FF
-	#define _G_MASK 0x0000FF00
-	#define _B_MASK 0x00FF0000
-	#define _A_MASK 0xFF000000
-
-	#define _R_SHIFT 0
-	#define _G_SHIFT 8
-	#define _B_SHIFT 16
-	#define _A_SHIFT 24
-#endif
-
-#define U32_TO_RGBA(color)                            \
-	ImVec4(                                           \
-		(float)((color & _R_MASK) >> _R_SHIFT) / 255, \
-		(float)((color & _G_MASK) >> _G_SHIFT) / 255, \
-		(float)((color & _B_MASK) >> _B_SHIFT) / 255, \
-		(float)((color & _A_MASK) >> _A_SHIFT) / 255  \
+#define U32_TO_RGBA(color)                                              \
+	ImVec4(                                                             \
+		(float)((color & PIXEL_RED_MASK) >> PIXEL_RED_SHIFT)     / 255, \
+		(float)((color & PIXEL_GREEN_MASK) >> PIXEL_GREEN_SHIFT) / 255, \
+		(float)((color & PIXEL_BLUE_MASK) >> PIXEL_BLUE_SHIFT)   / 255, \
+		(float)((color & PIXEL_ALPHA_MASK) >> PIXEL_ALPHA_SHIFT) / 255  \
 	)
 
 IMGUI_API void ImGui::Ext_ToggleButton(const char* str_id, bool* v) {

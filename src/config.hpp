@@ -3,6 +3,7 @@
 #pragma once
 
 #include "types.hpp"
+#include "pixel/pixel.hpp"
 #include "renderer/renderer.h"
 
 struct AppConfig {
