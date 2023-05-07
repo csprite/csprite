@@ -1,11 +1,11 @@
-#include <zlib.h> // for uLongf
 #include "log/log.h"
-#include "ifileio.h"
-#include "zlib_wrapper.h"
 #include "../utils.h"
 #include "../renderer/renderer.h"
 #include "../renderer/canvas.h"
+
+#include "ifileio.h"
 #include "ifileio_endian.h"
+#include "zlib_wrapper.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -266,5 +266,3 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, uint8_t c
 	}
 	return -1;
 }
-
-
