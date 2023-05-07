@@ -2,20 +2,22 @@
 #define CSP_SRC_CONFIG_HPP_INCLUDED_ 1
 #pragma once
 
-#include <string>
+#include "types.hpp"
 #include "renderer/renderer.h"
 
-struct Config_T {
-	uint16_t     Max_FPS;
-	std::string  Theme_Name;
+struct AppConfig {
+	u16    FramesPerSecond;
+	String ThemeName;
 	Renderer_API RenderDriver;
-	uint8_t      CheckerboardColor1[3];
-	uint8_t      CheckerboardColor2[3];
+	Pixel  CheckerboardColor1;
+	Pixel  CheckerboardColor2;
 
-	Config_T& operator = (const Config_T& rhs);
+	AppConfig& operator = (const AppConfig& rhs);
+	bool operator == (const AppConfig& rhs) const;
+	bool operator != (const AppConfig& rhs) const;
 };
 
-Config_T* LoadConfig(void);
-int WriteConfig(Config_T* s);
+AppConfig* LoadConfig(void);
+int WriteConfig(AppConfig* s);
 
 #endif // CSP_SRC_CONFIG_HPP_INCLUDED_
