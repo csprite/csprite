@@ -11,7 +11,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../common_defs.txt)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/zlib)
 add_library(third_party STATIC ${THIRD_PARTY_FILES})
-target_link_libraries(third_party PUBLIC zlibstatic)
+target_link_libraries(third_party PUBLIC zlib)
 
 target_include_directories(third_party PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/)
