@@ -19,7 +19,7 @@
 #endif
 
 #include <stdio.h>
-#include "zlib.h"
+#include "./zlib.h"
 #ifdef STDC
 #  include <string.h>
 #  include <stdlib.h>
@@ -48,6 +48,8 @@
 #  define read _read
 #  define write _write
 #  define close _close
+#else
+    #include <unistd.h>
 #endif
 
 #ifdef NO_DEFLATE       /* for compatibility with old definition */
