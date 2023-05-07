@@ -25,6 +25,7 @@
 #include "palette.h"
 #include "history.h"
 #include "system.h"
+#include "pixel/pixel.hpp"
 #include "tools/tools.h"
 #include "renderer/canvas.h"
 #include "renderer/renderer.h"
