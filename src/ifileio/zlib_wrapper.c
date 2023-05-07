@@ -1,7 +1,8 @@
-#include <zlib.h>
 #include <stdlib.h>
-#include "zlib_wrapper.h"
+
 #include "log/log.h"
+#include "zlib/zlib.h"
+#include "zlib_wrapper.h"
 
 uint8_t* Z_CompressData(uLongf dataToCompressSize, uLongf* sizeDataCompressed, uint8_t* dataToCompress) {
 	*sizeDataCompressed = (dataToCompressSize * 1.1) + 12;
