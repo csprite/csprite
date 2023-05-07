@@ -33,17 +33,4 @@ struct Rect {
 	explicit operator SDL_Rect() const;
 };
 
-struct Pixel {
-#if TARGET_IS_BIGENDIAN == 0
-	u8 r, g, b, a;
-#else
-	u8 a, b, g, r;
-#endif
-
-	Pixel& operator = (const Pixel& rhs);
-	bool operator == (const Pixel& rhs) const;
-	bool operator != (const Pixel& rhs) const;
-	explicit operator u8*();
-};
-
 #endif // CSP_TYPES_HPP_INCLUDED_
