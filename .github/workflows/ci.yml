@@ -66,8 +66,8 @@ jobs:
 
     - name: Build & Install SDL2
       run: |
-        set CC=${{ matrix.compiler.cc }}
-        set CXX=${{ matrix.compiler.cxx }}
+        export CC=${{ matrix.compiler.cc }}
+        export CXX=${{ matrix.compiler.cxx }}
         git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
         cd SDL/
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
@@ -76,8 +76,8 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
-        set CC=${{ matrix.compiler.cc }}
-        set CXX=${{ matrix.compiler.cxx }}
+        export CC=${{ matrix.compiler.cc }}
+        export CXX=${{ matrix.compiler.cxx }}
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
         cmake --build ./build/ --config Release --parallel 3
         mv ./build/csprite ./
