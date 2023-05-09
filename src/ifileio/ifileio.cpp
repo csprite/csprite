@@ -9,31 +9,35 @@
 
 #include "stb_image.h"
 #include "stb_image_write.h"
+#include <algorithm>
 
-static uint8_t* BlendPixels_Alpha(CanvasLayer_Manager* mgr) {
+static Pixel* BlendPixels_Alpha(CanvasLayer_Manager* mgr) {
 	int32_t w = mgr->dims[0], h = mgr->dims[1];
-	uint8_t* blendedPixels = new uint8_t[w * h * 4]();
+	Pixel* blendedPixels = new Pixel[w * h];
 
 	for (uint32_t i = 0; i < mgr->layers.size(); ++i) {
 		for (int32_t y = 0; y < h; ++y) {
 			for (int32_t x = 0; x < w; ++x) {
 				// Simple Alpha-Blending Being Done Here.
-				uint8_t* srcPixel = GetCharData(mgr->layers[i]->pixels, x, y, w, h);
-				uint8_t* destPixel = GetCharData(blendedPixels, x, y, w, h);
-				if (srcPixel != NULL && destPixel != NULL) {
-					uint8_t src1Red = *(srcPixel + 0), src1Green = *(srcPixel + 1), src1Blue = *(srcPixel + 2), src1Alpha = *(srcPixel + 3);
-					uint8_t src2Red = *(destPixel + 0), src2Green = *(destPixel + 1), src2Blue = *(destPixel + 2), src2Alpha = *(destPixel + 3);
+				Pixel& srcPixel = mgr->layers[i]->pixels[(y * w) + x];
+				Pixel& destPixel = blendedPixels[(y * w) + x];
 
-					uint16_t outRed = ((uint16_t)src1Red * src1Alpha + (uint16_t)src2Red * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-					uint16_t outGreen = ((uint16_t)src1Green * src1Alpha + (uint16_t)src2Green * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-					uint16_t outBlue = ((uint16_t)src1Blue * src1Alpha + (uint16_t)src2Blue * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-					uint16_t outAlpha = src1Alpha + (uint16_t)src2Alpha * (255 - src1Alpha) / 255;
-
-					*(destPixel + 0) = CLAMP_NUM(outRed,   0, 255);
-					*(destPixel + 1) = CLAMP_NUM(outGreen, 0, 255);
-					*(destPixel + 2) = CLAMP_NUM(outBlue,  0, 255);
-					*(destPixel + 3) = CLAMP_NUM(outAlpha, 0, 255);
-				}
+				#define CLAMP_u16_to_u8(val) (u8)std::clamp((val), u16(0), u16(255))
+				destPixel = {
+					.r = CLAMP_u16_to_u8(static_cast<u16>(
+						((uint16_t)srcPixel.r * srcPixel.a + (uint16_t)destPixel.r * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+					)),
+					.g = CLAMP_u16_to_u8(static_cast<u16>(
+						((uint16_t)srcPixel.g * srcPixel.a + (uint16_t)destPixel.g * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+					)),
+					.b = CLAMP_u16_to_u8(static_cast<u16>(
+						((uint16_t)srcPixel.b * srcPixel.a + (uint16_t)destPixel.b * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+					)),
+					.a = CLAMP_u16_to_u8(static_cast<u16>(
+						srcPixel.a + (uint16_t)destPixel.a * (255 - srcPixel.a) / 255
+					)),
+				};
+				#undef CLAMP_u16_to_u8
 			}
 		}
 	}
@@ -44,7 +48,7 @@ int32_t ifio_write(const char* filePath, CanvasLayer_Manager* mgr) {
 	if (filePath == NULL || mgr == NULL || mgr->dims[0] < 1 || mgr->dims[1] < 1) return -1;
 	int32_t w = mgr->dims[0], h = mgr->dims[1];
 
-	uint8_t* _BlendedPixels = NULL;
+	Pixel* _BlendedPixels = NULL;
 	if (HAS_SUFFIX_CI(filePath, ".csprite", 8)) {
 #define WRITE_CHECKED(file, src, szBytes) do { if (fwrite(src, szBytes, 1, file) != 1) { log_error("Cannot write %d bytes", szBytes); return -1; } } while(0)
 

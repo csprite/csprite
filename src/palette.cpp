@@ -1,20 +1,23 @@
-#include "palette.h"
+#include "assets.h"
 #include "system.h"
 #include "log/log.h"
-#include "assets.h"
+#include "palette.hpp"
 
 // Forward Declarations
 static int OnSysDirList(const char *dir, const char *fname, void* data);
 static int OnAssetMgrList(int i, const char *fname);
 
-void Palette::AddColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-	colors.push_back({ r, g, b, a });
+void Palette::AddColor(Pixel color) {
+	colors.push_back({ color.r, color.g, color.b, color.a });
 }
 
-void Palette::RemoveColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+void Palette::AddColor(Pixel& color) {
+	colors.push_back({ color.r, color.g, color.b, color.a });
+}
+
+void Palette::RemoveColor(Pixel& color) {
 	for (int32_t i = 0; i < (int32_t)colors.size(); ++i) {
-		Color_T color = colors[i];
-		if (color.r == r && color.g == g && color.b == b && color.a == a) {
+		if (color == colors[i]) {
 			colors.erase(colors.begin() + i);
 		}
 	}
@@ -25,27 +28,24 @@ PaletteManager::PaletteManager() {
 	// data/palettes/bittersweet16 Palette Hardcoded Here
 	palette.name = "Bittersweet16";
 	palette.author = "SoundsDotZip";
-	palette.AddColor(0x1e, 0x18, 0x18, 0xFF);
-	palette.AddColor(0x53, 0x4c, 0x56, 0xFF);
-	palette.AddColor(0x97, 0x97, 0x8e, 0xFF);
-	palette.AddColor(0xde, 0xdc, 0xd3, 0xFF);
-	palette.AddColor(0x7e, 0xc0, 0xc2, 0xFF);
-	palette.AddColor(0x41, 0x6f, 0x8a, 0xFF);
-	palette.AddColor(0x3f, 0x35, 0x5b, 0xFF);
-	palette.AddColor(0x7d, 0x3b, 0x55, 0xFF);
-	palette.AddColor(0xb1, 0x48, 0x52, 0xFF);
-	palette.AddColor(0xbe, 0x81, 0x62, 0xFF);
-	palette.AddColor(0xd4, 0xa0, 0x9d, 0xFF);
-	palette.AddColor(0xe1, 0xbe, 0x88, 0xFF);
-	palette.AddColor(0x97, 0xb6, 0x68, 0xFF);
-	palette.AddColor(0x56, 0x8f, 0x73, 0xFF);
-	palette.AddColor(0x68, 0x5d, 0x45, 0xFF);
-	palette.AddColor(0x54, 0x37, 0x34, 0xFF);
+	palette.AddColor({ .r = 0x1e, .g = 0x18, .b = 0x18, .a = 0xFF });
+	palette.AddColor({ .r = 0x53, .g = 0x4c, .b = 0x56, .a = 0xFF });
+	palette.AddColor({ .r = 0x97, .g = 0x97, .b = 0x8e, .a = 0xFF });
+	palette.AddColor({ .r = 0xde, .g = 0xdc, .b = 0xd3, .a = 0xFF });
+	palette.AddColor({ .r = 0x7e, .g = 0xc0, .b = 0xc2, .a = 0xFF });
+	palette.AddColor({ .r = 0x41, .g = 0x6f, .b = 0x8a, .a = 0xFF });
+	palette.AddColor({ .r = 0x3f, .g = 0x35, .b = 0x5b, .a = 0xFF });
+	palette.AddColor({ .r = 0x7d, .g = 0x3b, .b = 0x55, .a = 0xFF });
+	palette.AddColor({ .r = 0xb1, .g = 0x48, .b = 0x52, .a = 0xFF });
+	palette.AddColor({ .r = 0xbe, .g = 0x81, .b = 0x62, .a = 0xFF });
+	palette.AddColor({ .r = 0xd4, .g = 0xa0, .b = 0x9d, .a = 0xFF });
+	palette.AddColor({ .r = 0xe1, .g = 0xbe, .b = 0x88, .a = 0xFF });
+	palette.AddColor({ .r = 0x97, .g = 0xb6, .b = 0x68, .a = 0xFF });
+	palette.AddColor({ .r = 0x56, .g = 0x8f, .b = 0x73, .a = 0xFF });
+	palette.AddColor({ .r = 0x68, .g = 0x5d, .b = 0x45, .a = 0xFF });
+	palette.AddColor({ .r = 0x54, .g = 0x37, .b = 0x34, .a = 0xFF });
 	SelectedColorIdx = 0;
-	PrimaryColor[0] = palette.colors[SelectedColorIdx].r;
-	PrimaryColor[1] = palette.colors[SelectedColorIdx].g;
-	PrimaryColor[2] = palette.colors[SelectedColorIdx].b;
-	PrimaryColor[3] = palette.colors[SelectedColorIdx].a;
+	PrimaryColor = palette.colors[SelectedColorIdx];
 }
 
 PaletteManager::~PaletteManager() {
@@ -58,10 +58,7 @@ void PaletteManager::SetPreset(Palette& p) {
 
 void PaletteManager::SetSelectedColorIdx(int32_t idx) {
 	SelectedColorIdx = idx;
-	PrimaryColor[0] = palette.colors[SelectedColorIdx].r;
-	PrimaryColor[1] = palette.colors[SelectedColorIdx].g;
-	PrimaryColor[2] = palette.colors[SelectedColorIdx].b;
-	PrimaryColor[3] = palette.colors[SelectedColorIdx].a;
+	PrimaryColor = palette.colors[SelectedColorIdx];
 }
 
 std::vector<Palette>* Palette_LoadAll() {
