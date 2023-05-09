@@ -3,10 +3,10 @@
 
 CanvasLayer::CanvasLayer(SDL_Renderer* ren, int32_t w, int32_t h, std::string name) {
 	this->name = name;
-	this->pixels = new uint8_t[w * h * 4]();
+	this->pixels = new Pixel[w * h];
 	this->tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
 	this->history = NULL;
-	SaveHistory(&this->history, w * h * 4, this->pixels);
+	SaveHistory(&this->history, w * h, this->pixels);
 
 	if (SDL_SetTextureBlendMode(this->tex, SDL_BLENDMODE_BLEND) != 0) {
 		log_error("SDL_SetTextureBlendMode() returned Non-Zero: %s", SDL_GetError());
@@ -32,16 +32,16 @@ CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h
 		log_error("Cannot create renderTex, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
 	}
 
-	uint8_t* pixels = new uint8_t[(w/2) * (h/2) * 4];
+	Pixel* pixels = new Pixel[(w/2) * (h/2)];
 	for (int32_t y = 0; y < h/2; y++) {
 		for (int32_t x = 0; x < w/2; x++) {
 			uint8_t r = pCol1[0], g = pCol1[1], b = pCol1[2];
 			if ((x + y) % 2) { r = pCol2[0]; g = pCol2[1]; b = pCol2[2]; }
-			uint8_t* pixel = &pixels[(y * (int)(w/2) + x) * 4];
-			*(pixel + 0) = r;
-			*(pixel + 1) = g;
-			*(pixel + 2) = b;
-			*(pixel + 3) = 255;
+			Pixel& pixel = pixels[(y * (w/2)) + x];
+			pixel.r = r;
+			pixel.g = g;
+			pixel.b = b;
+			pixel.a = 255;
 		}
 	}
 	this->pattern = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, w/2, h/2);

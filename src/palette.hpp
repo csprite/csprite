@@ -1,29 +1,29 @@
-#ifndef PALETTE_H
-#define PALETTE_H
+#ifndef CSP_PALETTE_HPP_INCLUDED_
+#define CSP_PALETTE_HPP_INCLUDED_ 1
+#pragma once
 
 #include <vector>
 #include <string>
 #include <cstdint>
 #include <cstring>
 
-typedef struct {
-	uint8_t r, g, b, a;
-} Color_T;
+#include "pixel/pixel.hpp"
 
 struct Palette {
 	std::string name;
 	std::string author;
-	std::vector<Color_T> colors;
+	std::vector<Pixel> colors;
 
-	void AddColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255);
-	void RemoveColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255); // removes the duplicate colors too if found.
+	void AddColor(Pixel color);
+	void AddColor(Pixel& color);
+	void RemoveColor(Pixel& color); // removes the duplicate colors too if found.
 };
 
 struct PaletteManager {
 	std::vector<Palette>* presets;
 	Palette palette;
 	int32_t SelectedColorIdx;
-	uint8_t PrimaryColor[4];
+	Pixel   PrimaryColor;
 
 	PaletteManager();
 	~PaletteManager();
@@ -38,6 +38,4 @@ void Palette_ReleaseAll(std::vector<Palette>* palettes);
 Palette* Palette_LoadCsv(const char* csvText); // Load lospec format .csv palettes
 char* Palettes_GetDir(); // directory where csprite loads the palettes from
 
-#endif // PALETTE_H
-
-
+#endif // CSP_PALETTE_HPP_INCLUDED_

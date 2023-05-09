@@ -1,8 +1,10 @@
+#include "stb_image.h"
+
 #include "../utils.h"
 #include "../macros.h"
-#include "tools.h"
+
 #include "xy_stack.h"
-#include "stb_image.h"
+#include "tools/tools.hpp"
 
 BrushShape_t BrushShape = BRUSH_SHAPE_CIRCLE;
 int32_t BrushSize = 1;
@@ -23,7 +25,7 @@ void Tools_SetBrushSize(int32_t NewBrushSize) {
 	BrushSize = NewBrushSize;
 }
 
-bool Tool_Brush(uint8_t* Pixels, uint8_t* Color, uint32_t st_x, uint32_t st_y, uint32_t w, uint32_t h) {
+bool Tool_Brush(Pixel* Pixels, Pixel& Color, uint32_t st_x, uint32_t st_y, uint32_t w, uint32_t h) {
 	bool didChange = false;
 	// dirY = direction Y
 	// dirX = direction X
@@ -37,20 +39,14 @@ bool Tool_Brush(uint8_t* Pixels, uint8_t* Color, uint32_t st_x, uint32_t st_y, u
 			if (BrushShape == BRUSH_SHAPE_CIRCLE && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
-			uint8_t* pixel = GetCharData(Pixels, st_x + dirX, st_y + dirY, w, h);
-			if (pixel != NULL) {
-				*(pixel + 0) = Color[0];
-				*(pixel + 1) = Color[1];
-				*(pixel + 2) = Color[2];
-				*(pixel + 3) = Color[3];
-				didChange = true;
-			}
+			Pixel& pixel = Pixels[((st_y + dirY) * w) + (st_x + dirX)];
+			pixel = Color;
 		}
 	}
 	return didChange;
 }
 
-bool Tool_Line(uint8_t* Pixels, uint8_t* Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
+bool Tool_Line(Pixel* Pixels, Pixel& Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
 	int dx =  abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
 	int err = dx + dy, e2; /* error value e_xy */
@@ -82,7 +78,7 @@ bool Tool_Line(uint8_t* Pixels, uint8_t* Color, int x0, int y0, int x1, int y1, 
  x0, y1           x1, y1
 */
 
-bool Tool_Rect(uint8_t* Pixels, uint8_t* Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
+bool Tool_Rect(Pixel* Pixels, Pixel& Color, int x0, int y0, int x1, int y1, uint32_t w, uint32_t h) {
 	bool didChange = false;
 	didChange = Tool_Line(Pixels, Color, x0, y0, x1, y0, w, h) || didChange;
 	didChange = Tool_Line(Pixels, Color, x1, y0, x1, y1, w, h) || didChange;
@@ -91,7 +87,7 @@ bool Tool_Rect(uint8_t* Pixels, uint8_t* Color, int x0, int y0, int x1, int y1, 
 	return didChange;
 }
 
-bool Tool_Circle(uint8_t* Pixels, uint8_t* Color, int centreX, int centreY, int radius, uint32_t w, uint32_t h) {
+bool Tool_Circle(Pixel* Pixels, Pixel& Color, int centreX, int centreY, int radius, uint32_t w, uint32_t h) {
 	const int diameter = (radius * 2);
 
 	int32_t x = (radius - 1);
@@ -129,13 +125,13 @@ bool Tool_Circle(uint8_t* Pixels, uint8_t* Color, int centreX, int centreY, int 
 xy_stack_t* floodFillLocStack = NULL;
 
 bool Tool_FloodFill(
-	uint8_t* Pixels,
-	uint8_t* OldColor,
-	uint8_t* NewColor,
+	Pixel* Pixels,
+	Pixel& OldColor,
+	Pixel& NewColor,
 	uint32_t x, uint32_t y,
 	uint32_t w, uint32_t h
 ) {
-	if (COLOR_EQUAL(NewColor, OldColor)) return false;
+	if (NewColor == OldColor) return false;
 	if (floodFillLocStack == NULL) {
 		floodFillLocStack = s_init(w * h);
 	} else if (floodFillLocStack->length != w * h) {
@@ -150,28 +146,25 @@ bool Tool_FloodFill(
 		s_pop(floodFillLocStack, &x, &y);
 
 		if (x > -1 && x < w && y > -1 && y < h) {
-			uint8_t* pixel = GetCharData(Pixels, x, y, w, h);
-			if (COLOR_EQUAL(pixel, OldColor)) {
-				*pixel = NewColor[0];
-				*(pixel + 1) = NewColor[1];
-				*(pixel + 2) = NewColor[2];
-				*(pixel + 3) = NewColor[3];
+			Pixel& pixel = Pixels[(y * w) + x];
+			if (pixel == OldColor) {
+				pixel = NewColor;
 				didChange = true;
 
 				int32_t newX = x + 1;
-				if (newX < w && COLOR_EQUAL(GetCharData(Pixels, newX, y, w, h), OldColor))
+				if (newX < w && Pixels[(y * w) + newX] == OldColor)
 					s_push(floodFillLocStack, newX, y);
 
 				newX = x - 1;
-				if (newX >= 0 && COLOR_EQUAL(GetCharData(Pixels, newX, y, w, h), OldColor))
+				if (newX >= 0 && Pixels[(y * w) + newX] == OldColor)
 					s_push(floodFillLocStack, newX, y);
 
 				int32_t newY = y + 1;
-				if (newY < h && COLOR_EQUAL(GetCharData(Pixels, x, newY, w, h), OldColor))
+				if (newY < h && Pixels[(newY * w) + x] == OldColor)
 					s_push(floodFillLocStack, x, newY);
 
 				newY = y - 1;
-				if (newY >= 0 && COLOR_EQUAL(GetCharData(Pixels, x, newY, w, h), OldColor))
+				if (newY >= 0 && Pixels[(newY * w) + x] == OldColor)
 					s_push(floodFillLocStack, x, newY);
 			}
 		}
