@@ -133,7 +133,7 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
+        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}" -T "ClangCL"
         cmake --build ./build/ --config Release --parallel 3
 
     - name: Zip Binaries
