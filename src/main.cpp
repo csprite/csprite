@@ -2,12 +2,11 @@
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <limits.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
+#include <climits>
 #include <SDL.h>
 
 #include "imgui/imgui.h"
@@ -1349,4 +1348,3 @@ static int OpenNewFile(const char* _fName) {
 	}
 	return 0;
 }
-
