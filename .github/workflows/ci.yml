@@ -84,7 +84,7 @@ jobs:
 
     - name: Build AppImage
       run: |
-        make appimage
+        make appimage MajVer=1 MinVer=0 PatVer=0
         mv ./csprite-*.AppImage ./csprite-x86_64.AppImage
 
     - name: Upload Artifacts
