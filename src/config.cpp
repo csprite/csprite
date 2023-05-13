@@ -75,9 +75,9 @@ AppConfig* LoadConfig(void) {
 			&CheckerColor1Int[1],
 			&CheckerColor1Int[2]) != 3) {}
 
-		c->CheckerboardColor1.r = (u8)std::clamp(CheckerColor1Int[0], 0U, 255U);
-		c->CheckerboardColor1.g = (u8)std::clamp(CheckerColor1Int[1], 0U, 255U);
-		c->CheckerboardColor1.b = (u8)std::clamp(CheckerColor1Int[2], 0U, 255U);
+		c->CheckerboardColor1.r = clampNum(CheckerColor1Int[0], u8(0));
+		c->CheckerboardColor1.g = clampNum(CheckerColor1Int[1], u8(0));
+		c->CheckerboardColor1.b = clampNum(CheckerColor1Int[2], u8(0));
 		c->CheckerboardColor1.a = 255;
 
 		const char* CheckerColor2_Str = ini_get(config, "colors", "CheckerColor2");
@@ -89,9 +89,9 @@ AppConfig* LoadConfig(void) {
 			&CheckerColor2Int[1],
 			&CheckerColor2Int[2]) != 3) {}
 
-		c->CheckerboardColor2.r = (u8)std::clamp(CheckerColor2Int[0], 0U, 255U);
-		c->CheckerboardColor2.g = (u8)std::clamp(CheckerColor2Int[1], 0U, 255U);
-		c->CheckerboardColor2.b = (u8)std::clamp(CheckerColor2Int[2], 0U, 255U);
+		c->CheckerboardColor2.r = clampNum(CheckerColor2Int[0], u8(0));
+		c->CheckerboardColor2.g = clampNum(CheckerColor2Int[1], u8(0));
+		c->CheckerboardColor2.b = clampNum(CheckerColor2Int[2], u8(0));
 		c->CheckerboardColor2.a = 255;
 
 		ini_free(config);

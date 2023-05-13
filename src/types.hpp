@@ -2,6 +2,8 @@
 #define CSP_TYPES_HPP_INCLUDED_ 1
 #pragma once
 
+// Functions & Definitions To Work With Different Types
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -32,5 +34,9 @@ struct Rect {
 
 	explicit operator SDL_Rect() const;
 };
+
+// clamps "a" to the min & max value "targetType" can hold without overflowing
+template <typename TypeToClamp, typename TypeToClampTo>
+TypeToClampTo clampNum(const TypeToClamp a, const TypeToClampTo targetType);
 
 #endif // CSP_TYPES_HPP_INCLUDED_
