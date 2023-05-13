@@ -1,26 +1,19 @@
-#ifndef _IFILEIO_ENDIAN_H
-#define _IFILEIO_ENDIAN_H 1
+#ifndef CSP_IFILEIO_IFILEIO_ENDIAN_HPP_INCLUDED_
+#define CSP_IFILEIO_IFILEIO_ENDIAN_HPP_INCLUDED_ 1
+#pragma once
 
-#include <stdint.h>
+#include "types.hpp"
 
 // swap_xxxxxx functions simple swap bytes, can be usefully for converting between endianness
-int16_t  swap_int16(int16_t val);
-uint16_t swap_uint16(uint16_t val);
-
-int32_t  swap_int32(int32_t val);
-uint32_t swap_uint32(uint32_t val);
+i16 swap_val(i16 val);
+u16 swap_val(u16 val);
+i32 swap_val(i32 val);
+u32 swap_val(u32 val);
 
 #if TARGET_IS_BIGENDIAN == 1
-	#define SWAP_ONLY_BIGE_i32(val) swap_int32(val)
-	#define SWAP_ONLY_BIGE_u32(val) swap_uint32(val)
-	#define SWAP_ONLY_BIGE_i16(val) swap_int16(val)
-	#define SWAP_ONLY_BIGE_u16(val) swap_uint16(val)
+	#define SWAP_ONLY_BIGE(val) swap_val(val)
 #else
-	#define SWAP_ONLY_BIGE_i32(val) val
-	#define SWAP_ONLY_BIGE_u32(val) val
-	#define SWAP_ONLY_BIGE_i16(val) val
-	#define SWAP_ONLY_BIGE_u16(val) val
+	#define SWAP_ONLY_BIGE(val) val
 #endif
 
-#endif // _IFILEIO_ENDIAN_H
-
+#endif // CSP_IFILEIO_IFILEIO_ENDIAN_HPP_INCLUDED_
