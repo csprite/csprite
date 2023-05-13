@@ -609,9 +609,9 @@ int main(int argc, char* argv[]) {
 							ImGui::GetItemRectMax().y - NEGATIVE_OFFSET
 						),
 						IM_COL32(
-							CLAMP_NUM((r > 127 ? r - 125 : r + 125), 0, 255),
-							CLAMP_NUM((g > 127 ? g - 125 : g + 125), 0, 255),
-							CLAMP_NUM((b > 127 ? b - 125 : b + 125), 0, 255),
+							CLAMP_NUM_TO_TYPE((r > 127 ? r - 125 : r + 125), u8),
+							CLAMP_NUM_TO_TYPE((g > 127 ? g - 125 : g + 125), u8),
+							CLAMP_NUM_TO_TYPE((b > 127 ? b - 125 : b + 125), u8),
 							200
 						)
 					);

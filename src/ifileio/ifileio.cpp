@@ -24,18 +24,22 @@ static Pixel* BlendPixels_Alpha(CanvasLayer_Manager* mgr) {
 				Pixel& srcPixel = mgr->layers[i]->pixels[(y * w) + x];
 				Pixel& destPixel = blendedPixels[(y * w) + x];
 
-				destPixel.r = clampNum<u16, u8>(
-					((uint16_t)srcPixel.r * srcPixel.a + (uint16_t)destPixel.r * (255 - srcPixel.a) / 255 * destPixel.a) / 255
-				);
-				destPixel.g = clampNum<u16, u8>(
-					((uint16_t)srcPixel.g * srcPixel.a + (uint16_t)destPixel.g * (255 - srcPixel.a) / 255 * destPixel.a) / 255
-				);
-				destPixel.b = clampNum<u16, u8>(
-					((uint16_t)srcPixel.b * srcPixel.a + (uint16_t)destPixel.b * (255 - srcPixel.a) / 255 * destPixel.a) / 255
-				);
-				destPixel.a = clampNum<u16, u8>(
-					srcPixel.a + (uint16_t)destPixel.a * (255 - srcPixel.a) / 255
-				);
+				destPixel.r = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						((u16)srcPixel.r * srcPixel.a + (u16)destPixel.r * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+					), u8);
+				destPixel.g = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						((u16)srcPixel.g * srcPixel.a + (u16)destPixel.g * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+					), u8);
+				destPixel.b = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						((u16)srcPixel.b * srcPixel.a + (u16)destPixel.b * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+					), u8);
+				destPixel.a = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						srcPixel.a + (u16)destPixel.a * (255 - srcPixel.a) / 255
+					), u8);
 			}
 		}
 	}
@@ -58,12 +62,12 @@ int32_t ifio_write(const char* filePath, CanvasLayer_Manager* mgr) {
 
 		int32_t numChannels = 4;
 		char signature[5] = "DEEZ";
-		uint16_t formatVersion = 1; // max uint16_t 65535
+		u16 formatVersion = 1; // max u16 65535
 
 		WRITE_CHECKED(fp, signature, 4);
 
 		// htonX function converts the value to a big-endian value
-		{ uint16_t b_formatVersion = SWAP_ONLY_BIGE((u16)formatVersion); WRITE_CHECKED(fp, &b_formatVersion, 2); }
+		{ u16 b_formatVersion = SWAP_ONLY_BIGE((u16)formatVersion); WRITE_CHECKED(fp, &b_formatVersion, 2); }
 		{ int32_t b_w = SWAP_ONLY_BIGE((i32)w); WRITE_CHECKED(fp, &b_w, 4); }
 		{ int32_t b_h = SWAP_ONLY_BIGE((i32)h); WRITE_CHECKED(fp, &b_h, 4); }
 		{ int32_t b_numChannels = SWAP_ONLY_BIGE((i32)numChannels); WRITE_CHECKED(fp, &b_numChannels, 4); }
@@ -153,7 +157,7 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, Pixel& ch
 		}
 	} else if (HAS_SUFFIX_CI(filePath, ".csprite", 8)) {
 		int32_t w = 0, h = 0, numChannels = 0, numLayers = 0;
-		uint16_t formatVersion = 0;
+		u16 formatVersion = 0;
 		char signature[4] = "";
 		FILE* fp = fopen(filePath, "rb");
 		if (fp == NULL) {
