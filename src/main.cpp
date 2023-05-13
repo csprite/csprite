@@ -119,13 +119,12 @@ static void ZoomViewport(int increase);
 static void MutateCanvas(bool LmbJustReleased);
 static inline bool CanMutateCanvas();
 static inline void ProcessEvents();
-static uint8_t* GetPixel(int x, int y);
 
 #define UNDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
+	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1], CURR_CANVAS_LAYER->pixels)
 
 #define REDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
+	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1], CURR_CANVAS_LAYER->pixels)
 
 #define UPDATE_WINDOW_TITLE() do {\
 		GEN_WIN_TITLE();\
@@ -589,9 +588,10 @@ int main(int argc, char* argv[]) {
 
 				if (pMgr->SelectedColorIdx == i && primaryIsInPalette) {
 					ImVec2 rSz = ImGui::GetItemRectSize();
-					uint8_t r = pMgr->palette.colors[i].r;
-					uint8_t g = pMgr->palette.colors[i].g;
-					uint8_t b = pMgr->palette.colors[i].b;
+					u8 r = pMgr->palette.colors[i].r,
+					   g = pMgr->palette.colors[i].g,
+					   b = pMgr->palette.colors[i].b;
+
 					/* This Value Will Be Subtracted From Triangle's Positions
 					   Because Of Some Extra "Marginal" Space The Button Takes */
 					#define NEGATIVE_OFFSET 1.0f
