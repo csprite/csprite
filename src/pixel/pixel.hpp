@@ -28,9 +28,9 @@
 
 struct Pixel {
 #if TARGET_IS_BIGENDIAN == 0
-	u8 r = 0, g = 0, b = 0, a = 255;
+	u8 r = 0, g = 0, b = 0, a = 0;
 #else
-	u8 a = 255, b = 0, g = 0, r = 0;
+	u8 a = 0, b = 0, g = 0, r = 0;
 #endif
 
 	Pixel& operator = (const u32 RGBA_Color);
