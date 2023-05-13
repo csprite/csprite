@@ -1,12 +1,13 @@
 #include "canvas.h"
 #include "log/log.h"
+#include <SDL_config.h>
 
 CanvasLayer::CanvasLayer(SDL_Renderer* ren, int32_t w, int32_t h, std::string name) {
 	this->name = name;
-	this->pixels = new uint8_t[w * h * 4]();
+	this->pixels = new Pixel[w * h];
 	this->tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
 	this->history = NULL;
-	SaveHistory(&this->history, w * h * 4, this->pixels);
+	SaveHistory(&this->history, w * h, this->pixels);
 
 	if (SDL_SetTextureBlendMode(this->tex, SDL_BLENDMODE_BLEND) != 0) {
 		log_error("SDL_SetTextureBlendMode() returned Non-Zero: %s", SDL_GetError());
@@ -19,7 +20,7 @@ CanvasLayer::~CanvasLayer() {
 	FreeHistory(&this->history);
 }
 
-CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h, uint8_t pCol1[3], uint8_t pCol2[3]) {
+CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h, Pixel& pCol1, Pixel& pCol2) {
 	this->dims[0] = w;
 	this->dims[1] = h;
 	this->ren = ren;
@@ -32,23 +33,20 @@ CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h
 		log_error("Cannot create renderTex, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
 	}
 
-	uint8_t* pixels = new uint8_t[(w/2) * (h/2) * 4];
-	for (int32_t y = 0; y < h/2; y++) {
-		for (int32_t x = 0; x < w/2; x++) {
-			uint8_t r = pCol1[0], g = pCol1[1], b = pCol1[2];
-			if ((x + y) % 2) { r = pCol2[0]; g = pCol2[1]; b = pCol2[2]; }
-			uint8_t* pixel = &pixels[(y * (int)(w/2) + x) * 4];
-			*(pixel + 0) = r;
-			*(pixel + 1) = g;
-			*(pixel + 2) = b;
-			*(pixel + 3) = 255;
+	u16 checkerBoardW = w / 2, checkerBoardH = h / 2;
+	Pixel* pixels = new Pixel[checkerBoardW * checkerBoardH];
+	for (int32_t y = 0; y < checkerBoardH; y++) {
+		for (int32_t x = 0; x < checkerBoardH; x++) {
+			Pixel& pixel = pixels[(y * checkerBoardH) + x];
+			pixel = ((x + y) % 2) ? pCol2 : pCol1;
+			pixel.a = 255;
 		}
 	}
-	this->pattern = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, w/2, h/2);
+	this->pattern = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, checkerBoardW, checkerBoardH);
 	if (this->pattern == NULL) {
 		log_error("Cannot create pattern, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
 	}
-	SDL_UpdateTexture(this->pattern, NULL, pixels, (w/2) * 4);
+	SDL_UpdateTexture(this->pattern, NULL, pixels, checkerBoardW * sizeof(Pixel));
 
 	if (SDL_SetTextureBlendMode(this->pattern, SDL_BLENDMODE_BLEND) != 0) {
 		log_error("SDL_SetTextureBlendMode() returned Non-Zero: %s", SDL_GetError());
@@ -88,7 +86,7 @@ void CanvasLayer_Manager::SetCurrentLayerIdx(int32_t idx) {
 
 void CanvasLayer_Manager::ReUploadTexture(int32_t idx) {
 	if (this->layers.size() > 0 && idx < this->layers.size()) {
-		SDL_UpdateTexture(this->layers[idx]->tex, NULL, this->layers[idx]->pixels, this->dims[0] * 4);
+		SDL_UpdateTexture(this->layers[idx]->tex, NULL, this->layers[idx]->pixels, this->dims[0] * sizeof(Pixel));
 	}
 }
 
@@ -98,7 +96,7 @@ void CanvasLayer_Manager::Draw(SDL_Rect* r, int32_t layerToUpdateIdx) {
 
 	for (int32_t i = 0; i < this->layers.size(); ++i) {
 		if (layerToUpdateIdx == i) {
-			SDL_UpdateTexture(this->layers[i]->tex, NULL, this->layers[i]->pixels, this->dims[0] * 4);
+			SDL_UpdateTexture(this->layers[i]->tex, NULL, this->layers[i]->pixels, this->dims[0] * sizeof(Pixel));
 		}
 		SDL_RenderCopy(this->ren, this->layers[i]->tex, NULL, NULL);
 	}

@@ -2,12 +2,11 @@
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <limits.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
+#include <climits>
 #include <SDL.h>
 
 #include "imgui/imgui.h"
@@ -22,11 +21,11 @@
 #include "macros.h"
 #include "config.hpp"
 #include "theme.h"
-#include "palette.h"
+#include "palette.hpp"
 #include "history.h"
 #include "system.h"
 #include "pixel/pixel.hpp"
-#include "tools/tools.h"
+#include "tools/tools.hpp"
 #include "renderer/canvas.h"
 #include "renderer/renderer.h"
 #include "ifileio/ifileio.h"
@@ -120,13 +119,12 @@ static void ZoomViewport(int increase);
 static void MutateCanvas(bool LmbJustReleased);
 static inline bool CanMutateCanvas();
 static inline void ProcessEvents();
-static uint8_t* GetPixel(int x, int y);
 
 #define UNDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
+	if (CURR_CANVAS_LAYER != NULL) HISTORY_UNDO(CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1], CURR_CANVAS_LAYER->pixels)
 
 #define REDO() \
-	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels)
+	if (CURR_CANVAS_LAYER != NULL) HISTORY_REDO(CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1], CURR_CANVAS_LAYER->pixels)
 
 #define UPDATE_WINDOW_TITLE() do {\
 		GEN_WIN_TITLE();\
@@ -176,7 +174,7 @@ int main(int argc, char* argv[]) {
 	}
 	SDL_Renderer* renderer = R_GetRenderer();
 
-	CanvasLayerMgr = new CanvasLayer_Manager(renderer, 64, 64, static_cast<u8*>(Config->CheckerboardColor1), static_cast<u8*>(Config->CheckerboardColor2));
+	CanvasLayerMgr = new CanvasLayer_Manager(renderer, 64, 64, Config->CheckerboardColor1, Config->CheckerboardColor2);
 	CanvasLayerMgr->AddLayer();
 	CanvasLayerMgr->SetCurrentLayerIdx(0);
 
@@ -586,18 +584,14 @@ int main(int argc, char* argv[]) {
 					pMgr->SetSelectedColorIdx(i);
 				}
 
-				primaryIsInPalette = primaryIsInPalette || (
-					pMgr->PrimaryColor[0] == pMgr->palette.colors[i].r  &&
-					pMgr->PrimaryColor[1] == pMgr->palette.colors[i].g  &&
-					pMgr->PrimaryColor[2] == pMgr->palette.colors[i].b  &&
-					pMgr->PrimaryColor[3] == pMgr->palette.colors[i].a
-				);
+				primaryIsInPalette = primaryIsInPalette || pMgr->PrimaryColor == pMgr->palette.colors[i];
 
 				if (pMgr->SelectedColorIdx == i && primaryIsInPalette) {
 					ImVec2 rSz = ImGui::GetItemRectSize();
-					uint8_t r = pMgr->palette.colors[i].r;
-					uint8_t g = pMgr->palette.colors[i].g;
-					uint8_t b = pMgr->palette.colors[i].b;
+					u8 r = pMgr->palette.colors[i].r,
+					   g = pMgr->palette.colors[i].g,
+					   b = pMgr->palette.colors[i].b;
+
 					/* This Value Will Be Subtracted From Triangle's Positions
 					   Because Of Some Extra "Marginal" Space The Button Takes */
 					#define NEGATIVE_OFFSET 1.0f
@@ -615,9 +609,9 @@ int main(int argc, char* argv[]) {
 							ImGui::GetItemRectMax().y - NEGATIVE_OFFSET
 						),
 						IM_COL32(
-							CLAMP_NUM((r > 127 ? r - 125 : r + 125), 0, 255),
-							CLAMP_NUM((g > 127 ? g - 125 : g + 125), 0, 255),
-							CLAMP_NUM((b > 127 ? b - 125 : b + 125), 0, 255),
+							CLAMP_NUM_TO_TYPE((r > 127 ? r - 125 : r + 125), u8),
+							CLAMP_NUM_TO_TYPE((g > 127 ? g - 125 : g + 125), u8),
+							CLAMP_NUM_TO_TYPE((b > 127 ? b - 125 : b + 125), u8),
 							200
 						)
 					);
@@ -645,12 +639,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			if (ImGui::Button("Add") && !primaryIsInPalette) {
-				pMgr->palette.AddColor(
-					pMgr->PrimaryColor[0],
-					pMgr->PrimaryColor[1],
-					pMgr->PrimaryColor[2],
-					pMgr->PrimaryColor[3]
-				);
+				pMgr->palette.AddColor((Pixel)pMgr->PrimaryColor);
 			}
 
 			if (primaryIsInPalette) {
@@ -671,12 +660,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			if (ImGui::Button("Remove") && pSize > 0 && primaryIsInPalette) {
-				pMgr->palette.RemoveColor(
-					pMgr->PrimaryColor[0],
-					pMgr->PrimaryColor[1],
-					pMgr->PrimaryColor[2],
-					pMgr->PrimaryColor[3]
-				);
+				pMgr->palette.RemoveColor(pMgr->PrimaryColor);
 				pMgr->SetSelectedColorIdx(
 					CLAMP_NUM(pMgr->SelectedColorIdx, 0, pSize - 1)
 				);
@@ -690,20 +674,20 @@ int main(int argc, char* argv[]) {
 			primaryIsInPalette = false;
 
 			float ImColPicker[4] = {
-				(float)(pMgr->PrimaryColor[0]) / 255,
-				(float)(pMgr->PrimaryColor[1]) / 255,
-				(float)(pMgr->PrimaryColor[2]) / 255,
-				(float)(pMgr->PrimaryColor[3]) / 255
+				(float)(pMgr->PrimaryColor.r) / 255,
+				(float)(pMgr->PrimaryColor.g) / 255,
+				(float)(pMgr->PrimaryColor.b) / 255,
+				(float)(pMgr->PrimaryColor.a) / 255
 			};
 			ImGui::SetNextItemWidth(-FLT_MIN); // right align
 			if (ImGui::ColorPicker4(
 				"##ColorPickerWidget", (float*)&ImColPicker,
 				ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview
 			)) {
-				pMgr->PrimaryColor[0] = ImColPicker[0] * 255;
-				pMgr->PrimaryColor[1] = ImColPicker[1] * 255;
-				pMgr->PrimaryColor[2] = ImColPicker[2] * 255;
-				pMgr->PrimaryColor[3] = ImColPicker[3] * 255;
+				pMgr->PrimaryColor.r = ImColPicker[0] * 255;
+				pMgr->PrimaryColor.g = ImColPicker[1] * 255;
+				pMgr->PrimaryColor.b = ImColPicker[2] * 255;
+				pMgr->PrimaryColor.a = ImColPicker[3] * 255;
 			}
 
 			LeftSideBarSize = ImGui::GetWindowSize();
@@ -759,7 +743,7 @@ int main(int argc, char* argv[]) {
 			if (ImGui::Button("Clear Undo/Redo Buffers")) {
 				for (int i = 0; i < CanvasLayerMgr->layers.size(); ++i) {
 					FreeHistory(&CanvasLayerMgr->layers[i]->history);
-					SaveHistory(&CanvasLayerMgr->layers[i]->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * 4, CanvasLayerMgr->layers[i]->pixels);
+					SaveHistory(&CanvasLayerMgr->layers[i]->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1], CanvasLayerMgr->layers[i]->pixels);
 				}
 			}
 #endif
@@ -858,7 +842,7 @@ int main(int argc, char* argv[]) {
 				if (ImGui::Button("Create")) {
 					if (NewDims[0] > 0 && NewDims[1] > 0) {
 						delete CanvasLayerMgr;
-						CanvasLayerMgr = new CanvasLayer_Manager(renderer, NewDims[0], NewDims[1], static_cast<u8*>(Config->CheckerboardColor1), static_cast<u8*>(Config->CheckerboardColor2));
+						CanvasLayerMgr = new CanvasLayer_Manager(renderer, NewDims[0], NewDims[1], Config->CheckerboardColor1, Config->CheckerboardColor2);
 						CanvasLayerMgr->AddLayer();
 						CanvasLayerMgr->SetCurrentLayerIdx(0);
 						CurrViewportZoom = 1.0f;
@@ -1001,7 +985,7 @@ static inline bool CanMutateCanvas() {
 // Drawing And Stuff Is Done Here
 static void MutateCanvas(bool LmbJustReleased) {
 	if (CanMutateCanvas() && (LmbJustReleased || IsLMBDown)) {
-		static uint8_t EraseColor[4] = { 0, 0, 0, 0 };
+		static Pixel EraseColor = { 0, 0, 0, 0 };
 
 		switch (Tool) {
 			case BRUSH_COLOR:
@@ -1015,14 +999,14 @@ static void MutateCanvas(bool LmbJustReleased) {
 				if (LmbJustReleased) {
 					CanvasDidMutate = CanvasDidMutate || (Tool == SHAPE_LINE || Tool == SHAPE_RECT || Tool == SHAPE_CIRCLE);
 					if (CanvasDidMutate == true) {
-						SaveHistory(&CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
+						SaveHistory(&CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1], CURR_CANVAS_LAYER->pixels);
 						CanvasDidMutate = false;
 					}
 				} else if (IsLMBDown) {
 					if (CURR_CANVAS_LAYER->history->prev != NULL) {
-						memcpy(CURR_CANVAS_LAYER->pixels, CURR_CANVAS_LAYER->history->pixels, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * 4 * sizeof(uint8_t));
+						memcpy(CURR_CANVAS_LAYER->pixels, CURR_CANVAS_LAYER->history->pixels, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * sizeof(Pixel));
 					} else {
-						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * 4 * sizeof(uint8_t));
+						memset(CURR_CANVAS_LAYER->pixels, 0, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * sizeof(Pixel));
 					}
 					if (Tool == SHAPE_RECT) {
 						Tool_Rect(CURR_CANVAS_LAYER->pixels, pMgr->PrimaryColor, MousePosDownRel[0], MousePosDownRel[1], MousePosRel[0], MousePosRel[1], CanvasLayerMgr->dims[0], CanvasLayerMgr->dims[1]);
@@ -1048,11 +1032,10 @@ static void MutateCanvas(bool LmbJustReleased) {
 			}
 			case TOOL_FLOODFILL: {
 				if (LmbJustReleased) {
-					unsigned char* pixel = GetCharData(CURR_CANVAS_LAYER->pixels, MousePosRel[0], MousePosRel[1], CanvasLayerMgr->dims[0], CanvasLayerMgr->dims[1]);
-					unsigned char OldColor[4] = { *(pixel + 0), *(pixel + 1), *(pixel + 2), *(pixel + 3) };
 					CanvasDidMutate = Tool_FloodFill(
 						CURR_CANVAS_LAYER->pixels,
-						OldColor, pMgr->PrimaryColor,
+						CURR_CANVAS_LAYER->pixels[(MousePosRel[1] * CanvasLayerMgr->dims[0]) + MousePosRel[0]],
+						pMgr->PrimaryColor,
 						MousePosRel[0], MousePosRel[1],
 						CanvasLayerMgr->dims[0], CanvasLayerMgr->dims[1]
 					) || CanvasDidMutate;
@@ -1061,24 +1044,15 @@ static void MutateCanvas(bool LmbJustReleased) {
 			}
 			case TOOL_INKDROPPER: {
 				if (LmbJustReleased) {
-					uint8_t* pixel = GetPixel(MousePosRel[0], MousePosRel[1]);
-					if (pixel != NULL && *(pixel + 3) != 0) {
+					Pixel& pixel = CURR_CANVAS_LAYER->pixels[(MousePosRel[1] * CanvasLayerMgr->dims[0]) + MousePosRel[0]];
+					if (pixel.a != 0) {
 						for (unsigned int i = 0; i < pMgr->palette.colors.size(); i++) {
-							if (
-								pMgr->PrimaryColor[0] == pixel[0] &&
-								pMgr->PrimaryColor[1] == pixel[1] &&
-								pMgr->PrimaryColor[2] == pixel[2] &&
-								pMgr->PrimaryColor[3] == pixel[3]
-							) {
+							if (pMgr->PrimaryColor == pixel) {
 								pMgr->SetSelectedColorIdx(i);
 								break;
 							}
 						}
-						pMgr->PrimaryColor[0] = *(pixel + 0);
-						pMgr->PrimaryColor[1] = *(pixel + 1);
-						pMgr->PrimaryColor[2] = *(pixel + 2);
-						pMgr->PrimaryColor[3] = *(pixel + 3);
-
+						pMgr->PrimaryColor = pixel;
 						Tool = LastTool;
 						_GuiSetToolText();
 					}
@@ -1298,7 +1272,7 @@ static inline void ProcessEvents() {
 	}
 
 	if (CanvasDidMutate == true && IsLMBDown == false) {
-		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1] * 4 * sizeof(uint8_t), CURR_CANVAS_LAYER->pixels);
+		SaveHistory(&CURR_CANVAS_LAYER->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1], CURR_CANVAS_LAYER->pixels);
 		CanvasDidMutate = false;
 	}
 }
@@ -1337,11 +1311,6 @@ static void ZoomViewport(int increase) {
 	UpdateViewportSize();
 }
 
-static uint8_t* GetPixel(int x, int y) {
-	if (CURR_CANVAS_LAYER == NULL) return NULL;
-	return CURR_CANVAS_LAYER->pixels + ((y * CanvasLayerMgr->dims[0] + x) * 4);
-}
-
 static void InitWindowIcon() {
 	uint8_t* winIcon = (uint8_t*)Assets_Get("data/icons/icon-24.png", NULL);
 	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
@@ -1366,7 +1335,7 @@ static int OpenNewFile(const char* _fName) {
 		return -1;
 	}
 
-	if (ifio_read(_fName, &CanvasLayerMgr, static_cast<u8*>(Config->CheckerboardColor1), static_cast<u8*>(Config->CheckerboardColor2)) == 0 && CanvasLayerMgr->dims[0] > 0 && CanvasLayerMgr->dims[1] > 0) {
+	if (ifio_read(_fName, &CanvasLayerMgr, Config->CheckerboardColor1, Config->CheckerboardColor2) == 0 && CanvasLayerMgr->dims[0] > 0 && CanvasLayerMgr->dims[1] > 0) {
 		CurrViewportZoom = 1.0f;
 		UpdateViewportSize();
 		UpdateViewportPos();
@@ -1379,4 +1348,3 @@ static int OpenNewFile(const char* _fName) {
 	}
 	return 0;
 }
-

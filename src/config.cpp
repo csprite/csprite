@@ -12,7 +12,7 @@ AppConfig& AppConfig::operator = (const AppConfig& rhs) {
 	FramesPerSecond = rhs.FramesPerSecond;
 	ThemeName = rhs.ThemeName;
 	CheckerboardColor1 = rhs.CheckerboardColor1;
-	CheckerboardColor2 = rhs.CheckerboardColor1;
+	CheckerboardColor2 = rhs.CheckerboardColor2;
 	return *this;
 }
 
@@ -75,12 +75,10 @@ AppConfig* LoadConfig(void) {
 			&CheckerColor1Int[1],
 			&CheckerColor1Int[2]) != 3) {}
 
-		c->CheckerboardColor1 = {
-			(u8)std::clamp(CheckerColor1Int[0], 0U, 255U),
-			(u8)std::clamp(CheckerColor1Int[1], 0U, 255U),
-			(u8)std::clamp(CheckerColor1Int[2], 0U, 255U),
-			255
-		};
+		c->CheckerboardColor1.r = CLAMP_NUM_TO_TYPE(CheckerColor1Int[0], u8);
+		c->CheckerboardColor1.g = CLAMP_NUM_TO_TYPE(CheckerColor1Int[1], u8);
+		c->CheckerboardColor1.b = CLAMP_NUM_TO_TYPE(CheckerColor1Int[2], u8);
+		c->CheckerboardColor1.a = 255;
 
 		const char* CheckerColor2_Str = ini_get(config, "colors", "CheckerColor2");
 		unsigned int CheckerColor2Int[4] = { 0x80, 0x80, 0x80 };
@@ -91,20 +89,26 @@ AppConfig* LoadConfig(void) {
 			&CheckerColor2Int[1],
 			&CheckerColor2Int[2]) != 3) {}
 
-		c->CheckerboardColor1 = {
-			(u8)std::clamp(CheckerColor2Int[0], 0U, 255U),
-			(u8)std::clamp(CheckerColor2Int[1], 0U, 255U),
-			(u8)std::clamp(CheckerColor2Int[2], 0U, 255U),
-			255
-		};
+		c->CheckerboardColor2.r = CLAMP_NUM_TO_TYPE(CheckerColor2Int[0], u8);
+		c->CheckerboardColor2.g = CLAMP_NUM_TO_TYPE(CheckerColor2Int[1], u8);
+		c->CheckerboardColor2.b = CLAMP_NUM_TO_TYPE(CheckerColor2Int[2], u8);
+		c->CheckerboardColor2.a = 255;
 
 		ini_free(config);
 		config = NULL;
 		return c;
 	} else {
 		log_error("failed to open \"%s\"!", configPath);
-		c->CheckerboardColor1 = { 0xC0, 0xC0, 0xC0, 0xFF };
-		c->CheckerboardColor2 = { 0x80, 0x80, 0x80, 0xFF};
+		c->CheckerboardColor1.r = 0xC0;
+		c->CheckerboardColor1.g = 0xC0;
+		c->CheckerboardColor1.b = 0xC0;
+		c->CheckerboardColor1.a = 0xFF;
+
+		c->CheckerboardColor2.r = 0x80;
+		c->CheckerboardColor2.g = 0x80;
+		c->CheckerboardColor2.b = 0x80;
+		c->CheckerboardColor2.a = 0xFF;
+
 		c->FramesPerSecond = 60;
 		c->RenderDriver = R_API_OPENGL;
 		c->ThemeName = "Noice Blue";

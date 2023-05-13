@@ -12,6 +12,10 @@ typedef struct {
 	int32_t    length;
 } xy_stack_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 xy_stack_t* s_init(uint32_t len);
 void s_free(xy_stack_t* s);
 void s_clear(xy_stack_t* s);
@@ -19,6 +23,10 @@ bool s_push(xy_stack_t* s, int x, int y);
 bool s_pop(xy_stack_t* s, int* x, int* y);
 int  s_getcount(xy_stack_t* s);
 bool s_isEmpty(xy_stack_t* s);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // XY_STACK_H
 

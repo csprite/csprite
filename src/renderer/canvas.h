@@ -5,12 +5,14 @@
 #include <cstdint>
 #include <SDL.h>
 #include "../history.h"
+#include "types.hpp"
+#include "pixel/pixel.hpp"
 
 struct CanvasLayer {
-	std::string   name;
-	SDL_Texture*   tex;
-	uint8_t*    pixels;
-	History_T* history;
+	String       name;
+	SDL_Texture* tex;
+	Pixel*       pixels;
+	History_T*   history;
 
 	CanvasLayer(SDL_Renderer* ren, int32_t w, int32_t h, std::string name = "New Layer");
 	~CanvasLayer();
@@ -28,7 +30,7 @@ public:
 
 	/* ren is an instance of SDL_Renderer that should exist for the lime time of the class.
 	   w, h is the width & height of the canvas. */
-	CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h, uint8_t pCol1[3], uint8_t pCol2[3]);
+	CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h, Pixel& pCol1, Pixel& pCol2);
 	~CanvasLayer_Manager();
 
 	void AddLayer(std::string name = "New Layer");
