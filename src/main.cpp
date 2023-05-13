@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
 	}
 	SDL_Renderer* renderer = R_GetRenderer();
 
-	CanvasLayerMgr = new CanvasLayer_Manager(renderer, 64, 64, static_cast<u8*>(Config->CheckerboardColor1), static_cast<u8*>(Config->CheckerboardColor2));
+	CanvasLayerMgr = new CanvasLayer_Manager(renderer, 64, 64, Config->CheckerboardColor1, Config->CheckerboardColor2);
 	CanvasLayerMgr->AddLayer();
 	CanvasLayerMgr->SetCurrentLayerIdx(0);
 
@@ -842,7 +842,7 @@ int main(int argc, char* argv[]) {
 				if (ImGui::Button("Create")) {
 					if (NewDims[0] > 0 && NewDims[1] > 0) {
 						delete CanvasLayerMgr;
-						CanvasLayerMgr = new CanvasLayer_Manager(renderer, NewDims[0], NewDims[1], static_cast<u8*>(Config->CheckerboardColor1), static_cast<u8*>(Config->CheckerboardColor2));
+						CanvasLayerMgr = new CanvasLayer_Manager(renderer, NewDims[0], NewDims[1], Config->CheckerboardColor1, Config->CheckerboardColor2);
 						CanvasLayerMgr->AddLayer();
 						CanvasLayerMgr->SetCurrentLayerIdx(0);
 						CurrViewportZoom = 1.0f;
@@ -1335,7 +1335,7 @@ static int OpenNewFile(const char* _fName) {
 		return -1;
 	}
 
-	if (ifio_read(_fName, &CanvasLayerMgr, static_cast<u8*>(Config->CheckerboardColor1), static_cast<u8*>(Config->CheckerboardColor2)) == 0 && CanvasLayerMgr->dims[0] > 0 && CanvasLayerMgr->dims[1] > 0) {
+	if (ifio_read(_fName, &CanvasLayerMgr, Config->CheckerboardColor1, Config->CheckerboardColor2) == 0 && CanvasLayerMgr->dims[0] > 0 && CanvasLayerMgr->dims[1] > 0) {
 		CurrViewportZoom = 1.0f;
 		UpdateViewportSize();
 		UpdateViewportPos();

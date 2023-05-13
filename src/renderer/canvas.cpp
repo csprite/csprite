@@ -19,7 +19,7 @@ CanvasLayer::~CanvasLayer() {
 	FreeHistory(&this->history);
 }
 
-CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h, uint8_t pCol1[3], uint8_t pCol2[3]) {
+CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h, Pixel& pCol1, Pixel& pCol2) {
 	this->dims[0] = w;
 	this->dims[1] = h;
 	this->ren = ren;
@@ -35,12 +35,8 @@ CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h
 	Pixel* pixels = new Pixel[(w/2) * (h/2)];
 	for (int32_t y = 0; y < h/2; y++) {
 		for (int32_t x = 0; x < w/2; x++) {
-			uint8_t r = pCol1[0], g = pCol1[1], b = pCol1[2];
-			if ((x + y) % 2) { r = pCol2[0]; g = pCol2[1]; b = pCol2[2]; }
 			Pixel& pixel = pixels[(y * (w/2)) + x];
-			pixel.r = r;
-			pixel.g = g;
-			pixel.b = b;
+			pixel = ((x + y) % 2) ? pCol2 : pCol1;
 			pixel.a = 255;
 		}
 	}
