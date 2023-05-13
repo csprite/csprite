@@ -75,9 +75,9 @@ AppConfig* LoadConfig(void) {
 			&CheckerColor1Int[1],
 			&CheckerColor1Int[2]) != 3) {}
 
-		c->CheckerboardColor1.r = clampNum<u16, u8>(CheckerColor1Int[0]);
-		c->CheckerboardColor1.g = clampNum<u16, u8>(CheckerColor1Int[1]);
-		c->CheckerboardColor1.b = clampNum<u16, u8>(CheckerColor1Int[2]);
+		c->CheckerboardColor1.r = CLAMP_NUM_TO_TYPE(CheckerColor1Int[0], u8);
+		c->CheckerboardColor1.g = CLAMP_NUM_TO_TYPE(CheckerColor1Int[1], u8);
+		c->CheckerboardColor1.b = CLAMP_NUM_TO_TYPE(CheckerColor1Int[2], u8);
 		c->CheckerboardColor1.a = 255;
 
 		const char* CheckerColor2_Str = ini_get(config, "colors", "CheckerColor2");
@@ -89,9 +89,9 @@ AppConfig* LoadConfig(void) {
 			&CheckerColor2Int[1],
 			&CheckerColor2Int[2]) != 3) {}
 
-		c->CheckerboardColor2.r = clampNum<u16, u8>(CheckerColor2Int[0]);
-		c->CheckerboardColor2.g = clampNum<u16, u8>(CheckerColor2Int[1]);
-		c->CheckerboardColor2.b = clampNum<u16, u8>(CheckerColor2Int[2]);
+		c->CheckerboardColor2.r = CLAMP_NUM_TO_TYPE(CheckerColor2Int[0], u8);
+		c->CheckerboardColor2.g = CLAMP_NUM_TO_TYPE(CheckerColor2Int[1], u8);
+		c->CheckerboardColor2.b = CLAMP_NUM_TO_TYPE(CheckerColor2Int[2], u8);
 		c->CheckerboardColor2.a = 255;
 
 		ini_free(config);

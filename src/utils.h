@@ -11,9 +11,6 @@
 // Checks if a string has a suffix, case-insensitive.
 #define HAS_SUFFIX_CI(str, ext, extLen) (strncmpci(str + (strlen(str) - extLen), ext, extLen) == 0)
 
-// Clamps The Given Number From min To max
-#define CLAMP_NUM(a, min, max) (a <= min ? min : a) >= max ? max : (a <= min ? min : a)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
