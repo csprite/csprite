@@ -35,9 +35,9 @@ struct Rect {
 	explicit operator SDL_Rect() const;
 };
 
-// clamps "a" to the min & max value "targetType" can hold without overflowing
+// clamps "a" from "TypeToClamp" to "TypeToClampTo" without overflowing
 template <typename TypeToClamp, typename TypeToClampTo>
-inline TypeToClampTo clampNum(const TypeToClamp a, const TypeToClampTo targetType) {
+TypeToClampTo clampNum(const TypeToClamp a) {
 	auto min = std::numeric_limits<TypeToClampTo>().min();
 	auto max = std::numeric_limits<TypeToClampTo>().max();
 
