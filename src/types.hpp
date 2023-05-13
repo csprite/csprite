@@ -37,6 +37,11 @@ struct Rect {
 
 // clamps "a" to the min & max value "targetType" can hold without overflowing
 template <typename TypeToClamp, typename TypeToClampTo>
-TypeToClampTo clampNum(const TypeToClamp a, const TypeToClampTo targetType);
+inline TypeToClampTo clampNum(const TypeToClamp a, const TypeToClampTo targetType) {
+	auto min = std::numeric_limits<TypeToClampTo>().min();
+	auto max = std::numeric_limits<TypeToClampTo>().max();
+
+	return (a <= min ? min : a) >= max ? max : (a <= min ? min : a);
+}
 
 #endif // CSP_TYPES_HPP_INCLUDED_
