@@ -1,18 +1,14 @@
+#ifndef CSP_HISTORY_H_INCLUDED_
+#define CSP_HISTORY_H_INCLUDED_ 1
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <cstring>
+#include "pixel/pixel.hpp"
 
 typedef struct history {
-	uint8_t*         pixels;
-	struct history*  next;
-	struct history*  prev;
+	Pixel*          pixels;
+	struct history* next;
+	struct history* prev;
 } History_T;
 
 /*
@@ -30,23 +26,20 @@ void FreeHistory(History_T** CurrentState);
 	Remarks:
 		- It's safe to pass the un-initialized buffer, it allocated the memory for it
 */
-void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, uint8_t* data);
+void SaveHistory(History_T** CurrentState, size_t numOfPixels, Pixel* data);
 
-// HISTORY_UNDO(History_T* state, unsigned int size, uint8_t* data)
-#define HISTORY_UNDO(state, size, data)         \
-	if (state->prev != NULL) {                  \
-		state = state->prev;                    \
-		memcpy(data, state->pixels, size);      \
+// HISTORY_UNDO(History_T* state, unsigned int numOfPixels, Pixel* data)
+#define HISTORY_UNDO(state, numOfPixels, data) \
+	if (state->prev != NULL) { \
+		state = state->prev; \
+		std::memcpy(data, state->pixels, numOfPixels * sizeof(Pixel)); \
 	}
 
-// HISTORY_REDO(History_T* state, unsigned int size, uint8_t* data)
-#define HISTORY_REDO(state, size, data)        \
-	if (state->next != NULL) {                 \
-		state = state->next;                   \
-		memcpy(data, state->pixels, size);     \
+// HISTORY_REDO(History_T* state, unsigned int numOfPixels, Pixel* data)
+#define HISTORY_REDO(state, numOfPixels, data) \
+	if (state->next != NULL) { \
+		state = state->next; \
+		std::memcpy(data, state->pixels, numOfPixels * sizeof(Pixel)); \
 	}
 
-#ifdef __cplusplus
-}
-#endif
-
+#endif // CSP_HISTORY_H_INCLUDED_
