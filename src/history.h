@@ -30,7 +30,7 @@ void FreeHistory(History_T** CurrentState);
 	Remarks:
 		- It's safe to pass the un-initialized buffer, it allocated the memory for it
 */
-void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, Pixel* data);
+void SaveHistory(History_T** CurrentState, size_t numOfPixels, Pixel* data);
 
 // HISTORY_UNDO(History_T* state, unsigned int size, Pixel* data)
 #define HISTORY_UNDO(state, size, data)         \

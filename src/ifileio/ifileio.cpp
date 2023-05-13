@@ -5,6 +5,7 @@
 
 #include "ifileio.h"
 #include "ifileio_endian.h"
+#include "pixel/pixel.hpp"
 #include "zlib_wrapper.h"
 
 #include "stb_image.h"
@@ -63,11 +64,11 @@ int32_t ifio_write(const char* filePath, CanvasLayer_Manager* mgr) {
 		WRITE_CHECKED(fp, signature, 4);
 
 		// htonX function converts the value to a big-endian value
-		{ uint16_t b_formatVersion = SWAP_ONLY_BIGE_u16(formatVersion); WRITE_CHECKED(fp, &b_formatVersion, 2); }
-		{ int32_t b_w = SWAP_ONLY_BIGE_i32(w); WRITE_CHECKED(fp, &b_w, 4); }
-		{ int32_t b_h = SWAP_ONLY_BIGE_i32(h); WRITE_CHECKED(fp, &b_h, 4); }
-		{ int32_t b_numChannels = SWAP_ONLY_BIGE_i32(numChannels); WRITE_CHECKED(fp, &b_numChannels, 4); }
-		{ int32_t b_numLayers = SWAP_ONLY_BIGE_i32(mgr->layers.size()); WRITE_CHECKED(fp, &b_numLayers, 4); }
+		{ uint16_t b_formatVersion = SWAP_ONLY_BIGE((u16)formatVersion); WRITE_CHECKED(fp, &b_formatVersion, 2); }
+		{ int32_t b_w = SWAP_ONLY_BIGE((i32)w); WRITE_CHECKED(fp, &b_w, 4); }
+		{ int32_t b_h = SWAP_ONLY_BIGE((i32)h); WRITE_CHECKED(fp, &b_h, 4); }
+		{ int32_t b_numChannels = SWAP_ONLY_BIGE((i32)numChannels); WRITE_CHECKED(fp, &b_numChannels, 4); }
+		{ int32_t b_numLayers = SWAP_ONLY_BIGE((i32)mgr->layers.size()); WRITE_CHECKED(fp, &b_numLayers, 4); }
 		for (int i = 0; i < mgr->layers.size(); ++i) {
 			WRITE_CHECKED(fp, mgr->layers[i]->name.c_str(), mgr->layers[i]->name.length() + 1);
 		}
@@ -143,9 +144,9 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, Pixel& ch
 			mgr->AddLayer();
 			mgr->SetCurrentLayerIdx(0);
 			CanvasLayer* layer = mgr->layer;
-			memcpy(layer->pixels, _data, w * h * 4);
-			memcpy(layer->history->pixels, _data, w * h * 4);
-			SaveHistory(&layer->history, w * h * 4, layer->pixels);
+			memcpy(layer->pixels, _data, w * h * sizeof(Pixel));
+			memcpy(layer->history->pixels, _data, w * h * sizeof(Pixel));
+			SaveHistory(&layer->history, w * h, layer->pixels);
 			free(_data);
 			delete (*mgr_ptr);
 			*mgr_ptr = mgr;
@@ -173,7 +174,7 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, Pixel& ch
 
 		if (fread(signature, 4, 1, fp) != 1) { log_error("failed to read .csprite signature"); fclose(fp); return -1; }
 		if (fread(&formatVersion, 2, 1, fp) != 1) { log_error("failed to read .csprite format-version"); fclose(fp); return -1; }
-		formatVersion = SWAP_ONLY_BIGE_u16(formatVersion);
+		formatVersion = SWAP_ONLY_BIGE((u16)formatVersion);
 
 		if (strncmp(signature, "DEEZ", 4) != 0 || formatVersion != 1) {
 			log_error("invalid .csprite format signature, formatVersion: %d", formatVersion);
@@ -182,16 +183,16 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, Pixel& ch
 		}
 
 		if (fread(&w, 4, 1, fp) != 1) { log_error("failed to read image width"); fclose(fp); return -1; }
-		w = SWAP_ONLY_BIGE_i32(w);
+		w = SWAP_ONLY_BIGE((i32)w);
 
 		if (fread(&h, 4, 1, fp) != 1) { log_error("failed to read image height"); fclose(fp); return -1; }
-		h = SWAP_ONLY_BIGE_i32(h);
+		h = SWAP_ONLY_BIGE((i32)h);
 
 		if (fread(&numChannels, 4, 1, fp) != 1) { log_error("failed to read number of channels available"); fclose(fp); return -1; }
-		numChannels = SWAP_ONLY_BIGE_i32(numChannels);
+		numChannels = SWAP_ONLY_BIGE((i32)numChannels);
 
 		if (fread(&numLayers, 4, 1, fp) != 1) { log_error("failed to read number of layers available"); fclose(fp); return -1; }
-		numLayers = SWAP_ONLY_BIGE_i32(numLayers);
+		numLayers = SWAP_ONLY_BIGE((i32)numLayers);
 
 		if (w < 1 || h < 1) {
 			log_error("invalid width or height, %dx%d", w, h);
@@ -245,8 +246,7 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, Pixel& ch
 			for (int i = 0; i < mgr->layers.size(); ++i) {
 				// if (mgr->layers[i]->pixels == NULL) return -1;
 				memcpy(mgr->layers[i]->pixels, originalData + ((w * h * numChannels) * numLayersCopied), w * h * numChannels);
-				SaveHistory(&mgr->layers[i]->history, w * h * 4, mgr->layers[i]->pixels);
-				// memcpy(mgr->layers[i]->history->pixels, mgr->layers[i]->pixels, w * h * 4);
+				SaveHistory(&mgr->layers[i]->history, w * h, mgr->layers[i]->pixels);
 				mgr->ReUploadTexture(i);
 				numLayersCopied++;
 			}

@@ -19,7 +19,7 @@ void FreeHistory(History_T** CurrentState) {
 		if (tmp != NULL && tmp->pixels != NULL) {
 			delete[] tmp->pixels;
 			tmp->pixels = NULL;
-			free(tmp);
+			delete tmp;
 			tmp = NULL;
 		}
 	}
@@ -32,7 +32,7 @@ void FreeHistory(History_T** CurrentState) {
 		if (tmp != NULL && tmp->pixels != NULL) {
 			delete[] tmp->pixels;
 			tmp->pixels = NULL;
-			free(tmp);
+			delete tmp;
 			tmp = NULL;
 		}
 	}
@@ -44,7 +44,7 @@ void FreeHistory(History_T** CurrentState) {
 	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
 	Removes The Elements in a range from "History" if "IsDirty" is true
 */
-void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, Pixel* data) {
+void SaveHistory(History_T** CurrentState, size_t numOfPixels, Pixel* data) {
 	// Runs When We Did Undo And Tried To Modify The Canvas
 	if (CurrentState != NULL && (*CurrentState != NULL) && (*CurrentState)->next != NULL) {
 		History_T* tmp;
@@ -56,12 +56,12 @@ void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, Pixel* data) {
 			if (tmp->pixels != NULL) {
 				delete[] tmp->pixels;
 			}
-			free(tmp);
+			delete tmp;
 		}
 	}
 
-	History_T* NewState = (History_T*) malloc(sizeof(History_T));
-	NewState->pixels = new Pixel[dataSizeBytes];
+	History_T* NewState = new History_T;
+	NewState->pixels = new Pixel[numOfPixels];
 
 	if ((*CurrentState) == NULL) {
 		(*CurrentState) = NewState;
@@ -74,6 +74,5 @@ void SaveHistory(History_T** CurrentState, size_t dataSizeBytes, Pixel* data) {
 		(*CurrentState) = NewState;
 	}
 
-	std::memcpy((*CurrentState)->pixels, data, dataSizeBytes * sizeof(Pixel));
+	std::memcpy((*CurrentState)->pixels, data, numOfPixels * sizeof(Pixel));
 }
-
