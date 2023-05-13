@@ -2,11 +2,7 @@
 #define CSP_HISTORY_H_INCLUDED_ 1
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-
+#include <cstring>
 #include "pixel/pixel.hpp"
 
 typedef struct history {
@@ -32,18 +28,18 @@ void FreeHistory(History_T** CurrentState);
 */
 void SaveHistory(History_T** CurrentState, size_t numOfPixels, Pixel* data);
 
-// HISTORY_UNDO(History_T* state, unsigned int size, Pixel* data)
-#define HISTORY_UNDO(state, size, data)         \
-	if (state->prev != NULL) {                  \
-		state = state->prev;                    \
-		std::memcpy(data, state->pixels, size); \
+// HISTORY_UNDO(History_T* state, unsigned int numOfPixels, Pixel* data)
+#define HISTORY_UNDO(state, numOfPixels, data) \
+	if (state->prev != NULL) { \
+		state = state->prev; \
+		std::memcpy(data, state->pixels, numOfPixels * sizeof(Pixel)); \
 	}
 
-// HISTORY_REDO(History_T* state, unsigned int size, Pixel* data)
-#define HISTORY_REDO(state, size, data)         \
-	if (state->next != NULL) {                  \
-		state = state->next;                    \
-		std::memcpy(data, state->pixels, size); \
+// HISTORY_REDO(History_T* state, unsigned int numOfPixels, Pixel* data)
+#define HISTORY_REDO(state, numOfPixels, data) \
+	if (state->next != NULL) { \
+		state = state->next; \
+		std::memcpy(data, state->pixels, numOfPixels * sizeof(Pixel)); \
 	}
 
 #endif // CSP_HISTORY_H_INCLUDED_
