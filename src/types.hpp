@@ -2,6 +2,8 @@
 #define CSP_TYPES_HPP_INCLUDED_ 1
 #pragma once
 
+// Functions & Definitions To Work With Different Types, Like Short Aliases, Comparisons, Clamping
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -32,5 +34,19 @@ struct Rect {
 
 	explicit operator SDL_Rect() const;
 };
+
+// Clamps "a" to the min & max value
+#define CLAMP_NUM(a, min, max) \
+	((a <= min ? min : a ) >= max ? max : (a <= min ? min : a))
+
+// Clamps "a" to the min & max value of "targetType", without overflowing.
+#define CLAMP_NUM_TO_TYPE(a, targetType)             \
+	static_cast<targetType>(                         \
+		CLAMP_NUM(                                   \
+			a,                                       \
+			std::numeric_limits<targetType>().min(), \
+			std::numeric_limits<targetType>().max()  \
+		)                                            \
+	)
 
 #endif // CSP_TYPES_HPP_INCLUDED_

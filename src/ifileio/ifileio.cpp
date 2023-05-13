@@ -5,35 +5,41 @@
 
 #include "ifileio.h"
 #include "ifileio_endian.h"
+#include "pixel/pixel.hpp"
+#include "types.hpp"
 #include "zlib_wrapper.h"
 
 #include "stb_image.h"
 #include "stb_image_write.h"
+#include <algorithm>
 
-static uint8_t* BlendPixels_Alpha(CanvasLayer_Manager* mgr) {
+static Pixel* BlendPixels_Alpha(CanvasLayer_Manager* mgr) {
 	int32_t w = mgr->dims[0], h = mgr->dims[1];
-	uint8_t* blendedPixels = new uint8_t[w * h * 4]();
+	Pixel* blendedPixels = new Pixel[w * h];
 
 	for (uint32_t i = 0; i < mgr->layers.size(); ++i) {
 		for (int32_t y = 0; y < h; ++y) {
 			for (int32_t x = 0; x < w; ++x) {
 				// Simple Alpha-Blending Being Done Here.
-				uint8_t* srcPixel = GetCharData(mgr->layers[i]->pixels, x, y, w, h);
-				uint8_t* destPixel = GetCharData(blendedPixels, x, y, w, h);
-				if (srcPixel != NULL && destPixel != NULL) {
-					uint8_t src1Red = *(srcPixel + 0), src1Green = *(srcPixel + 1), src1Blue = *(srcPixel + 2), src1Alpha = *(srcPixel + 3);
-					uint8_t src2Red = *(destPixel + 0), src2Green = *(destPixel + 1), src2Blue = *(destPixel + 2), src2Alpha = *(destPixel + 3);
+				Pixel& srcPixel = mgr->layers[i]->pixels[(y * w) + x];
+				Pixel& destPixel = blendedPixels[(y * w) + x];
 
-					uint16_t outRed = ((uint16_t)src1Red * src1Alpha + (uint16_t)src2Red * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-					uint16_t outGreen = ((uint16_t)src1Green * src1Alpha + (uint16_t)src2Green * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-					uint16_t outBlue = ((uint16_t)src1Blue * src1Alpha + (uint16_t)src2Blue * (255 - src1Alpha) / 255 * src2Alpha) / 255;
-					uint16_t outAlpha = src1Alpha + (uint16_t)src2Alpha * (255 - src1Alpha) / 255;
-
-					*(destPixel + 0) = CLAMP_NUM(outRed,   0, 255);
-					*(destPixel + 1) = CLAMP_NUM(outGreen, 0, 255);
-					*(destPixel + 2) = CLAMP_NUM(outBlue,  0, 255);
-					*(destPixel + 3) = CLAMP_NUM(outAlpha, 0, 255);
-				}
+				destPixel.r = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						((u16)srcPixel.r * srcPixel.a + (u16)destPixel.r * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+					), u8);
+				destPixel.g = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						((u16)srcPixel.g * srcPixel.a + (u16)destPixel.g * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+					), u8);
+				destPixel.b = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						((u16)srcPixel.b * srcPixel.a + (u16)destPixel.b * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+					), u8);
+				destPixel.a = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						srcPixel.a + (u16)destPixel.a * (255 - srcPixel.a) / 255
+					), u8);
 			}
 		}
 	}
@@ -44,7 +50,7 @@ int32_t ifio_write(const char* filePath, CanvasLayer_Manager* mgr) {
 	if (filePath == NULL || mgr == NULL || mgr->dims[0] < 1 || mgr->dims[1] < 1) return -1;
 	int32_t w = mgr->dims[0], h = mgr->dims[1];
 
-	uint8_t* _BlendedPixels = NULL;
+	Pixel* _BlendedPixels = NULL;
 	if (HAS_SUFFIX_CI(filePath, ".csprite", 8)) {
 #define WRITE_CHECKED(file, src, szBytes) do { if (fwrite(src, szBytes, 1, file) != 1) { log_error("Cannot write %d bytes", szBytes); return -1; } } while(0)
 
@@ -56,16 +62,16 @@ int32_t ifio_write(const char* filePath, CanvasLayer_Manager* mgr) {
 
 		int32_t numChannels = 4;
 		char signature[5] = "DEEZ";
-		uint16_t formatVersion = 1; // max uint16_t 65535
+		u16 formatVersion = 1; // max u16 65535
 
 		WRITE_CHECKED(fp, signature, 4);
 
 		// htonX function converts the value to a big-endian value
-		{ uint16_t b_formatVersion = SWAP_ONLY_BIGE_u16(formatVersion); WRITE_CHECKED(fp, &b_formatVersion, 2); }
-		{ int32_t b_w = SWAP_ONLY_BIGE_i32(w); WRITE_CHECKED(fp, &b_w, 4); }
-		{ int32_t b_h = SWAP_ONLY_BIGE_i32(h); WRITE_CHECKED(fp, &b_h, 4); }
-		{ int32_t b_numChannels = SWAP_ONLY_BIGE_i32(numChannels); WRITE_CHECKED(fp, &b_numChannels, 4); }
-		{ int32_t b_numLayers = SWAP_ONLY_BIGE_i32(mgr->layers.size()); WRITE_CHECKED(fp, &b_numLayers, 4); }
+		{ u16 b_formatVersion = SWAP_ONLY_BIGE((u16)formatVersion); WRITE_CHECKED(fp, &b_formatVersion, 2); }
+		{ int32_t b_w = SWAP_ONLY_BIGE((i32)w); WRITE_CHECKED(fp, &b_w, 4); }
+		{ int32_t b_h = SWAP_ONLY_BIGE((i32)h); WRITE_CHECKED(fp, &b_h, 4); }
+		{ int32_t b_numChannels = SWAP_ONLY_BIGE((i32)numChannels); WRITE_CHECKED(fp, &b_numChannels, 4); }
+		{ int32_t b_numLayers = SWAP_ONLY_BIGE((i32)mgr->layers.size()); WRITE_CHECKED(fp, &b_numLayers, 4); }
 		for (int i = 0; i < mgr->layers.size(); ++i) {
 			WRITE_CHECKED(fp, mgr->layers[i]->name.c_str(), mgr->layers[i]->name.length() + 1);
 		}
@@ -130,7 +136,7 @@ int32_t ifio_write(const char* filePath, CanvasLayer_Manager* mgr) {
 	return 0;
 }
 
-int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, uint8_t checkBg1[4], uint8_t checkBg2[4]) {
+int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, Pixel& checkBg1, Pixel& checkBg2) {
 	if (filePath == NULL || mgr_ptr == NULL || *mgr_ptr == NULL) return -1;
 
 	if (HAS_SUFFIX_CI(filePath, ".png", 4) || HAS_SUFFIX_CI(filePath, ".jpeg", 5) || HAS_SUFFIX_CI(filePath, ".jpg", 4)) {
@@ -141,9 +147,9 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, uint8_t c
 			mgr->AddLayer();
 			mgr->SetCurrentLayerIdx(0);
 			CanvasLayer* layer = mgr->layer;
-			memcpy(layer->pixels, _data, w * h * 4);
-			memcpy(layer->history->pixels, _data, w * h * 4);
-			SaveHistory(&layer->history, w * h * 4, layer->pixels);
+			memcpy(layer->pixels, _data, w * h * sizeof(Pixel));
+			memcpy(layer->history->pixels, _data, w * h * sizeof(Pixel));
+			SaveHistory(&layer->history, w * h, layer->pixels);
 			free(_data);
 			delete (*mgr_ptr);
 			*mgr_ptr = mgr;
@@ -151,7 +157,7 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, uint8_t c
 		}
 	} else if (HAS_SUFFIX_CI(filePath, ".csprite", 8)) {
 		int32_t w = 0, h = 0, numChannels = 0, numLayers = 0;
-		uint16_t formatVersion = 0;
+		u16 formatVersion = 0;
 		char signature[4] = "";
 		FILE* fp = fopen(filePath, "rb");
 		if (fp == NULL) {
@@ -171,7 +177,7 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, uint8_t c
 
 		if (fread(signature, 4, 1, fp) != 1) { log_error("failed to read .csprite signature"); fclose(fp); return -1; }
 		if (fread(&formatVersion, 2, 1, fp) != 1) { log_error("failed to read .csprite format-version"); fclose(fp); return -1; }
-		formatVersion = SWAP_ONLY_BIGE_u16(formatVersion);
+		formatVersion = SWAP_ONLY_BIGE((u16)formatVersion);
 
 		if (strncmp(signature, "DEEZ", 4) != 0 || formatVersion != 1) {
 			log_error("invalid .csprite format signature, formatVersion: %d", formatVersion);
@@ -180,16 +186,16 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, uint8_t c
 		}
 
 		if (fread(&w, 4, 1, fp) != 1) { log_error("failed to read image width"); fclose(fp); return -1; }
-		w = SWAP_ONLY_BIGE_i32(w);
+		w = SWAP_ONLY_BIGE((i32)w);
 
 		if (fread(&h, 4, 1, fp) != 1) { log_error("failed to read image height"); fclose(fp); return -1; }
-		h = SWAP_ONLY_BIGE_i32(h);
+		h = SWAP_ONLY_BIGE((i32)h);
 
 		if (fread(&numChannels, 4, 1, fp) != 1) { log_error("failed to read number of channels available"); fclose(fp); return -1; }
-		numChannels = SWAP_ONLY_BIGE_i32(numChannels);
+		numChannels = SWAP_ONLY_BIGE((i32)numChannels);
 
 		if (fread(&numLayers, 4, 1, fp) != 1) { log_error("failed to read number of layers available"); fclose(fp); return -1; }
-		numLayers = SWAP_ONLY_BIGE_i32(numLayers);
+		numLayers = SWAP_ONLY_BIGE((i32)numLayers);
 
 		if (w < 1 || h < 1) {
 			log_error("invalid width or height, %dx%d", w, h);
@@ -243,8 +249,7 @@ int32_t ifio_read(const char* filePath, CanvasLayer_Manager** mgr_ptr, uint8_t c
 			for (int i = 0; i < mgr->layers.size(); ++i) {
 				// if (mgr->layers[i]->pixels == NULL) return -1;
 				memcpy(mgr->layers[i]->pixels, originalData + ((w * h * numChannels) * numLayersCopied), w * h * numChannels);
-				SaveHistory(&mgr->layers[i]->history, w * h * 4, mgr->layers[i]->pixels);
-				// memcpy(mgr->layers[i]->history->pixels, mgr->layers[i]->pixels, w * h * 4);
+				SaveHistory(&mgr->layers[i]->history, w * h, mgr->layers[i]->pixels);
 				mgr->ReUploadTexture(i);
 				numLayersCopied++;
 			}
