@@ -24,20 +24,17 @@ static Pixel* BlendPixels_Alpha(CanvasLayer_Manager* mgr) {
 				Pixel& srcPixel = mgr->layers[i]->pixels[(y * w) + x];
 				Pixel& destPixel = blendedPixels[(y * w) + x];
 
-				destPixel.r = clampNum(
-					static_cast<u16>(((uint16_t)srcPixel.r * srcPixel.a + (uint16_t)destPixel.r * (255 - srcPixel.a) / 255 * destPixel.a) / 255),
-					u8(0)
+				destPixel.r = clampNum<u16, u8>(
+					((uint16_t)srcPixel.r * srcPixel.a + (uint16_t)destPixel.r * (255 - srcPixel.a) / 255 * destPixel.a) / 255
 				);
-				destPixel.g = clampNum(
-					static_cast<u16>(((uint16_t)srcPixel.g * srcPixel.a + (uint16_t)destPixel.g * (255 - srcPixel.a) / 255 * destPixel.a) / 255),
-					u8(0)
+				destPixel.g = clampNum<u16, u8>(
+					((uint16_t)srcPixel.g * srcPixel.a + (uint16_t)destPixel.g * (255 - srcPixel.a) / 255 * destPixel.a) / 255
 				);
-				destPixel.b = clampNum(
-					static_cast<u16>(((uint16_t)srcPixel.b * srcPixel.a + (uint16_t)destPixel.b * (255 - srcPixel.a) / 255 * destPixel.a) / 255),
-					u8(0));
-				destPixel.a = clampNum(
-					static_cast<u16>(srcPixel.a + (uint16_t)destPixel.a * (255 - srcPixel.a) / 255),
-					u8(0)
+				destPixel.b = clampNum<u16, u8>(
+					((uint16_t)srcPixel.b * srcPixel.a + (uint16_t)destPixel.b * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+				);
+				destPixel.a = clampNum<u16, u8>(
+					srcPixel.a + (uint16_t)destPixel.a * (255 - srcPixel.a) / 255
 				);
 			}
 		}
