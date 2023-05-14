@@ -1,13 +1,12 @@
-#ifndef HELPERS_H
-#define HELPERS_H
+#ifndef CSP_HELPERS_HPP_INCLUDE_
+#define CSP_HELPERS_HPP_INCLUDE_
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <climits>
+#include <string>
 
-#if defined(__linux__) || defined(__FreeBSD__)
-#elif defined(__APPLE__)
-#elif defined(_WIN32)
-	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#if defined(TARGET_WINDOWS)
 	#include <windows.h>
 	#include <shellapi.h>
 #endif
@@ -56,4 +55,4 @@ void openUrl(std::string url) {
 #endif
 }
 
-#endif // End HELPERS_H
+#endif // CSP_HELPERS_HPP_INCLUDE_
