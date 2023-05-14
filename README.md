@@ -1,4 +1,4 @@
-# <img src="data/icon-scaled.png" width="32"> csprite
+# <img src="data/icon-32x32.png" width="32"> csprite
 A tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
 
 [![Continous Integration](https://img.shields.io/github/actions/workflow/status/pegvin/csprite/ci.yml?style=flat-square)](https://github.com/pegvin/csprite/actions/)
