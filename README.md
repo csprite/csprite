@@ -1,5 +1,5 @@
-# <img src="data/icon-scaled.png" width="32"> csprite
-A tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
+# <img src="https://github.com/pegvin/csprite/assets/75035219/5dc363b6-792e-4c57-a4f3-5631188339bb" height="128" title="csprite">
+csprite is a tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
 
 [![Continous Integration](https://img.shields.io/github/actions/workflow/status/pegvin/csprite/ci.yml?style=flat-square)](https://github.com/pegvin/csprite/actions/)
 [![Open Issues](https://img.shields.io/github/issues/pegvin/csprite?style=flat-square&color=%235cb85c)](https://github.com/pegvin/csprite/issues)
@@ -22,6 +22,9 @@ A tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 
 ### Download
 - You can get csprite from [downloads page](https://csprite.github.io/downloads/) or you can build it from source from the instructions [here](https://csprite.github.io/wiki/latest-git/building-from-source.html).
+
+### Credits
+the beautiful icon & banner are created ["Birds Probably" aka Lilith](https://www.instagram.com/birds_probably/), show the bird some love.
 
 ---
 ### Todo
