@@ -6,16 +6,6 @@
 # text file, we try to keep the data as a string, for binary files we store it
 # into a uint8_t array.
 
-# The Script Can Be Run With Multiple Flags Which Change The Behaviour Of The Script
-# Disable File Types From Being Processed: --disabled=<comma-separated-values>
-#   - Example:
-#        --disabled=png,tga
-#        --disabled=mp4
-#
-# Change Compiler The Script Uses To Compile A C++ Script For Image Asset Generation: --cxx=<compiler-name>
-#   - Example:
-#        --cxx=g++
-
 from PIL import Image
 from collections import namedtuple
 import numpy as np
@@ -23,7 +13,6 @@ import os
 import sys
 import subprocess
 
-CXX = "clang++"
 CWD = os.getcwd()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
@@ -33,30 +22,16 @@ if CWD != PROJECT_ROOT:
 	sys.exit(-1)
 
 TYPES = {
-	"csv":   { "text": True,  "Disabled": False },
-	"ini":   { "text": True,  "Disabled": False },
-	"glsl":  { "text": True,  "Disabled": False },
-	"png":   { "text": False, "Disabled": False },
-	"ttf":   { "text": False, "Disabled": False }
+	"csv":   { "text": True   },
+	"ini":   { "text": True   },
+	"glsl":  { "text": True   },
+	"png":   { "text": False  },
+	"ttf":   { "text": False  }
 }
-
-# Parse Disabled Stuff, --disabled=csv,glsl & --cxx=gcc
-for argument in sys.argv:
-	if argument.startswith("--cxx="):
-		CXX = argument.replace("--cxx=", '')
-	elif argument.startswith("--disabled="):
-		argument = argument.replace("--disabled=", '')
-		argument = argument.split(',')
-		for item in argument:
-			if item in TYPES:
-				TYPES[item]["Disabled"] = True
-			else:
-				TYPES[item] = { "text": True, "Disabled": True }
 
 GROUPS = [
 	'fonts', 'icons',
-	'palettes', 'shaders',
-	'cursors', 'themes'
+	'palettes', 'shaders'
 ]
 
 TEMPLATE = '{{\n\t.path = "{path}",\n\t.size = {size},\n\t.data = {data}\n}},\n\n'
@@ -69,7 +44,7 @@ def list_files(group):
 	for root, dirs, files in os.walk("data/%s" % group):
 		for f in files:
 			if any(f.endswith('.' + x) for x in TYPES):
-				ret.append(os.path.join(root, f).replace("\\", "/"))
+				ret.append(os.path.join(root, f))
 
 	return sorted(ret, key=lambda x: x.upper())
 
@@ -106,22 +81,14 @@ def encode_bin(data):
 
 def encode_font(fontPath):
 	if not os.path.isfile("./tools/font2inl.out"):
-		result = subprocess.run([CXX, 'tools/font2inl.cpp', '-o', 'tools/font2inl.out'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-		result = result.stdout.decode('utf-8')
-		if result != '':
-			print(result)
+		result = subprocess.run(['clang++', 'tools/font2inl.cpp', '-o', 'tools/font2inl.out'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		print(result.stdout.decode('utf-8'))
 		if not os.path.isfile("./tools/font2inl.out"):
-			print("Cannot compile tools/font2inl.cpp for compressing font!")
+			print("Cannot compile lib/font2inl.cpp for compressing font!")
 			sys.exit(1)
 
-	res = subprocess.run(['./tools/font2inl.out', fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-	result = res.stdout.decode('utf-8').split('\n')
-	if (len(result) < 3):
-		print("Length of result is less than 3...\n")
-		print(res)
-		print(res.stdout.decode('utf-8'))
-		sys.exit(1)
-
+	result = subprocess.run(['tools/font2inl.out', fontPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	result = result.stdout.decode('utf-8').split('\n')
 	ret = "(const unsigned int["
 	ret += result[1]
 	ret += "]) {"
@@ -131,15 +98,7 @@ def encode_font(fontPath):
 
 def encode_img(imgPath):
 	ret = "(unsigned char[]) {"
-	data = Image.open(imgPath)
-	width, height = data.size
-	data = data.convert('RGBA').getdata()
-
-	# We Don't Generate Icons For Sizes more than 48 because of file sizes
-	if not imgPath.startswith("data/cursors"):
-		if not width == 24 or not height == 24:
-			return False
-
+	data = Image.open(imgPath).convert('RGBA').getdata()
 	pixelArr = []
 	for pixel in data:
 		for comp in pixel:
@@ -155,16 +114,11 @@ def create_file(f):
 	name = f.replace('/', '_').replace('.', '_').replace('-', '_')
 	ext = f.split(".")[-1]
 
-	if TYPES[ext]['Disabled']:
-		return False;
-
 	if TYPES[ext]['text']:
 		size += 1 # So that we NULL terminate the string.
 		data = encode_str(data)
 	elif ext == 'png':
 		data = encode_img(f)
-		if not data:
-			return False
 	elif ext == 'ttf':
 		data, size = encode_font(f)
 	else:
@@ -176,10 +130,7 @@ for group in GROUPS:
 	files = []
 
 	for f in list_files(group):
-		file = create_file(f)
-		if file:
-			files.append(file)
-
+		files.append(create_file(f))
 	if not files:
 		continue
 
@@ -192,5 +143,3 @@ for group in GROUPS:
 		out.write(TEMPLATE.format(**f._asdict()))
 
 	out.write("\n\n")
-
-
