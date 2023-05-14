@@ -98,7 +98,6 @@ jobs:
         chmod a+x csp/usr/bin/csprite
         mv csp csprite.AppDir
         ARCH=x86_64 appimagetool csprite.AppDir
-        mv ./csprite-*.AppImage ./csprite-x86_64.AppImage
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
