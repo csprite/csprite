@@ -1,11 +1,8 @@
-// impl.c is a separate file which contains implementation for multiple "header only" libraries.
-// this was done to reduce compile times, & compiling same thing over and over again.
+// all header only libraries are compiled in this translation unit to reduce re-compiling...
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "stb/stb_image_write.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "stb/stb_image.h"
 
-#define UTILS_IMPLEMENTATION 1
-#include "utils.h"
