@@ -21,24 +21,29 @@ static Pixel* BlendPixels_Alpha(CanvasLayer_Manager* mgr) {
 		for (int32_t y = 0; y < h; ++y) {
 			for (int32_t x = 0; x < w; ++x) {
 				// Simple Alpha-Blending Being Done Here.
-				Pixel& srcPixel = mgr->layers[i]->pixels[(y * w) + x];
-				Pixel& destPixel = blendedPixels[(y * w) + x];
+				Pixel& frontPixel = mgr->layers[i]->pixels[(y * w) + x];
+				Pixel& backPixel = blendedPixels[(y * w) + x];
 
-				destPixel.r = CLAMP_NUM_TO_TYPE(
+				if (frontPixel.a == 255) {
+					backPixel = frontPixel;
+					continue;
+				}
+
+				backPixel.r = CLAMP_NUM_TO_TYPE(
 					static_cast<u16>(
-						((u16)srcPixel.r * srcPixel.a + (u16)destPixel.r * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+						((u16)frontPixel.r * frontPixel.a + (u16)backPixel.r * (255 - frontPixel.a) / 255 * backPixel.a) / 255
 					), u8);
-				destPixel.g = CLAMP_NUM_TO_TYPE(
+				backPixel.g = CLAMP_NUM_TO_TYPE(
 					static_cast<u16>(
-						((u16)srcPixel.g * srcPixel.a + (u16)destPixel.g * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+						((u16)frontPixel.g * frontPixel.a + (u16)backPixel.g * (255 - frontPixel.a) / 255 * backPixel.a) / 255
 					), u8);
-				destPixel.b = CLAMP_NUM_TO_TYPE(
+				backPixel.b = CLAMP_NUM_TO_TYPE(
 					static_cast<u16>(
-						((u16)srcPixel.b * srcPixel.a + (u16)destPixel.b * (255 - srcPixel.a) / 255 * destPixel.a) / 255
+						((u16)frontPixel.b * frontPixel.a + (u16)backPixel.b * (255 - frontPixel.a) / 255 * backPixel.a) / 255
 					), u8);
-				destPixel.a = CLAMP_NUM_TO_TYPE(
+				backPixel.a = CLAMP_NUM_TO_TYPE(
 					static_cast<u16>(
-						srcPixel.a + (u16)destPixel.a * (255 - srcPixel.a) / 255
+						frontPixel.a + (u16)backPixel.a * (255 - frontPixel.a) / 255
 					), u8);
 			}
 		}
