@@ -3,7 +3,7 @@ script:
   - rm -rf AppDir | true
   - mkdir -p AppDir/bin/ AppDir/usr/share/icons/
   - cp ./csprite AppDir/bin
-  - cp data/icon-512.png AppDir/usr/share/icons/csprite.png
+  - cp data/icons/icon-512.png AppDir/usr/share/icons/csprite.png
 
 AppDir:
   path: ./AppDir
