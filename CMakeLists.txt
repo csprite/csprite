@@ -22,7 +22,7 @@ if(WIN32)
 	set(SRC_FILES ${SRC_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/data/windows.rc)
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/common_defs.txt)
+include(${CMAKE_CURRENT_SOURCE_DIR}/common_defs.cmake)
 
 if(APPLE AND BUILD_APPLE_BUNDLE)
 	add_executable(csprite MACOSX_BUNDLE ${SRC_FILES})
@@ -51,15 +51,9 @@ target_link_libraries(csprite PUBLIC third_party)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
-find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
-
-if(TARGET SDL2::SDL2main) # Required on Windows
-	target_link_libraries(csprite PUBLIC SDL2::SDL2main)
-endif()
-
-target_link_libraries(third_party PUBLIC SDL2::SDL2)
-target_link_libraries(csprite PUBLIC SDL2::SDL2)
+find_package(glfw3 3.3 REQUIRED)
+target_link_libraries(third_party PUBLIC glfw)
+target_link_libraries(csprite PUBLIC glfw)
 
 if(WIN32)
 	add_custom_command(TARGET csprite POST_BUILD

@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+bool str_startswith(const char *pre, const char *str);
+
 // All the assets are saved in binary directly in the code, using tool/create_assets.py.
 
 /*
@@ -17,7 +19,7 @@ extern "C" {
 		filePath: ex - data/fonts/Montserrat-Bold.ttf
 		size: size of the data will be stored in this variable
 */
-const void* Assets_Get(const char *filePath, int *size);
+const void* assets_get(const char *filePath, int *size);
 
 /*
 	Function: assets_list()
@@ -30,7 +32,7 @@ const void* Assets_Get(const char *filePath, int *size);
 		directoryPath: directory to list items of
 		callback: function to call on every item
 */
-int Assets_List(const char* directoryPath, int (*callback)(int i, const char *path));
+int assets_list(const char* directoryPath, int (*callback)(int i, const char *path));
 
 #ifdef __cplusplus
 }

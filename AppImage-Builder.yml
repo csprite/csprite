@@ -3,7 +3,7 @@ script:
   - rm -rf AppDir | true
   - mkdir -p AppDir/bin/ AppDir/usr/share/icons/
   - cp ./csprite AppDir/bin
-  - cp data/icons/icon-512.png AppDir/usr/share/icons/csprite.png
+  - cp data/icon-512.png AppDir/usr/share/icons/csprite.png
 
 AppDir:
   path: ./AppDir
@@ -23,7 +23,7 @@ AppDir:
         key_url: 'https://ftp-master.debian.org/keys/archive-key-11.asc' # https://ftp-master.debian.org/keys.html
 
     include:
-      - libsdl2-2.0-0
+      - libglfw3
     exclude:
       - libpcre3
       - binutils
@@ -36,3 +36,4 @@ AppImage:
   update-information: 'gh-releases-zsync|pegvin|csprite|latest|*x86_64.AppImage.zsync'
   sign-key: None
   arch: x86_64
+

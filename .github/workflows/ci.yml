@@ -64,13 +64,13 @@ jobs:
         chmod +x appimage-builder-x86_64.AppImage
         sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
 
-    - name: Build & Install SDL2
+    - name: Build & Install GLFW3 3.3.8
       run: |
         export CC=${{ matrix.compiler.cc }}
         export CXX=${{ matrix.compiler.cxx }}
-        git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
-        cd SDL/
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
+        git clone https://github.com/glfw/glfw -b 3.3.8 --recursive
+        cd glfw/
+        cmake -S ./ -B ./build/ -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
         cmake --build ./build/ --config Release --parallel 3
         sudo cmake --install ./build/ --strip --config Release
 
@@ -123,13 +123,15 @@ jobs:
         name: data
         path: ./data/
 
-    - name: Build & Install SDL2
+    - name: Build & Install GLFW3 3.3.8
       run: |
-        git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
-        cd SDL/
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
+        export CC=${{ matrix.compiler.cc }}
+        export CXX=${{ matrix.compiler.cxx }}
+        git clone https://github.com/glfw/glfw -b 3.3.8 --recursive
+        cd glfw/
+        cmake -S ./ -B ./build/ -G "Ninja" -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}" -T "ClangCL" -DBUILD_SHARED_LIBS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
         cmake --build ./build/ --config Release --parallel 3
-        cmake --install ./build/ --strip --config Release
+        sudo cmake --install ./build/ --strip --config Release
 
     - name: Generate Build Files & Build
       run: |
@@ -175,16 +177,6 @@ jobs:
     - name: Lint Info.plist
       run: plutil data/Info.plist
 
-    - name: Install SDL2
-      run: |
-        PACKAGES=(sdl2)
-        for PACKAGE in "${PACKAGES[@]}"
-        do
-          formulaResult=$(brew --cache --bottle-tag=${{ matrix.architecture }}_monterey $PACKAGE)
-          brew fetch --force --bottle-tag=${{ matrix.architecture }}_monterey $PACKAGE
-          brew install $formulaResult
-        done
-
     - name: Generate .icns
       run: |
         mkdir csprite.iconset
@@ -200,6 +192,14 @@ jobs:
         sips -z 1024 1024 data/icon-32x32.png --out csprite.iconset/icon_512x512@2x.png
         iconutil -c icns -o csprite.icns csprite.iconset
         rm -R csprite.iconset
+
+    - name: Build & Install GLFW3 3.3.8
+      run: |
+        git clone https://github.com/glfw/glfw -b 3.3.8 --recursive
+        cd glfw/
+        cmake -S ./ -B ./build/ -G "Ninja" -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }} -DBUILD_SHARED_LIBS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
+        cmake --build ./build/ --config Release --parallel 3
+        sudo cmake --install ./build/ --strip --config Release
 
     - name: Generate Build Files & Build
       run: |
