@@ -51,10 +51,6 @@ target_link_libraries(csprite PUBLIC third_party)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-find_package(glfw3 3.3 REQUIRED)
-target_link_libraries(third_party PUBLIC glfw)
-target_link_libraries(csprite PUBLIC glfw)
-
 if(WIN32)
 	add_custom_command(TARGET csprite POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:csprite> $<TARGET_RUNTIME_DLLS:csprite>

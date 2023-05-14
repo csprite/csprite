@@ -64,16 +64,6 @@ jobs:
         chmod a+x ./appimagetool
         sudo mv appimagetool /usr/local/bin/appimagetool
 
-    - name: Build & Install GLFW3 3.3.8
-      run: |
-        export CC=${{ matrix.compiler.cc }}
-        export CXX=${{ matrix.compiler.cxx }}
-        git clone https://github.com/glfw/glfw -b 3.3.8 --recursive
-        cd glfw/
-        cmake -S ./ -B ./build/ -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
-        cmake --build ./build/ --config Release --parallel 3
-        sudo cmake --install ./build/ --strip --config Release
-
     - name: Generate Build Files & Build
       run: |
         export CC=${{ matrix.compiler.cc }}
@@ -135,14 +125,6 @@ jobs:
         name: data
         path: ./data/
 
-    - name: Build & Install GLFW3 3.3.8
-      run: |
-        git clone https://github.com/glfw/glfw -b 3.3.8 --recursive
-        cd glfw/
-        cmake -S ./ -B ./build/ -G "Ninja" -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}" -T "ClangCL" -DBUILD_SHARED_LIBS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
-        cmake --build ./build/ --config Release --parallel 3
-        cmake --install ./build/ --strip --config Release
-
     - name: Generate Build Files & Build
       run: |
         cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}" -T "ClangCL"
@@ -202,14 +184,6 @@ jobs:
         sips -z 1024 1024 data/icon-32x32.png --out csprite.iconset/icon_512x512@2x.png
         iconutil -c icns -o csprite.icns csprite.iconset
         rm -R csprite.iconset
-
-    - name: Build & Install GLFW3 3.3.8
-      run: |
-        git clone https://github.com/glfw/glfw -b 3.3.8 --recursive
-        cd glfw/
-        cmake -S ./ -B ./build/ -G "Ninja" -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }} -DBUILD_SHARED_LIBS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
-        cmake --build ./build/ --config Release --parallel 3
-        sudo cmake --install ./build/ --strip --config Release
 
     - name: Generate Build Files & Build
       run: |
