@@ -14,8 +14,3 @@ gen-assets:
 	@echo - Icons generated
 	@$(PYTHON) tools/create_assets.py --cxx=$(CXX)
 	@echo - Assets generated
-
-# make appimage
-appimage:
-	@CSPRITE_VERSION=$(MajVer).$(MinVer).$(PatVer) appimage-builder --skip-test --recipe=AppImage-Builder.yml
-	@echo - AppImage created
