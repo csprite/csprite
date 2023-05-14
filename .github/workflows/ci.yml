@@ -91,9 +91,9 @@ jobs:
         cp ./data/csprite.desktop csp/
         cp ./data/icons/icon-512.png csp/csprite.png
         echo -e "#!/bin/sh\n\
-HERE=\"\$(dirname \"\$(readlink -f \"\${0}\")\")\"\n\
-EXEC=\"\${HERE}/usr/bin/csprite\"\n\
-exec \"\${EXEC}\"" >> csp/AppRun
+        HERE=\"\$(dirname \"\$(readlink -f \"\${0}\")\")\"\n\
+        EXEC=\"\${HERE}/usr/bin/csprite\"\n\
+        exec \"\${EXEC}\"" >> csp/AppRun
         chmod a+x csp/AppRun
         chmod a+x csp/usr/bin/csprite
         mv csp csprite.AppDir
