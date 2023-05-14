@@ -26,7 +26,7 @@
 #include "math_linear.h"
 #include "main.h"
 #include "save.h"
-#include "helpers.h"
+#include "helpers.hpp"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
