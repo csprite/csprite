@@ -129,7 +129,7 @@ jobs:
         cd glfw/
         cmake -S ./ -B ./build/ -G "Ninja" -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}" -T "ClangCL" -DBUILD_SHARED_LIBS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
         cmake --build ./build/ --config Release --parallel 3
-        sudo cmake --install ./build/ --strip --config Release
+        cmake --install ./build/ --strip --config Release
 
     - name: Generate Build Files & Build
       run: |
