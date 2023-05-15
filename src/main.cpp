@@ -22,7 +22,6 @@
 #include "GLFW/glfw3.h"
 
 #include "assets.h"
-#include "math_linear.h"
 #include "main.h"
 #include "save.hpp"
 #include "helpers.hpp"
@@ -122,6 +121,7 @@ int main(int argc, char **argv) {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
+	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
 	window = glfwCreateWindow(WindowDims[0], WindowDims[1], "CSprite", NULL, NULL);
 
@@ -213,6 +213,8 @@ int main(int argc, char **argv) {
 	auto next_time = start_time + wait_time;
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
+
+	glfwShowWindow(window);
 
 	while (!glfwWindowShouldClose(window)) {
 		// --------------------------------------------------------------------------------------
@@ -412,10 +414,6 @@ int main(int argc, char **argv) {
 	glfwTerminate();
 	FreeHistory();
 	return 0;
-}
-
-unsigned char * GetCharData(unsigned char *data, int x, int y) {
-	return data + ((y * CanvasDims[0] + x) * 4);
 }
 
 void FrameBufferSizeCallback(GLFWwindow *window, int w, int h) {
