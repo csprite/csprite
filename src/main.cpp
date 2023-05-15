@@ -1,3 +1,4 @@
+#include "renderer/canvas.hpp"
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <climits>
@@ -27,6 +28,8 @@
 #include "main.h"
 #include "save.h"
 #include "helpers.hpp"
+#include "types.hpp"
+#include "pixel/pixel.hpp"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
@@ -82,20 +85,6 @@ unsigned char ShouldSave = 0;
 unsigned char ShowNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
 
 GLfloat ViewPort[4];
-GLfloat CanvasVertices[] = {
-	//       Canvas              Color To       Texture
-	//     Coordinates          Blend With     Coordinates
-	//  X      Y      Z      R     G     B      X     Y
-	   1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 0.0f, // Top Right
-	   1.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // Bottom Right
-	  -1.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 1.0f, // Bottom Left
-	  -1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  0.0f, 0.0f  // Top Left
-	// Z Coordinates Are 0 Because We Are Working With 2D Stuff
-	// Color To Blend With Are The Colors Which Will Be multiplied by the selected color to get the final output on the canvas
-};
-
-// Index Buffer
-unsigned int Indices[] = {0, 1, 3, 1, 2, 3};
 
 // Mouse Position On Window
 double MousePos[2];
@@ -192,43 +181,10 @@ int main(int argc, char **argv) {
 	glfwSetKeyCallback(window, KeyCallback);
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
-	unsigned int shader_program = CreateShaderProgram();
-	unsigned int vertexBuffObj, vertexArrObj, ebo;
-	glGenVertexArrays(1, &vertexArrObj);
-	glGenBuffers(1, &vertexBuffObj);
-	glGenBuffers(1, &ebo);
-	glBindVertexArray(vertexArrObj);
+	CanvasRenderer::Init();
 
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffObj);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(CanvasVertices), CanvasVertices, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
-	glBindAttribLocation(shader_program, 0, "position");
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
-	glBindAttribLocation(shader_program, 1, "color");
-	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
-	glBindAttribLocation(shader_program, 2, "tex_coords");
-	glEnableVertexAttribArray(2);
-
-	unsigned int texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CanvasDims[0], CanvasDims[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, CanvasData);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	Canvas canvas(CanvasDims[0], CanvasDims[1]);
+	Rect dirtyArea = { 0, 0, CanvasDims[0], CanvasDims[1] };
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -304,19 +260,8 @@ int main(int argc, char **argv) {
 		glClearColor(0.075, 0.075, 0.1, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shader_program);
-		glBindVertexArray(vertexArrObj);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		unsigned int alpha_loc = glGetUniformLocation(shader_program, "alpha");
-		glUniform1f(alpha_loc, 0.2f);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		glUniform1f(alpha_loc, 1.0f);
-		glBindTexture(GL_TEXTURE_2D, texture);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CanvasDims[0], CanvasDims[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, CanvasData);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		canvas.Update(dirtyArea, (Pixel*)CanvasData);
+		CanvasRenderer::Draw(canvas);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -469,6 +414,7 @@ int main(int argc, char **argv) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+	CanvasRenderer::Release();
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
