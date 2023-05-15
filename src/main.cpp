@@ -22,7 +22,6 @@
 #include "GLFW/glfw3.h"
 
 #include "assets.h"
-#include "shader.h"
 #include "math_linear.h"
 #include "main.h"
 #include "save.hpp"
