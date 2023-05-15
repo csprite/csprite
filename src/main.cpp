@@ -1,4 +1,3 @@
-#include "renderer/canvas.hpp"
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <climits>
@@ -26,10 +25,11 @@
 #include "shader.h"
 #include "math_linear.h"
 #include "main.h"
-#include "save.h"
+#include "save.hpp"
 #include "helpers.hpp"
 #include "types.hpp"
 #include "pixel/pixel.hpp"
+#include "renderer/canvas.hpp"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
@@ -38,13 +38,12 @@ unsigned char NumOfFilterPatterns = 3;
 int WindowDims[2] = {700, 500}; // Default Window Dimensions
 int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
 
-unsigned char *CanvasData; // Canvas Data Containg Pixel Values.
-#define CANVAS_SIZE_B CanvasDims[0] * CanvasDims[1] * 4 * sizeof(unsigned char)
+Pixel* CanvasData = NULL;
 
 unsigned char LastPaletteIndex = 1;
 unsigned char PaletteIndex = 1;
 unsigned char PaletteCount = 17;
-unsigned char ColorPalette[17][4] = {
+Pixel ColorPalette[17] = {
 	{ 0,   0,   0,   0   }, // Black Transparent/None
 	// Pico 8 Color Palette - https://lospec.com/ColorPalette-list/pico-8
 	{ 0,   0,   0,   255 }, // Black Color
@@ -80,7 +79,7 @@ unsigned char CanvasFreeze = 0;
 enum mode_e Mode = CIRCLE_BRUSH;
 enum mode_e LastMode = CIRCLE_BRUSH;
 
-unsigned char *SelectedColor; // Holds Pointer To Currently Selected Color
+Pixel SelectedColor; // Holds Pointer To Currently Selected Color
 unsigned char ShouldSave = 0;
 unsigned char ShowNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
 
@@ -98,7 +97,7 @@ bool DidUndo = false;
 bool IsDirty = false;
 
 struct cvstate {
-	unsigned char* pixelData;
+	Pixel* pixelData;
 	cvstate* next; // Canvas State Before This Node
 	cvstate* prev; // Canvas State After This Node
 };
@@ -109,12 +108,7 @@ cvstate_t* CurrentState = NULL;
 
 int main(int argc, char **argv) {
 	if (CanvasData == NULL) {
-		CanvasData = (unsigned char *)malloc(CANVAS_SIZE_B);
-		memset(CanvasData, 0, CANVAS_SIZE_B);
-		if (CanvasData == NULL) {
-			printf("Unable To allocate memory for canvas.\n");
-			return 1;
-		}
+		CanvasData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
 	}
 
 	GLFWwindow *window;
@@ -134,7 +128,7 @@ int main(int argc, char **argv) {
 
 	if (!window) {
 		printf("Failed to create GLFW window\n");
-		free(CanvasData);
+		delete[] CanvasData;
 		return 1;
 	}
 
@@ -158,7 +152,7 @@ int main(int argc, char **argv) {
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		printf("Failed to init GLAD\n");
-		free(CanvasData);
+		delete[] CanvasData;
 		return 1;
 	}
 
@@ -329,15 +323,11 @@ int main(int argc, char **argv) {
 				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
 				if (ImGui::Button("Ok")) {
-					free(CanvasData);
+					delete[] CanvasData;
 					CanvasDims[0] = NEW_DIMS[0];
 					CanvasDims[1] = NEW_DIMS[1];
-					CanvasData = (unsigned char *)malloc(CANVAS_SIZE_B);
-					memset(CanvasData, 0, CANVAS_SIZE_B);
-					if (CanvasData == NULL) {
-						printf("Unable To allocate memory for canvas.\n");
-						return 1;
-					}
+
+					CanvasData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
 
 					ZoomNLevelViewport();
 					FreeHistory();
@@ -396,7 +386,10 @@ int main(int argc, char **argv) {
 			ImGui::SetWindowPos({0, (float)WindowDims[1] - 35});
 			for (int i = 1; i < PaletteCount; i++) {
 				if (i != 1) ImGui::SameLine();
-				if (ImGui::ColorButton(PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(), {(float)ColorPalette[i][0]/255, (float)ColorPalette[i][1]/255, (float)ColorPalette[i][2]/255, (float)ColorPalette[i][3]/255})) {
+				if (ImGui::ColorButton(
+					PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(),
+					{(float)ColorPalette[i].r/255, (float)ColorPalette[i].g/255, (float)ColorPalette[i].b/255, (float)ColorPalette[i].a/255})
+				) {
 					PaletteIndex = i;
 					SelectedColor = ColorPalette[PaletteIndex];
 				}
@@ -503,30 +496,16 @@ void ProcessInput(GLFWwindow *window) {
 					break;
 				}
 				case FILL: {
-					unsigned char *ptr = GetPixel(x, y);
-					// Color Clicked On.
-					unsigned char color[4] = {
-						*(ptr + 0),
-						*(ptr + 1),
-						*(ptr + 2),
-						*(ptr + 3)
-					};
+					Pixel& color = GetPixel(x, y);
 					fill(x, y, color);
 					break;
 				}
 				case INK_DROPPER: {
-					unsigned char *ptr = GetPixel(x, y);
-					// Color Clicked On.
-					unsigned char color[4] = {
-						*(ptr + 0),
-						*(ptr + 1),
-						*(ptr + 2),
-						*(ptr + 3)
-					};
+					Pixel& color = GetPixel(x, y);
 
 					// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
 					for (int i = 1; i < PaletteCount; i++) {
-						if (color_equal(ColorPalette[i], color) == 1) {
+						if (ColorPalette[i] == color) {
 							LastPaletteIndex = PaletteIndex;
 							PaletteIndex = i;
 							break;
@@ -729,8 +708,8 @@ void AdjustZoom(bool increase) {
 	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 }
 
-unsigned char * GetPixel(int x, int y) {
-	return CanvasData + ((y * CanvasDims[0] + x) * 4);
+Pixel& GetPixel(int x, int y) {
+	return CanvasData[(y * CanvasDims[0]) + x];
 }
 
 /*
@@ -762,13 +741,8 @@ void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
 				if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 					continue;
 
-				unsigned char *ptr = GetPixel(st_x + dirX, st_y + dirY);
-
-				// Set Pixel Color
-				*ptr = SelectedColor[0]; // Red
-				*(ptr + 1) = SelectedColor[1]; // Green
-				*(ptr + 2) = SelectedColor[2]; // Blue
-				*(ptr + 3) = SelectedColor[3]; // Alpha
+				Pixel& ptr = GetPixel(st_x + dirX, st_y + dirY);
+				ptr = SelectedColor;
 			}
 		}
 	}
@@ -786,33 +760,25 @@ void draw(int st_x, int st_y) {
 			if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
-			unsigned char *ptr = GetPixel(st_x + dirX, st_y + dirY);
-
-			// Set Pixel Color
-			*ptr = SelectedColor[0]; // Red
-			*(ptr + 1) = SelectedColor[1]; // Green
-			*(ptr + 2) = SelectedColor[2]; // Blue
-			*(ptr + 3) = SelectedColor[3]; // Alpha
+			Pixel& ptr = GetPixel(st_x + dirX, st_y + dirY);
+			ptr = SelectedColor;
 		}
 	}
 }
 
 // Fill Tool, Fills The Whole Canvas Using Recursion
-void fill(int x, int y, unsigned char *old_color) {
-	unsigned char *ptr = GetPixel(x, y);
-	if (color_equal(ptr, old_color)) {
-		*ptr = SelectedColor[0];
-		*(ptr + 1) = SelectedColor[1];
-		*(ptr + 2) = SelectedColor[2];
-		*(ptr + 3) = SelectedColor[3];
+void fill(int x, int y, Pixel& old_color) {
+	Pixel& ptr = GetPixel(x, y);
+	if (ptr == old_color) {
+		ptr = SelectedColor;
 
-		if (x != 0 && !color_equal(GetPixel(x - 1, y), SelectedColor))
+		if (x != 0 && GetPixel(x - 1, y) != SelectedColor)
 			fill(x - 1, y, old_color);
-		if (x != CanvasDims[0] - 1 && !color_equal(GetPixel(x + 1, y), SelectedColor))
+		if (x != CanvasDims[0] - 1 && GetPixel(x + 1, y) != SelectedColor)
 			fill(x + 1, y, old_color);
-		if (y != CanvasDims[1] - 1 && !color_equal(GetPixel(x, y + 1), SelectedColor))
+		if (y != CanvasDims[1] - 1 && GetPixel(x, y + 1) != SelectedColor)
 			fill(x, y + 1, old_color);
-		if (y != 0 && !color_equal(GetPixel(x, y - 1), SelectedColor))
+		if (y != 0 && GetPixel(x, y - 1) != SelectedColor)
 			fill(x, y - 1, old_color);
 	}
 }
@@ -858,14 +824,14 @@ void SaveState() {
 			tmp = head;
 			head = head->next;
 			if (tmp->pixelData != NULL) {
-				free(tmp->pixelData);
+				delete[] tmp->pixelData;
 			}
 			free(tmp);
 		}
 	}
 
 	cvstate_t* NewState = (cvstate_t*) malloc(sizeof(cvstate_t));
-	NewState->pixelData = (unsigned char*) malloc(CANVAS_SIZE_B);
+	NewState->pixelData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
 
 	if (CurrentState == NULL) {
 		CurrentState = NewState;
@@ -878,8 +844,7 @@ void SaveState() {
 		CurrentState = NewState;
 	}
 
-	memset(CurrentState->pixelData, 0, CANVAS_SIZE_B);
-	memcpy(CurrentState->pixelData, CanvasData, CANVAS_SIZE_B);
+	memcpy(CurrentState->pixelData, CanvasData, CanvasDims[0] * CanvasDims[1] * sizeof(Pixel));
 }
 
 // Undo - Puts The Pixels from "History" at "HistoryIndex"
@@ -888,7 +853,7 @@ int Undo() {
 
 	if (CurrentState->prev != NULL) {
 		CurrentState = CurrentState->prev;
-		memcpy(CanvasData, CurrentState->pixelData, CANVAS_SIZE_B);
+		memcpy(CanvasData, CurrentState->pixelData, CanvasDims[0] * CanvasDims[1] * sizeof(Pixel));
 	}
 	return 0;
 }
@@ -897,7 +862,7 @@ int Undo() {
 int Redo() {
 	if (CurrentState->next != NULL) {
 		CurrentState = CurrentState->next;
-		memcpy(CanvasData, CurrentState->pixelData, CANVAS_SIZE_B);
+		memcpy(CanvasData, CurrentState->pixelData, CanvasDims[0] * CanvasDims[1] * sizeof(Pixel));
 	}
 
 	return 0;
@@ -919,7 +884,7 @@ void FreeHistory() {
 		tmp = head;
 		head = head->prev;
 		if (tmp != NULL && tmp->pixelData != NULL) {
-			free(tmp->pixelData);
+			delete[] tmp->pixelData;
 			free(tmp);
 		}
 		tmp = NULL;
@@ -931,7 +896,7 @@ void FreeHistory() {
 		tmp = head;
 		head = head->next;
 		if (tmp != NULL && tmp->pixelData != NULL) {
-			free(tmp->pixelData);
+			delete[] tmp->pixelData;
 			free(tmp);
 		}
 		tmp = NULL;
