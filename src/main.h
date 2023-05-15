@@ -3,6 +3,8 @@
 
 #include <string>
 #include "GLFW/glfw3.h"
+#include "types.hpp"
+#include "pixel/pixel.hpp"
 
 enum export_format_e { PNG, JPG };
 
@@ -21,10 +23,10 @@ void AdjustZoom(bool increase);
 
 // Little Helpers
 unsigned char * GetCharData(unsigned char *data, int x, int y);
-unsigned char * GetPixel(int x, int y);
+Pixel& GetPixel(int x, int y);
 
 // Canvas Operations
-void fill(int x, int y, unsigned char *old_colour);
+void fill(int x, int y, Pixel& old_colour);
 void draw(int x, int y); // Draws on 1 x, y coordinate
 void drawInBetween(int st_x, int st_y, int end_x, int end_y); // Draws Between The Given 2 x, y coordinates
 

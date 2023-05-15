@@ -1,11 +1,14 @@
 #ifndef SAVE_H
 #define SAVE_H
 
+#include "main.h"
 #include "stb/stb_image_write.h"
 #include "stb/stb_image.h"
+#include "types.hpp"
+#include "pixel/pixel.hpp"
 
 // Loads a image to canvas and automatically calls FreeHistory to reset undo/redo
-void LoadImageToCanvas(const char *filepath, int *canvas_dims, unsigned char **canvas_data) {
+void LoadImageToCanvas(const char *filepath, int *canvas_dims, Pixel** canvas_data) {
 	int imgWidth, imgHeight, c;
 	unsigned char *image_data = stbi_load(filepath, &imgWidth, &imgHeight, &c, 0);
 	if (image_data == NULL) {
@@ -18,19 +21,18 @@ void LoadImageToCanvas(const char *filepath, int *canvas_dims, unsigned char **c
 
 	if (*canvas_data != NULL) free(*canvas_data);
 
-	*canvas_data = (unsigned char *)malloc(canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
-	memset(*canvas_data, 0, canvas_dims[0] * canvas_dims[1] * 4 * sizeof(unsigned char));
-	int j, k;
+	*canvas_data = new Pixel[canvas_dims[0] * canvas_dims[1]]{ 0, 0, 0, 0 };
+
 	unsigned char *ptr;
 	unsigned char *iptr;
-	for (j = 0; j < imgHeight; j++) {
-		for (k = 0; k < imgWidth; k++) {
-			ptr = GetPixel(k, j);
-			iptr = GetCharData(image_data, k, j);
-			*(ptr+0) = *(iptr+0);
-			*(ptr+1) = *(iptr+1);
-			*(ptr+2) = *(iptr+2);
-			*(ptr+3) = *(iptr+3);
+	for (u32 y = 0; y < imgHeight; y++) {
+		for (u32 x = 0; x < imgWidth; x++) {
+			Pixel& destPixel = *canvas_data[(y * canvas_dims[0]) + x];
+			u8* srcPixel = image_data + (y * canvas_dims[0]) + x;
+			destPixel.r = *(srcPixel + 0);
+			destPixel.g = *(srcPixel + 1);
+			destPixel.b = *(srcPixel + 2);
+			destPixel.a = *(srcPixel + 3);
 		}
 	}
 	stbi_image_free(image_data);
