@@ -30,6 +30,7 @@
 #include "types.hpp"
 #include "pixel/pixel.hpp"
 #include "renderer/canvas.hpp"
+#include "palette/palette.hpp"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
@@ -43,26 +44,8 @@ Pixel* CanvasData = NULL;
 unsigned char LastPaletteIndex = 1;
 unsigned char PaletteIndex = 1;
 unsigned char PaletteCount = 17;
-Pixel ColorPalette[17] = {
-	{ 0,   0,   0,   0   }, // Black Transparent/None
-	// Pico 8 Color Palette - https://lospec.com/ColorPalette-list/pico-8
-	{ 0,   0,   0,   255 }, // Black Color
-	{ 29,  43,  83,  255 }, // Dark Violet
-	{ 126, 37,  83,  255 }, // Dark Pink
-	{ 0,   135, 81,  255 }, // Dark Green
-	{ 171, 82,  54,  255 }, // Dark Orange
-	{ 95,  87,  79,  255 }, // Dark Brown
-	{ 194, 195, 199, 255 }, // Grey
-	{ 255, 241, 232, 255 }, // Seashell
-	{ 255, 0,   77,  255 }, // Redish Pink
-	{ 255, 163, 0,   255 }, // Orange
-	{ 255, 236, 39,  255 }, // Yellow
-	{ 0,   228, 54,  255 }, // Green
-	{ 41,  173, 255, 255 }, // Blue
-	{ 131, 118, 156, 255 }, // Light Purple
-	{ 255, 119, 168, 255 }, // Pink
-	{ 255, 204, 170, 255 }  // Pale Orange
-};
+
+Palette ColorPalette;
 
 unsigned int ZoomLevel = 8; // Default Zoom Level
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
@@ -114,6 +97,23 @@ int main(int argc, char **argv) {
 	GLFWwindow *window;
 	GLFWcursor *cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
 
+	ColorPalette.Add(Pixel{ 0,   0,   0,   0   });
+	ColorPalette.Add(Pixel{ 0,   0,   0,   255 });
+	ColorPalette.Add(Pixel{ 29,  43,  83,  255 });
+	ColorPalette.Add(Pixel{ 126, 37,  83,  255 });
+	ColorPalette.Add(Pixel{ 0,   135, 81,  255 });
+	ColorPalette.Add(Pixel{ 171, 82,  54,  255 });
+	ColorPalette.Add(Pixel{ 95,  87,  79,  255 });
+	ColorPalette.Add(Pixel{ 194, 195, 199, 255 });
+	ColorPalette.Add(Pixel{ 255, 241, 232, 255 });
+	ColorPalette.Add(Pixel{ 255, 0,   77,  255 });
+	ColorPalette.Add(Pixel{ 255, 163, 0,   255 });
+	ColorPalette.Add(Pixel{ 255, 236, 39,  255 });
+	ColorPalette.Add(Pixel{ 0,   228, 54,  255 });
+	ColorPalette.Add(Pixel{ 41,  173, 255, 255 });
+	ColorPalette.Add(Pixel{ 131, 118, 156, 255 });
+	ColorPalette.Add(Pixel{ 255, 119, 168, 255 });
+	ColorPalette.Add(Pixel{ 255, 204, 170, 255 });
 	SelectedColor = ColorPalette[PaletteIndex];
 
 	glfwInit();
