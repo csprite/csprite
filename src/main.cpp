@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
 		glClearColor(0.075, 0.075, 0.1, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		canvas.Update(dirtyArea, (Pixel*)CanvasData);
+		canvas.Update(dirtyArea, CanvasData);
 		CanvasRenderer::Draw(canvas);
 
 		ImGui_ImplOpenGL3_NewFrame();
