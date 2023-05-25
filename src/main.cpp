@@ -132,6 +132,13 @@ int main(int argc, char **argv) {
 	}
 
 	glfwMakeContextCurrent(window);
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		printf("Failed to init GLAD\n");
+		delete[] CanvasData;
+		return 1;
+	}
+
 	glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
 	glfwSwapInterval(0);
 
@@ -148,12 +155,6 @@ int main(int argc, char **argv) {
 	iconArr[2].height = 48;
 	iconArr[2].pixels = (unsigned char*)assets_get("data/icons/icon-48.png", NULL);
 	glfwSetWindowIcon(window, 3, iconArr);
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		printf("Failed to init GLAD\n");
-		delete[] CanvasData;
-		return 1;
-	}
 
 	glfwSetCursor(window, cursor);
 	glEnable(GL_BLEND);
@@ -208,35 +209,48 @@ int main(int argc, char **argv) {
 	int nbFrames = 0; // Number Of Frames Rendered
 #endif
 
-	auto const wait_time = std::chrono::milliseconds{ 17 };
-	auto const start_time = std::chrono::steady_clock::now();
-	auto next_time = start_time + wait_time;
-
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
 	glfwShowWindow(window);
 
+	#define xstr(a) str(a)
+	#define str(a) #a
+	#define PRINT_GL_VER(ver) printf(xstr(ver) ": %d\n", ver)
+
+	PRINT_GL_VER(GLAD_GL_VERSION_1_0);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_1);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_2);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_3);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_4);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_5);
+	PRINT_GL_VER(GLAD_GL_VERSION_2_0);
+	PRINT_GL_VER(GLAD_GL_VERSION_2_1);
+	PRINT_GL_VER(GLAD_GL_VERSION_3_0);
+	PRINT_GL_VER(GLAD_GL_VERSION_3_1);
+	PRINT_GL_VER(GLAD_GL_VERSION_3_2);
+	PRINT_GL_VER(GLAD_GL_VERSION_3_3);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_0);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_1);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_2);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_3);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_4);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_5);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_6);
+
+	#undef PRINT_GL_VER
+	#undef xstr
+	#undef str
+
+	printf("OpenGL version supported by this platform is %s\n", glGetString(GL_VERSION));
+
+	auto const wait_time = std::chrono::milliseconds{ 1000/50 };
+	auto const start_time = std::chrono::steady_clock::now();
+	auto next_time = start_time + wait_time;
+
+	const u32 frameDelay = 1000/50;
+	u32 frameStart, frameTime;
+
 	while (!glfwWindowShouldClose(window)) {
-		// --------------------------------------------------------------------------------------
-		// Updating Cursor Position Here because function callback was causing performance issues.
-		glfwGetCursorPos(window, &MousePos[0], &MousePos[1]);
-		/* infitesimally small chance aside from startup */
-		if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
-			if (Mode == PAN) {
-				ViewPort[0] -= MousePosLast[0] - MousePos[0];
-				ViewPort[1] += MousePosLast[1] - MousePos[1];
-				ViewportSet();
-			}
-		}
-		MousePosLast[0] = MousePos[0];
-		MousePosLast[1] = MousePos[1];
-
-		MousePosRelativeLast[0] = MousePosRelative[0];
-		MousePosRelativeLast[1] = MousePosRelative[1];
-		MousePosRelative[0] = MousePos[0] - ViewPort[0];
-		MousePosRelative[1] = (MousePos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
-		// --------------------------------------------------------------------------------------
-
 #ifdef SHOW_FRAME_TIME
 		double currentTime = glfwGetTime();
 		nbFrames++;
@@ -246,8 +260,6 @@ int main(int argc, char **argv) {
 			lastTime += 1.0;
 		}
 #endif
-
-		std::this_thread::sleep_until(next_time);
 
 		glfwPollEvents();
 		ProcessInput(window);
@@ -402,7 +414,9 @@ int main(int argc, char **argv) {
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(window);
+
 		next_time += wait_time;
+		std::this_thread::sleep_until(next_time);
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();
@@ -478,6 +492,25 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 
 void ProcessInput(GLFWwindow *window) {
 	if (CanvasFreeze == 1) return;
+
+	glfwGetCursorPos(window, &MousePos[0], &MousePos[1]);
+
+	// infitesimally small chance aside from startup
+	if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
+		if (Mode == PAN) {
+			ViewPort[0] -= MousePosLast[0] - MousePos[0];
+			ViewPort[1] += MousePosLast[1] - MousePos[1];
+			ViewportSet();
+		}
+	}
+
+	MousePosLast[0] = MousePos[0];
+	MousePosLast[1] = MousePos[1];
+
+	MousePosRelativeLast[0] = MousePosRelative[0];
+	MousePosRelativeLast[1] = MousePosRelative[1];
+	MousePosRelative[0] = MousePos[0] - ViewPort[0];
+	MousePosRelative[1] = (MousePos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
 
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
