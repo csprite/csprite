@@ -68,8 +68,7 @@ jobs:
       run: |
         export CC=${{ matrix.compiler.cc }}
         export CXX=${{ matrix.compiler.cxx }}
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
-        cmake --build ./build/ --config Release --parallel 3
+        make all GENERATOR=Ninja BUILD_TYPE=Release NUM_JOBS=4
         mv ./build/csprite ./
 
     - name: Build AppImage
@@ -127,8 +126,7 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}" -T "ClangCL"
-        cmake --build ./build/ --config Release --parallel 3
+        make all GENERATOR="${{ matrix.generator.cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.architecture }}" -T "ClangCL"'
 
     - name: Zip Binaries
       uses: vimtor/action-zip@v1
@@ -187,8 +185,7 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -DBUILD_APPLE_BUNDLE=ON -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
-        cmake --build ./build/ --config Release
+        make all GENERATOR="${{ matrix.generator }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-DBUILD_APPLE_BUNDLE=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}'
 
     - name: Create Zip
       run: zip -r csprite.zip ./build/Release/csprite.app/
