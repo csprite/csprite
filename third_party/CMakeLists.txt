@@ -21,5 +21,6 @@ target_include_directories(third_party PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tfd/)
 
 target_link_libraries(third_party PUBLIC stb_static)
 target_link_libraries(third_party PUBLIC imgui_static)
+target_link_libraries(imgui_static PUBLIC glfw)
 target_link_libraries(third_party PUBLIC glad_loader)
 target_link_libraries(third_party PUBLIC glfw)
