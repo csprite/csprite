@@ -10,7 +10,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-option(BUILD_APPLE_BUNDLE "Build Apple Bundle, Used For Releases & Is Ignored On Non-Apple Target" OFF)
+option(ENABLE_APPLE_BUNDLE "Build Apple Bundle, Used For Releases & Is Ignored On Non-Apple Target" OFF)
 option(ENABLE_OPENGL_20 "Enable OpenGL 2.0" OFF)
 option(ENABLE_OPENGL_30 "Enable OpenGL 3.0" OFF)
 option(ENABLE_OPENGL_33 "Enable OpenGL 3.3" OFF)
