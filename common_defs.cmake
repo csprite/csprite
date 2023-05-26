@@ -1,6 +1,7 @@
 # Some Common Definitions...
 
-add_definitions(-DSDL_MAIN_HANDLED)
+add_definitions(-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS=1)
+add_definitions(-DIMGUI_DISABLE_OBSOLETE_KEYIO=1)
 
 # Debug C/C++ flags
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
