@@ -1,8 +1,14 @@
+GENERATOR=Ninja
+BUILD_DIR=build/
 BUILD_TYPE=Debug
+NUM_JOBS=2
 
 all:
-	@cmake -S ./ -B build -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -G "Ninja" -L
-	@cmake --build build --parallel 3
+	@cmake -S ./ -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -G "$(GENERATOR)" -L
+	@cmake --build $(BUILD_DIR) --config=$(BUILD_TYPE) --parallel $(NUM_JOBS)
+
+clean:
+	@$(RM) -r $(BUILD_DIR)
 
 run: all
 	@./build/csprite

@@ -3,8 +3,8 @@
 #pragma once
 
 #include "main.h"
-#include "stb/stb_image_write.h"
-#include "stb/stb_image.h"
+#include "stb_image_write.h"
+#include "stb_image.h"
 #include "types.hpp"
 #include "pixel/pixel.hpp"
 
