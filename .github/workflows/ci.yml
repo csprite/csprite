@@ -17,6 +17,7 @@ jobs:
         python3 -m pip install --upgrade Pillow
         python3 -m pip install --upgrade numpy
         make gen-assets
+        make gen-gui
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
@@ -30,6 +31,13 @@ jobs:
       with:
         name: src-assets
         path: ./src/assets/
+        if-no-files-found: error
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: gui-code
+        path: ./src/gui/
         if-no-files-found: error
 
   linux-x86_64:
@@ -50,6 +58,11 @@ jobs:
       with:
         name: src-assets
         path: ./src/assets/
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: gui-code
+        path: ./src/gui/
 
     - uses: actions/download-artifact@v2
       with:
@@ -125,12 +138,17 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
+        name: gui-code
+        path: ./src/gui/
+
+    - uses: actions/download-artifact@v2
+      with:
         name: data
         path: ./data/
 
     - name: Generate Build Files & Build
       run: |
-        make all PYTHON=python3 GENERATOR="${{ matrix.generator.cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.architecture }}" -T "ClangCL"'
+        make all GENERATOR="${{ matrix.generator.cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.architecture }}" -T "ClangCL"'
 
     - name: Zip Binaries
       uses: vimtor/action-zip@v1
@@ -165,11 +183,13 @@ jobs:
 
     - uses: actions/download-artifact@v2
       with:
+        name: gui-code
+        path: ./src/gui/
+
+    - uses: actions/download-artifact@v2
+      with:
         name: data
         path: ./data/
-
-    - name: Install clang-format
-      run: brew install clang-format
 
     - name: Lint Info.plist
       run: plutil data/Info.plist
