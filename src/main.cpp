@@ -274,7 +274,64 @@ int main(int argc, char **argv) {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		#include "gui/menu.hpp"
+		#define BEGIN_MENU(label) if (ImGui::BeginMenu(label)) {
+		#define END_MENU() ImGui::EndMenu(); }
+
+		#define BEGIN_MENUITEM(label, shortcut) if (ImGui::MenuItem(label, shortcut)) {
+		#define END_MENUITEM() }
+
+		if (ImGui::BeginMainMenuBar()) {
+			BEGIN_MENU("File")
+				BEGIN_MENUITEM("New", "Ctrl+N")
+					ShowNewCanvasWindow = 1;
+				END_MENUITEM()
+				BEGIN_MENUITEM("Open", "Ctrl+O")
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
+					if (filePath != NULL) {
+						FilePath = std::string(filePath);
+						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						ZoomNLevelViewport();
+					}
+				END_MENUITEM()
+				BEGIN_MENU("Save")
+					BEGIN_MENUITEM("Save", "Ctrl+S")
+						FilePath = FixFileExtension(FilePath);
+						SaveImageFromCanvas(FilePath);
+						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+					END_MENUITEM()
+					BEGIN_MENUITEM("Save As", "Alt+S")
+						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
+						if (filePath != NULL) {
+							FilePath = FixFileExtension(std::string(filePath));
+							SaveImageFromCanvas(FilePath);
+							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						}
+					END_MENUITEM()
+				END_MENU()
+			END_MENU()
+
+			BEGIN_MENU("Edit")
+				BEGIN_MENUITEM("Undo", "Ctrl+Z") Undo(); END_MENUITEM()
+				BEGIN_MENUITEM("Redo", "Ctrl+Y") Redo(); END_MENUITEM()
+			END_MENU()
+
+			BEGIN_MENU("Help")
+				BEGIN_MENUITEM("About", NULL)
+					openUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
+				END_MENUITEM()
+				BEGIN_MENUITEM("About", NULL)
+					openUrl("https://github.com/pegvin/CSprite");
+				END_MENUITEM()
+			END_MENU()
+
+			ImGui::EndMainMenuBar();
+		}
+
+		#undef BEGIN_MENUITEM
+		#undef END_MENUITEM
+		#undef BEGIN_MENU
+		#undef END_MENU
 
 		if (ShowNewCanvasWindow == 1) {
 			CanvasFreeze = 1;
