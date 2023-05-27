@@ -8,7 +8,7 @@ jobs:
   generate-assets:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
@@ -19,14 +19,14 @@ jobs:
         make gen-assets
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: data
         path: ./data/
         if-no-files-found: error
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: src-assets
         path: ./src/assets/
@@ -42,16 +42,16 @@ jobs:
           { cc: clang, cxx: clang++, toolchain: clang }
         ]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: src-assets
         path: ./src/assets/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: data
         path: ./data/
@@ -89,14 +89,14 @@ jobs:
         ARCH=x86_64 appimagetool csprite.AppDir
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: linux_appimage-x86_64-${{ matrix.compiler.toolchain }}
         path: csprite-x86_64.AppImage
         if-no-files-found: error
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: linux-x86_64-${{ matrix.compiler.toolchain }}
         path: ./csprite
@@ -110,16 +110,16 @@ jobs:
         architecture: [x64, Win32]
         generator: [ { short_name: "vs17_2022", cmake_name: "Visual Studio 17 2022" } ]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: src-assets
         path: ./src/assets/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: data
         path: ./data/
@@ -136,7 +136,7 @@ jobs:
         dest: ./csprite.zip
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: win-${{ matrix.architecture }}-${{ matrix.generator.short_name }}
         if-no-files-found: error
@@ -150,16 +150,16 @@ jobs:
         architecture: [x86_64, arm64]
         generator: [Xcode]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: src-assets
         path: ./src/assets/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: data
         path: ./data/
@@ -191,7 +191,7 @@ jobs:
       run: zip -r csprite.zip ./build/Release/csprite.app/
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: osx-${{ matrix.architecture }}-${{ matrix.generator }}
         path: ./csprite.zip
@@ -213,42 +213,42 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: win-x64-vs17_2022
         path: ./win-x64-vs17_2022/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: win-Win32-vs17_2022
         path: ./win-Win32-vs17_2022/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: linux_appimage-x86_64-clang
         path: ./linux_appimage-x86_64-clang/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: linux-x86_64-clang
         path: ./linux-x86_64-clang/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: linux_appimage-x86_64-gcc
         path: ./linux_appimage-x86_64-gcc/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: linux-x86_64-gcc
         path: ./linux-x86_64-gcc/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: osx-arm64-Xcode
         path: ./osx-arm64-Xcode/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: osx-x86_64-Xcode
         path: ./osx-x86_64-Xcode/
