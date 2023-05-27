@@ -130,7 +130,7 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
-        make all GENERATOR="${{ matrix.generator.cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.architecture }}" -T "ClangCL"'
+        make all PYTHON=python3 GENERATOR="${{ matrix.generator.cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.architecture }}" -T "ClangCL"'
 
     - name: Zip Binaries
       uses: vimtor/action-zip@v1
