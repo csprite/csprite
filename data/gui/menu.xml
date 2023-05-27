@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MainMenuBar>
+	<Include file="helpers.hpp" />
+	<Menu label="File">
+		<MenuItem label="New" shortcut="Ctrl+N">
+			ShowNewCanvasWindow = 1;
+		</MenuItem>
+		<MenuItem label="Open" shortcut="Ctrl+O">
+			char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
+			if (filePath != NULL) {
+				FilePath = std::string(filePath);
+				LoadImageToCanvas(FilePath.c_str(), CanvasDims, &amp;CanvasData);
+				glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+				ZoomNLevelViewport();
+			}
+		</MenuItem>
+		<Menu label="Save">
+			<MenuItem label="Save" shortcut="Ctrl+S">
+				FilePath = FixFileExtension(FilePath);
+				SaveImageFromCanvas(FilePath);
+				glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+			</MenuItem>
+			<MenuItem label="Save As" shortcut="Alt+S">
+				char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
+				if (filePath != NULL) {
+					FilePath = FixFileExtension(std::string(filePath));
+					SaveImageFromCanvas(FilePath);
+					glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+				}
+			</MenuItem>
+		</Menu>
+	</Menu>
+	<Menu label="Edit">
+		<MenuItem label="Undo" shortcut="Ctrl+Z">Undo();</MenuItem>
+		<MenuItem label="Redo" shortcut="Ctrl+Y">Redo();</MenuItem>
+	</Menu>
+	<Menu label="Help">
+		<MenuItem label="About">
+			openUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
+		</MenuItem>
+		<MenuItem label="GitHub">
+			openUrl("https://github.com/pegvin/CSprite");
+		</MenuItem>
+	</Menu>
+</MainMenuBar>

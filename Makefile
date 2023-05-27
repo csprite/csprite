@@ -9,7 +9,7 @@ CMAKE_GEN_FLAGS=
 # These Flags are passed to Cmake When Building The Project
 CMAKE_BUILD_FLAGS=
 
-all:
+all: gen-gui
 	@cmake -L -S ./ -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -G "$(GENERATOR)" $(CMAKE_GEN_FLAGS)
 	@cmake --build $(BUILD_DIR) --config=$(BUILD_TYPE) --parallel $(NUM_JOBS) $(CMAKE_BUILD_FLAGS)
 
@@ -19,10 +19,16 @@ clean:
 run: all
 	@./build/csprite
 
+$(eval PYTHON := $(if $(PYTHON),$(PYTHON),python3))
+
+# make gen-gui PYTHON=python3
+gen-gui:
+	@$(PYTHON) tools/guigen.py
+	@echo -- GUI code generated
+
 # make gen-assets PYTHON=python3
 gen-assets:
-	$(eval PYTHON := $(if $(PYTHON),$(PYTHON),python3))
 	@$(PYTHON) tools/create_icons.py
-	@echo - Icons generated
+	@echo -- Icons generated
 	@$(PYTHON) tools/create_assets.py --cxx=$(CXX)
-	@echo - Assets generated
+	@echo -- Assets generated

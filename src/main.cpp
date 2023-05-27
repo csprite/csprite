@@ -274,59 +274,7 @@ int main(int argc, char **argv) {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		if (ImGui::BeginMainMenuBar()) {
-			if (ImGui::BeginMenu("File")) {
-				if (ImGui::MenuItem("New", "Ctrl+N")) {
-					ShowNewCanvasWindow = 1;
-				}
-				if (ImGui::MenuItem("Open", "Ctrl+O")) {
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
-					if (filePath != NULL) {
-						FilePath = std::string(filePath);
-						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
-						ZoomNLevelViewport();
-					}
-				}
-				if (ImGui::BeginMenu("Save")) {
-					if (ImGui::MenuItem("Save", "Ctrl+S")) {
-						FilePath = FixFileExtension(FilePath);
-						SaveImageFromCanvas(FilePath);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
-					}
-					if (ImGui::MenuItem("Save As", "Alt+S")) {
-						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
-						if (filePath != NULL) {
-							FilePath = FixFileExtension(std::string(filePath));
-							SaveImageFromCanvas(FilePath);
-							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
-						}
-					}
-					ImGui::EndMenu();
-				}
-				ImGui::EndMenu();
-			}
-			if (ImGui::BeginMenu("Edit")) {
-				if (ImGui::MenuItem("Undo", "Ctrl+Z")) {
-					Undo();
-				}
-				if (ImGui::MenuItem("Redo", "Ctrl+Y")) {
-					Redo();
-				}
-				ImGui::EndMenu();
-			}
-
-			if (ImGui::BeginMenu("Help")) {
-				if (ImGui::MenuItem("About")) {
-					openUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
-				}
-				if (ImGui::MenuItem("GitHub")) {
-					openUrl("https://github.com/pegvin/CSprite");
-				}
-				ImGui::EndMenu();
-			}
-			ImGui::EndMainMenuBar();
-		}
+		#include "gui/menu.hpp"
 
 		if (ShowNewCanvasWindow == 1) {
 			CanvasFreeze = 1;
