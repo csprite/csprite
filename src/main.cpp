@@ -320,7 +320,7 @@ int main(int argc, char **argv) {
 				BEGIN_MENUITEM("About", NULL)
 					openUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
 				END_MENUITEM()
-				BEGIN_MENUITEM("About", NULL)
+				BEGIN_MENUITEM("GitHub", NULL)
 					openUrl("https://github.com/pegvin/CSprite");
 				END_MENUITEM()
 			END_MENU()
