@@ -114,6 +114,10 @@ jobs:
       with:
         submodules: recursive
 
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
     - uses: actions/download-artifact@v2
       with:
         name: src-assets
@@ -163,6 +167,9 @@ jobs:
       with:
         name: data
         path: ./data/
+
+    - name: Install clang-format
+      run: brew install clang-format
 
     - name: Lint Info.plist
       run: plutil data/Info.plist
