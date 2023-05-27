@@ -17,7 +17,6 @@ jobs:
         python3 -m pip install --upgrade Pillow
         python3 -m pip install --upgrade numpy
         make gen-assets
-        make gen-gui
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
@@ -31,13 +30,6 @@ jobs:
       with:
         name: src-assets
         path: ./src/assets/
-        if-no-files-found: error
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: gui-code
-        path: ./src/gui/
         if-no-files-found: error
 
   linux-x86_64:
@@ -58,11 +50,6 @@ jobs:
       with:
         name: src-assets
         path: ./src/assets/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: gui-code
-        path: ./src/gui/
 
     - uses: actions/download-artifact@v2
       with:
@@ -127,19 +114,10 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'
-
     - uses: actions/download-artifact@v2
       with:
         name: src-assets
         path: ./src/assets/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: gui-code
-        path: ./src/gui/
 
     - uses: actions/download-artifact@v2
       with:
@@ -180,11 +158,6 @@ jobs:
       with:
         name: src-assets
         path: ./src/assets/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: gui-code
-        path: ./src/gui/
 
     - uses: actions/download-artifact@v2
       with:

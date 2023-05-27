@@ -21,11 +21,6 @@ run: all
 
 $(eval PYTHON := $(if $(PYTHON),$(PYTHON),python3))
 
-# make gen-gui PYTHON=python3
-gen-gui:
-	@$(PYTHON) tools/guigen.py
-	@echo -- GUI code generated
-
 # make gen-assets PYTHON=python3
 gen-assets:
 	@$(PYTHON) tools/create_icons.py
