@@ -14,18 +14,12 @@
 struct Canvas {
 	using TextureID = GLuint;
 	TextureID id = 0;
-	Rect viewPort = { 0, 0, 0, 0 };
+	Rect viewport = { 0, 0, 0, 0 };
 
 	Canvas(u16 w, u16 h);
 	~Canvas();
 
 	void Update(Rect& dirtyArea, Pixel* pixelData);
 };
-
-namespace CanvasRenderer {
-	void Init();
-	void Draw(Canvas& c);
-	void Release();
-}
 
 #endif // CSP_RENDERER_CANVAS_HPP_INCLUDED_

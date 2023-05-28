@@ -60,11 +60,10 @@ unsigned char CanvasFreeze = 0;
 enum mode_e Mode = CIRCLE_BRUSH;
 enum mode_e LastMode = CIRCLE_BRUSH;
 
+Canvas* canvas = nullptr;
 Pixel SelectedColor; // Holds Pointer To Currently Selected Color
 unsigned char ShouldSave = 0;
 unsigned char ShowNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
-
-GLfloat ViewPort[4];
 
 // Mouse Position On Window
 double MousePos[2];
@@ -160,25 +159,20 @@ int main(int argc, char **argv) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// Initial Canvas Position
-	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2; // X Position
-	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2; // Y Position
-
-	// Output Width And Height Of The Canvas
-	ViewPort[2] = CanvasDims[0] * ZoomLevel; // Width
-	ViewPort[3] = CanvasDims[1] * ZoomLevel; // Height
-
-	ZoomNLevelViewport();
 	glfwSetWindowSizeCallback(window, WindowSizeCallback);
 	glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
 	glfwSetScrollCallback(window, ScrollCallback);
 	glfwSetKeyCallback(window, KeyCallback);
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
-	CanvasRenderer::Init();
-
-	Canvas canvas(CanvasDims[0], CanvasDims[1]);
+	canvas = new Canvas(CanvasDims[0], CanvasDims[1]);
 	Rect dirtyArea = { 0, 0, CanvasDims[0], CanvasDims[1] };
+
+	// Initial Canvas Position & Size
+	canvas->viewport.x = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2; // X Position
+	canvas->viewport.y = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2; // Y Position
+	canvas->viewport.w = CanvasDims[0] * ZoomLevel; // Width
+	canvas->viewport.h = CanvasDims[1] * ZoomLevel; // Height
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -250,6 +244,8 @@ int main(int argc, char **argv) {
 	const u32 frameDelay = 1000/50;
 	u32 frameStart, frameTime;
 
+	ZoomNLevelViewport();
+
 	while (!glfwWindowShouldClose(window)) {
 #ifdef SHOW_FRAME_TIME
 		double currentTime = glfwGetTime();
@@ -267,8 +263,7 @@ int main(int argc, char **argv) {
 		glClearColor(0.075, 0.075, 0.1, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		canvas.Update(dirtyArea, CanvasData);
-		CanvasRenderer::Draw(canvas);
+		canvas->Update(dirtyArea, CanvasData);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -363,6 +358,30 @@ int main(int argc, char **argv) {
 			END_WINDOW()
 		}
 
+		ImGuiWindowFlags CanvasWindowFlags = 0;
+		CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
+		CanvasWindowFlags |= ImGuiWindowFlags_NoMove;
+		CanvasWindowFlags |= ImGuiWindowFlags_NoResize;
+		CanvasWindowFlags |= ImGuiWindowFlags_NoCollapse;
+		CanvasWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+		CanvasWindowFlags |= ImGuiWindowFlags_NoNavInputs;
+		CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
+		// CanvasWindowFlags |= ImGuiWindowFlags_NoBackground;
+		CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
+		CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
+		CanvasWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
+
+		BEGIN_WINDOW("Canvas", NULL, CanvasWindowFlags)
+			ImGui::SetWindowPos({
+				(float)canvas->viewport.x,
+				(float)canvas->viewport.y
+			});
+			ImGui::Image(
+				(ImTextureID)canvas->id,
+				{ (float)canvas->viewport.w, (float)canvas->viewport.h }
+			);
+		END_WINDOW()
+
 		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)
 			ImGui::SetWindowPos({0, 20});
 			std::string selectedToolText;
@@ -429,7 +448,6 @@ int main(int argc, char **argv) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-	CanvasRenderer::Release();
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
@@ -442,23 +460,8 @@ void FrameBufferSizeCallback(GLFWwindow *window, int w, int h) {
 }
 
 void ZoomNLevelViewport() {
-	// Simple hacky way to adjust canvas zoom level till it fits the window
-	while (true) {
-		if (ViewPort[2] >= WindowDims[1] || ViewPort[3] >= WindowDims[1]) {
-			AdjustZoom(false);
-			AdjustZoom(false);
-			AdjustZoom(false);
-			break;
-		}
-		AdjustZoom(true);
-		ViewPort[2] = CanvasDims[0] * ZoomLevel;
-		ViewPort[3] = CanvasDims[1] * ZoomLevel;
-	}
-
-	// Center On Screen
-	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
-	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
-	ViewportSet();
+	canvas->viewport.x = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	canvas->viewport.y = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
 }
 
 void WindowSizeCallback(GLFWwindow* window, int width, int height) {
@@ -466,13 +469,12 @@ void WindowSizeCallback(GLFWwindow* window, int width, int height) {
 	WindowDims[1] = height;
 
 	// Center The Canvas On X, Y
-	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
-	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
+	canvas->viewport.x = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	canvas->viewport.y = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
 
 	// Set The Canvas Size (Not Neccessary Here Tho)
-	ViewPort[2] = CanvasDims[0] * ZoomLevel;
-	ViewPort[3] = CanvasDims[1] * ZoomLevel;
-	ViewportSet();
+	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
+	canvas->viewport.h = CanvasDims[1] * ZoomLevel;
 }
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
@@ -505,9 +507,8 @@ void ProcessInput(GLFWwindow *window) {
 	// infitesimally small chance aside from startup
 	if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
 		if (Mode == PAN) {
-			ViewPort[0] -= MousePosLast[0] - MousePos[0];
-			ViewPort[1] += MousePosLast[1] - MousePos[1];
-			ViewportSet();
+			canvas->viewport.x -= MousePosLast[0] - MousePos[0];
+			canvas->viewport.y += MousePosLast[1] - MousePos[1];
 		}
 	}
 
@@ -516,8 +517,8 @@ void ProcessInput(GLFWwindow *window) {
 
 	MousePosRelativeLast[0] = MousePosRelative[0];
 	MousePosRelativeLast[1] = MousePosRelative[1];
-	MousePosRelative[0] = MousePos[0] - ViewPort[0];
-	MousePosRelative[1] = (MousePos[1] + ViewPort[1]) - (WindowDims[1] - ViewPort[3]);
+	MousePosRelative[0] = MousePos[0] - canvas->viewport.x;
+	MousePosRelative[1] = (MousePos[1] + canvas->viewport.y) - (WindowDims[1] - canvas->viewport.h);
 
 	int x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
@@ -719,10 +720,6 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 	SelectedColor = ColorPalette[PaletteIndex];
 }
 
-void ViewportSet() {
-	glViewport(ViewPort[0], ViewPort[1], ViewPort[2], ViewPort[3]);
-}
-
 void AdjustZoom(bool increase) {
 	if (increase == true) {
 		if (ZoomLevel < UINT_MAX) { // Max Value Of Unsigned int
@@ -735,13 +732,11 @@ void AdjustZoom(bool increase) {
 	}
 
 	// Comment Out To Not Center When Zooming
-	ViewPort[0] = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
-	ViewPort[1] = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
+	canvas->viewport.x = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	canvas->viewport.y = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
 
-	ViewPort[2] = CanvasDims[0] * ZoomLevel;
-	ViewPort[3] = CanvasDims[1] * ZoomLevel;
-
-	ViewportSet();
+	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
+	canvas->viewport.h = CanvasDims[1] * ZoomLevel;
 	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 }
 
