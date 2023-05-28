@@ -333,10 +333,13 @@ int main(int argc, char **argv) {
 		#undef BEGIN_MENU
 		#undef END_MENU
 
+		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
+		#define END_WINDOW() ImGui::End(); }
+
 		if (ShowNewCanvasWindow == 1) {
 			CanvasFreeze = 1;
 			ImGui::SetNextWindowSize({280, 100}, 0);
-			if (ImGui::Begin("NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
+			BEGIN_WINDOW("NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)
 				ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
 				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
@@ -357,12 +360,10 @@ int main(int argc, char **argv) {
 					CanvasFreeze = 0;
 					ShowNewCanvasWindow = 0;
 				}
-
-				ImGui::End();
-			}
+			END_WINDOW()
 		}
 
-		if (ImGui::Begin("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)) {
+		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)
 			ImGui::SetWindowPos({0, 20});
 			std::string selectedToolText;
 
@@ -397,11 +398,10 @@ int main(int argc, char **argv) {
 
 			ImGui::Text("%s", selectedToolText.c_str());
 			ImGui::Text("%s", ZoomText.c_str());
-			ImGui::End();
-		}
+		END_WINDOW()
 
-		if (ImGui::Begin("ColorPaletteWindow", NULL, window_flags)) {
-			ImGui::SetWindowPos({0, (float)WindowDims[1] - 35});
+		BEGIN_WINDOW("ColorPaletteWindow", NULL, window_flags)
+			ImGui::SetWindowPos({ 0, (float)WindowDims[1] - 35 });
 			for (int i = 1; i < PaletteCount; i++) {
 				if (i != 1) ImGui::SameLine();
 				if (ImGui::ColorButton(
@@ -412,8 +412,10 @@ int main(int argc, char **argv) {
 					SelectedColor = ColorPalette[PaletteIndex];
 				}
 			};
-			ImGui::End();
-		}
+		END_WINDOW()
+
+		#undef BEGIN_WINDOW
+		#undef END_WINDOW
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
