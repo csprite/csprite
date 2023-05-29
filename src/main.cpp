@@ -13,11 +13,10 @@
 #include <chrono>
 #include <thread>
 
-#include "app/app.hpp"
 #include "imgui/imgui.h"
 #include "tinyfiledialogs.h"
 
-#include "glad/glad.h"
+#include "renderer/canvas.hpp"
 #include "GLFW/glfw3.h"
 
 #include "assets.h"
@@ -26,7 +25,7 @@
 #include "helpers.hpp"
 #include "types.hpp"
 #include "pixel/pixel.hpp"
-#include "renderer/canvas.hpp"
+#include "app/app.hpp"
 #include "palette/palette.hpp"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
@@ -134,36 +133,6 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoMove;
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
-
-	#define xstr(a) str(a)
-	#define str(a) #a
-	#define PRINT_GL_VER(ver) printf(xstr(ver) ": %d\n", ver)
-
-	PRINT_GL_VER(GLAD_GL_VERSION_1_0);
-	PRINT_GL_VER(GLAD_GL_VERSION_1_1);
-	PRINT_GL_VER(GLAD_GL_VERSION_1_2);
-	PRINT_GL_VER(GLAD_GL_VERSION_1_3);
-	PRINT_GL_VER(GLAD_GL_VERSION_1_4);
-	PRINT_GL_VER(GLAD_GL_VERSION_1_5);
-	PRINT_GL_VER(GLAD_GL_VERSION_2_0);
-	PRINT_GL_VER(GLAD_GL_VERSION_2_1);
-	PRINT_GL_VER(GLAD_GL_VERSION_3_0);
-	PRINT_GL_VER(GLAD_GL_VERSION_3_1);
-	PRINT_GL_VER(GLAD_GL_VERSION_3_2);
-	PRINT_GL_VER(GLAD_GL_VERSION_3_3);
-	PRINT_GL_VER(GLAD_GL_VERSION_4_0);
-	PRINT_GL_VER(GLAD_GL_VERSION_4_1);
-	PRINT_GL_VER(GLAD_GL_VERSION_4_2);
-	PRINT_GL_VER(GLAD_GL_VERSION_4_3);
-	PRINT_GL_VER(GLAD_GL_VERSION_4_4);
-	PRINT_GL_VER(GLAD_GL_VERSION_4_5);
-	PRINT_GL_VER(GLAD_GL_VERSION_4_6);
-
-	#undef PRINT_GL_VER
-	#undef xstr
-	#undef str
-
-	printf("OpenGL version supported by this platform is %s\n", glGetString(GL_VERSION));
 
 	auto const wait_time = std::chrono::milliseconds{ 1000/50 };
 	auto const start_time = std::chrono::steady_clock::now();
