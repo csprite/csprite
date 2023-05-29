@@ -13,9 +13,8 @@
 #include <chrono>
 #include <thread>
 
+#include "app/app.hpp"
 #include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
 #include "tinyfiledialogs.h"
 
 #include "glad/glad.h"
@@ -87,12 +86,15 @@ typedef struct cvstate cvstate_t; // Canvas State Type
 cvstate_t* CurrentState = NULL;
 
 int main(int argc, char **argv) {
-	if (CanvasData == NULL) {
-		CanvasData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
+	if (App::Init(WindowDims[0], WindowDims[1]) != 0) {
+		return 1;
 	}
 
-	GLFWwindow *window;
-	GLFWcursor *cursor = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+	glfwSetWindowSizeCallback((GLFWwindow*)App::GetWindow(), WindowSizeCallback);
+	glfwSetFramebufferSizeCallback((GLFWwindow*)App::GetWindow(), FrameBufferSizeCallback);
+	glfwSetScrollCallback((GLFWwindow*)App::GetWindow(), ScrollCallback);
+	glfwSetKeyCallback((GLFWwindow*)App::GetWindow(), KeyCallback);
+	glfwSetMouseButtonCallback((GLFWwindow*)App::GetWindow(), MouseButtonCallback);
 
 	ColorPalette.Add(Pixel{ 0,   0,   0,   0   });
 	ColorPalette.Add(Pixel{ 0,   0,   0,   255 });
@@ -112,58 +114,7 @@ int main(int argc, char **argv) {
 	ColorPalette.Add(Pixel{ 255, 119, 168, 255 });
 	ColorPalette.Add(Pixel{ 255, 204, 170, 255 });
 	SelectedColor = ColorPalette[PaletteIndex];
-
-	glfwInit();
-	glfwSetErrorCallback(logGLFWErrors);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-	glfwWindowHint(GLFW_CENTER_CURSOR, GLFW_TRUE);
-	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-
-	window = glfwCreateWindow(WindowDims[0], WindowDims[1], "CSprite", NULL, NULL);
-
-	if (!window) {
-		printf("Failed to create GLFW window\n");
-		delete[] CanvasData;
-		return 1;
-	}
-
-	glfwMakeContextCurrent(window);
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		printf("Failed to init GLAD\n");
-		delete[] CanvasData;
-		return 1;
-	}
-
-	glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
-	glfwSwapInterval(0);
-
-	GLFWimage iconArr[3];
-	iconArr[0].width = 16;
-	iconArr[0].height = 16;
-	iconArr[0].pixels = (unsigned char*)assets_get("data/icons/icon-16.png", NULL);
-
-	iconArr[1].width = 32;
-	iconArr[1].height = 32;
-	iconArr[1].pixels = (unsigned char*)assets_get("data/icons/icon-32.png", NULL);
-
-	iconArr[2].width = 48;
-	iconArr[2].height = 48;
-	iconArr[2].pixels = (unsigned char*)assets_get("data/icons/icon-48.png", NULL);
-	glfwSetWindowIcon(window, 3, iconArr);
-
-	glfwSetCursor(window, cursor);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glfwSetWindowSizeCallback(window, WindowSizeCallback);
-	glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
-	glfwSetScrollCallback(window, ScrollCallback);
-	glfwSetKeyCallback(window, KeyCallback);
-	glfwSetMouseButtonCallback(window, MouseButtonCallback);
+	CanvasData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
 
 	canvas = new Canvas(CanvasDims[0], CanvasDims[1]);
 	RectI32 dirtyArea = { 0, 0, CanvasDims[0], CanvasDims[1] };
@@ -174,34 +125,13 @@ int main(int argc, char **argv) {
 	canvas->viewport.w = CanvasDims[0] * ZoomLevel; // Width
 	canvas->viewport.h = CanvasDims[1] * ZoomLevel; // Height
 
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.IniFilename = NULL; // Disable Generation of .ini file
-
-	const void* Montserrat_Bold = NULL;
-	int Montserrat_Bold_Size = 0;
-
-	Montserrat_Bold = assets_get("data/fonts/Montserrat-Bold.ttf", &Montserrat_Bold_Size);
-
-	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold, Montserrat_Bold_Size, 16.0f);
-
-	ImGui::StyleColorsDark();
-
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 130");
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
 	window_flags |= ImGuiWindowFlags_NoTitleBar;
 	window_flags |= ImGuiWindowFlags_NoResize;
 	window_flags |= ImGuiWindowFlags_NoMove;
-
-#ifdef SHOW_FRAME_TIME
-	double lastTime = glfwGetTime();
-	int nbFrames = 0; // Number Of Frames Rendered
-#endif
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
@@ -256,30 +186,13 @@ int main(int argc, char **argv) {
 	CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
 	CanvasWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
 
-	glfwShowWindow(window);
+	glfwShowWindow((GLFWwindow*)App::GetWindow());
 
-	while (!glfwWindowShouldClose(window)) {
-#ifdef SHOW_FRAME_TIME
-		double currentTime = glfwGetTime();
-		nbFrames++;
-		if (currentTime - lastTime >= 1.0) {
-			printf("%f ms/frame\n", 1000.0 / double(nbFrames));
-			nbFrames = 0;
-			lastTime += 1.0;
-		}
-#endif
-
-		glfwPollEvents();
-		ProcessInput(window);
-
-		glClearColor(0.075, 0.075, 0.1, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+	while (!glfwWindowShouldClose((GLFWwindow*)App::GetWindow())) {
+		App::NewFrame();
+		ProcessInput((GLFWwindow*)App::GetWindow());
 
 		canvas->Update(dirtyArea, CanvasData);
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
 
 		#define BEGIN_MENU(label) if (ImGui::BeginMenu(label)) {
 		#define END_MENU() ImGui::EndMenu(); }
@@ -297,7 +210,7 @@ int main(int argc, char **argv) {
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
 						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						glfwSetWindowTitle((GLFWwindow*)App::GetWindow(), ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						ZoomNLevelViewport();
 					}
 				END_MENUITEM()
@@ -305,14 +218,14 @@ int main(int argc, char **argv) {
 					BEGIN_MENUITEM("Save", "Ctrl+S")
 						FilePath = FixFileExtension(FilePath);
 						SaveImageFromCanvas(FilePath);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+						glfwSetWindowTitle((GLFWwindow*)App::GetWindow(), ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 					END_MENUITEM()
 					BEGIN_MENUITEM("Save As", "Alt+S")
 						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
 						if (filePath != NULL) {
 							FilePath = FixFileExtension(std::string(filePath));
 							SaveImageFromCanvas(FilePath);
-							glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+							glfwSetWindowTitle((GLFWwindow*)App::GetWindow(), ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						}
 					END_MENUITEM()
 				END_MENU()
@@ -437,22 +350,14 @@ int main(int argc, char **argv) {
 		#undef BEGIN_WINDOW
 		#undef END_WINDOW
 
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		glfwSwapBuffers(window);
+		App::EndFrame();
 
 		next_time += wait_time;
 		std::this_thread::sleep_until(next_time);
 	}
 
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-
-	glfwDestroyWindow(window);
-	glfwTerminate();
 	FreeHistory();
+	App::Release();
 	return 0;
 }
 
