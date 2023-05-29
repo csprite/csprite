@@ -24,7 +24,7 @@ Canvas::~Canvas() {
 	id = 0;
 }
 
-void Canvas::Update(Rect& dirtyArea, Pixel* pixelData) {
+void Canvas::Update(RectI32& dirtyArea, Pixel* pixelData) {
 	glBindTexture(GL_TEXTURE_2D, id);
 	glTexSubImage2D(
 		GL_TEXTURE_2D, 0,
