@@ -205,8 +205,6 @@ int main(int argc, char **argv) {
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
-	glfwShowWindow(window);
-
 	#define xstr(a) str(a)
 	#define str(a) #a
 	#define PRINT_GL_VER(ver) printf(xstr(ver) ": %d\n", ver)
@@ -245,6 +243,20 @@ int main(int argc, char **argv) {
 	u32 frameStart, frameTime;
 
 	ZoomNLevelViewport();
+
+	ImGuiWindowFlags CanvasWindowFlags = 0;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoMove;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoResize;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoCollapse;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoNavInputs;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
+	CanvasWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
+
+	glfwShowWindow(window);
 
 	while (!glfwWindowShouldClose(window)) {
 #ifdef SHOW_FRAME_TIME
@@ -357,18 +369,6 @@ int main(int argc, char **argv) {
 				}
 			END_WINDOW()
 		}
-
-		ImGuiWindowFlags CanvasWindowFlags = 0;
-		CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-		CanvasWindowFlags |= ImGuiWindowFlags_NoMove;
-		CanvasWindowFlags |= ImGuiWindowFlags_NoResize;
-		CanvasWindowFlags |= ImGuiWindowFlags_NoCollapse;
-		CanvasWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-		CanvasWindowFlags |= ImGuiWindowFlags_NoNavInputs;
-		CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-		CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
-		CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
-		CanvasWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0, 0 });
