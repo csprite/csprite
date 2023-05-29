@@ -2,8 +2,9 @@
 #define CSP_RENDERER_CANVAS_HPP_INCLUDED_ 1
 #pragma once
 
-#include "glad/glad.h"
 #include "types.hpp"
+#include "imgui/imgui.h"
+#include "glad/glad.h"
 #include "pixel/pixel.hpp"
 
 /* Functions For Canvas Rendering.
@@ -14,12 +15,12 @@
 struct Canvas {
 	using TextureID = GLuint;
 	TextureID id = 0;
-	Rect viewport = { 0, 0, 0, 0 };
+	RectF32 viewport = { 0, 0, 0, 0 };
 
 	Canvas(u16 w, u16 h);
 	~Canvas();
 
-	void Update(Rect& dirtyArea, Pixel* pixelData);
+	void Update(RectI32& dirtyArea, Pixel* pixelData);
 };
 
 #endif // CSP_RENDERER_CANVAS_HPP_INCLUDED_
