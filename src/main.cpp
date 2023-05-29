@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
 	glfwSetMouseButtonCallback(window, MouseButtonCallback);
 
 	canvas = new Canvas(CanvasDims[0], CanvasDims[1]);
-	Rect dirtyArea = { 0, 0, CanvasDims[0], CanvasDims[1] };
+	RectI32 dirtyArea = { 0, 0, CanvasDims[0], CanvasDims[1] };
 
 	// Initial Canvas Position & Size
 	canvas->viewport.x = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2; // X Position
@@ -366,21 +366,22 @@ int main(int argc, char **argv) {
 		CanvasWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 		CanvasWindowFlags |= ImGuiWindowFlags_NoNavInputs;
 		CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-		// CanvasWindowFlags |= ImGuiWindowFlags_NoBackground;
 		CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
 		CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
 		CanvasWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0, 0 });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0, 0 });
 		BEGIN_WINDOW("Canvas", NULL, CanvasWindowFlags)
-			ImGui::SetWindowPos({
-				(float)canvas->viewport.x,
-				(float)canvas->viewport.y
-			});
+			ImGui::SetWindowPos({ canvas->viewport.x, canvas->viewport.y });
 			ImGui::Image(
 				(ImTextureID)canvas->id,
-				{ (float)canvas->viewport.w, (float)canvas->viewport.h }
+				{ canvas->viewport.w, canvas->viewport.h }
 			);
 		END_WINDOW()
+		ImGui::PopStyleVar(4);
 
 		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)
 			ImGui::SetWindowPos({0, 20});
@@ -479,8 +480,8 @@ void WindowSizeCallback(GLFWwindow* window, int width, int height) {
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT) {
-		int x = (int)(MousePosRelative[0] / ZoomLevel);
-		int y = (int)(MousePosRelative[1] / ZoomLevel);
+		double x = MousePosRelative[0];
+		double y = MousePosRelative[1];
 
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
 			if (action == GLFW_PRESS) {
@@ -502,35 +503,35 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 void ProcessInput(GLFWwindow *window) {
 	if (CanvasFreeze == 1) return;
 
+	MousePosLast[0] = MousePos[0];
+	MousePosLast[1] = MousePos[1];
 	glfwGetCursorPos(window, &MousePos[0], &MousePos[1]);
+
+	MousePosRelativeLast[0] = MousePosRelative[0];
+	MousePosRelativeLast[1] = MousePosRelative[1];
+
+	MousePosRelative[0] = (MousePos[0] - canvas->viewport.x) / ZoomLevel;
+	MousePosRelative[1] = (MousePos[1] - canvas->viewport.y) / ZoomLevel;
 
 	// infitesimally small chance aside from startup
 	if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
 		if (Mode == PAN) {
 			canvas->viewport.x -= MousePosLast[0] - MousePos[0];
-			canvas->viewport.y += MousePosLast[1] - MousePos[1];
+			canvas->viewport.y -= MousePosLast[1] - MousePos[1];
 		}
 	}
 
-	MousePosLast[0] = MousePos[0];
-	MousePosLast[1] = MousePos[1];
-
-	MousePosRelativeLast[0] = MousePosRelative[0];
-	MousePosRelativeLast[1] = MousePosRelative[1];
-	MousePosRelative[0] = MousePos[0] - canvas->viewport.x;
-	MousePosRelative[1] = (MousePos[1] + canvas->viewport.y) - (WindowDims[1] - canvas->viewport.h);
-
-	int x, y;
+	double x, y;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		x = (int)(MousePosRelative[0] / ZoomLevel);
-		y = (int)(MousePosRelative[1] / ZoomLevel);
+		x = MousePosRelative[0];
+		y = MousePosRelative[1];
 
 		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
 			switch (Mode) {
 				case SQUARE_BRUSH:
 				case CIRCLE_BRUSH: {
 					draw(x, y);
-					drawInBetween(x, y, (int)(MousePosRelativeLast[0] / ZoomLevel), (int)(MousePosRelativeLast[1] / ZoomLevel));
+					drawInBetween(x, y, (int)MousePosRelativeLast[0], (int)MousePosRelativeLast[1]);
 					break;
 				}
 				case FILL: {

@@ -24,13 +24,16 @@ using String = std::string;
 template<typename Type>
 using Vector = std::vector<Type>;
 
-struct Rect {
-	i32 x, y, w, h;
+#define GEN_RECT_STRUCT(name, type) \
+	struct name { \
+		type x, y, w, h; \
+		name& operator = (const name& rhs); \
+		bool operator == (const name& rhs) const; \
+		bool operator != (const name& rhs) const; \
+	}
 
-	Rect& operator = (const Rect& rhs);
-	bool operator == (const Rect& rhs) const;
-	bool operator != (const Rect& rhs) const;
-};
+GEN_RECT_STRUCT(RectI32, i32);
+GEN_RECT_STRUCT(RectF32, f32);
 
 // Clamps "a" to the min & max value
 #define CLAMP_NUM(a, min, max) \
