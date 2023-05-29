@@ -3,10 +3,12 @@
 	But Later I'll Switch To Native APIs Depending On The OS.
 */
 
-#include "app/app.hpp"
 #include "assets.h"
+
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
+
+#include "app/app.hpp"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -19,7 +21,9 @@ void* App::GetWindow() {
 
 i32 App::Init(u16 w, u16 h, const char* title) {
 	glfwInit();
-	// glfwSetErrorCallback(logGLFWErrors);
+	glfwSetErrorCallback([](int error, const char* desc) -> void {
+		printf("Error: %d\n%s\n", error, desc);
+	});
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -66,6 +70,34 @@ i32 App::Init(u16 w, u16 h, const char* title) {
 	int Montserrat_Bold_Size = 0;
 	const void* Montserrat_Bold = assets_get("data/fonts/Montserrat-Bold.ttf", &Montserrat_Bold_Size);
 	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold, Montserrat_Bold_Size, 16.0f);
+
+	#define xstr(a) str(a)
+	#define str(a) #a
+	#define PRINT_GL_VER(ver) printf(xstr(ver) ": %d\n", ver)
+	PRINT_GL_VER(GLAD_GL_VERSION_1_0);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_1);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_2);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_3);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_4);
+	PRINT_GL_VER(GLAD_GL_VERSION_1_5);
+	PRINT_GL_VER(GLAD_GL_VERSION_2_0);
+	PRINT_GL_VER(GLAD_GL_VERSION_2_1);
+	PRINT_GL_VER(GLAD_GL_VERSION_3_0);
+	PRINT_GL_VER(GLAD_GL_VERSION_3_1);
+	PRINT_GL_VER(GLAD_GL_VERSION_3_2);
+	PRINT_GL_VER(GLAD_GL_VERSION_3_3);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_0);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_1);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_2);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_3);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_4);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_5);
+	PRINT_GL_VER(GLAD_GL_VERSION_4_6);
+	#undef PRINT_GL_VER
+	#undef xstr
+	#undef str
+
+	printf("OpenGL version supported by this platform is %s\n", glGetString(GL_VERSION));
 
 	return 0;
 }

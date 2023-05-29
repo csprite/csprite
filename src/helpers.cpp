@@ -7,10 +7,6 @@
 	#include <shellapi.h>
 #endif
 
-void logGLFWErrors(int error, const char *description) {
-	printf("Error: %d\n%s\n", error, description);
-}
-
 void openUrl(std::string url) {
 #if defined(TARGET_WINDOWS)
 	ShellExecute(0, 0, url.c_str(), 0, 0, SW_SHOW);
