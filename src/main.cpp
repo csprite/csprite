@@ -382,7 +382,7 @@ int main(int argc, char **argv) {
 			ImGui::SetWindowPos({ canvas->viewport.x, canvas->viewport.y });
 			ImGui::SetWindowSize({ canvas->viewport.w, canvas->viewport.h });
 			ImGui::Image(
-				(ImTextureID)canvas->id,
+				reinterpret_cast<ImTextureID>(canvas->id),
 				{ canvas->viewport.w, canvas->viewport.h }
 			);
 		END_WINDOW()
