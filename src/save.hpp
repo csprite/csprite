@@ -7,6 +7,7 @@
 #include "stb_image.h"
 #include "types.hpp"
 #include "pixel/pixel.hpp"
+#include "glad/glad.h"
 
 // Loads a image to canvas and automatically calls FreeHistory to reset undo/redo
 void LoadImageToCanvas(const char *filepath, int *canvas_dims, Pixel** canvas_data) {

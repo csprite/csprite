@@ -3,21 +3,20 @@
 	But Later I'll Switch To Native APIs Depending On The OS.
 */
 
-#include "assets.h"
+#include <chrono>
+#include <thread>
 
-#include "glad/glad.h"
-#include "GLFW/glfw3.h"
+#include "assets.h"
 
 #include "app/app.hpp"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
-static GLFWwindow* window = nullptr;
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
 
-void* App::GetWindow() {
-	return (void*)window;
-}
+static GLFWwindow* window = nullptr;
 
 i32 App::Init(u16 w, u16 h, const char* title) {
 	glfwInit();
@@ -53,9 +52,6 @@ i32 App::Init(u16 w, u16 h, const char* title) {
 	iconImage.height = 32;
 	iconImage.pixels = (u8*) assets_get("data/icons/icon-32.png", NULL);
 	glfwSetWindowIcon(window, 1, &iconImage);
-
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -99,10 +95,20 @@ i32 App::Init(u16 w, u16 h, const char* title) {
 
 	printf("OpenGL version supported by this platform is %s\n", glGetString(GL_VERSION));
 
+	glfwShowWindow(window);
 	return 0;
 }
 
+bool App::ShouldClose() {
+	return glfwWindowShouldClose(window);
+}
+
+static f32 frameStart; // when frame started
+static f32 frameTime; // how long that frame took
+static f32 frameDelay = 1.0f / 59.0f;
+
 void App::NewFrame() {
+	frameStart = glfwGetTime();
 	glfwPollEvents();
 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -111,12 +117,21 @@ void App::NewFrame() {
 }
 
 void App::EndFrame() {
+	ImGui::Render();
+
 	glClearColor(0.075, 0.075, 0.1, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	glfwSwapBuffers(window);
+
+	frameTime = glfwGetTime() - frameStart;
+	if (frameDelay > frameTime) {
+		std::this_thread::sleep_for(
+			std::chrono::milliseconds((u32)((frameDelay - frameTime) * 1000))
+		);
+	}
+	frameStart = glfwGetTime();
 }
 
 void App::Release() {
@@ -126,4 +141,14 @@ void App::Release() {
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
+}
+
+void* App::GetWindow() {
+	return (void*)window;
+}
+
+void App::SetTitle(const char* title) {
+	if (title && window) {
+		glfwSetWindowTitle(window, title);
+	}
 }
