@@ -44,7 +44,7 @@ u16 BrushSize = 5; // Default Brush Size
 // Holds if a ctrl/shift is pressed or not
 bool IsShiftDown = 0;
 
-enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER };
+enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, INK_DROPPER };
 bool CanvasFreeze = 0;
 
 // Currently & last selected tool
@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
 				double x = MousePosRel.x;
 				double y = MousePosRel.y;
 
-				if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
+				if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH)) {
 					if (ImGui::IsMouseClicked(ImGuiMouseButton_Left, false)) {
 						SaveState();
 					}
@@ -228,8 +228,6 @@ int main(int argc, char **argv) {
 						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
 					}
 				}
-			} else if (ImGui::IsKeyPressed(ImGuiKey_F, false)) {
-				Mode = FILL;
 			} 
 
 			SelectedColor = ColorPalette[PaletteIndex];
@@ -250,11 +248,6 @@ int main(int argc, char **argv) {
 						case CIRCLE_BRUSH: {
 							draw(x, y);
 							drawInBetween(x, y, (int)MousePosRel.x, (int)MousePosRel.y);
-							break;
-						}
-						case FILL: {
-							Pixel& color = GetPixel(x, y);
-							fill(x, y, color);
 							break;
 						}
 						case INK_DROPPER: {
@@ -423,9 +416,6 @@ int main(int argc, char **argv) {
 						selectedToolText = "Circle Brush - (Size: " + std::to_string(BrushSize) + ")";
 					}
 					break;
-				case FILL:
-					selectedToolText = "Fill";
-					break;
 				case INK_DROPPER:
 					selectedToolText = "Ink Dropper";
 					break;
@@ -549,23 +539,6 @@ void draw(int st_x, int st_y) {
 			Pixel& ptr = GetPixel(st_x + dirX, st_y + dirY);
 			ptr = SelectedColor;
 		}
-	}
-}
-
-// Fill Tool, Fills The Whole Canvas Using Recursion
-void fill(int x, int y, Pixel& old_color) {
-	Pixel& ptr = GetPixel(x, y);
-	if (ptr == old_color) {
-		ptr = SelectedColor;
-
-		if (x != 0 && GetPixel(x - 1, y) != SelectedColor)
-			fill(x - 1, y, old_color);
-		if (x != CanvasDims[0] - 1 && GetPixel(x + 1, y) != SelectedColor)
-			fill(x + 1, y, old_color);
-		if (y != CanvasDims[1] - 1 && GetPixel(x, y + 1) != SelectedColor)
-			fill(x, y + 1, old_color);
-		if (y != 0 && GetPixel(x, y - 1) != SelectedColor)
-			fill(x, y - 1, old_color);
 	}
 }
 
