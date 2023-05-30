@@ -10,14 +10,8 @@
 #include <algorithm>
 #include <cctype>
 
-#include <chrono>
-#include <thread>
-
 #include "imgui/imgui.h"
 #include "tinyfiledialogs.h"
-
-#include "renderer/canvas.hpp"
-#include "GLFW/glfw3.h"
 
 #include "assets.h"
 #include "main.h"
@@ -27,32 +21,31 @@
 #include "pixel/pixel.hpp"
 #include "app/app.hpp"
 #include "palette/palette.hpp"
+#include "renderer/canvas.hpp"
 
 std::string FilePath = "untitled.png"; // Default Output Filename
 char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
 unsigned char NumOfFilterPatterns = 3;
 
-int WindowDims[2] = {700, 500}; // Default Window Dimensions
 int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
 
 Pixel* CanvasData = NULL;
 
-unsigned char LastPaletteIndex = 1;
-unsigned char PaletteIndex = 1;
-unsigned char PaletteCount = 17;
+u16 LastPaletteIndex = 1;
+u16 PaletteIndex = 1;
+u16 PaletteCount = 17;
 
 Palette ColorPalette;
 
 unsigned int ZoomLevel = 8; // Default Zoom Level
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
-unsigned char BrushSize = 5; // Default Brush Size
+u16 BrushSize = 5; // Default Brush Size
 
 // Holds if a ctrl/shift is pressed or not
-unsigned char IsCtrlDown = 0;
-unsigned char IsShiftDown = 0;
+bool IsShiftDown = 0;
 
 enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, FILL, INK_DROPPER };
-unsigned char CanvasFreeze = 0;
+bool CanvasFreeze = 0;
 
 // Currently & last selected tool
 enum mode_e Mode = CIRCLE_BRUSH;
@@ -64,12 +57,11 @@ unsigned char ShouldSave = 0;
 unsigned char ShowNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
 
 // Mouse Position On Window
-double MousePos[2];
-double MousePosLast[2];
+ImVec2 MousePos; // mouse position
+ImVec2 MousePosLast; // mouse position last frame
 
-// Mouse Position On Canvas
-double MousePosRelative[2];
-double MousePosRelativeLast[2];
+ImVec2 MousePosRel; // mouse position relative to canvas
+ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
 
 bool DidUndo = false;
 bool IsDirty = false;
@@ -85,15 +77,11 @@ typedef struct cvstate cvstate_t; // Canvas State Type
 cvstate_t* CurrentState = NULL;
 
 int main(int argc, char **argv) {
-	if (App::Init(WindowDims[0], WindowDims[1]) != 0) {
+	if (App::Init(700, 500) != 0) {
 		return 1;
 	}
 
-	glfwSetWindowSizeCallback((GLFWwindow*)App::GetWindow(), WindowSizeCallback);
-	glfwSetFramebufferSizeCallback((GLFWwindow*)App::GetWindow(), FrameBufferSizeCallback);
-	glfwSetScrollCallback((GLFWwindow*)App::GetWindow(), ScrollCallback);
-	glfwSetKeyCallback((GLFWwindow*)App::GetWindow(), KeyCallback);
-	glfwSetMouseButtonCallback((GLFWwindow*)App::GetWindow(), MouseButtonCallback);
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	ColorPalette.Add(Pixel{ 0,   0,   0,   0   });
 	ColorPalette.Add(Pixel{ 0,   0,   0,   255 });
@@ -119,12 +107,10 @@ int main(int argc, char **argv) {
 	RectI32 dirtyArea = { 0, 0, CanvasDims[0], CanvasDims[1] };
 
 	// Initial Canvas Position & Size
-	canvas->viewport.x = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2; // X Position
-	canvas->viewport.y = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2; // Y Position
-	canvas->viewport.w = CanvasDims[0] * ZoomLevel; // Width
-	canvas->viewport.h = CanvasDims[1] * ZoomLevel; // Height
-
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	canvas->viewport.x = io.DisplaySize.x / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	canvas->viewport.y = io.DisplaySize.y / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
+	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
+	canvas->viewport.h = CanvasDims[1] * ZoomLevel;
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
@@ -133,13 +119,6 @@ int main(int argc, char **argv) {
 	window_flags |= ImGuiWindowFlags_NoMove;
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
-
-	auto const wait_time = std::chrono::milliseconds{ 1000/50 };
-	auto const start_time = std::chrono::steady_clock::now();
-	auto next_time = start_time + wait_time;
-
-	const u32 frameDelay = 1000/50;
-	u32 frameStart, frameTime;
 
 	ZoomNLevelViewport();
 
@@ -153,15 +132,157 @@ int main(int argc, char **argv) {
 	CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
 	CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
 	CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
-	CanvasWindowFlags |= ImGuiWindowFlags_AlwaysAutoResize;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoScrollWithMouse;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoScrollbar;
+	CanvasWindowFlags |= ImGuiWindowFlags_NoNavFocus;
 
-	glfwShowWindow((GLFWwindow*)App::GetWindow());
-
-	while (!glfwWindowShouldClose((GLFWwindow*)App::GetWindow())) {
+	while (!App::ShouldClose()) {
 		App::NewFrame();
-		ProcessInput((GLFWwindow*)App::GetWindow());
+
+		if (!CanvasFreeze) {
+			MousePosLast = MousePos;
+			MousePosRelLast = MousePosRel;
+
+			MousePos = ImGui::GetMousePos();
+			MousePosRel.x = (MousePos[0] - canvas->viewport.x) / ZoomLevel;
+			MousePosRel.y = (MousePos[1] - canvas->viewport.y) / ZoomLevel;
+
+			IsShiftDown = !io.KeyCtrl && ImGui::IsKeyDown(ImGuiMod_Shift);
+
+			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+				double x = MousePosRel.x;
+				double y = MousePosRel.y;
+
+				if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
+					if (ImGui::IsMouseClicked(ImGuiMouseButton_Left, false)) {
+						SaveState();
+					}
+					if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+						if (DidUndo == true) {
+							IsDirty = true;
+							DidUndo = false;
+						} else {
+							IsDirty = false;
+						}
+						SaveState();
+					}
+				}
+			} else {
+				if (io.MouseWheel > 0) AdjustZoom(true);
+				if (io.MouseWheel < 0) AdjustZoom(false);
+			}
+
+			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
+				if (io.KeyCtrl) AdjustZoom(true);
+				else if (IsShiftDown) PaletteIndex = PaletteIndex >= PaletteCount - 1 ? 1 : PaletteIndex + 1;
+				else BrushSize++;
+			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
+				if (io.KeyCtrl) AdjustZoom(false);
+				else if (IsShiftDown) PaletteIndex = PaletteIndex > 1 ? PaletteCount - 1 : PaletteCount - 1;
+				else if (BrushSize > 2) BrushSize--;
+			} else if (ImGui::IsKeyPressed(ImGuiKey_B, false)) {
+				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
+				PaletteIndex = LastPaletteIndex;
+			} else if (ImGui::IsKeyPressed(ImGuiKey_E, false)) {
+				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
+				if (PaletteIndex != 0) {
+					LastPaletteIndex = PaletteIndex;
+					PaletteIndex = 0;
+				}
+			} else if (ImGui::IsKeyPressed(ImGuiKey_I, false)) {
+				LastMode = Mode;
+				Mode = INK_DROPPER;
+			} else if (ImGui::IsKeyPressed(ImGuiKey_Space, false)) {
+				LastMode = Mode;
+				Mode = PAN;
+			} else if (ImGui::IsKeyReleased(ImGuiKey_Space)) {
+				Mode = LastMode;
+			} else if (ImGui::IsKeyPressed(ImGuiKey_Z, false)) {
+				if (io.KeyCtrl) Undo();
+			} else if (ImGui::IsKeyPressed(ImGuiKey_Y, false)) {
+				if (io.KeyCtrl) Redo();
+			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
+				if (io.KeyCtrl) ShowNewCanvasWindow = 1;
+			} else if (ImGui::IsKeyPressed(ImGuiKey_S, false)) {
+				if (ImGui::IsKeyPressed(ImGuiMod_Alt, false)) { // Show Prompt To Save if Alt + S pressed
+					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
+					if (filePath != NULL) {
+						FilePath = FixFileExtension(std::string(filePath));
+						SaveImageFromCanvas(FilePath);
+
+						// Simple Hack To Get The File Name from the path and set it to the window title
+						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
+					}
+				} else if (io.KeyCtrl) { // Directly Save Don't Prompt
+					FilePath = FixFileExtension(FilePath);
+					SaveImageFromCanvas(FilePath);
+				}
+			} else if (ImGui::IsKeyPressed(ImGuiKey_O, false)) {
+				if (io.KeyCtrl) {
+					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
+					if (filePath != NULL) {
+						FilePath = std::string(filePath);
+						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
+
+						// Simple Hack To Get The File Name from the path and set it to the window title
+						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
+					}
+				}
+			} else if (ImGui::IsKeyPressed(ImGuiKey_F, false)) {
+				Mode = FILL;
+			} 
+
+			SelectedColor = ColorPalette[PaletteIndex];
+
+			if (Mode == PAN) {
+				canvas->viewport.x -= MousePosLast.x - MousePos.x;
+				canvas->viewport.y -= MousePosLast.y - MousePos.y;
+			}
+
+			double x, y;
+			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+				x = MousePosRel.x;
+				y = MousePosRel.y;
+
+				if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
+					switch (Mode) {
+						case SQUARE_BRUSH:
+						case CIRCLE_BRUSH: {
+							draw(x, y);
+							drawInBetween(x, y, (int)MousePosRel.x, (int)MousePosRel.y);
+							break;
+						}
+						case FILL: {
+							Pixel& color = GetPixel(x, y);
+							fill(x, y, color);
+							break;
+						}
+						case INK_DROPPER: {
+							Pixel& color = GetPixel(x, y);
+
+							// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
+							for (int i = 1; i < PaletteCount; i++) {
+								if (ColorPalette[i] == color) {
+									LastPaletteIndex = PaletteIndex;
+									PaletteIndex = i;
+									break;
+								}
+							}
+							break;
+						}
+						default: {
+							break;
+						}
+					}
+				}
+			}
+		}
 
 		canvas->Update(dirtyArea, CanvasData);
+
+#ifdef _DEBUG
+		static bool metricsWinVisible = false;
+#endif
 
 		#define BEGIN_MENU(label) if (ImGui::BeginMenu(label)) {
 		#define END_MENU() ImGui::EndMenu(); }
@@ -179,22 +300,28 @@ int main(int argc, char **argv) {
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
 						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-						glfwSetWindowTitle((GLFWwindow*)App::GetWindow(), ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
 						ZoomNLevelViewport();
+
+						// Simple Hack To Get The File Name from the path and set it to the window title
+						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
 					}
 				END_MENUITEM()
 				BEGIN_MENU("Save")
 					BEGIN_MENUITEM("Save", "Ctrl+S")
 						FilePath = FixFileExtension(FilePath);
 						SaveImageFromCanvas(FilePath);
-						glfwSetWindowTitle((GLFWwindow*)App::GetWindow(), ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+
+						// Simple Hack To Get The File Name from the path and set it to the window title
+						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
 					END_MENUITEM()
 					BEGIN_MENUITEM("Save As", "Alt+S")
 						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
 						if (filePath != NULL) {
 							FilePath = FixFileExtension(std::string(filePath));
 							SaveImageFromCanvas(FilePath);
-							glfwSetWindowTitle((GLFWwindow*)App::GetWindow(), ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
+
+							// Simple Hack To Get The File Name from the path and set it to the window title
+							App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
 						}
 					END_MENUITEM()
 				END_MENU()
@@ -204,6 +331,12 @@ int main(int argc, char **argv) {
 				BEGIN_MENUITEM("Undo", "Ctrl+Z") Undo(); END_MENUITEM()
 				BEGIN_MENUITEM("Redo", "Ctrl+Y") Redo(); END_MENUITEM()
 			END_MENU()
+
+#ifdef _DEBUG
+			BEGIN_MENU("Dev")
+				BEGIN_MENUITEM("Metrics", NULL) metricsWinVisible = !metricsWinVisible; END_MENUITEM()
+			END_MENU()
+#endif
 
 			BEGIN_MENU("Help")
 				BEGIN_MENUITEM("About", NULL)
@@ -258,12 +391,19 @@ int main(int argc, char **argv) {
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0, 0 });
 		BEGIN_WINDOW("Canvas", NULL, CanvasWindowFlags)
 			ImGui::SetWindowPos({ canvas->viewport.x, canvas->viewport.y });
+			ImGui::SetWindowSize({ canvas->viewport.w, canvas->viewport.h });
 			ImGui::Image(
 				(ImTextureID)canvas->id,
 				{ canvas->viewport.w, canvas->viewport.h }
 			);
 		END_WINDOW()
 		ImGui::PopStyleVar(4);
+
+#ifdef _DEBUG
+		if (metricsWinVisible) {
+			ImGui::ShowMetricsWindow(NULL);
+		}
+#endif
 
 		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)
 			ImGui::SetWindowPos({0, 20});
@@ -303,7 +443,7 @@ int main(int argc, char **argv) {
 		END_WINDOW()
 
 		BEGIN_WINDOW("ColorPaletteWindow", NULL, window_flags)
-			ImGui::SetWindowPos({ 0, (float)WindowDims[1] - 35 });
+			ImGui::SetWindowPos({ 0, io.DisplaySize.y - 35.0f });
 			for (int i = 1; i < PaletteCount; i++) {
 				if (i != 1) ImGui::SameLine();
 				if (ImGui::ColorButton(
@@ -320,9 +460,6 @@ int main(int argc, char **argv) {
 		#undef END_WINDOW
 
 		App::EndFrame();
-
-		next_time += wait_time;
-		std::this_thread::sleep_until(next_time);
 	}
 
 	FreeHistory();
@@ -330,269 +467,11 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void FrameBufferSizeCallback(GLFWwindow *window, int w, int h) {
-	glViewport(0, 0, w, h);
-}
-
 void ZoomNLevelViewport() {
-	canvas->viewport.x = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
-	canvas->viewport.y = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
-}
-
-void WindowSizeCallback(GLFWwindow* window, int width, int height) {
-	WindowDims[0] = width;
-	WindowDims[1] = height;
-
-	// Center The Canvas On X, Y
-	canvas->viewport.x = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
-	canvas->viewport.y = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
-
-	// Set The Canvas Size (Not Neccessary Here Tho)
+	canvas->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	canvas->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
 	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
 	canvas->viewport.h = CanvasDims[1] * ZoomLevel;
-}
-
-void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-	if (button == GLFW_MOUSE_BUTTON_LEFT) {
-		double x = MousePosRelative[0];
-		double y = MousePosRelative[1];
-
-		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH || Mode == FILL)) {
-			if (action == GLFW_PRESS) {
-				SaveState();
-			}
-			if (action == GLFW_RELEASE) {
-				if (DidUndo == true) {
-					IsDirty = true;
-					DidUndo = false;
-				} else {
-					IsDirty = false;
-				}
-				SaveState();
-			}
-		}
-	}
-}
-
-void ProcessInput(GLFWwindow *window) {
-	if (CanvasFreeze == 1) return;
-
-	MousePosLast[0] = MousePos[0];
-	MousePosLast[1] = MousePos[1];
-	glfwGetCursorPos(window, &MousePos[0], &MousePos[1]);
-
-	MousePosRelativeLast[0] = MousePosRelative[0];
-	MousePosRelativeLast[1] = MousePosRelative[1];
-
-	MousePosRelative[0] = (MousePos[0] - canvas->viewport.x) / ZoomLevel;
-	MousePosRelative[1] = (MousePos[1] - canvas->viewport.y) / ZoomLevel;
-
-	// infitesimally small chance aside from startup
-	if (MousePosLast[0] != 0 && MousePosLast[1] != 0) {
-		if (Mode == PAN) {
-			canvas->viewport.x -= MousePosLast[0] - MousePos[0];
-			canvas->viewport.y -= MousePosLast[1] - MousePos[1];
-		}
-	}
-
-	double x, y;
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		x = MousePosRelative[0];
-		y = MousePosRelative[1];
-
-		if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
-			switch (Mode) {
-				case SQUARE_BRUSH:
-				case CIRCLE_BRUSH: {
-					draw(x, y);
-					drawInBetween(x, y, (int)MousePosRelativeLast[0], (int)MousePosRelativeLast[1]);
-					break;
-				}
-				case FILL: {
-					Pixel& color = GetPixel(x, y);
-					fill(x, y, color);
-					break;
-				}
-				case INK_DROPPER: {
-					Pixel& color = GetPixel(x, y);
-
-					// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
-					for (int i = 1; i < PaletteCount; i++) {
-						if (ColorPalette[i] == color) {
-							LastPaletteIndex = PaletteIndex;
-							PaletteIndex = i;
-							break;
-						}
-					}
-					break;
-				}
-				default: {
-					break;
-				}
-			}
-		}
-	}
-}
-
-void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset) {
-	if (yoffset > 0)
-		AdjustZoom(true);
-	else
-		AdjustZoom(false);
-}
-
-void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-	if (action == GLFW_RELEASE) {
-		if (mods == GLFW_MOD_CONTROL)
-			IsCtrlDown = 0;
-
-		if (mods == GLFW_MOD_SHIFT)
-			IsShiftDown = 0;
-
-		if (key == GLFW_KEY_SPACE) {
-			Mode = LastMode;
-		}
-	}
-
-	if (action == GLFW_PRESS) {
-		if (mods == GLFW_MOD_CONTROL) {
-			IsCtrlDown = 1;
-
-			// if IsCtrlDown key is pressed and + or - is pressed, adjust the zoom size
-			if (key == GLFW_KEY_EQUAL) {
-				AdjustZoom(true);
-			} else if (key == GLFW_KEY_MINUS) {
-				AdjustZoom(false);
-			}
-		} else if (mods == GLFW_MOD_SHIFT) {
-			IsShiftDown = 1;
-		} else {
-			if (key == GLFW_KEY_EQUAL) {
-				if (BrushSize < 255) {
-					BrushSize++;
-				}
-			} else if (key == GLFW_KEY_MINUS) {
-				if (BrushSize != 1) {
-					BrushSize--;
-				}
-			}
-		}
-
-		switch (key) {
-			case GLFW_KEY_K:
-				if (PaletteIndex > 1) {
-					PaletteIndex--;
-				}
-				break;
-			case GLFW_KEY_L:
-				if (PaletteIndex < PaletteCount-1) {
-					PaletteIndex++;
-				}
-				break;
-			case GLFW_KEY_1:
-				if (PaletteCount >= 1) {
-					PaletteIndex = IsShiftDown ? 9 : 1;
-				}
-				break;
-			case GLFW_KEY_2:
-				if (PaletteCount >= 2) {
-					PaletteIndex = IsShiftDown ? 10 : 2;
-				}
-				break;
-			case GLFW_KEY_3:
-				if (PaletteCount >= 3) {
-					PaletteIndex = IsShiftDown ? 11 : 3;
-				}
-				break;
-			case GLFW_KEY_4:
-				if (PaletteCount >= 4) {
-					PaletteIndex = IsShiftDown ? 12 : 4;
-				}
-				break;
-			case GLFW_KEY_5:
-				if (PaletteCount >= 5) {
-					PaletteIndex = IsShiftDown ? 13 : 5;
-				}
-				break;
-			case GLFW_KEY_6:
-				if (PaletteCount >= 6) {
-					PaletteIndex = IsShiftDown ? 14 : 6;
-				}
-				break;
-			case GLFW_KEY_7:
-				if (PaletteCount >= 7) {
-					PaletteIndex = IsShiftDown ? 15 : 7;
-				}
-				break;
-			case GLFW_KEY_8:
-				if (PaletteCount >= 8) {
-					PaletteIndex = IsShiftDown ? 16 : 8;
-				}
-				break;
-			case GLFW_KEY_F:
-				Mode = FILL;
-				break;
-			case GLFW_KEY_B:
-				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
-				PaletteIndex = LastPaletteIndex;
-				break;
-			case GLFW_KEY_E:
-				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
-				if (PaletteIndex != 0) {
-					LastPaletteIndex = PaletteIndex;
-					PaletteIndex = 0;
-				}
-				break;
-			case GLFW_KEY_I:
-				LastMode = Mode;
-				Mode = INK_DROPPER;
-				break;
-			case GLFW_KEY_SPACE:
-				LastMode = Mode;
-				Mode = PAN;
-				break;
-			case GLFW_KEY_Z:
-				if (IsCtrlDown == 1) {
-					Undo();
-				}
-				break;
-			case GLFW_KEY_Y:
-				if (IsCtrlDown == 1) {
-					Redo();
-				}
-				break;
-			case GLFW_KEY_N:
-				if (IsCtrlDown == 1) ShowNewCanvasWindow = 1;
-				break;
-			case GLFW_KEY_S:
-				if (mods == GLFW_MOD_ALT) { // Show Prompt To Save if Alt + S pressed
-					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
-					if (filePath != NULL) {
-						FilePath = FixFileExtension(std::string(filePath));
-						SaveImageFromCanvas(FilePath);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
-					}
-				} else if (IsCtrlDown == 1) { // Directly Save Don't Prompt
-					FilePath = FixFileExtension(FilePath);
-					SaveImageFromCanvas(FilePath);
-				}
-				break;
-			case GLFW_KEY_O: {
-				if (IsCtrlDown == 1) {
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
-					if (filePath != NULL) {
-						FilePath = std::string(filePath);
-						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-						glfwSetWindowTitle(window, ("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str()); // Simple Hack To Get The File Name from the path and set it to the window title
-					}
-				}
-			}
-			default:
-				break;
-		}
-	}
-
-	SelectedColor = ColorPalette[PaletteIndex];
 }
 
 void AdjustZoom(bool increase) {
@@ -607,8 +486,8 @@ void AdjustZoom(bool increase) {
 	}
 
 	// Comment Out To Not Center When Zooming
-	canvas->viewport.x = (float)WindowDims[0] / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
-	canvas->viewport.y = (float)WindowDims[1] / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
+	canvas->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
+	canvas->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
 
 	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
 	canvas->viewport.h = CanvasDims[1] * ZoomLevel;
