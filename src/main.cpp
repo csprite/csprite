@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 	CanvasData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
 
 	canvas = new Canvas(CanvasDims[0], CanvasDims[1]);
-	RectI32 dirtyArea = { 0, 0, CanvasDims[0], CanvasDims[1] };
+	RectI32 dirtyArea = { 0, 0, CanvasDims[0]/2, CanvasDims[1]/2 };
 
 	// Initial Canvas Position & Size
 	canvas->viewport.x = io.DisplaySize.x / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
@@ -242,7 +242,10 @@ int main(int argc, char **argv) {
 						case SQUARE_BRUSH:
 						case CIRCLE_BRUSH: {
 							draw(x, y);
-							drawInBetween(x, y, (int)MousePosRel.x, (int)MousePosRel.y);
+							drawInBetween(
+								x, y,
+								MousePosRelLast.x, MousePosRelLast.y
+							);
 							break;
 						}
 						case INK_DROPPER: {
@@ -265,8 +268,6 @@ int main(int argc, char **argv) {
 				}
 			}
 		}
-
-		canvas->Update(dirtyArea, CanvasData);
 
 #ifdef _DEBUG
 		static bool metricsWinVisible = false;
@@ -444,6 +445,7 @@ int main(int argc, char **argv) {
 		#undef BEGIN_WINDOW
 		#undef END_WINDOW
 
+		canvas->Update(CanvasData);
 		App::EndFrame();
 	}
 
@@ -491,38 +493,16 @@ Pixel& GetPixel(int x, int y) {
 */
 void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
 	while (st_x != end_x || st_y != end_y) {
-		if (st_x < end_x) {
-			st_x++;
-		}
-		if (st_x > end_x) {
-			st_x--;
-		}
-		if (st_y < end_y) {
-			st_y++;
-		}
-		if (st_y > end_y) {
-			st_y--;
-		}
+		if (st_x < end_x) st_x++;
+		if (st_x > end_x) st_x--;
+		if (st_y < end_y) st_y++;
+		if (st_y > end_y) st_y--;
 
-		for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
-			for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
-				if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
-					continue;
-
-				if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
-					continue;
-
-				Pixel& ptr = GetPixel(st_x + dirX, st_y + dirY);
-				ptr = SelectedColor;
-			}
-		}
+		draw(st_x, st_y);
 	}
 }
 
 void draw(int st_x, int st_y) {
-	// dirY = direction Y
-	// dirX = direction X
-
 	for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
 		for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
 			if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
@@ -531,11 +511,23 @@ void draw(int st_x, int st_y) {
 			if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
-			Pixel& ptr = GetPixel(st_x + dirX, st_y + dirY);
+			u16 affectedX = st_x + dirX, affectedY = st_y + dirY;
+			Pixel& ptr = GetPixel(affectedX, affectedY);
 			ptr = SelectedColor;
 		}
 	}
 }
+
+/*
+	_____________________
+	|                    |
+	|    +++             |
+	|    +-+             |
+	|    +++             |
+	|                    |
+	|____________________|
+
+*/
 
 // Makes sure that the file extension is .png or .jpg/.jpeg
 std::string FixFileExtension(std::string filepath) {

@@ -20,7 +20,10 @@ struct Canvas {
 	Canvas(u16 w, u16 h);
 	~Canvas();
 
-	void Update(RectI32& dirtyArea, Pixel* pixelData);
+	void Update(Pixel* pixelData);
+
+private:
+	u16 w, h;
 };
 
 #endif // CSP_RENDERER_CANVAS_HPP_INCLUDED_
