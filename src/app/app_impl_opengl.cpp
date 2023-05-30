@@ -119,7 +119,7 @@ void App::NewFrame() {
 void App::EndFrame() {
 	ImGui::Render();
 
-	glClearColor(0.075, 0.075, 0.1, 1.0);
+	glClearColor(0.07, 0.07, 0.07, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

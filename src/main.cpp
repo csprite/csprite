@@ -375,7 +375,6 @@ int main(int argc, char **argv) {
 		}
 
 		// Saves Few CPU & GPU Time Since There's No Window Flags Processing Or Some Other Overhead.
-
 		ImGui::GetBackgroundDrawList()->AddRect(
 			{ canvas->viewport.x - 1, canvas->viewport.y - 1 },
 			{ canvas->viewport.w + canvas->viewport.x + 1, canvas->viewport.h + canvas->viewport.y + 1 },
@@ -438,6 +437,12 @@ int main(int argc, char **argv) {
 					PaletteIndex = i;
 					SelectedColor = ColorPalette[PaletteIndex];
 				}
+				if (PaletteIndex == i)
+					ImGui::GetWindowDrawList()->AddRect(
+						ImGui::GetItemRectMin(),
+						ImGui::GetItemRectMax(),
+						IM_COL32_WHITE
+					);
 			};
 		END_WINDOW()
 
