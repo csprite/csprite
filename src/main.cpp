@@ -41,9 +41,6 @@ unsigned int ZoomLevel = 8; // Default Zoom Level
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
 u16 BrushSize = 5; // Default Brush Size
 
-// Holds if a ctrl/shift is pressed or not
-bool IsShiftDown = 0;
-
 enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, INK_DROPPER };
 bool CanvasFreeze = 0;
 
@@ -147,8 +144,6 @@ int main(int argc, char **argv) {
 			MousePosRel.x = (MousePos[0] - canvas->viewport.x) / ZoomLevel;
 			MousePosRel.y = (MousePos[1] - canvas->viewport.y) / ZoomLevel;
 
-			IsShiftDown = !io.KeyCtrl && ImGui::IsKeyDown(ImGuiMod_Shift);
-
 			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				double x = MousePosRel.x;
 				double y = MousePosRel.y;
@@ -174,21 +169,21 @@ int main(int argc, char **argv) {
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
 				if (io.KeyCtrl) AdjustZoom(true);
-				else if (IsShiftDown) PaletteIndex = PaletteIndex >= PaletteCount - 1 ? 1 : PaletteIndex + 1;
+				else if (io.KeyShift && !io.KeyCtrl)
+					PaletteIndex = PaletteIndex >= PaletteCount - 1 ? 1 : PaletteIndex + 1;
 				else BrushSize++;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
 				if (io.KeyCtrl) AdjustZoom(false);
-				else if (IsShiftDown) PaletteIndex = PaletteIndex > 1 ? PaletteCount - 1 : PaletteCount - 1;
+				else if (io.KeyShift && !io.KeyCtrl)
+					PaletteIndex = PaletteIndex > 1 ? PaletteCount - 1 : PaletteCount - 1;
 				else if (BrushSize > 2) BrushSize--;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_B, false)) {
-				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
+				Mode = io.KeyShift ? SQUARE_BRUSH : CIRCLE_BRUSH;
 				PaletteIndex = LastPaletteIndex;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_E, false)) {
-				Mode = IsShiftDown ? SQUARE_BRUSH : CIRCLE_BRUSH;
-				if (PaletteIndex != 0) {
-					LastPaletteIndex = PaletteIndex;
-					PaletteIndex = 0;
-				}
+				Mode = io.KeyShift ? SQUARE_BRUSH : CIRCLE_BRUSH;
+				LastPaletteIndex = PaletteIndex;
+				PaletteIndex = 0;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_I, false)) {
 				LastMode = Mode;
 				Mode = INK_DROPPER;
