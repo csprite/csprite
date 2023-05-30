@@ -374,19 +374,18 @@ int main(int argc, char **argv) {
 			END_WINDOW()
 		}
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0, 0 });
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0, 0 });
-		BEGIN_WINDOW("Canvas", NULL, CanvasWindowFlags)
-			ImGui::SetWindowPos({ canvas->viewport.x, canvas->viewport.y });
-			ImGui::SetWindowSize({ canvas->viewport.w, canvas->viewport.h });
-			ImGui::Image(
-				reinterpret_cast<ImTextureID>(canvas->id),
-				{ canvas->viewport.w, canvas->viewport.h }
-			);
-		END_WINDOW()
-		ImGui::PopStyleVar(4);
+		// Saves Few CPU & GPU Time Since There's No Window Flags Processing Or Some Other Overhead.
+
+		ImGui::GetBackgroundDrawList()->AddRect(
+			{ canvas->viewport.x - 1, canvas->viewport.y - 1 },
+			{ canvas->viewport.w + canvas->viewport.x + 1, canvas->viewport.h + canvas->viewport.y + 1 },
+			ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
+		);
+		ImGui::GetBackgroundDrawList()->AddImage(
+			reinterpret_cast<ImTextureID>(canvas->id),
+			{ canvas->viewport.x, canvas->viewport.y },
+			{ canvas->viewport.w + canvas->viewport.x, canvas->viewport.h + canvas->viewport.y }
+		);
 
 #ifdef _DEBUG
 		if (metricsWinVisible) {
