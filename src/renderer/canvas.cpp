@@ -1,3 +1,4 @@
+#include "glad/glad.h"
 #include "renderer/canvas.hpp"
 
 Canvas::Canvas(u16 _w, u16 _h) {
