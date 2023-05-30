@@ -16,7 +16,7 @@ void AdjustZoom(bool increase);
 Pixel& GetPixel(int x, int y);
 
 // Canvas Operations
-void draw(int x, int y); // Draws on 1 x, y coordinate
+void draw(int x, int y); // Returns The Area This Function Changed
 void drawInBetween(int st_x, int st_y, int end_x, int end_y); // Draws Between The Given 2 x, y coordinates
 
 // File IO
