@@ -2,19 +2,10 @@
 #define MAIN_H
 
 #include <string>
-#include "GLFW/glfw3.h"
 #include "types.hpp"
 #include "pixel/pixel.hpp"
 
 enum export_format_e { PNG, JPG };
-
-// Callbacks
-void ProcessInput(GLFWwindow* window);
-void ScrollCallback(GLFWwindow* window, double, double);
-void KeyCallback(GLFWwindow* window, int, int, int, int);
-void FrameBufferSizeCallback(GLFWwindow* window, int, int);
-void WindowSizeCallback(GLFWwindow* window, int width, int height);
-void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 
 // Canvas Zoom
 void ViewportSet();
