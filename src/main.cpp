@@ -13,13 +13,14 @@
 #include "imgui/imgui.h"
 #include "tinyfiledialogs.h"
 
-#include "assets.h"
 #include "main.h"
 #include "save.hpp"
-#include "helpers.hpp"
+#include "assets.h"
 #include "types.hpp"
-#include "pixel/pixel.hpp"
+#include "helpers.hpp"
 #include "app/app.hpp"
+#include "tools/tools.hpp"
+#include "pixel/pixel.hpp"
 #include "palette/palette.hpp"
 #include "renderer/canvas.hpp"
 
@@ -31,27 +32,22 @@ int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
 
 Pixel* CanvasData = NULL;
 
-u16 LastPaletteIndex = 1;
-u16 PaletteIndex = 1;
-u16 PaletteCount = 17;
+u16 PaletteIndex = 0;
+u16 PaletteCount = 16;
 
 Palette ColorPalette;
 
 unsigned int ZoomLevel = 8; // Default Zoom Level
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
-u16 BrushSize = 5; // Default Brush Size
-
-enum mode_e { SQUARE_BRUSH, CIRCLE_BRUSH, PAN, INK_DROPPER };
-bool CanvasFreeze = 0;
-
-// Currently & last selected tool
-enum mode_e Mode = CIRCLE_BRUSH;
-enum mode_e LastMode = CIRCLE_BRUSH;
 
 Canvas* canvas = nullptr;
 Pixel SelectedColor; // Holds Pointer To Currently Selected Color
-unsigned char ShouldSave = 0;
-unsigned char ShowNewCanvasWindow = 0; // Holds Whether to show new canvas window or not.
+
+bool ShouldSave = false;
+bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
+bool CanvasFreeze = false;
+bool DidUndo = false;
+bool IsDirty = false;
 
 // Mouse Position On Window
 ImVec2 MousePos; // mouse position
@@ -59,9 +55,6 @@ ImVec2 MousePosLast; // mouse position last frame
 
 ImVec2 MousePosRel; // mouse position relative to canvas
 ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
-
-bool DidUndo = false;
-bool IsDirty = false;
 
 struct cvstate {
 	Pixel* pixelData;
@@ -80,7 +73,6 @@ int main(int argc, char **argv) {
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-	ColorPalette.Add(Pixel{ 0,   0,   0,   0   });
 	ColorPalette.Add(Pixel{ 0,   0,   0,   255 });
 	ColorPalette.Add(Pixel{ 29,  43,  83,  255 });
 	ColorPalette.Add(Pixel{ 126, 37,  83,  255 });
@@ -133,8 +125,14 @@ int main(int argc, char **argv) {
 	CanvasWindowFlags |= ImGuiWindowFlags_NoScrollbar;
 	CanvasWindowFlags |= ImGuiWindowFlags_NoNavFocus;
 
+	ToolType LastToolType = ToolManager::GetToolType();
+	ToolShape LastToolShape = ToolManager::GetToolShape();
+	Pixel EmptyColor = { 0, 0, 0, 0 };
+
 	while (!App::ShouldClose()) {
 		App::NewFrame();
+
+		// printf("x: %f, y: %f\n", io.MouseDelta.x, io.MouseDelta.y);
 
 		if (!CanvasFreeze) {
 			MousePosLast = MousePos;
@@ -148,7 +146,12 @@ int main(int argc, char **argv) {
 				double x = MousePosRel.x;
 				double y = MousePosRel.y;
 
-				if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1] && (Mode == SQUARE_BRUSH || Mode == CIRCLE_BRUSH)) {
+				if (
+					x >= 0 && x < CanvasDims[0] &&
+					y >= 0 && y < CanvasDims[1] &&
+					ToolManager::GetToolType() == ToolType::BRUSH ||
+					ToolManager::GetToolType() == ToolType::ERASER
+				) {
 					if (ImGui::IsMouseClicked(ImGuiMouseButton_Left, false)) {
 						SaveState();
 					}
@@ -170,28 +173,31 @@ int main(int argc, char **argv) {
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
 				if (io.KeyCtrl) AdjustZoom(true);
 				else if (io.KeyShift && !io.KeyCtrl)
-					PaletteIndex = PaletteIndex >= PaletteCount - 1 ? 1 : PaletteIndex + 1;
-				else BrushSize++;
+					PaletteIndex = PaletteIndex >= PaletteCount - 1 ? 0 : PaletteIndex + 1;
+				else ToolManager::SetBrushSize(ToolManager::GetBrushSize() + 1);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
 				if (io.KeyCtrl) AdjustZoom(false);
 				else if (io.KeyShift && !io.KeyCtrl)
-					PaletteIndex = PaletteIndex > 1 ? PaletteCount - 1 : PaletteCount - 1;
-				else if (BrushSize > 2) BrushSize--;
+					PaletteIndex = PaletteIndex > 0 ? PaletteIndex - 1 : PaletteCount - 1;
+				else if (ToolManager::GetBrushSize() > 2)
+					ToolManager::SetBrushSize(ToolManager::GetBrushSize() - 1);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_B, false)) {
-				Mode = io.KeyShift ? SQUARE_BRUSH : CIRCLE_BRUSH;
-				PaletteIndex = LastPaletteIndex;
+				ToolManager::SetToolType(ToolType::BRUSH);
+				ToolManager::SetToolShape(io.KeyShift ? ToolShape::SQUARE : ToolShape::CIRCLE);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_E, false)) {
-				Mode = io.KeyShift ? SQUARE_BRUSH : CIRCLE_BRUSH;
-				LastPaletteIndex = PaletteIndex;
-				PaletteIndex = 0;
+				ToolManager::SetToolType(ToolType::ERASER);
+				ToolManager::SetToolShape(io.KeyShift ? ToolShape::SQUARE : ToolShape::CIRCLE);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_I, false)) {
-				LastMode = Mode;
-				Mode = INK_DROPPER;
+				LastToolType = ToolManager::GetToolType();
+				LastToolShape = ToolManager::GetToolShape();
+				ToolManager::SetToolType(ToolType::INK_DROPPER);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Space, false)) {
-				LastMode = Mode;
-				Mode = PAN;
+				LastToolType = ToolManager::GetToolType();
+				LastToolShape = ToolManager::GetToolShape();
+				ToolManager::SetToolType(ToolType::PAN);
 			} else if (ImGui::IsKeyReleased(ImGuiKey_Space)) {
-				Mode = LastMode;
+				ToolManager::SetToolType(LastToolType);
+				ToolManager::SetToolShape(LastToolShape);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Z, false)) {
 				if (io.KeyCtrl) Undo();
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Y, false)) {
@@ -227,9 +233,9 @@ int main(int argc, char **argv) {
 
 			SelectedColor = ColorPalette[PaletteIndex];
 
-			if (Mode == PAN) {
-				canvas->viewport.x -= MousePosLast.x - MousePos.x;
-				canvas->viewport.y -= MousePosLast.y - MousePos.y;
+			if (ToolManager::GetToolType() == ToolType::PAN) {
+				canvas->viewport.x += io.MouseDelta.x;
+				canvas->viewport.y += io.MouseDelta.y;
 			}
 
 			double x, y;
@@ -238,13 +244,21 @@ int main(int argc, char **argv) {
 				y = MousePosRel.y;
 
 				if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
-					switch (Mode) {
-						case SQUARE_BRUSH:
-						case CIRCLE_BRUSH: {
-							draw(x, y);
-							drawInBetween(
-								x, y,
-								MousePosRelLast.x, MousePosRelLast.y
+					switch (ToolManager::GetToolType()) {
+						case BRUSH:
+							ToolManager::Draw(x, y, CanvasDims[0], CanvasDims[1], SelectedColor, CanvasData);
+							ToolManager::DrawBetween(
+								x, y, MousePosRelLast.x, MousePosRelLast.y,
+								CanvasDims[0], CanvasDims[1],
+								SelectedColor, CanvasData
+							);
+							break;
+						case ERASER: {
+							ToolManager::Draw(x, y, CanvasDims[0], CanvasDims[1], EmptyColor, CanvasData);
+							ToolManager::DrawBetween(
+								x, y, MousePosRelLast.x, MousePosRelLast.y,
+								CanvasDims[0], CanvasDims[1],
+								EmptyColor, CanvasData
 							);
 							break;
 						}
@@ -252,9 +266,8 @@ int main(int argc, char **argv) {
 							Pixel& color = GetPixel(x, y);
 
 							// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
-							for (int i = 1; i < PaletteCount; i++) {
+							for (int i = 0; i < PaletteCount; i++) {
 								if (ColorPalette[i] == color) {
-									LastPaletteIndex = PaletteIndex;
 									PaletteIndex = i;
 									break;
 								}
@@ -396,18 +409,19 @@ int main(int argc, char **argv) {
 			ImGui::SetWindowPos({0, 20});
 			std::string selectedToolText;
 
-			switch (Mode) {
-				case SQUARE_BRUSH:
-					if (PaletteIndex == 0)
-						selectedToolText = "Square Eraser - (Size: " + std::to_string(BrushSize) + ")";
-					else
-						selectedToolText = "Square Brush - (Size: " + std::to_string(BrushSize) + ")";
-					break;
-				case CIRCLE_BRUSH:
-					if (PaletteIndex == 0) {
-						selectedToolText = "Circle Eraser - (Size: " + std::to_string(BrushSize) + ")";
+			switch (ToolManager::GetToolType()) {
+				case BRUSH:
+					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
+						selectedToolText = "Circle Brush - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
 					} else {
-						selectedToolText = "Circle Brush - (Size: " + std::to_string(BrushSize) + ")";
+						selectedToolText = "Square Brush - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+					}
+					break;
+				case ERASER:
+					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
+						selectedToolText = "Circle Eraser - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+					} else {
+						selectedToolText = "Square Eraser - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
 					}
 					break;
 				case INK_DROPPER:
@@ -428,8 +442,8 @@ int main(int argc, char **argv) {
 
 		BEGIN_WINDOW("ColorPaletteWindow", NULL, window_flags)
 			ImGui::SetWindowPos({ 0, io.DisplaySize.y - 35.0f });
-			for (int i = 1; i < PaletteCount; i++) {
-				if (i != 1) ImGui::SameLine();
+			for (int i = 0; i < PaletteCount; i++) {
+				if (i != 0) ImGui::SameLine();
 				if (ImGui::ColorButton(
 					PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(),
 					{(float)ColorPalette[i].r/255, (float)ColorPalette[i].g/255, (float)ColorPalette[i].b/255, (float)ColorPalette[i].a/255})
@@ -488,50 +502,6 @@ void AdjustZoom(bool increase) {
 Pixel& GetPixel(int x, int y) {
 	return CanvasData[(y * CanvasDims[0]) + x];
 }
-
-/*
-	Function Takes 4 Argument First 2 Are starting x, y coordinates,
-	and second 2 are ending x, y coordinates.
-	And using a while loop it draws between the 2 given coordinates,
-	hence no gap is left when mouse is being moved very fast
-*/
-void drawInBetween(int st_x, int st_y, int end_x, int end_y) {
-	while (st_x != end_x || st_y != end_y) {
-		if (st_x < end_x) st_x++;
-		if (st_x > end_x) st_x--;
-		if (st_y < end_y) st_y++;
-		if (st_y > end_y) st_y--;
-
-		draw(st_x, st_y);
-	}
-}
-
-void draw(int st_x, int st_y) {
-	for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
-		for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
-			if (st_x + dirX < 0 || st_x + dirX >= CanvasDims[0] || st_y + dirY < 0 || st_y + dirY > CanvasDims[1])
-				continue;
-
-			if (Mode == CIRCLE_BRUSH && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
-				continue;
-
-			u16 affectedX = st_x + dirX, affectedY = st_y + dirY;
-			Pixel& ptr = GetPixel(affectedX, affectedY);
-			ptr = SelectedColor;
-		}
-	}
-}
-
-/*
-	_____________________
-	|                    |
-	|    +++             |
-	|    +-+             |
-	|    +++             |
-	|                    |
-	|____________________|
-
-*/
 
 // Makes sure that the file extension is .png or .jpg/.jpeg
 std::string FixFileExtension(std::string filepath) {
