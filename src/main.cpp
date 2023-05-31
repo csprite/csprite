@@ -109,8 +109,6 @@ int main(int argc, char **argv) {
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
-	ZoomNLevelViewport();
-
 	ImGuiWindowFlags CanvasWindowFlags = 0;
 	CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
 	CanvasWindowFlags |= ImGuiWindowFlags_NoMove;
@@ -128,6 +126,11 @@ int main(int argc, char **argv) {
 	ToolType LastToolType = ToolManager::GetToolType();
 	ToolShape LastToolShape = ToolManager::GetToolShape();
 	Pixel EmptyColor = { 0, 0, 0, 0 };
+
+	// is needed since the display size is updated every frame.
+	App::NewFrame();
+	ZoomNCenterVP();
+	App::EndFrame();
 
 	while (!App::ShouldClose()) {
 		App::NewFrame();
@@ -263,7 +266,7 @@ int main(int argc, char **argv) {
 							break;
 						}
 						case INK_DROPPER: {
-							Pixel& color = GetPixel(x, y);
+							Pixel& color = CanvasData[(u32)((y * CanvasDims[0]) + x)];
 
 							// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
 							for (int i = 0; i < PaletteCount; i++) {
@@ -302,7 +305,7 @@ int main(int argc, char **argv) {
 					if (filePath != NULL) {
 						FilePath = std::string(filePath);
 						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-						ZoomNLevelViewport();
+						ZoomNCenterVP();
 
 						// Simple Hack To Get The File Name from the path and set it to the window title
 						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
@@ -374,7 +377,7 @@ int main(int argc, char **argv) {
 
 					CanvasData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
 
-					ZoomNLevelViewport();
+					ZoomNCenterVP();
 					FreeHistory();
 					CanvasFreeze = 0;
 					ShowNewCanvasWindow = 0;
@@ -472,7 +475,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void ZoomNLevelViewport() {
+inline void ZoomNCenterVP() {
 	canvas->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
 	canvas->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
 	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
@@ -497,10 +500,6 @@ void AdjustZoom(bool increase) {
 	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
 	canvas->viewport.h = CanvasDims[1] * ZoomLevel;
 	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
-}
-
-Pixel& GetPixel(int x, int y) {
-	return CanvasData[(y * CanvasDims[0]) + x];
 }
 
 // Makes sure that the file extension is .png or .jpg/.jpeg
