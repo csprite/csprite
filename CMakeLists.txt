@@ -49,7 +49,11 @@ else()
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
-target_link_libraries(csprite PUBLIC third_party)
+target_link_libraries(csprite PUBLIC stb_static)
+target_link_libraries(csprite PUBLIC glad_loader)
+target_link_libraries(csprite PUBLIC glfw)
+target_link_libraries(csprite PUBLIC imgui_static)
+target_link_libraries(imgui_static PUBLIC glfw)
 
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
