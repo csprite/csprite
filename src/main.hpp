@@ -4,12 +4,17 @@
 
 #include "types.hpp"
 #include "doc/doc.hpp"
+#include "palette/palette.hpp"
 
 struct DocumentState {
-	u16 SelectedLayer;
-	u16 CanvasZoom;
 	Pixel SelectedColor;
+	u16 PaletteIndex;
+	Palette palette;
 
+	u16 CanvasZoom;
+	String CanvasZoomText;
+
+	u16 SelectedLayer;
 	Doc doc;
 };
 
