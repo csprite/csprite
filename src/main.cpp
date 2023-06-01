@@ -86,20 +86,6 @@ int main(int argc, char **argv) {
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
-	ImGuiWindowFlags CanvasWindowFlags = 0;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoMove;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoResize;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoCollapse;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoNavInputs;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoMouseInputs;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoScrollWithMouse;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoScrollbar;
-	CanvasWindowFlags |= ImGuiWindowFlags_NoNavFocus;
-
 	ToolType LastToolType = ToolManager::GetToolType();
 	ToolShape LastToolShape = ToolManager::GetToolShape();
 	Pixel EmptyColor = { 0, 0, 0, 0 };
@@ -224,6 +210,9 @@ int main(int argc, char **argv) {
 		#define BEGIN_MENUITEM(label, shortcut) if (ImGui::MenuItem(label, shortcut)) {
 		#define END_MENUITEM() }
 
+		static ImVec2 MenuBarPos;
+		static ImVec2 MenuBarSize;
+
 		if (ImGui::BeginMainMenuBar()) {
 			BEGIN_MENU("File")
 				BEGIN_MENUITEM("New", "Ctrl+N")
@@ -246,6 +235,8 @@ int main(int argc, char **argv) {
 				END_MENUITEM()
 			END_MENU()
 
+			MenuBarPos = ImGui::GetWindowPos();
+			MenuBarSize = ImGui::GetWindowSize();
 			ImGui::EndMainMenuBar();
 		}
 
@@ -302,7 +293,7 @@ int main(int argc, char **argv) {
 #endif
 
 		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)
-			ImGui::SetWindowPos({0, 20});
+			ImGui::SetWindowPos({0, MenuBarPos.y + MenuBarSize.y });
 			std::string selectedToolText;
 
 			switch (ToolManager::GetToolType()) {
