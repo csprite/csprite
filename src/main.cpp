@@ -1,20 +1,14 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-#include <climits>
-#include <cstdio>
-#include <cstring>
-#include <iostream>
-#include <string>
+#include <limits>
 
 // For Converting Strings To LowerCase in FixFileExtension function
 #include <algorithm>
 #include <cctype>
 
 #include "imgui/imgui.h"
-#include "tinyfiledialogs.h"
 
 #include "main.h"
-#include "save.hpp"
 #include "assets.h"
 #include "types.hpp"
 #include "helpers.hpp"
@@ -22,16 +16,9 @@
 #include "tools/tools.hpp"
 #include "pixel/pixel.hpp"
 #include "palette/palette.hpp"
-#include "renderer/canvas.hpp"
+#include "doc/doc.hpp"
 
-std::string FilePath = "untitled.png"; // Default Output Filename
-char const * FileFilterPatterns[3] = { "*.png", "*.jpg", "*.jpeg" };
-unsigned char NumOfFilterPatterns = 3;
-
-int CanvasDims[2] = {60, 40}; // Width, Height Default Canvas Size
-
-Pixel* CanvasData = NULL;
-
+Doc* mainDoc = nullptr;
 u16 PaletteIndex = 0;
 u16 PaletteCount = 16;
 
@@ -39,8 +26,6 @@ Palette ColorPalette;
 
 unsigned int ZoomLevel = 8; // Default Zoom Level
 std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
-
-Canvas* canvas = nullptr;
 Pixel SelectedColor; // Holds Pointer To Currently Selected Color
 
 bool ShouldSave = false;
@@ -55,16 +40,6 @@ ImVec2 MousePosLast; // mouse position last frame
 
 ImVec2 MousePosRel; // mouse position relative to canvas
 ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
-
-struct cvstate {
-	Pixel* pixelData;
-	cvstate* next; // Canvas State Before This Node
-	cvstate* prev; // Canvas State After This Node
-};
-
-typedef struct cvstate cvstate_t; // Canvas State Type
-
-cvstate_t* CurrentState = NULL;
 
 int main(int argc, char **argv) {
 	if (App::Init(700, 500) != 0) {
@@ -90,16 +65,19 @@ int main(int argc, char **argv) {
 	ColorPalette.Add(Pixel{ 255, 119, 168, 255 });
 	ColorPalette.Add(Pixel{ 255, 204, 170, 255 });
 	SelectedColor = ColorPalette[PaletteIndex];
-	CanvasData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
 
-	canvas = new Canvas(CanvasDims[0], CanvasDims[1]);
-	RectI32 dirtyArea = { 0, 0, CanvasDims[0]/2, CanvasDims[1]/2 };
+	mainDoc = new Doc();
+	mainDoc->CreateNew(60, 40);
+	mainDoc->AddLayer("New Layer");
+	mainDoc->layers[0]->pixels = new Pixel[mainDoc->GetTotalPixels()]{ 0, 0, 0, 0 };
+
+	RectI32 dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
 
 	// Initial Canvas Position & Size
-	canvas->viewport.x = io.DisplaySize.x / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
-	canvas->viewport.y = io.DisplaySize.y / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
-	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
-	canvas->viewport.h = CanvasDims[1] * ZoomLevel;
+	mainDoc->canvas->viewport.x = io.DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
+	mainDoc->canvas->viewport.y = io.DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
+	mainDoc->canvas->viewport.w = mainDoc->w * ZoomLevel;
+	mainDoc->canvas->viewport.h = mainDoc->h * ZoomLevel;
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
@@ -135,40 +113,15 @@ int main(int argc, char **argv) {
 	while (!App::ShouldClose()) {
 		App::NewFrame();
 
-		// printf("x: %f, y: %f\n", io.MouseDelta.x, io.MouseDelta.y);
-
 		if (!CanvasFreeze) {
 			MousePosLast = MousePos;
 			MousePosRelLast = MousePosRel;
 
 			MousePos = ImGui::GetMousePos();
-			MousePosRel.x = (MousePos[0] - canvas->viewport.x) / ZoomLevel;
-			MousePosRel.y = (MousePos[1] - canvas->viewport.y) / ZoomLevel;
+			MousePosRel.x = (MousePos[0] - mainDoc->canvas->viewport.x) / ZoomLevel;
+			MousePosRel.y = (MousePos[1] - mainDoc->canvas->viewport.y) / ZoomLevel;
 
-			if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				double x = MousePosRel.x;
-				double y = MousePosRel.y;
-
-				if (
-					x >= 0 && x < CanvasDims[0] &&
-					y >= 0 && y < CanvasDims[1] &&
-					ToolManager::GetToolType() == ToolType::BRUSH ||
-					ToolManager::GetToolType() == ToolType::ERASER
-				) {
-					if (ImGui::IsMouseClicked(ImGuiMouseButton_Left, false)) {
-						SaveState();
-					}
-					if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-						if (DidUndo == true) {
-							IsDirty = true;
-							DidUndo = false;
-						} else {
-							IsDirty = false;
-						}
-						SaveState();
-					}
-				}
-			} else {
+			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				if (io.MouseWheel > 0) AdjustZoom(true);
 				if (io.MouseWheel < 0) AdjustZoom(false);
 			}
@@ -201,44 +154,15 @@ int main(int argc, char **argv) {
 			} else if (ImGui::IsKeyReleased(ImGuiKey_Space)) {
 				ToolManager::SetToolType(LastToolType);
 				ToolManager::SetToolShape(LastToolShape);
-			} else if (ImGui::IsKeyPressed(ImGuiKey_Z, false)) {
-				if (io.KeyCtrl) Undo();
-			} else if (ImGui::IsKeyPressed(ImGuiKey_Y, false)) {
-				if (io.KeyCtrl) Redo();
 			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
 				if (io.KeyCtrl) ShowNewCanvasWindow = 1;
-			} else if (ImGui::IsKeyPressed(ImGuiKey_S, false)) {
-				if (ImGui::IsKeyPressed(ImGuiMod_Alt, false)) { // Show Prompt To Save if Alt + S pressed
-					char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
-					if (filePath != NULL) {
-						FilePath = FixFileExtension(std::string(filePath));
-						SaveImageFromCanvas(FilePath);
-
-						// Simple Hack To Get The File Name from the path and set it to the window title
-						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
-					}
-				} else if (io.KeyCtrl) { // Directly Save Don't Prompt
-					FilePath = FixFileExtension(FilePath);
-					SaveImageFromCanvas(FilePath);
-				}
-			} else if (ImGui::IsKeyPressed(ImGuiKey_O, false)) {
-				if (io.KeyCtrl) {
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
-					if (filePath != NULL) {
-						FilePath = std::string(filePath);
-						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-
-						// Simple Hack To Get The File Name from the path and set it to the window title
-						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
-					}
-				}
-			} 
+			}
 
 			SelectedColor = ColorPalette[PaletteIndex];
 
 			if (ToolManager::GetToolType() == ToolType::PAN) {
-				canvas->viewport.x += io.MouseDelta.x;
-				canvas->viewport.y += io.MouseDelta.y;
+				mainDoc->canvas->viewport.x += io.MouseDelta.x;
+				mainDoc->canvas->viewport.y += io.MouseDelta.y;
 			}
 
 			double x, y;
@@ -246,27 +170,33 @@ int main(int argc, char **argv) {
 				x = MousePosRel.x;
 				y = MousePosRel.y;
 
-				if (x >= 0 && x < CanvasDims[0] && y >= 0 && y < CanvasDims[1]) {
+				if (x >= 0 && x < mainDoc->w && y >= 0 && y < mainDoc->h) {
 					switch (ToolManager::GetToolType()) {
 						case BRUSH:
-							ToolManager::Draw(x, y, CanvasDims[0], CanvasDims[1], SelectedColor, CanvasData);
+							ToolManager::Draw(
+								x, y, mainDoc->w, mainDoc->h,
+								SelectedColor, mainDoc->layers[0]->pixels
+							);
 							ToolManager::DrawBetween(
 								x, y, MousePosRelLast.x, MousePosRelLast.y,
-								CanvasDims[0], CanvasDims[1],
-								SelectedColor, CanvasData
+								mainDoc->w, mainDoc->h,
+								SelectedColor, mainDoc->layers[0]->pixels
 							);
 							break;
 						case ERASER: {
-							ToolManager::Draw(x, y, CanvasDims[0], CanvasDims[1], EmptyColor, CanvasData);
+							ToolManager::Draw(
+								x, y, mainDoc->w, mainDoc->h,
+								EmptyColor, mainDoc->layers[0]->pixels
+							);
 							ToolManager::DrawBetween(
 								x, y, MousePosRelLast.x, MousePosRelLast.y,
-								CanvasDims[0], CanvasDims[1],
-								EmptyColor, CanvasData
+								mainDoc->w, mainDoc->h,
+								EmptyColor, mainDoc->layers[0]->pixels
 							);
 							break;
 						}
 						case INK_DROPPER: {
-							Pixel& color = CanvasData[(u32)((y * CanvasDims[0]) + x)];
+							Pixel& color = mainDoc->layers[0]->pixels[(u32)((y * mainDoc->w) + x)];
 
 							// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
 							for (int i = 0; i < PaletteCount; i++) {
@@ -300,41 +230,6 @@ int main(int argc, char **argv) {
 				BEGIN_MENUITEM("New", "Ctrl+N")
 					ShowNewCanvasWindow = 1;
 				END_MENUITEM()
-				BEGIN_MENUITEM("Open", "Ctrl+O")
-					char *filePath = tinyfd_openFileDialog("Open A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)", 0);
-					if (filePath != NULL) {
-						FilePath = std::string(filePath);
-						LoadImageToCanvas(FilePath.c_str(), CanvasDims, &CanvasData);
-						ZoomNCenterVP();
-
-						// Simple Hack To Get The File Name from the path and set it to the window title
-						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
-					}
-				END_MENUITEM()
-				BEGIN_MENU("Save")
-					BEGIN_MENUITEM("Save", "Ctrl+S")
-						FilePath = FixFileExtension(FilePath);
-						SaveImageFromCanvas(FilePath);
-
-						// Simple Hack To Get The File Name from the path and set it to the window title
-						App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
-					END_MENUITEM()
-					BEGIN_MENUITEM("Save As", "Alt+S")
-						char *filePath = tinyfd_saveFileDialog("Save A File", NULL, NumOfFilterPatterns, FileFilterPatterns, "Image File (.png, .jpg, .jpeg)");
-						if (filePath != NULL) {
-							FilePath = FixFileExtension(std::string(filePath));
-							SaveImageFromCanvas(FilePath);
-
-							// Simple Hack To Get The File Name from the path and set it to the window title
-							App::SetTitle(("CSprite - " + FilePath.substr(FilePath.find_last_of("/\\") + 1)).c_str());
-						}
-					END_MENUITEM()
-				END_MENU()
-			END_MENU()
-
-			BEGIN_MENU("Edit")
-				BEGIN_MENUITEM("Undo", "Ctrl+Z") Undo(); END_MENUITEM()
-				BEGIN_MENUITEM("Redo", "Ctrl+Y") Redo(); END_MENUITEM()
 			END_MENU()
 
 #ifdef _DEBUG
@@ -371,14 +266,13 @@ int main(int argc, char **argv) {
 				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
 				if (ImGui::Button("Ok")) {
-					delete[] CanvasData;
-					CanvasDims[0] = NEW_DIMS[0];
-					CanvasDims[1] = NEW_DIMS[1];
-
-					CanvasData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
+					delete mainDoc;
+					mainDoc = new Doc();
+					mainDoc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
+					mainDoc->AddLayer("New Layers");
+					mainDoc->layers[0]->pixels = new Pixel[mainDoc->GetTotalPixels()]{ 0, 0, 0, 0 };
 
 					ZoomNCenterVP();
-					FreeHistory();
 					CanvasFreeze = 0;
 					ShowNewCanvasWindow = 0;
 				}
@@ -392,14 +286,14 @@ int main(int argc, char **argv) {
 
 		// Saves Few CPU & GPU Time Since There's No Window Flags Processing Or Some Other Overhead.
 		ImGui::GetBackgroundDrawList()->AddRect(
-			{ canvas->viewport.x - 1, canvas->viewport.y - 1 },
-			{ canvas->viewport.w + canvas->viewport.x + 1, canvas->viewport.h + canvas->viewport.y + 1 },
+			{ mainDoc->canvas->viewport.x - 1, mainDoc->canvas->viewport.y - 1 },
+			{ mainDoc->canvas->viewport.w + mainDoc->canvas->viewport.x + 1, mainDoc->canvas->viewport.h + mainDoc->canvas->viewport.y + 1 },
 			ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
 		);
 		ImGui::GetBackgroundDrawList()->AddImage(
-			reinterpret_cast<ImTextureID>(canvas->id),
-			{ canvas->viewport.x, canvas->viewport.y },
-			{ canvas->viewport.w + canvas->viewport.x, canvas->viewport.h + canvas->viewport.y }
+			reinterpret_cast<ImTextureID>(mainDoc->canvas->id),
+			{ mainDoc->canvas->viewport.x, mainDoc->canvas->viewport.y },
+			{ mainDoc->canvas->viewport.w + mainDoc->canvas->viewport.x, mainDoc->canvas->viewport.h + mainDoc->canvas->viewport.y }
 		);
 
 #ifdef _DEBUG
@@ -466,25 +360,25 @@ int main(int argc, char **argv) {
 		#undef BEGIN_WINDOW
 		#undef END_WINDOW
 
-		canvas->Update(CanvasData);
+		mainDoc->Render(dirtyArea);
+
 		App::EndFrame();
 	}
 
-	FreeHistory();
 	App::Release();
 	return 0;
 }
 
 inline void ZoomNCenterVP() {
-	canvas->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
-	canvas->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
-	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
-	canvas->viewport.h = CanvasDims[1] * ZoomLevel;
+	mainDoc->canvas->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
+	mainDoc->canvas->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
+	mainDoc->canvas->viewport.w = mainDoc->w * ZoomLevel;
+	mainDoc->canvas->viewport.h = mainDoc->h * ZoomLevel;
 }
 
 void AdjustZoom(bool increase) {
 	if (increase == true) {
-		if (ZoomLevel < UINT_MAX) { // Max Value Of Unsigned int
+		if (ZoomLevel < std::numeric_limits<u32>().max()) { // Max Value Of Unsigned int
 			ZoomLevel++;
 		}
 	} else {
@@ -494,132 +388,10 @@ void AdjustZoom(bool increase) {
 	}
 
 	// Comment Out To Not Center When Zooming
-	canvas->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)CanvasDims[0] * ZoomLevel / 2;
-	canvas->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)CanvasDims[1] * ZoomLevel / 2;
+	mainDoc->canvas->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
+	mainDoc->canvas->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
 
-	canvas->viewport.w = CanvasDims[0] * ZoomLevel;
-	canvas->viewport.h = CanvasDims[1] * ZoomLevel;
+	mainDoc->canvas->viewport.w = mainDoc->w * ZoomLevel;
+	mainDoc->canvas->viewport.h = mainDoc->h * ZoomLevel;
 	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
-}
-
-// Makes sure that the file extension is .png or .jpg/.jpeg
-std::string FixFileExtension(std::string filepath) {
-	std::string fileExt = filepath.substr(filepath.find_last_of(".") + 1);
-	std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), [](unsigned char c){ return std::tolower(c); });
-
-	if (fileExt != "png" && fileExt != "jpg" && fileExt != "jpeg") {
-		filepath = filepath + ".png";
-	}
-
-	return filepath;
-}
-
-void SaveImageFromCanvas(std::string filepath) {
-	std::string fileExt = filepath.substr(filepath.find_last_of(".") + 1);
-	// Convert File Extension to LowerCase
-	std::transform(fileExt.begin(), fileExt.end(), fileExt.begin(), [](unsigned char c){ return std::tolower(c); });
-
-	if (fileExt == "png") {
-		WritePngFromCanvas(filepath.c_str(), CanvasDims);
-	} else if (fileExt == "jpg" || fileExt == "jpeg") {
-		WriteJpgFromCanvas(filepath.c_str(), CanvasDims);
-	} else {
-		filepath = filepath + ".png";
-		WritePngFromCanvas(filepath.c_str(), CanvasDims);
-	}
-	ShouldSave = 0;
-}
-
-/*
-	Pushes Pixels On Current Canvas in "History" array at index "HistoryIndex"
-	Removes The Elements in a range from "History" if "IsDirty" is true
-*/
-void SaveState() {
-	if (IsDirty == true && CurrentState != NULL) {
-		cvstate_t* tmp;
-		cvstate_t* head = CurrentState->next; // we start freeing from the next node of current node
-
-		while (head != NULL) {
-			tmp = head;
-			head = head->next;
-			if (tmp->pixelData != NULL) {
-				delete[] tmp->pixelData;
-			}
-			free(tmp);
-		}
-	}
-
-	cvstate_t* NewState = (cvstate_t*) malloc(sizeof(cvstate_t));
-	NewState->pixelData = new Pixel[CanvasDims[0] * CanvasDims[1]]{ 0, 0, 0, 0 };
-
-	if (CurrentState == NULL) {
-		CurrentState = NewState;
-		CurrentState->prev = NULL;
-		CurrentState->next = NULL;
-	} else {
-		NewState->prev = CurrentState;
-		NewState->next = NULL;
-		CurrentState->next = NewState;
-		CurrentState = NewState;
-	}
-
-	memcpy(CurrentState->pixelData, CanvasData, CanvasDims[0] * CanvasDims[1] * sizeof(Pixel));
-}
-
-// Undo - Puts The Pixels from "History" at "HistoryIndex"
-int Undo() {
-	DidUndo = true;
-
-	if (CurrentState->prev != NULL) {
-		CurrentState = CurrentState->prev;
-		memcpy(CanvasData, CurrentState->pixelData, CanvasDims[0] * CanvasDims[1] * sizeof(Pixel));
-	}
-	return 0;
-}
-
-// Redo - Puts The Pixels from "History" at "HistoryIndex"
-int Redo() {
-	if (CurrentState->next != NULL) {
-		CurrentState = CurrentState->next;
-		memcpy(CanvasData, CurrentState->pixelData, CanvasDims[0] * CanvasDims[1] * sizeof(Pixel));
-	}
-
-	return 0;
-}
-
-/*
-	Function: FreeHistory()
-	Takes The CurrentState Node
-		- Frees All Of The Nodes Before It
-		- Frees All Of The Nodes After It
-*/
-void FreeHistory() {
-	if (CurrentState == NULL) return;
-
-	cvstate_t* tmp;
-	cvstate_t* head = CurrentState->prev;
-
-	while (head != NULL) {
-		tmp = head;
-		head = head->prev;
-		if (tmp != NULL && tmp->pixelData != NULL) {
-			delete[] tmp->pixelData;
-			free(tmp);
-		}
-		tmp = NULL;
-	}
-
-	head = CurrentState;
-
-	while (head != NULL) {
-		tmp = head;
-		head = head->next;
-		if (tmp != NULL && tmp->pixelData != NULL) {
-			delete[] tmp->pixelData;
-			free(tmp);
-		}
-		tmp = NULL;
-	}
-
-	CurrentState = NULL;
 }
