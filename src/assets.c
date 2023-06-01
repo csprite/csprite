@@ -11,8 +11,7 @@ typedef struct {
 } asset_t;
 
 static asset_t ASSETS[] = {
-	#include "assets/fonts.inl"
-	#include "assets/icons.inl"
+	#include "assets/assets.inl"
 	{ NULL, 0, NULL } // NULL asset at the end of the list.
 };
 
