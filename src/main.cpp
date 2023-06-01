@@ -8,8 +8,8 @@
 
 #include "imgui/imgui.h"
 
-#include "main.h"
 #include "assets.h"
+#include "main.hpp"
 #include "types.hpp"
 #include "helpers.hpp"
 #include "app/app.hpp"
@@ -69,7 +69,6 @@ int main(int argc, char **argv) {
 	mainDoc = new Doc();
 	mainDoc->CreateNew(60, 40);
 	mainDoc->AddLayer("New Layer");
-	mainDoc->layers[0]->pixels = new Pixel[mainDoc->GetTotalPixels()]{ 0, 0, 0, 0 };
 
 	RectI32 dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
 
@@ -365,6 +364,7 @@ int main(int argc, char **argv) {
 		App::EndFrame();
 	}
 
+	delete mainDoc;
 	App::Release();
 	return 0;
 }

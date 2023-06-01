@@ -1,8 +1,11 @@
 #include <cstring>
 #include "doc/doc.hpp"
 
-std::size_t Doc::GetTotalPixels() {
-	return w * h;
+DocLayer::~DocLayer() {
+	if (pixels != nullptr) {
+		delete[] pixels;
+		pixels = nullptr;
+	}
 }
 
 bool Doc::CreateNew(u16 _w, u16 _h, bool _headless) {
@@ -19,7 +22,7 @@ bool Doc::CreateNew(u16 _w, u16 _h, bool _headless) {
 void Doc::AddLayer(const char* name) {
 	DocLayer* layer = new DocLayer();
 	layer->name = name;
-	layer->pixels = new Pixel[w * h];
+	layer->pixels = new Pixel[w * h]{ 0, 0, 0, 0 };
 	layers.push_back(layer);
 }
 
@@ -34,7 +37,7 @@ void Doc::RemoveLayer(u16 index) {
 
 Doc::~Doc() {
 	for (std::size_t i = 0; i < layers.size(); ++i) {
-		delete layers[i];
+		if (layers[i] != nullptr) delete layers[i];
 	}
 	layers.clear();
 

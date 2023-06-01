@@ -8,7 +8,9 @@
 
 struct DocLayer {
 	String name;
-	Pixel* pixels;
+	Pixel* pixels = nullptr;
+
+	~DocLayer();
 };
 
 struct Doc {
@@ -26,7 +28,7 @@ struct Doc {
 
 	~Doc();
 
-	std::size_t GetTotalPixels(); // returns w * h
+	inline std::size_t GetTotalPixels() { return w * h; }
 
 	bool CreateNew(u16 w, u16 h, bool headless = false);
 	void Render(RectI32& dirtyArea);
