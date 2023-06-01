@@ -90,10 +90,7 @@ int main(int argc, char **argv) {
 	ToolShape LastToolShape = ToolManager::GetToolShape();
 	Pixel EmptyColor = { 0, 0, 0, 0 };
 
-	// is needed since the display size is updated every frame.
-	App::NewFrame();
 	ZoomNCenterVP();
-	App::EndFrame();
 
 	while (!App::ShouldClose()) {
 		App::NewFrame();
