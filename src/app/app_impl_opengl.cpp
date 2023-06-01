@@ -96,6 +96,11 @@ i32 App::Init(u16 w, u16 h, const char* title) {
 	printf("OpenGL version supported by this platform is %s\n", glGetString(GL_VERSION));
 
 	glfwShowWindow(window);
+
+	// triggers the updates to ImGui so display size and etc are set.
+	App::NewFrame();
+	App::EndFrame();
+
 	return 0;
 }
 
