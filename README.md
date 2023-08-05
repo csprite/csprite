@@ -25,8 +25,7 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 
 ---
 ### Installation
-1. [Download Pre-Built Binaries](https://github.com/pegvin/csprite/releases/tag/v0.1.1)
-2. [Building From Source](https://csprite.github.io/wiki/v0.1.x/)
+1. [Building From Source](https://csprite.github.io/wiki/rewrite/)
 
 ### Controls
 | Key                          | Description                  |
