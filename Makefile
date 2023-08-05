@@ -14,7 +14,7 @@ all:
 	@cmake --build $(BUILD_DIR) --config=$(BUILD_TYPE) --parallel $(NUM_JOBS) $(CMAKE_BUILD_FLAGS)
 
 clean:
-	@$(RM) -r $(BUILD_DIR)
+	@$(RM) -r $(BUILD_DIR) src/assets/*.inl
 
 run: all
 	@./build/csprite
