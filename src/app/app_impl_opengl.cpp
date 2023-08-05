@@ -64,7 +64,7 @@ i32 App::Init(u16 w, u16 h, const char* title) {
 	io.IniFilename = NULL; // Disable Generation of .ini file
 
 	int Montserrat_Bold_Size = 0;
-	const void* Montserrat_Bold = assets_get("data/fonts/Montserrat-Bold.ttf", &Montserrat_Bold_Size);
+	const void* Montserrat_Bold = assets_get("data/fonts/Roboto-Regular.ttf", &Montserrat_Bold_Size);
 	io.Fonts->AddFontFromMemoryCompressedTTF(Montserrat_Bold, Montserrat_Bold_Size, 16.0f);
 
 	#define xstr(a) str(a)
