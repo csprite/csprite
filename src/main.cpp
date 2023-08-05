@@ -1,5 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
-
 #include <limits>
 
 // For Converting Strings To LowerCase in FixFileExtension function
@@ -31,8 +29,6 @@ Pixel SelectedColor; // Holds Pointer To Currently Selected Color
 bool ShouldSave = false;
 bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
 bool CanvasFreeze = false;
-bool DidUndo = false;
-bool IsDirty = false;
 
 // Mouse Position On Window
 ImVec2 MousePos; // mouse position
