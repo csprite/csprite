@@ -37,7 +37,7 @@ ImVec2 MousePosLast; // mouse position last frame
 ImVec2 MousePosRel; // mouse position relative to canvas
 ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
 
-int main(int argc, char **argv) {
+int main() {
 	if (App::Init(700, 500) != 0) {
 		return 1;
 	}
