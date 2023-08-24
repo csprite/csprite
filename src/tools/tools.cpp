@@ -11,7 +11,6 @@ u16 ToolManager::GetBrushSize() {
 void ToolManager::SetBrushSize(u16 _sz) {
 	if (_sz > 0) _brushSize = _sz;
 }
-
 ToolType ToolManager::GetToolType() {
 	return _tType;
 }
@@ -44,7 +43,7 @@ void ToolManager::Draw(u16 x, u16 y, u16 w, u16 h, Pixel& strokeColor, Pixel* pi
 			) continue;
 
 			u16 affectedX = x + dirX, affectedY = y + dirY;
-			if (affectedX >= 0 && affectedY >= 0 && affectedX < w && affectedY < h) {
+			if (affectedX < w && affectedY < h) {
 				Pixel& pixel = pixels[(affectedY * w) + affectedX];
 				pixel = strokeColor;
 			}
@@ -59,9 +58,7 @@ void ToolManager::DrawBetween(u16 sx, u16 sy, u16 ex, u16 ey, u16 w, u16 h, Pixe
 		if (sy < ey) sy++;
 		if (sy > ey) sy--;
 
-		if (
-			sx >= 0 && sy >= 0 && ex >= 0 && ey >= 0 &&
-			sx < w && sy < h && ex < w && ey < h
-		) ToolManager::Draw(sx, sy, w, h, strokeColor, pixels);
+		if (sx < w && sy < h && ex < w && ey < h)
+			ToolManager::Draw(sx, sy, w, h, strokeColor, pixels);
 	}
 }
