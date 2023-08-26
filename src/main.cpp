@@ -43,6 +43,8 @@ int main() {
 	}
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImBase::NewFrame();
+	ImBase::EndFrame();
 
 	ColorPalette.Add(Pixel{ 0,   0,   0,   255 });
 	ColorPalette.Add(Pixel{ 29,  43,  83,  255 });
@@ -69,10 +71,10 @@ int main() {
 	RectI32 dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
 
 	// Initial Canvas Position & Size
-	mainDoc->canvas->viewport.x = io.DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
-	mainDoc->canvas->viewport.y = io.DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
-	mainDoc->canvas->viewport.w = mainDoc->w * ZoomLevel;
-	mainDoc->canvas->viewport.h = mainDoc->h * ZoomLevel;
+	mainDoc->viewport.x = io.DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
+	mainDoc->viewport.y = io.DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
+	mainDoc->viewport.w = mainDoc->w * ZoomLevel;
+	mainDoc->viewport.h = mainDoc->h * ZoomLevel;
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
@@ -96,8 +98,8 @@ int main() {
 			MousePosRelLast = MousePosRel;
 
 			MousePos = ImGui::GetMousePos();
-			MousePosRel.x = (MousePos[0] - mainDoc->canvas->viewport.x) / ZoomLevel;
-			MousePosRel.y = (MousePos[1] - mainDoc->canvas->viewport.y) / ZoomLevel;
+			MousePosRel.x = (MousePos[0] - mainDoc->viewport.x) / ZoomLevel;
+			MousePosRel.y = (MousePos[1] - mainDoc->viewport.y) / ZoomLevel;
 
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				if (io.MouseWheel > 0) AdjustZoom(true);
@@ -139,8 +141,8 @@ int main() {
 			SelectedColor = ColorPalette[PaletteIndex];
 
 			if (ToolManager::GetToolType() == ToolType::PAN) {
-				mainDoc->canvas->viewport.x += io.MouseDelta.x;
-				mainDoc->canvas->viewport.y += io.MouseDelta.y;
+				mainDoc->viewport.x += io.MouseDelta.x;
+				mainDoc->viewport.y += io.MouseDelta.y;
 			}
 
 			double x, y;
@@ -269,14 +271,14 @@ int main() {
 
 		// Saves Few CPU & GPU Time Since There's No Window Flags Processing Or Some Other Overhead.
 		ImGui::GetBackgroundDrawList()->AddRect(
-			{ mainDoc->canvas->viewport.x - 1, mainDoc->canvas->viewport.y - 1 },
-			{ mainDoc->canvas->viewport.w + mainDoc->canvas->viewport.x + 1, mainDoc->canvas->viewport.h + mainDoc->canvas->viewport.y + 1 },
+			{ mainDoc->viewport.x - 1, mainDoc->viewport.y - 1 },
+			{ mainDoc->viewport.w + mainDoc->viewport.x + 1, mainDoc->viewport.h + mainDoc->viewport.y + 1 },
 			ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
 		);
 		ImGui::GetBackgroundDrawList()->AddImage(
-			reinterpret_cast<ImTextureID>(mainDoc->canvas->id),
-			{ mainDoc->canvas->viewport.x, mainDoc->canvas->viewport.y },
-			{ mainDoc->canvas->viewport.w + mainDoc->canvas->viewport.x, mainDoc->canvas->viewport.h + mainDoc->canvas->viewport.y }
+			reinterpret_cast<ImTextureID>(mainDoc->tex->id),
+			{ mainDoc->viewport.x, mainDoc->viewport.y },
+			{ mainDoc->viewport.w + mainDoc->viewport.x, mainDoc->viewport.h + mainDoc->viewport.y }
 		);
 
 #ifdef _DEBUG
@@ -354,10 +356,10 @@ int main() {
 }
 
 inline void ZoomNCenterVP() {
-	mainDoc->canvas->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
-	mainDoc->canvas->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
-	mainDoc->canvas->viewport.w = mainDoc->w * ZoomLevel;
-	mainDoc->canvas->viewport.h = mainDoc->h * ZoomLevel;
+	mainDoc->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
+	mainDoc->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
+	mainDoc->viewport.w = mainDoc->w * ZoomLevel;
+	mainDoc->viewport.h = mainDoc->h * ZoomLevel;
 }
 
 void AdjustZoom(bool increase) {
@@ -372,10 +374,10 @@ void AdjustZoom(bool increase) {
 	}
 
 	// Comment Out To Not Center When Zooming
-	mainDoc->canvas->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
-	mainDoc->canvas->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
+	mainDoc->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
+	mainDoc->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
 
-	mainDoc->canvas->viewport.w = mainDoc->w * ZoomLevel;
-	mainDoc->canvas->viewport.h = mainDoc->h * ZoomLevel;
+	mainDoc->viewport.w = mainDoc->w * ZoomLevel;
+	mainDoc->viewport.h = mainDoc->h * ZoomLevel;
 	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 }

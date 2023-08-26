@@ -4,7 +4,7 @@
 
 #include "types.hpp"
 #include "pixel/pixel.hpp"
-#include "renderer/canvas.hpp"
+#include "imbase/texture.hpp"
 
 struct DocLayer {
 	String name;
@@ -20,7 +20,8 @@ struct Doc {
 
 	/* this is stored as pointer because it can be optional and not initialized
 	   if rendering without initializing a graphics context or a window */
-	Canvas* canvas = nullptr;
+	ImBase::Texture* tex = nullptr;
+	RectF32 viewport = { 0, 0, 0, 0 };
 
 	/* headless means no calls to any graphics apis or windows will be done
 	   as they are not available. */
