@@ -48,15 +48,11 @@ else()
 	add_executable(csprite ${SRC_FILES})
 endif()
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/imbase/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/)
 target_link_libraries(csprite PUBLIC stb_static)
-target_link_libraries(csprite PUBLIC glad_loader)
-target_link_libraries(csprite PUBLIC glfw)
-target_link_libraries(csprite PUBLIC imgui_static)
-target_link_libraries(imgui_static PUBLIC glfw)
-
+target_link_libraries(csprite PUBLIC imbase)
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
-target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_compile_options(csprite PRIVATE
 	$<$<CXX_COMPILER_ID:MSVC>:/W4>
@@ -69,3 +65,4 @@ if(WIN32)
 		COMMAND_EXPAND_LISTS
 	)
 endif()
+
