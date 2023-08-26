@@ -14,7 +14,7 @@ bool Doc::CreateNew(u16 _w, u16 _h, bool _headless) {
 	headless = _headless;
 	finalRender = new Pixel[w * h]{ 0, 0, 0, 0 };
 	if (!_headless)
-		canvas = new Canvas(_w, _h);
+		tex = new ImBase::Texture(_w, _h, nullptr);
 
 	return true;
 }
@@ -46,9 +46,9 @@ Doc::~Doc() {
 		finalRender = nullptr;
 	}
 
-	if (canvas != nullptr) {
-		delete canvas;
-		canvas = nullptr;
+	if (tex != nullptr) {
+		delete tex;
+		tex = nullptr;
 	}
 }
 
@@ -89,5 +89,5 @@ void Doc::Render(RectI32& dirtyArea) {
 		}
 	}
 
-	canvas->Update(finalRender);
+	tex->Update((unsigned char*)finalRender);
 }
