@@ -10,7 +10,7 @@
 #include "main.hpp"
 #include "types.hpp"
 #include "helpers.hpp"
-#include "app/app.hpp"
+#include "imbase/window.hpp"
 #include "tools/tools.hpp"
 #include "pixel/pixel.hpp"
 #include "palette/palette.hpp"
@@ -38,7 +38,7 @@ ImVec2 MousePosRel; // mouse position relative to canvas
 ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
 
 int main() {
-	if (App::Init(700, 500) != 0) {
+	if (ImBase::Window_Init(700, 500, "csprite") != 0) {
 		return 1;
 	}
 
@@ -88,8 +88,8 @@ int main() {
 
 	ZoomNCenterVP();
 
-	while (!App::ShouldClose()) {
-		App::NewFrame();
+	while (!ImBase::Window_ShouldClose()) {
+		ImBase::NewFrame();
 
 		if (!CanvasFreeze) {
 			MousePosLast = MousePos;
@@ -345,11 +345,11 @@ int main() {
 
 		mainDoc->Render(dirtyArea);
 
-		App::EndFrame();
+		ImBase::EndFrame();
 	}
 
 	delete mainDoc;
-	App::Release();
+	ImBase::Window_Destroy();
 	return 0;
 }
 
