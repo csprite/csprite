@@ -5,8 +5,10 @@ add_definitions(-DIMGUI_DISABLE_OBSOLETE_KEYIO=1)
 
 # Debug C/C++ flags
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
-	add_compile_options(-fsanitize=address)
-	add_link_options(-fsanitize=address)
+	if(NOT WIN32)
+		add_compile_options(-fsanitize=address)
+		add_link_options(-fsanitize=address)
+	endif()
 	add_definitions(-D_DEBUG)
 else()
 	add_definitions(-D_NDEBUG)
