@@ -729,16 +729,14 @@ int main(int argc, char* argv[]) {
 		}
 		ImGui::PopStyleVar();
 
+#if(CS_BUILD_STABLE == 0)
 		if (ImGui::Begin(
 			"Debug Window", NULL,
-			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize
-#if(CS_BUILD_STABLE == 1)
-			| ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground
-#endif
+			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground
 		)) {
 			ImVec2 DebugWinSize = ImGui::GetWindowSize();
 			ImGui::SetWindowPos({ ((float)WindowDims[0] / 2) - (DebugWinSize.x / 2), io.DisplaySize.y - DebugWinSize.y - BottomBarSize.y });
-#if(CS_BUILD_STABLE == 0)
 			ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			if (ImGui::Button("Clear Undo/Redo Buffers")) {
 				for (int i = 0; i < CanvasLayerMgr->layers.size(); ++i) {
@@ -746,9 +744,9 @@ int main(int argc, char* argv[]) {
 					SaveHistory(&CanvasLayerMgr->layers[i]->history, CanvasLayerMgr->dims[0] * CanvasLayerMgr->dims[1], CanvasLayerMgr->layers[i]->pixels);
 				}
 			}
-#endif
 			ImGui::End();
 		}
+#endif
 
 		static int32_t PreviewZoom = 2;
 		static ImVec2  PreviewImageSize;
