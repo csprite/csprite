@@ -8,6 +8,7 @@
 #if defined(TARGET_WINDOWS)
 	#include <windows.h>
 	#include <shellapi.h>
+	#include <direct.h>
 	#include <FileBrowser/Dirent/dirent.h>
 #else
 	#include <unistd.h>
@@ -16,7 +17,7 @@
 #endif
 
 // On Windows Mkdir Only Takes Path So We Don't Pass Path
-#if defined(_WIN32) || defined(WIN32)
+#if defined(TARGET_WINDOWS)
 	#define _mkdir_custom(path, perms) mkdir(path)
 #else
 	#define _mkdir_custom(path, perms) mkdir(path, perms)
