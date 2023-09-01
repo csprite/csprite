@@ -89,6 +89,12 @@ AppConfig*      Config = NULL;
 	#define CS_VERSION_PATCH 0
 #endif
 
+#ifdef _DEBUG
+	#define CS_BUILD_STABLE 0
+#else
+	#define CS_BUILD_STABLE 1
+#endif
+
 #ifndef CS_BUILD_STABLE
 	#define CS_BUILD_STABLE 0
 #endif
