@@ -28,7 +28,6 @@ Pixel SelectedColor; // Holds Pointer To Currently Selected Color
 
 bool ShouldSave = false;
 bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
-bool CanvasFreeze = false;
 
 // Mouse Position On Window
 ImVec2 MousePos; // mouse position
@@ -93,7 +92,169 @@ int main() {
 	while (!ImBase::Window::ShouldClose()) {
 		ImBase::Window::NewFrame();
 
-		if (!CanvasFreeze) {
+		bool isCanvasHovered = io.MousePos.x > mainDoc->viewport.x &&
+						io.MousePos.y > mainDoc->viewport.y &&
+						io.MousePos.x < mainDoc->viewport.x + mainDoc->viewport.w &&
+						io.MousePos.y < mainDoc->viewport.y + mainDoc->viewport.h;
+
+#ifdef _DEBUG
+		static bool metricsWinVisible = false;
+#endif
+
+		#define BEGIN_MENU(label) if (ImGui::BeginMenu(label)) {
+		#define END_MENU() ImGui::EndMenu(); }
+
+		#define BEGIN_MENUITEM(label, shortcut) if (ImGui::MenuItem(label, shortcut)) {
+		#define END_MENUITEM() }
+
+		static ImVec2 MenuBarPos;
+		static ImVec2 MenuBarSize;
+
+		if (ImGui::BeginMainMenuBar()) {
+			BEGIN_MENU("File")
+				BEGIN_MENUITEM("New", "Ctrl+N")
+					ShowNewCanvasWindow = 1;
+				END_MENUITEM()
+			END_MENU()
+
+#ifdef _DEBUG
+			BEGIN_MENU("Dev")
+				BEGIN_MENUITEM("Metrics", NULL) metricsWinVisible = !metricsWinVisible; END_MENUITEM()
+			END_MENU()
+#endif
+
+			BEGIN_MENU("Help")
+				BEGIN_MENUITEM("About", NULL)
+					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
+				END_MENUITEM()
+				BEGIN_MENUITEM("GitHub", NULL)
+					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
+				END_MENUITEM()
+				// BEGIN_MENUITEM("Credits", NULL)
+				// 	ImGui::OpenPopup("Lmao###CreditsPopup");
+				// END_MENUITEM()
+			END_MENU()
+
+			MenuBarPos = ImGui::GetWindowPos();
+			MenuBarSize = ImGui::GetWindowSize();
+			ImGui::EndMainMenuBar();
+		}
+
+		#undef BEGIN_MENUITEM
+		#undef END_MENUITEM
+		#undef BEGIN_MENU
+		#undef END_MENU
+
+		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
+		#define END_WINDOW() ImGui::End(); }
+
+		#define BEGIN_POPUP(id, flags) if (ImGui::BeginPopup(id, flags)) { isCanvasHovered = false;
+		#define END_POPUP() ImGui::EndPopup(); }
+
+		if (ShowNewCanvasWindow == 1) {
+			ImGui::SetNextWindowSize({280, 100}, 0);
+			ImGui::OpenPopup("NewCanvasWindow");
+			BEGIN_POPUP("NewCanvasWindow", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)
+				ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
+				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
+
+				if (ImGui::Button("Ok")) {
+					delete mainDoc;
+					mainDoc = new Doc();
+					mainDoc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
+					mainDoc->AddLayer("New Layers");
+					mainDoc->layers[0]->pixels = new Pixel[mainDoc->GetTotalPixels()]{ 0, 0, 0, 0 };
+
+					ZoomNCenterVP();
+					ShowNewCanvasWindow = 0;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel")) {
+					ShowNewCanvasWindow = 0;
+				}
+			END_POPUP()
+		}
+
+		#undef BEGIN_POPUP
+		#undef END_POPUP
+
+		// Saves Few CPU & GPU Time Since There's No Window Flags Processing Or Some Other Overhead.
+		ImGui::GetBackgroundDrawList()->AddRect(
+			{ mainDoc->viewport.x - 1, mainDoc->viewport.y - 1 },
+			{ mainDoc->viewport.w + mainDoc->viewport.x + 1, mainDoc->viewport.h + mainDoc->viewport.y + 1 },
+			ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
+		);
+		ImGui::GetBackgroundDrawList()->AddImage(
+			reinterpret_cast<ImTextureID>(mainDoc->tex->id),
+			{ mainDoc->viewport.x, mainDoc->viewport.y },
+			{ mainDoc->viewport.w + mainDoc->viewport.x, mainDoc->viewport.h + mainDoc->viewport.y }
+		);
+
+#ifdef _DEBUG
+		if (metricsWinVisible) {
+			ImGui::ShowMetricsWindow(NULL);
+		}
+#endif
+
+		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)
+			ImGui::SetWindowPos({0, MenuBarPos.y + MenuBarSize.y });
+			std::string selectedToolText;
+
+			switch (ToolManager::GetToolType()) {
+				case BRUSH:
+					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
+						selectedToolText = "Circle Brush - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+					} else {
+						selectedToolText = "Square Brush - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+					}
+					break;
+				case ERASER:
+					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
+						selectedToolText = "Circle Eraser - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+					} else {
+						selectedToolText = "Square Eraser - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+					}
+					break;
+				case INK_DROPPER:
+					selectedToolText = "Ink Dropper";
+					break;
+				case PAN:
+					selectedToolText = "Panning";
+					break;
+			}
+
+			ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
+			ImVec2 textSize2 = ImGui::CalcTextSize(ZoomText.c_str(), NULL, false, -2.0f);
+			ImGui::SetWindowSize({(float)(textSize1.x + textSize2.x), (float)(textSize1.y + textSize2.y) * 2}); // Make Sure Text is visible everytime.
+
+			ImGui::Text("%s", selectedToolText.c_str());
+			ImGui::Text("%s", ZoomText.c_str());
+		END_WINDOW()
+
+		BEGIN_WINDOW("ColorPaletteWindow", NULL, window_flags)
+			ImGui::SetWindowPos({ 0, io.DisplaySize.y - 35.0f });
+			for (int i = 0; i < PaletteCount; i++) {
+				if (i != 0) ImGui::SameLine();
+				if (ImGui::ColorButton(
+					PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(),
+					{(float)ColorPalette[i].r/255, (float)ColorPalette[i].g/255, (float)ColorPalette[i].b/255, (float)ColorPalette[i].a/255})
+				) {
+					PaletteIndex = i;
+					SelectedColor = ColorPalette[PaletteIndex];
+				}
+				if (PaletteIndex == i)
+					ImGui::GetWindowDrawList()->AddRect(
+						ImGui::GetItemRectMin(),
+						ImGui::GetItemRectMax(),
+						IM_COL32_WHITE
+					);
+			};
+		END_WINDOW()
+
+		#undef BEGIN_WINDOW
+		#undef END_WINDOW
+
+		if (isCanvasHovered) {
 			MousePosLast = MousePos;
 			MousePosRelLast = MousePosRel;
 
@@ -194,156 +355,6 @@ int main() {
 				}
 			}
 		}
-
-#ifdef _DEBUG
-		static bool metricsWinVisible = false;
-#endif
-
-		#define BEGIN_MENU(label) if (ImGui::BeginMenu(label)) {
-		#define END_MENU() ImGui::EndMenu(); }
-
-		#define BEGIN_MENUITEM(label, shortcut) if (ImGui::MenuItem(label, shortcut)) {
-		#define END_MENUITEM() }
-
-		static ImVec2 MenuBarPos;
-		static ImVec2 MenuBarSize;
-
-		if (ImGui::BeginMainMenuBar()) {
-			BEGIN_MENU("File")
-				BEGIN_MENUITEM("New", "Ctrl+N")
-					ShowNewCanvasWindow = 1;
-				END_MENUITEM()
-			END_MENU()
-
-#ifdef _DEBUG
-			BEGIN_MENU("Dev")
-				BEGIN_MENUITEM("Metrics", NULL) metricsWinVisible = !metricsWinVisible; END_MENUITEM()
-			END_MENU()
-#endif
-
-			BEGIN_MENU("Help")
-				BEGIN_MENUITEM("About", NULL)
-					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
-				END_MENUITEM()
-				BEGIN_MENUITEM("GitHub", NULL)
-					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
-				END_MENUITEM()
-			END_MENU()
-
-			MenuBarPos = ImGui::GetWindowPos();
-			MenuBarSize = ImGui::GetWindowSize();
-			ImGui::EndMainMenuBar();
-		}
-
-		#undef BEGIN_MENUITEM
-		#undef END_MENUITEM
-		#undef BEGIN_MENU
-		#undef END_MENU
-
-		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
-		#define END_WINDOW() ImGui::End(); }
-
-		if (ShowNewCanvasWindow == 1) {
-			CanvasFreeze = 1;
-			ImGui::SetNextWindowSize({280, 100}, 0);
-			BEGIN_WINDOW("NewCanvasWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)
-				ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
-				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
-
-				if (ImGui::Button("Ok")) {
-					delete mainDoc;
-					mainDoc = new Doc();
-					mainDoc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
-					mainDoc->AddLayer("New Layers");
-					mainDoc->layers[0]->pixels = new Pixel[mainDoc->GetTotalPixels()]{ 0, 0, 0, 0 };
-
-					ZoomNCenterVP();
-					CanvasFreeze = 0;
-					ShowNewCanvasWindow = 0;
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel")) {
-					CanvasFreeze = 0;
-					ShowNewCanvasWindow = 0;
-				}
-			END_WINDOW()
-		}
-
-		// Saves Few CPU & GPU Time Since There's No Window Flags Processing Or Some Other Overhead.
-		ImGui::GetBackgroundDrawList()->AddRect(
-			{ mainDoc->viewport.x - 1, mainDoc->viewport.y - 1 },
-			{ mainDoc->viewport.w + mainDoc->viewport.x + 1, mainDoc->viewport.h + mainDoc->viewport.y + 1 },
-			ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
-		);
-		ImGui::GetBackgroundDrawList()->AddImage(
-			reinterpret_cast<ImTextureID>(mainDoc->tex->id),
-			{ mainDoc->viewport.x, mainDoc->viewport.y },
-			{ mainDoc->viewport.w + mainDoc->viewport.x, mainDoc->viewport.h + mainDoc->viewport.y }
-		);
-
-#ifdef _DEBUG
-		if (metricsWinVisible) {
-			ImGui::ShowMetricsWindow(NULL);
-		}
-#endif
-
-		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)
-			ImGui::SetWindowPos({0, MenuBarPos.y + MenuBarSize.y });
-			std::string selectedToolText;
-
-			switch (ToolManager::GetToolType()) {
-				case BRUSH:
-					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
-						selectedToolText = "Circle Brush - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
-					} else {
-						selectedToolText = "Square Brush - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
-					}
-					break;
-				case ERASER:
-					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
-						selectedToolText = "Circle Eraser - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
-					} else {
-						selectedToolText = "Square Eraser - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
-					}
-					break;
-				case INK_DROPPER:
-					selectedToolText = "Ink Dropper";
-					break;
-				case PAN:
-					selectedToolText = "Panning";
-					break;
-			}
-
-			ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
-			ImVec2 textSize2 = ImGui::CalcTextSize(ZoomText.c_str(), NULL, false, -2.0f);
-			ImGui::SetWindowSize({(float)(textSize1.x + textSize2.x), (float)(textSize1.y + textSize2.y) * 2}); // Make Sure Text is visible everytime.
-
-			ImGui::Text("%s", selectedToolText.c_str());
-			ImGui::Text("%s", ZoomText.c_str());
-		END_WINDOW()
-
-		BEGIN_WINDOW("ColorPaletteWindow", NULL, window_flags)
-			ImGui::SetWindowPos({ 0, io.DisplaySize.y - 35.0f });
-			for (int i = 0; i < PaletteCount; i++) {
-				if (i != 0) ImGui::SameLine();
-				if (ImGui::ColorButton(
-					PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(),
-					{(float)ColorPalette[i].r/255, (float)ColorPalette[i].g/255, (float)ColorPalette[i].b/255, (float)ColorPalette[i].a/255})
-				) {
-					PaletteIndex = i;
-					SelectedColor = ColorPalette[PaletteIndex];
-				}
-				if (PaletteIndex == i)
-					ImGui::GetWindowDrawList()->AddRect(
-						ImGui::GetItemRectMin(),
-						ImGui::GetItemRectMax(),
-						IM_COL32_WHITE
-					);
-			};
-		END_WINDOW()
-
-		#undef BEGIN_WINDOW
-		#undef END_WINDOW
 
 		mainDoc->Render(dirtyArea);
 
