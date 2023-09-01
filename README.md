@@ -5,7 +5,7 @@ csprite is a tiny pixel art tool - Fork of [@Falconerd's](https://github.com/fal
 [![Open Issues](https://img.shields.io/github/issues/pegvin/csprite?style=flat-square&color=%235cb85c)](https://github.com/pegvin/csprite/issues)
 [![Total Downloads](https://img.shields.io/github/downloads/pegvin/csprite/total?style=flat-square)](https://csprite.github.io/downloads/)
 [![Reddit Icon](https://img.shields.io/badge/%20-r%2Fcsprite-%23ff6314?logo=reddit&labelColor=%23EFEFEF&style=flat-square)](https://www.reddit.com/r/csprite/)
-[![Discord Icon](https://discordapp.com/api/guilds/1027457407732957206/embed.png)](https://discord.gg/ZKs8sm2CPA)
+[![Discord Icon](https://discordapp.com/api/guilds/1144692558434422825/embed.png)](https://discord.gg/ZKs8sm2CPA)
 
 ![program preview](https://user-images.githubusercontent.com/75035219/224494365-09aa1ce8-c9cf-4157-9884-1a38573501d3.png)
 
