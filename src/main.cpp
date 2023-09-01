@@ -9,8 +9,8 @@
 #include "assets.h"
 #include "main.hpp"
 #include "types.hpp"
-#include "helpers.hpp"
 #include "imbase/window.hpp"
+#include "imbase/launcher.hpp"
 #include "tools/tools.hpp"
 #include "pixel/pixel.hpp"
 #include "palette/palette.hpp"
@@ -38,13 +38,13 @@ ImVec2 MousePosRel; // mouse position relative to canvas
 ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
 
 int main() {
-	if (ImBase::Window_Init(700, 500, "csprite") != 0) {
+	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
 		return 1;
 	}
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImBase::NewFrame();
-	ImBase::EndFrame();
+	ImBase::Window::NewFrame();
+	ImBase::Window::EndFrame();
 
 	ColorPalette.Add(Pixel{ 0,   0,   0,   255 });
 	ColorPalette.Add(Pixel{ 29,  43,  83,  255 });
@@ -90,8 +90,8 @@ int main() {
 
 	ZoomNCenterVP();
 
-	while (!ImBase::Window_ShouldClose()) {
-		ImBase::NewFrame();
+	while (!ImBase::Window::ShouldClose()) {
+		ImBase::Window::NewFrame();
 
 		if (!CanvasFreeze) {
 			MousePosLast = MousePos;
@@ -223,10 +223,10 @@ int main() {
 
 			BEGIN_MENU("Help")
 				BEGIN_MENUITEM("About", NULL)
-					openUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
+					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
 				END_MENUITEM()
 				BEGIN_MENUITEM("GitHub", NULL)
-					openUrl("https://github.com/pegvin/CSprite");
+					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
 				END_MENUITEM()
 			END_MENU()
 
@@ -347,11 +347,11 @@ int main() {
 
 		mainDoc->Render(dirtyArea);
 
-		ImBase::EndFrame();
+		ImBase::Window::EndFrame();
 	}
 
 	delete mainDoc;
-	ImBase::Window_Destroy();
+	ImBase::Window::Destroy();
 	return 0;
 }
 
