@@ -18,12 +18,12 @@ add_definitions(-DPNG_NO_MMX_CODE)
 
 set(PNG_STATIC                 ON  CACHE BOOL "")
 set(PNG_HARDWARE_OPTIMIZATIONS ON  CACHE BOOL "")
+set(PNG_BUILD_ZLIB             ON  CACHE BOOL "")
 set(PNG_SHARED                 OFF CACHE BOOL "")
 set(PNG_TESTS                  OFF CACHE BOOL "")
 set(PNG_FRAMEWORK              OFF CACHE BOOL "")
 set(PNG_EXECUTABLES            OFF CACHE BOOL "")
 set(PNG_DEBUG                  OFF CACHE BOOL "")
-set(PNG_BUILD_ZLIB             OFF CACHE BOOL "")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/libpng/)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/zlib/)
