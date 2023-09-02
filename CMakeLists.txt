@@ -48,9 +48,6 @@ else()
 	add_executable(csprite ${SRC_FILES})
 endif()
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/lodepng)
-target_link_libraries(csprite PUBLIC lodepng)
-
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/imbase/)
 target_link_libraries(csprite PUBLIC imbase)
 

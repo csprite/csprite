@@ -15,6 +15,7 @@
 #include "pixel/pixel.hpp"
 #include "palette/palette.hpp"
 #include "doc/doc.hpp"
+#include "doc/parser/parser.hpp"
 
 Doc* mainDoc = nullptr;
 u16 PaletteIndex = 0;
@@ -114,6 +115,16 @@ int main() {
 			BEGIN_MENU("File")
 				BEGIN_MENUITEM("New", "Ctrl+N")
 					ShowNewCanvasWindow = 1;
+				END_MENUITEM()
+				BEGIN_MENUITEM("Open", "Ctrl+O")
+					Doc* d = Parser::ParseImageFile("/home/adityaraj/Downloads/chica-amarilla.png");
+					if (d != nullptr) {
+						delete mainDoc;
+						mainDoc = d;
+						dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
+						ZoomNCenterVP();
+						mainDoc->Render(dirtyArea);
+					}
 				END_MENUITEM()
 			END_MENU()
 
