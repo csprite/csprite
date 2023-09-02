@@ -107,18 +107,15 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@v3
-      with:
-        name: src-assets
-        path: ./src/assets/
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: data
-        path: ./data/
+    - name: Install Deps
+      run: |
+        choco install llvm python
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
 
     - name: Generate Build Files & Build
       run: |
+        make gen-assets
         make all GENERATOR="${{ matrix.generator.cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.architecture }}" -T "ClangCL"'
 
     - name: Zip Binaries
