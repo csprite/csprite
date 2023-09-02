@@ -82,7 +82,6 @@ jobs:
         export CXX=${{ matrix.cxx }}
         make gen-assets
         make all GENERATOR=Ninja BUILD_TYPE=Release NUM_JOBS=4
-        mv ./build/csprite ./
 
     - name: Build AppImage (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
@@ -90,7 +89,7 @@ jobs:
         mkdir csp
         mkdir csp/usr/
         mkdir csp/usr/bin/
-        cp ./csprite csp/usr/bin/
+        cp ./build/csprite csp/usr/bin/
         cp ./data/csprite.desktop csp/
         cp ./data/icons/icon-512.png csp/csprite.png
         echo -e "#!/bin/sh\n\
@@ -108,20 +107,11 @@ jobs:
         make gen-assets CXX=clang++
         make all GENERATOR="${{ matrix.gen_cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.arch }}" -T "ClangCL"'
 
-    - name: Zip Binaries (Windows)
-      uses: vimtor/action-zip@v1
-      if: ${{ matrix.os == 'windows-2022' }}
-      with:
-        files: ./build/Release/
-        recursive: true
-        dest: ./csprite.zip
-
     - name: Generate Build Files, Build & Zip (MacOS)
       if: ${{ matrix.os == 'macos-12' }}
       run: |
         make gen-assets
         make all GENERATOR="${{ matrix.gen }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-DBUILD_APPLE_BUNDLE=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}'
-        zip -r csprite.zip ./build/Release/csprite.app/
 
     - name: Upload Artifacts (Linux)
       uses: actions/upload-artifact@v3
@@ -136,7 +126,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: linux-x86_64-${{ matrix.toolchain }}
-        path: ./csprite
+        path: ./build/csprite
         if-no-files-found: error
 
     - name: Upload artifacts (Windows)
@@ -145,14 +135,14 @@ jobs:
       with:
         name: win-${{ matrix.arch }}-${{ matrix.gen_short_name }}
         if-no-files-found: error
-        path: ./csprite.zip
+        path: ./build/Release/*
 
     - name: Upload Artifacts (MacOS)
       uses: actions/upload-artifact@v3
       if: ${{ matrix.os == 'macos-12' }}
       with:
         name: osx-${{ matrix.arch }}-${{ matrix.gen }}
-        path: ./csprite.zip
+        path: ./build/Release/csprite.app/
         if-no-files-found: error
 
   update-ci-release:
