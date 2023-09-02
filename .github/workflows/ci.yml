@@ -109,7 +109,6 @@ jobs:
 
     - name: Install Deps
       run: |
-        choco install llvm python
         python3 -m pip install --upgrade Pillow
         python3 -m pip install --upgrade numpy
 
