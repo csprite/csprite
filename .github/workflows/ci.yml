@@ -5,30 +5,64 @@ on:
   pull_request:
 
 jobs:
-  linux-amd64:
-    runs-on: ubuntu-latest
+  build:
     strategy:
       matrix:
-        compiler: [
-          { cc: gcc, cxx: g++, toolchain: gcc },
-          { cc: clang, cxx: clang++, toolchain: clang }
-        ]
+        os: [windows-2022, ubuntu-22.04, macos-12]
+        include:
+          - os: windows-2022
+            architecture: [x64, Win32]
+            generator: [ { short_name: "vs17_2022", cmake_name: "Visual Studio 17 2022" } ]
+
+          - os: ubuntu-22.04
+            compiler: [
+              { cc: gcc, cxx: g++, toolchain: gcc },
+              { cc: clang, cxx: clang++, toolchain: clang }
+            ]
+
+          - os: ubuntu-22.04
+            architecture: [x86_64, arm64]
+            generator: [Xcode]
+
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
 
-    - name: Install Deps
+    - name: Install Deps (Linux)
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         sudo apt-get update
         sudo apt-get install gcc clang cmake ninja-build libfuse2 xorg-dev python3 python3-pip
-        python3 -m pip install --upgrade Pillow
-        python3 -m pip install --upgrade numpy
         curl -L https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage --output ./appimagetool
         chmod a+x ./appimagetool
         sudo mv appimagetool /usr/local/bin/appimagetool
 
-    - name: Generate Build Files & Build
+    - name: Lint Info.plist & Generate .icns (MacOS)
+      if: ${{ matrix.os == 'macos-12' }}
+      run: |
+        plutil data/Info.plist
+        mkdir csprite.iconset
+        sips -z 16 16     data/icon-32x32.png --out csprite.iconset/icon_16x16.png
+        sips -z 32 32     data/icon-32x32.png --out csprite.iconset/icon_16x16@2x.png
+        sips -z 32 32     data/icon-32x32.png --out csprite.iconset/icon_32x32.png
+        sips -z 64 64     data/icon-32x32.png --out csprite.iconset/icon_32x32@2x.png
+        sips -z 128 128   data/icon-32x32.png --out csprite.iconset/icon_128x128.png
+        sips -z 256 256   data/icon-32x32.png --out csprite.iconset/icon_128x128@2x.png
+        sips -z 256 256   data/icon-32x32.png --out csprite.iconset/icon_256x256.png
+        sips -z 512 512   data/icon-32x32.png --out csprite.iconset/icon_256x256@2x.png
+        sips -z 512 512   data/icon-32x32.png --out csprite.iconset/icon_512x512.png
+        sips -z 1024 1024 data/icon-32x32.png --out csprite.iconset/icon_512x512@2x.png
+        iconutil -c icns -o csprite.icns csprite.iconset
+        rm -R csprite.iconset
+
+    - name: Install Python Deps
+      run: |
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
+
+    - name: Generate Build Files & Build (Linux)
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         export CC=${{ matrix.compiler.cc }}
         export CXX=${{ matrix.compiler.cxx }}
@@ -36,7 +70,8 @@ jobs:
         make all GENERATOR=Ninja BUILD_TYPE=Release NUM_JOBS=4
         mv ./build/csprite ./
 
-    - name: Build AppImage
+    - name: Build AppImage (Linux)
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         mkdir csp
         mkdir csp/usr/
@@ -53,107 +88,61 @@ jobs:
         mv csp csprite.AppDir
         ARCH=x86_64 appimagetool csprite.AppDir
 
-    - name: Upload Artifacts
+    - name: Generate Build Files & Build (Windows)
+      if: ${{ matrix.os == 'windows-2022' }}
+      run: |
+        make gen-assets CXX=clang++
+        make all GENERATOR="${{ matrix.generator.cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.architecture }}" -T "ClangCL"'
+
+    - name: Zip Binaries (Windows)
+      uses: vimtor/action-zip@v1
+      if: ${{ matrix.os == 'windows-2022' }}
+      with:
+        files: ./build/Release/
+        recursive: true
+        dest: ./csprite.zip
+
+    - name: Generate Build Files, Build & Zip (MacOS)
+      if: ${{ matrix.os == 'macos-12' }}
+      run: |
+        make gen-assets
+        make all GENERATOR="${{ matrix.generator }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-DBUILD_APPLE_BUNDLE=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}'
+        zip -r csprite.zip ./build/Release/csprite.app/
+
+    - name: Upload Artifacts (Linux)
       uses: actions/upload-artifact@v3
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       with:
         name: linux_appimage-x86_64-${{ matrix.compiler.toolchain }}
         path: csprite-x86_64.AppImage
         if-no-files-found: error
 
-    - name: Upload Artifacts
+    - name: Upload Artifacts (Linux)
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       uses: actions/upload-artifact@v3
       with:
         name: linux-x86_64-${{ matrix.compiler.toolchain }}
         path: ./csprite
         if-no-files-found: error
 
-  windows:
-    runs-on: windows-2022
-    strategy:
-      matrix:
-        architecture: [x64, Win32]
-        generator: [ { short_name: "vs17_2022", cmake_name: "Visual Studio 17 2022" } ]
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-
-    - name: Install Deps
-      run: |
-        python3 -m pip install --upgrade Pillow
-        python3 -m pip install --upgrade numpy
-
-    - name: Generate Build Files & Build
-      run: |
-        make gen-assets CXX=clang++
-        make all GENERATOR="${{ matrix.generator.cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.architecture }}" -T "ClangCL"'
-
-    - name: Zip Binaries
-      uses: vimtor/action-zip@v1
-      with:
-        files: ./build/Release/
-        recursive: true
-        dest: ./csprite.zip
-
-    - name: Upload artifacts
+    - name: Upload artifacts (Windows)
       uses: actions/upload-artifact@v3
+      if: ${{ matrix.os == 'windows-2022' }}
       with:
         name: win-${{ matrix.architecture }}-${{ matrix.generator.short_name }}
         if-no-files-found: error
         path: ./csprite.zip
 
-  osx:
-    runs-on: macos-12 # Monterey
-    strategy:
-      matrix:
-        architecture: [x86_64, arm64]
-        generator: [Xcode]
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-
-    - name: Install Deps
-      run: |
-        python3 -m pip install --upgrade Pillow
-        python3 -m pip install --upgrade numpy
-
-    - name: Lint Info.plist
-      run: plutil data/Info.plist
-
-    - name: Generate .icns
-      run: |
-        mkdir csprite.iconset
-        sips -z 16 16     data/icon-32x32.png --out csprite.iconset/icon_16x16.png
-        sips -z 32 32     data/icon-32x32.png --out csprite.iconset/icon_16x16@2x.png
-        sips -z 32 32     data/icon-32x32.png --out csprite.iconset/icon_32x32.png
-        sips -z 64 64     data/icon-32x32.png --out csprite.iconset/icon_32x32@2x.png
-        sips -z 128 128   data/icon-32x32.png --out csprite.iconset/icon_128x128.png
-        sips -z 256 256   data/icon-32x32.png --out csprite.iconset/icon_128x128@2x.png
-        sips -z 256 256   data/icon-32x32.png --out csprite.iconset/icon_256x256.png
-        sips -z 512 512   data/icon-32x32.png --out csprite.iconset/icon_256x256@2x.png
-        sips -z 512 512   data/icon-32x32.png --out csprite.iconset/icon_512x512.png
-        sips -z 1024 1024 data/icon-32x32.png --out csprite.iconset/icon_512x512@2x.png
-        iconutil -c icns -o csprite.icns csprite.iconset
-        rm -R csprite.iconset
-
-    - name: Generate Build Files & Build
-      run: |
-        make gen-assets
-        make all GENERATOR="${{ matrix.generator }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-DBUILD_APPLE_BUNDLE=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}'
-
-    - name: Create Zip
-      run: zip -r csprite.zip ./build/Release/csprite.app/
-
-    - name: Upload Artifacts
+    - name: Upload Artifacts (MacOS)
       uses: actions/upload-artifact@v3
+      if: ${{ matrix.os == 'macos-12' }}
       with:
         name: osx-${{ matrix.architecture }}-${{ matrix.generator }}
         path: ./csprite.zip
         if-no-files-found: error
 
   update-ci-release:
-    needs: [linux-amd64, windows, osx]
+    needs: [build]
     permissions:
       contents: write
     if: |
