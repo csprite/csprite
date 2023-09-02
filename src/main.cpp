@@ -148,13 +148,13 @@ int main() {
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
-		#define BEGIN_POPUP(id, flags) if (ImGui::BeginPopup(id, flags)) { isCanvasHovered = false;
+		#define BEGIN_POPUP(name, flags) if (ImGui::BeginPopupModal(name, NULL, flags)) { isCanvasHovered = false;
 		#define END_POPUP() ImGui::EndPopup(); }
 
 		if (ShowNewCanvasWindow == 1) {
 			ImGui::SetNextWindowSize({280, 100}, 0);
-			ImGui::OpenPopup("NewCanvasWindow");
-			BEGIN_POPUP("NewCanvasWindow", ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)
+			ImGui::OpenPopup("New Document###NewCanvasWindow");
+			BEGIN_POPUP("New Document###NewCanvasWindow", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
 				ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
 				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
@@ -167,10 +167,12 @@ int main() {
 
 					ZoomNCenterVP();
 					ShowNewCanvasWindow = 0;
+					ImGui::CloseCurrentPopup();
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Cancel")) {
 					ShowNewCanvasWindow = 0;
+					ImGui::CloseCurrentPopup();
 				}
 			END_POPUP()
 		}
