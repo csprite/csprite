@@ -30,11 +30,11 @@ jobs:
             cxx: clang++
             toolchain: clang
 
-          - os: ubuntu-22.04
+          - os: macos-12
             arch: x86_64
             gen: Xcode
 
-          - os: ubuntu-22.04
+          - os: macos-12
             arch: arm64
             gen: Xcode
 
