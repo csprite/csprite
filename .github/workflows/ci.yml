@@ -5,35 +5,7 @@ on:
   pull_request:
 
 jobs:
-  generate-assets:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-
-    - name: Generate Asset
-      run: |
-        python3 -m pip install --upgrade Pillow
-        python3 -m pip install --upgrade numpy
-        make gen-assets
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: data
-        path: ./data/
-        if-no-files-found: error
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: src-assets
-        path: ./src/assets/
-        if-no-files-found: error
-
-  linux-x86_64:
-    needs: [generate-assets]
+  linux-amd64:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -95,8 +67,7 @@ jobs:
         path: ./csprite
         if-no-files-found: error
 
-  windows-x86_64:
-    needs: [generate-assets]
+  windows:
     runs-on: windows-2022
     strategy:
       matrix:
@@ -131,8 +102,7 @@ jobs:
         if-no-files-found: error
         path: ./csprite.zip
 
-  osx_x86_64:
-    needs: [generate-assets]
+  osx:
     runs-on: macos-12 # Monterey
     strategy:
       matrix:
@@ -143,15 +113,10 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@v3
-      with:
-        name: src-assets
-        path: ./src/assets/
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: data
-        path: ./data/
+    - name: Install Deps
+      run: |
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
 
     - name: Lint Info.plist
       run: plutil data/Info.plist
@@ -174,6 +139,7 @@ jobs:
 
     - name: Generate Build Files & Build
       run: |
+        make gen-assets
         make all GENERATOR="${{ matrix.generator }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-DBUILD_APPLE_BUNDLE=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}'
 
     - name: Create Zip
@@ -187,7 +153,7 @@ jobs:
         if-no-files-found: error
 
   update-ci-release:
-    needs: [linux-x86_64, windows-x86_64, osx_x86_64]
+    needs: [linux-x86_64, windows, osx]
     permissions:
       contents: write
     if: |
