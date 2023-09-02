@@ -24,6 +24,7 @@ jobs:
             architecture: [x86_64, arm64]
             generator: [Xcode]
 
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
       with:
