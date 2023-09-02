@@ -164,6 +164,7 @@ int main() {
 					mainDoc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
 					mainDoc->AddLayer("New Layers");
 					mainDoc->layers[0]->pixels = new Pixel[mainDoc->GetTotalPixels()]{ 0, 0, 0, 0 };
+					dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
 
 					ZoomNCenterVP();
 					ShowNewCanvasWindow = 0;
