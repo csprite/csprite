@@ -1,3 +1,4 @@
+#include <iostream>
 #include <limits>
 
 // For Converting Strings To LowerCase in FixFileExtension function
@@ -16,6 +17,7 @@
 #include "palette/palette.hpp"
 #include "doc/doc.hpp"
 #include "doc/parser/parser.hpp"
+#include "filebrowser/filebrowser.hpp"
 
 Doc* mainDoc = nullptr;
 u16 PaletteIndex = 0;
@@ -28,7 +30,6 @@ std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Read
 Pixel SelectedColor; // Holds Pointer To Currently Selected Color
 
 bool ShouldSave = false;
-bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
 
 // Mouse Position On Window
 ImVec2 MousePos; // mouse position
@@ -90,6 +91,10 @@ int main() {
 
 	ZoomNCenterVP();
 
+	bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
+	bool ShowOpenFileWindow = false;
+	imgui_addons::ImGuiFileBrowser FileDialog;
+
 	while (!ImBase::Window::ShouldClose()) {
 		ImBase::Window::NewFrame();
 
@@ -114,17 +119,10 @@ int main() {
 		if (ImGui::BeginMainMenuBar()) {
 			BEGIN_MENU("File")
 				BEGIN_MENUITEM("New", "Ctrl+N")
-					ShowNewCanvasWindow = 1;
+					ShowNewCanvasWindow = true;
 				END_MENUITEM()
 				BEGIN_MENUITEM("Open", "Ctrl+O")
-					Doc* d = Parser::ParseImageFile("/home/adityaraj/Downloads/chica-amarilla.png");
-					if (d != nullptr) {
-						delete mainDoc;
-						mainDoc = d;
-						dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
-						ZoomNCenterVP();
-						mainDoc->Render(dirtyArea);
-					}
+					ShowOpenFileWindow = true;
 				END_MENUITEM()
 			END_MENU()
 
@@ -159,10 +157,33 @@ int main() {
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
+		if (ShowOpenFileWindow) {
+			ImGui::OpenPopup("Open File###OpenFileWindow");
+		}
+
+		if (FileDialog.showFileDialog(
+			"Open File###OpenFileWindow",
+			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
+			ImVec2(700, 310), ".png,.jpg,.jpeg"
+		)) {
+			Doc* d = Parser::ParseImageFile(FileDialog.selected_path.c_str());
+			if (d != nullptr) {
+				delete mainDoc;
+				mainDoc = d;
+				dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
+				ZoomNCenterVP();
+				mainDoc->Render(dirtyArea);
+			}
+
+			ShowOpenFileWindow = false;
+		} else {
+			ShowOpenFileWindow = false;
+		}
+
 		#define BEGIN_POPUP(name, flags) if (ImGui::BeginPopupModal(name, NULL, flags)) { isCanvasHovered = false;
 		#define END_POPUP() ImGui::EndPopup(); }
 
-		if (ShowNewCanvasWindow == 1) {
+		if (ShowNewCanvasWindow) {
 			ImGui::SetNextWindowSize({280, 100}, 0);
 			ImGui::OpenPopup("New Document###NewCanvasWindow");
 			BEGIN_POPUP("New Document###NewCanvasWindow", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
