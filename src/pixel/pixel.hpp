@@ -29,11 +29,25 @@
 struct Pixel {
 	u8 r = 0, g = 0, b = 0, a = 0;
 
-	Pixel& operator = (const u32 RGBA_Color);
-	Pixel& operator = (const Pixel& rhs);
-	bool operator == (const Pixel& rhs) const;
-	bool operator != (const Pixel& rhs) const;
-	explicit operator u8*(); // returns the pointer to the first element in the struct and other elements can be acced via struct[index]
+	inline Pixel& operator = (const Pixel& rhs) {
+		r = rhs.r;
+		g = rhs.g;
+		b = rhs.b;
+		a = rhs.a;
+		return *this;
+	}
+
+	inline bool operator == (const Pixel& rhs) const {
+		return (r == rhs.r && g == rhs.g && b == rhs.b && a == rhs.a);
+	}
+
+	inline bool operator != (const Pixel& rhs) const {
+		return !(*this == rhs);
+	}
+
+	inline explicit operator u8*() {
+		return &r;
+	}
 };
 
 #endif // CSP_SRC_PIXEL_PIXEL_HPP_INCLUDED_
