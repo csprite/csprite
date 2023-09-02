@@ -50,7 +50,6 @@ endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/zlib/)
 target_link_libraries(csprite PUBLIC zlibstatic)
-include_directories(${ZLIB_INCLUDE_DIRS})
 
 set(PNG_STATIC                 ON  CACHE INTERNAL "")
 set(PNG_HARDWARE_OPTIMIZATIONS ON  CACHE INTERNAL "")
@@ -62,6 +61,7 @@ set(PNG_SHARED                 OFF CACHE INTERNAL "")
 set(PNG_DEBUG                  OFF CACHE INTERNAL "")
 set(PNG_BUILD_ZLIB             ${CMAKE_CURRENT_SOURCE_DIR}/third_party/zlib/ CACHE INTERNAL "")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpng/)
+target_link_libraries(png_static PUBLIC zlibstatic)
 target_link_libraries(csprite PUBLIC png_static)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/imbase/)
