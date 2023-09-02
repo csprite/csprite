@@ -13,9 +13,14 @@ import os
 import sys
 import subprocess
 
+CXX = "g++"
 CWD = os.getcwd()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
+
+for arg in sys.argv:
+	if arg.startswith("--cxx="):
+		CXX = arg.replace("--cxx=", '');
 
 if CWD != PROJECT_ROOT:
 	print("Error: Run the script from project root, i.e.", PROJECT_ROOT)
@@ -70,7 +75,7 @@ def encode_bin(data):
 
 def encode_font(fontPath):
 	if not os.path.isfile("./tools/font2inl.out"):
-		result = subprocess.run(['clang++', 'tools/font2inl.cpp', '-o', 'tools/font2inl.out'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		result = subprocess.run([CXX, 'tools/font2inl.cpp', '-o', 'tools/font2inl.out'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 		print(result.stdout.decode('utf-8'))
 		if not os.path.isfile("./tools/font2inl.out"):
 			print("Cannot compile lib/font2inl.cpp for compressing font!")
