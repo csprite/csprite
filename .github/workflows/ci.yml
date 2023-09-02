@@ -10,33 +10,33 @@ jobs:
       matrix:
         os: [windows-2022, ubuntu-22.04, macos-12]
         include:
-          - os: windows-2022
-            arch: x64
-            gen_short_name: "vs17_2022"
-            gen_cmake_name: "Visual Studio 17 2022"
+          - arch: x64
+          - gen_short_name: "vs17_2022"
+          - gen_cmake_name: "Visual Studio 17 2022"
+            os: windows-2022
 
-          - os: windows-2022
-            arch: Win32
-            gen_short_name: "vs17_2022"
-            gen_cmake_name: "Visual Studio 17 2022"
+          - arch: Win32
+          - gen_short_name: "vs17_2022"
+          - gen_cmake_name: "Visual Studio 17 2022"
+            os: windows-2022
 
-          - os: ubuntu-22.04
-            cc: gcc
-            cxx: g++
-            toolchain: gcc
+          - cc: gcc
+          - cxx: g++
+          - toolchain: gcc
+            os: ubuntu-22.04
 
-          - os: ubuntu-22.04
-            cc: clang
-            cxx: clang++
-            toolchain: clang
+          - cc: clang
+          - cxx: clang++
+          - toolchain: clang
+            os: ubuntu-22.04
 
-          - os: macos-12
-            arch: x86_64
-            gen: Xcode
+          - arch: x86_64
+          - gen: Xcode
+            os: macos-12
 
-          - os: macos-12
-            arch: arm64
-            gen: Xcode
+          - arch: arm64
+          - gen: Xcode
+            os: macos-12
 
     runs-on: ${{ matrix.os }}
     steps:
