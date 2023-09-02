@@ -46,20 +46,10 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@v3
-      with:
-        name: src-assets
-        path: ./src/assets/
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: data
-        path: ./data/
-
     - name: Install Deps
       run: |
         sudo apt-get update
-        sudo apt-get install gcc clang cmake ninja-build libfuse2 xorg-dev
+        sudo apt-get install gcc clang cmake ninja-build libfuse2 xorg-dev python3 python3-pillow python3-numpy
         curl -L https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage --output ./appimagetool
         chmod a+x ./appimagetool
         sudo mv appimagetool /usr/local/bin/appimagetool
@@ -68,6 +58,7 @@ jobs:
       run: |
         export CC=${{ matrix.compiler.cc }}
         export CXX=${{ matrix.compiler.cxx }}
+        make gen-assets
         make all GENERATOR=Ninja BUILD_TYPE=Release NUM_JOBS=4
         mv ./build/csprite ./
 
