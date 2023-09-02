@@ -355,11 +355,10 @@ int main() {
 							break;
 						}
 					}
+					mainDoc->Render(dirtyArea);
 				}
 			}
 		}
-
-		mainDoc->Render(dirtyArea);
 
 		ImBase::Window::EndFrame();
 	}
