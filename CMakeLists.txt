@@ -48,10 +48,27 @@ else()
 	add_executable(csprite ${SRC_FILES})
 endif()
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/zlib/)
+target_link_libraries(csprite PUBLIC zlibstatic)
+
+set(PNG_STATIC                 ON  CACHE INTERNAL "")
+set(PNG_HARDWARE_OPTIMIZATIONS ON  CACHE INTERNAL "")
+set(PNG_SHARED                 OFF CACHE INTERNAL "")
+set(PNG_FRAMEWORK              OFF CACHE INTERNAL "")
+set(PNG_EXECUTABLES            OFF CACHE INTERNAL "")
+set(PNG_TESTS                  OFF CACHE INTERNAL "")
+set(PNG_SHARED                 OFF CACHE INTERNAL "")
+set(PNG_DEBUG                  OFF CACHE INTERNAL "")
+set(PNG_BUILD_ZLIB             ${CMAKE_CURRENT_SOURCE_DIR}/third_party/zlib/ CACHE INTERNAL "")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/libpng/)
+target_link_libraries(csprite PUBLIC png_static)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/imbase/)
+target_link_libraries(csprite PUBLIC imbase)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/)
 target_link_libraries(csprite PUBLIC stb_static)
-target_link_libraries(csprite PUBLIC imbase)
+
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
 
 target_compile_options(csprite PRIVATE
