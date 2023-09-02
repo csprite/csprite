@@ -48,6 +48,8 @@ else()
 	add_executable(csprite ${SRC_FILES})
 endif()
 
+set(SKIP_INSTALL_ALL ON  CACHE INTERNAL "")
+set(ZLIB_TESTS       OFF CACHE INTERNAL "")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/zlib/)
 target_link_libraries(csprite PUBLIC zlibstatic)
 
