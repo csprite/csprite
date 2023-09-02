@@ -45,7 +45,7 @@
 	#ifndef NOMINMAX
 		#define NOMINMAX
 	#endif
-	#include <Dirent/dirent.h>
+	#include "filebrowser/Dirent/dirent.h"
 	#include <windows.h>
 #else
 	#include <dirent.h>
