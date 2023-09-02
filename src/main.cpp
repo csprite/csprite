@@ -164,7 +164,7 @@ int main() {
 		if (FileDialog.showFileDialog(
 			"Open File###OpenFileWindow",
 			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
-			ImVec2(700, 310), ".png,.jpg,.jpeg"
+			ImVec2(700, 310), ".png,.jpg,.jpeg,.bmp,.psd,.tga"
 		)) {
 			Doc* d = Parser::ParseImageFile(FileDialog.selected_path.c_str());
 			if (d != nullptr) {
