@@ -19,13 +19,6 @@
 #include "doc/parser/parser.hpp"
 #include "filebrowser/filebrowser.hpp"
 
-// Mouse Position On Window
-ImVec2 MousePos; // mouse position
-ImVec2 MousePosLast; // mouse position last frame
-
-ImVec2 MousePosRel; // mouse position relative to canvas
-ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
-
 int main() {
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
 		return 1;
@@ -34,6 +27,13 @@ int main() {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImBase::Window::NewFrame();
 	ImBase::Window::EndFrame();
+
+	// Mouse Position On Window
+	ImVec2 MousePos; // mouse position
+	ImVec2 MousePosLast; // mouse position last frame
+
+	ImVec2 MousePosRel; // mouse position relative to canvas
+	ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
 
 	DocumentState dState;
 	String ZoomText = "Zoom: " + std::to_string(dState.ZoomLevel) + "x";
