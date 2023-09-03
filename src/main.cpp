@@ -19,8 +19,6 @@
 #include "doc/parser/parser.hpp"
 #include "filebrowser/filebrowser.hpp"
 
-bool ShouldSave = false;
-
 // Mouse Position On Window
 ImVec2 MousePos; // mouse position
 ImVec2 MousePosLast; // mouse position last frame
