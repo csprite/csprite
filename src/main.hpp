@@ -11,7 +11,7 @@ struct DocumentState {
 	u16 PaletteIndex = 0;
 	Palette palette;
 
-	u16 CanvasZoom = 1;
+	u32 ZoomLevel = 4;
 	u16 SelectedLayer = 0;
 
 	Doc* doc = nullptr;

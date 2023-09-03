@@ -38,8 +38,7 @@ int main() {
 	ImBase::Window::EndFrame();
 
 	DocumentState dState;
-	u32 ZoomLevel = 8;
-	String ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
+	String ZoomText = "Zoom: " + std::to_string(dState.ZoomLevel) + "x";
 
 	dState.palette.Add(Pixel{ 0,   0,   0,   255 });
 	dState.palette.Add(Pixel{ 29,  43,  83,  255 });
@@ -65,10 +64,10 @@ int main() {
 	RectI32 dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
 
 	// Initial Canvas Position & Size
-	dState.doc->viewport.x = io.DisplaySize.x / 2 - (float)dState.doc->w * ZoomLevel / 2;
-	dState.doc->viewport.y = io.DisplaySize.y / 2 - (float)dState.doc->h * ZoomLevel / 2;
-	dState.doc->viewport.w = dState.doc->w * ZoomLevel;
-	dState.doc->viewport.h = dState.doc->h * ZoomLevel;
+	dState.doc->viewport.x = io.DisplaySize.x / 2 - (float)dState.doc->w * dState.ZoomLevel / 2;
+	dState.doc->viewport.y = io.DisplaySize.y / 2 - (float)dState.doc->h * dState.ZoomLevel / 2;
+	dState.doc->viewport.w = dState.doc->w * dState.ZoomLevel;
+	dState.doc->viewport.h = dState.doc->h * dState.ZoomLevel;
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
@@ -82,7 +81,7 @@ int main() {
 	ToolShape LastToolShape = ToolManager::GetToolShape();
 	Pixel EmptyColor = { 0, 0, 0, 0 };
 
-	ZoomNCenterVP(ZoomLevel, *dState.doc);
+	ZoomNCenterVP(dState.ZoomLevel, *dState.doc);
 
 	bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
 	bool ShowOpenFileWindow = false;
@@ -166,7 +165,7 @@ int main() {
 				delete dState.doc;
 				dState.doc = d;
 				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
-				ZoomNCenterVP(ZoomLevel, *dState.doc);
+				ZoomNCenterVP(dState.ZoomLevel, *dState.doc);
 				dState.doc->Render(dirtyArea);
 			}
 		}
@@ -186,7 +185,7 @@ int main() {
 				dState.doc->AddLayer("New Layers");
 				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
 
-				ZoomNCenterVP(ZoomLevel, *dState.doc);
+				ZoomNCenterVP(dState.ZoomLevel, *dState.doc);
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
@@ -279,21 +278,21 @@ int main() {
 			MousePosRelLast = MousePosRel;
 
 			MousePos = ImGui::GetMousePos();
-			MousePosRel.x = (MousePos[0] - dState.doc->viewport.x) / ZoomLevel;
-			MousePosRel.y = (MousePos[1] - dState.doc->viewport.y) / ZoomLevel;
+			MousePosRel.x = (MousePos[0] - dState.doc->viewport.x) / dState.ZoomLevel;
+			MousePosRel.y = (MousePos[1] - dState.doc->viewport.y) / dState.ZoomLevel;
 
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				if (io.MouseWheel > 0) AdjustZoom(true, ZoomLevel, ZoomText, *dState.doc);
-				if (io.MouseWheel < 0) AdjustZoom(false, ZoomLevel, ZoomText, *dState.doc);
+				if (io.MouseWheel > 0) AdjustZoom(true, dState.ZoomLevel, ZoomText, *dState.doc);
+				if (io.MouseWheel < 0) AdjustZoom(false, dState.ZoomLevel, ZoomText, *dState.doc);
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
-				if (io.KeyCtrl) AdjustZoom(true, ZoomLevel, ZoomText, *dState.doc);
+				if (io.KeyCtrl) AdjustZoom(true, dState.ZoomLevel, ZoomText, *dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex >= dState.palette.Colors.size() - 1 ? 0 : dState.PaletteIndex + 1;
 				else ToolManager::SetBrushSize(ToolManager::GetBrushSize() + 1);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
-				if (io.KeyCtrl) AdjustZoom(false, ZoomLevel, ZoomText, *dState.doc);
+				if (io.KeyCtrl) AdjustZoom(false, dState.ZoomLevel, ZoomText, *dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex > 0 ? dState.PaletteIndex - 1 : dState.palette.Colors.size() - 1;
 				else if (ToolManager::GetBrushSize() > 2)
