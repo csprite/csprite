@@ -7,19 +7,18 @@
 #include "palette/palette.hpp"
 
 struct DocumentState {
-	Pixel SelectedColor;
-	u16 PaletteIndex;
+	Pixel SelectedColor = { 255, 255, 255, 255 };
+	u16 PaletteIndex = 0;
 	Palette palette;
 
-	u16 CanvasZoom;
-	String CanvasZoomText;
+	u16 CanvasZoom = 1;
+	u16 SelectedLayer = 0;
 
-	u16 SelectedLayer;
-	Doc doc;
+	Doc* doc = nullptr;
+	String FilePath = "";
 };
 
-// Canvas Zoom
-void ZoomNCenterVP(); // Zooms And Centers The Viewport.
-void AdjustZoom(bool increase);
+void ZoomNCenterVP(u32 ZoomLevel, Doc& d);
+void AdjustZoom(bool Increase, u32& ZoomLevel, String& ZoomText, Doc& d);
 
 #endif // CSP_MAIN_HPP_INCLUDED_

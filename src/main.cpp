@@ -19,16 +19,6 @@
 #include "doc/parser/parser.hpp"
 #include "filebrowser/filebrowser.hpp"
 
-Doc* mainDoc = nullptr;
-u16 PaletteIndex = 0;
-u16 PaletteCount = 16;
-
-Palette ColorPalette;
-
-unsigned int ZoomLevel = 8; // Default Zoom Level
-std::string ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x"; // Human Readable string decribing zoom level for UI
-Pixel SelectedColor; // Holds Pointer To Currently Selected Color
-
 bool ShouldSave = false;
 
 // Mouse Position On Window
@@ -47,35 +37,38 @@ int main() {
 	ImBase::Window::NewFrame();
 	ImBase::Window::EndFrame();
 
-	ColorPalette.Add(Pixel{ 0,   0,   0,   255 });
-	ColorPalette.Add(Pixel{ 29,  43,  83,  255 });
-	ColorPalette.Add(Pixel{ 126, 37,  83,  255 });
-	ColorPalette.Add(Pixel{ 0,   135, 81,  255 });
-	ColorPalette.Add(Pixel{ 171, 82,  54,  255 });
-	ColorPalette.Add(Pixel{ 95,  87,  79,  255 });
-	ColorPalette.Add(Pixel{ 194, 195, 199, 255 });
-	ColorPalette.Add(Pixel{ 255, 241, 232, 255 });
-	ColorPalette.Add(Pixel{ 255, 0,   77,  255 });
-	ColorPalette.Add(Pixel{ 255, 163, 0,   255 });
-	ColorPalette.Add(Pixel{ 255, 236, 39,  255 });
-	ColorPalette.Add(Pixel{ 0,   228, 54,  255 });
-	ColorPalette.Add(Pixel{ 41,  173, 255, 255 });
-	ColorPalette.Add(Pixel{ 131, 118, 156, 255 });
-	ColorPalette.Add(Pixel{ 255, 119, 168, 255 });
-	ColorPalette.Add(Pixel{ 255, 204, 170, 255 });
-	SelectedColor = ColorPalette[PaletteIndex];
+	DocumentState dState;
+	u32 ZoomLevel = 8;
+	String ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 
-	mainDoc = new Doc();
-	mainDoc->CreateNew(60, 40);
-	mainDoc->AddLayer("New Layer");
+	dState.palette.Add(Pixel{ 0,   0,   0,   255 });
+	dState.palette.Add(Pixel{ 29,  43,  83,  255 });
+	dState.palette.Add(Pixel{ 126, 37,  83,  255 });
+	dState.palette.Add(Pixel{ 0,   135, 81,  255 });
+	dState.palette.Add(Pixel{ 171, 82,  54,  255 });
+	dState.palette.Add(Pixel{ 95,  87,  79,  255 });
+	dState.palette.Add(Pixel{ 194, 195, 199, 255 });
+	dState.palette.Add(Pixel{ 255, 241, 232, 255 });
+	dState.palette.Add(Pixel{ 255, 0,   77,  255 });
+	dState.palette.Add(Pixel{ 255, 163, 0,   255 });
+	dState.palette.Add(Pixel{ 255, 236, 39,  255 });
+	dState.palette.Add(Pixel{ 0,   228, 54,  255 });
+	dState.palette.Add(Pixel{ 41,  173, 255, 255 });
+	dState.palette.Add(Pixel{ 131, 118, 156, 255 });
+	dState.palette.Add(Pixel{ 255, 119, 168, 255 });
+	dState.palette.Add(Pixel{ 255, 204, 170, 255 });
+	dState.SelectedColor = dState.palette[dState.PaletteIndex];
 
-	RectI32 dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
+	dState.doc = new Doc();
+	dState.doc->CreateNew(60, 40);
+	dState.doc->AddLayer("New Layer");
+	RectI32 dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
 
 	// Initial Canvas Position & Size
-	mainDoc->viewport.x = io.DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
-	mainDoc->viewport.y = io.DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
-	mainDoc->viewport.w = mainDoc->w * ZoomLevel;
-	mainDoc->viewport.h = mainDoc->h * ZoomLevel;
+	dState.doc->viewport.x = io.DisplaySize.x / 2 - (float)dState.doc->w * ZoomLevel / 2;
+	dState.doc->viewport.y = io.DisplaySize.y / 2 - (float)dState.doc->h * ZoomLevel / 2;
+	dState.doc->viewport.w = dState.doc->w * ZoomLevel;
+	dState.doc->viewport.h = dState.doc->h * ZoomLevel;
 
 	ImGuiWindowFlags window_flags = 0;
 	window_flags |= ImGuiWindowFlags_NoBackground;
@@ -89,7 +82,7 @@ int main() {
 	ToolShape LastToolShape = ToolManager::GetToolShape();
 	Pixel EmptyColor = { 0, 0, 0, 0 };
 
-	ZoomNCenterVP();
+	ZoomNCenterVP(ZoomLevel, *dState.doc);
 
 	bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
 	bool ShowOpenFileWindow = false;
@@ -98,10 +91,10 @@ int main() {
 	while (!ImBase::Window::ShouldClose()) {
 		ImBase::Window::NewFrame();
 
-		bool isCanvasHovered = io.MousePos.x > mainDoc->viewport.x &&
-						io.MousePos.y > mainDoc->viewport.y &&
-						io.MousePos.x < mainDoc->viewport.x + mainDoc->viewport.w &&
-						io.MousePos.y < mainDoc->viewport.y + mainDoc->viewport.h;
+		bool isCanvasHovered = io.MousePos.x > dState.doc->viewport.x &&
+						io.MousePos.y > dState.doc->viewport.y &&
+						io.MousePos.x < dState.doc->viewport.x + dState.doc->viewport.w &&
+						io.MousePos.y < dState.doc->viewport.y + dState.doc->viewport.h;
 
 #ifdef _DEBUG
 		static bool metricsWinVisible = false;
@@ -139,9 +132,6 @@ int main() {
 				BEGIN_MENUITEM("GitHub", NULL)
 					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
 				END_MENUITEM()
-				// BEGIN_MENUITEM("Credits", NULL)
-				// 	ImGui::OpenPopup("Lmao###CreditsPopup");
-				// END_MENUITEM()
 			END_MENU()
 
 			MenuBarPos = ImGui::GetWindowPos();
@@ -157,8 +147,13 @@ int main() {
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
+		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen("Open File###OpenFileWindow") || ImGui::IsPopupOpen("New Document###NewCanvasWindow"));
 		if (ShowOpenFileWindow) {
+			ShowOpenFileWindow = false;
 			ImGui::OpenPopup("Open File###OpenFileWindow");
+		} else if (ShowNewCanvasWindow) {
+			ShowNewCanvasWindow = false;
+			ImGui::OpenPopup("New Document###NewCanvasWindow");
 		}
 
 		if (FileDialog.showFileDialog(
@@ -168,60 +163,51 @@ int main() {
 		)) {
 			Doc* d = Parser::ParseImageFile(FileDialog.selected_path.c_str());
 			if (d != nullptr) {
-				delete mainDoc;
-				mainDoc = d;
-				dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
-				ZoomNCenterVP();
-				mainDoc->Render(dirtyArea);
+				delete dState.doc;
+				dState.doc = d;
+				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
+				ZoomNCenterVP(ZoomLevel, *dState.doc);
+				dState.doc->Render(dirtyArea);
 			}
-
-			ShowOpenFileWindow = false;
-		} else {
-			ShowOpenFileWindow = false;
 		}
 
 		#define BEGIN_POPUP(name, flags) if (ImGui::BeginPopupModal(name, NULL, flags)) { isCanvasHovered = false;
 		#define END_POPUP() ImGui::EndPopup(); }
 
-		if (ShowNewCanvasWindow) {
-			ImGui::SetNextWindowSize({280, 100}, 0);
-			ImGui::OpenPopup("New Document###NewCanvasWindow");
-			BEGIN_POPUP("New Document###NewCanvasWindow", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
-				ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
-				ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
+		ImGui::SetNextWindowSize({280, 100}, 0);
+		BEGIN_POPUP("New Document###NewCanvasWindow", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
+			ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
+			ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
 
-				if (ImGui::Button("Ok")) {
-					delete mainDoc;
-					mainDoc = new Doc();
-					mainDoc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
-					mainDoc->AddLayer("New Layers");
-					dirtyArea = { 0, 0, mainDoc->w, mainDoc->h };
+			if (ImGui::Button("Ok")) {
+				delete dState.doc;
+				dState.doc = new Doc();
+				dState.doc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
+				dState.doc->AddLayer("New Layers");
+				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
 
-					ZoomNCenterVP();
-					ShowNewCanvasWindow = 0;
-					ImGui::CloseCurrentPopup();
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel")) {
-					ShowNewCanvasWindow = 0;
-					ImGui::CloseCurrentPopup();
-				}
-			END_POPUP()
-		}
+				ZoomNCenterVP(ZoomLevel, *dState.doc);
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel")) {
+				ImGui::CloseCurrentPopup();
+			}
+		END_POPUP()
 
 		#undef BEGIN_POPUP
 		#undef END_POPUP
 
 		// Saves Few CPU & GPU Time Since There's No Window Flags Processing Or Some Other Overhead.
 		ImGui::GetBackgroundDrawList()->AddRect(
-			{ mainDoc->viewport.x - 1, mainDoc->viewport.y - 1 },
-			{ mainDoc->viewport.w + mainDoc->viewport.x + 1, mainDoc->viewport.h + mainDoc->viewport.y + 1 },
+			{ dState.doc->viewport.x - 1, dState.doc->viewport.y - 1 },
+			{ dState.doc->viewport.w + dState.doc->viewport.x + 1, dState.doc->viewport.h + dState.doc->viewport.y + 1 },
 			ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
 		);
 		ImGui::GetBackgroundDrawList()->AddImage(
-			reinterpret_cast<ImTextureID>(mainDoc->tex->id),
-			{ mainDoc->viewport.x, mainDoc->viewport.y },
-			{ mainDoc->viewport.w + mainDoc->viewport.x, mainDoc->viewport.h + mainDoc->viewport.y }
+			reinterpret_cast<ImTextureID>(dState.doc->tex->id),
+			{ dState.doc->viewport.x, dState.doc->viewport.y },
+			{ dState.doc->viewport.w + dState.doc->viewport.x, dState.doc->viewport.h + dState.doc->viewport.y }
 		);
 
 #ifdef _DEBUG
@@ -267,16 +253,16 @@ int main() {
 
 		BEGIN_WINDOW("ColorPaletteWindow", NULL, window_flags)
 			ImGui::SetWindowPos({ 0, io.DisplaySize.y - 35.0f });
-			for (int i = 0; i < PaletteCount; i++) {
+			for (auto i = 0UL; i < dState.palette.Colors.size(); i++) {
 				if (i != 0) ImGui::SameLine();
 				if (ImGui::ColorButton(
-					PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(),
-					{(float)ColorPalette[i].r/255, (float)ColorPalette[i].g/255, (float)ColorPalette[i].b/255, (float)ColorPalette[i].a/255})
+					dState.PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(),
+					{(float)dState.palette[i].r/255, (float)dState.palette[i].g/255, (float)dState.palette[i].b/255, (float)dState.palette[i].a/255})
 				) {
-					PaletteIndex = i;
-					SelectedColor = ColorPalette[PaletteIndex];
+					dState.PaletteIndex = i;
+					dState.SelectedColor = dState.palette[dState.PaletteIndex];
 				}
-				if (PaletteIndex == i)
+				if (dState.PaletteIndex == i)
 					ImGui::GetWindowDrawList()->AddRect(
 						ImGui::GetItemRectMin(),
 						ImGui::GetItemRectMax(),
@@ -293,23 +279,23 @@ int main() {
 			MousePosRelLast = MousePosRel;
 
 			MousePos = ImGui::GetMousePos();
-			MousePosRel.x = (MousePos[0] - mainDoc->viewport.x) / ZoomLevel;
-			MousePosRel.y = (MousePos[1] - mainDoc->viewport.y) / ZoomLevel;
+			MousePosRel.x = (MousePos[0] - dState.doc->viewport.x) / ZoomLevel;
+			MousePosRel.y = (MousePos[1] - dState.doc->viewport.y) / ZoomLevel;
 
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				if (io.MouseWheel > 0) AdjustZoom(true);
-				if (io.MouseWheel < 0) AdjustZoom(false);
+				if (io.MouseWheel > 0) AdjustZoom(true, ZoomLevel, ZoomText, *dState.doc);
+				if (io.MouseWheel < 0) AdjustZoom(false, ZoomLevel, ZoomText, *dState.doc);
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
-				if (io.KeyCtrl) AdjustZoom(true);
+				if (io.KeyCtrl) AdjustZoom(true, ZoomLevel, ZoomText, *dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
-					PaletteIndex = PaletteIndex >= PaletteCount - 1 ? 0 : PaletteIndex + 1;
+					dState.PaletteIndex = dState.PaletteIndex >= dState.palette.Colors.size() - 1 ? 0 : dState.PaletteIndex + 1;
 				else ToolManager::SetBrushSize(ToolManager::GetBrushSize() + 1);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
-				if (io.KeyCtrl) AdjustZoom(false);
+				if (io.KeyCtrl) AdjustZoom(false, ZoomLevel, ZoomText, *dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
-					PaletteIndex = PaletteIndex > 0 ? PaletteIndex - 1 : PaletteCount - 1;
+					dState.PaletteIndex = dState.PaletteIndex > 0 ? dState.PaletteIndex - 1 : dState.palette.Colors.size() - 1;
 				else if (ToolManager::GetBrushSize() > 2)
 					ToolManager::SetBrushSize(ToolManager::GetBrushSize() - 1);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_B, false)) {
@@ -330,14 +316,14 @@ int main() {
 				ToolManager::SetToolType(LastToolType);
 				ToolManager::SetToolShape(LastToolShape);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
-				if (io.KeyCtrl) ShowNewCanvasWindow = 1;
+				if (io.KeyCtrl) ShowNewCanvasWindow = true;
 			}
 
-			SelectedColor = ColorPalette[PaletteIndex];
+			dState.SelectedColor = dState.palette[dState.PaletteIndex];
 
 			if (ToolManager::GetToolType() == ToolType::PAN) {
-				mainDoc->viewport.x += io.MouseDelta.x;
-				mainDoc->viewport.y += io.MouseDelta.y;
+				dState.doc->viewport.x += io.MouseDelta.x;
+				dState.doc->viewport.y += io.MouseDelta.y;
 			}
 
 			double x, y;
@@ -345,38 +331,38 @@ int main() {
 				x = MousePosRel.x;
 				y = MousePosRel.y;
 
-				if (x >= 0 && x < mainDoc->w && y >= 0 && y < mainDoc->h) {
+				if (x >= 0 && x < dState.doc->w && y >= 0 && y < dState.doc->h) {
 					switch (ToolManager::GetToolType()) {
 						case BRUSH:
 							ToolManager::Draw(
-								x, y, mainDoc->w, mainDoc->h,
-								SelectedColor, mainDoc->layers[0]->pixels
+								x, y, dState.doc->w, dState.doc->h,
+								dState.SelectedColor, dState.doc->layers[0]->pixels
 							);
 							ToolManager::DrawBetween(
 								x, y, MousePosRelLast.x, MousePosRelLast.y,
-								mainDoc->w, mainDoc->h,
-								SelectedColor, mainDoc->layers[0]->pixels
+								dState.doc->w, dState.doc->h,
+								dState.SelectedColor, dState.doc->layers[0]->pixels
 							);
 							break;
 						case ERASER: {
 							ToolManager::Draw(
-								x, y, mainDoc->w, mainDoc->h,
-								EmptyColor, mainDoc->layers[0]->pixels
+								x, y, dState.doc->w, dState.doc->h,
+								EmptyColor, dState.doc->layers[0]->pixels
 							);
 							ToolManager::DrawBetween(
 								x, y, MousePosRelLast.x, MousePosRelLast.y,
-								mainDoc->w, mainDoc->h,
-								EmptyColor, mainDoc->layers[0]->pixels
+								dState.doc->w, dState.doc->h,
+								EmptyColor, dState.doc->layers[0]->pixels
 							);
 							break;
 						}
 						case INK_DROPPER: {
-							Pixel& color = mainDoc->layers[0]->pixels[(u32)((y * mainDoc->w) + x)];
+							Pixel& color = dState.doc->layers[0]->pixels[(u32)((y * dState.doc->w) + x)];
 
 							// For loop starts from 1 because we don't need the first color i.e. 0,0,0,0 or transparent black
-							for (int i = 0; i < PaletteCount; i++) {
-								if (ColorPalette[i] == color) {
-									PaletteIndex = i;
+							for (auto i = 0UL; i < dState.palette.Colors.size(); i++) {
+								if (dState.palette[i] == color) {
+									dState.PaletteIndex = i;
 									break;
 								}
 							}
@@ -386,7 +372,7 @@ int main() {
 							break;
 						}
 					}
-					mainDoc->Render(dirtyArea);
+					dState.doc->Render(dirtyArea);
 				}
 			}
 		}
@@ -394,20 +380,20 @@ int main() {
 		ImBase::Window::EndFrame();
 	}
 
-	delete mainDoc;
+	delete dState.doc;
 	ImBase::Window::Destroy();
 	return 0;
 }
 
-inline void ZoomNCenterVP() {
-	mainDoc->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
-	mainDoc->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
-	mainDoc->viewport.w = mainDoc->w * ZoomLevel;
-	mainDoc->viewport.h = mainDoc->h * ZoomLevel;
+inline void ZoomNCenterVP(u32 ZoomLevel, Doc& d) {
+	d.viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)d.w * ZoomLevel / 2;
+	d.viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)d.h * ZoomLevel / 2;
+	d.viewport.w = d.w * ZoomLevel;
+	d.viewport.h = d.h * ZoomLevel;
 }
 
-void AdjustZoom(bool increase) {
-	if (increase == true) {
+void AdjustZoom(bool Increase, u32& ZoomLevel, String& ZoomText, Doc& d) {
+	if (Increase == true) {
 		if (ZoomLevel < std::numeric_limits<u32>().max()) { // Max Value Of Unsigned int
 			ZoomLevel++;
 		}
@@ -418,10 +404,10 @@ void AdjustZoom(bool increase) {
 	}
 
 	// Comment Out To Not Center When Zooming
-	mainDoc->viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)mainDoc->w * ZoomLevel / 2;
-	mainDoc->viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)mainDoc->h * ZoomLevel / 2;
+	d.viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)d.w * ZoomLevel / 2;
+	d.viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)d.h * ZoomLevel / 2;
 
-	mainDoc->viewport.w = mainDoc->w * ZoomLevel;
-	mainDoc->viewport.h = mainDoc->h * ZoomLevel;
+	d.viewport.w = d.w * ZoomLevel;
+	d.viewport.h = d.h * ZoomLevel;
 	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 }
