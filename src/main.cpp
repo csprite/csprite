@@ -328,7 +328,7 @@ int main(int argc, char* argv[]) {
 				}
 				ImGui::EndMenu();
 			}
-			if (ImGui::BeginMenu("KeyboardControls")) {
+			if (ImGui::BeginMenu("Controls")) {
 				if (ImGui::MenuItem("Circle Brush", "B")) {
 					Tool = BRUSH_COLOR;
 					Tools_SetBrushShape(BRUSH_SHAPE_CIRCLE);
