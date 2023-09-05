@@ -83,6 +83,7 @@ int main() {
 
 	bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
 	bool ShowOpenFileWindow = false;
+	bool ShowAboutWindow = false;
 	imgui_addons::ImGuiFileBrowser FileDialog;
 
 	while (!ImBase::Window::ShouldClose()) {
@@ -124,7 +125,7 @@ int main() {
 
 			BEGIN_MENU("Help")
 				BEGIN_MENUITEM("About", NULL)
-					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
+					ShowAboutWindow = true;
 				END_MENUITEM()
 				BEGIN_MENUITEM("GitHub", NULL)
 					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
@@ -144,13 +145,16 @@ int main() {
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
-		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen("Open File###OpenFileWindow") || ImGui::IsPopupOpen("New Document###NewCanvasWindow"));
+		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen("Open File###OpenFileWindow") || ImGui::IsPopupOpen("New Document###NewCanvasWindow") || ImGui::IsPopupOpen("About###AboutCspriteWindow"));
 		if (ShowOpenFileWindow) {
 			ShowOpenFileWindow = false;
 			ImGui::OpenPopup("Open File###OpenFileWindow");
 		} else if (ShowNewCanvasWindow) {
 			ShowNewCanvasWindow = false;
 			ImGui::OpenPopup("New Document###NewCanvasWindow");
+		} else if (ShowAboutWindow) {
+			ShowAboutWindow = false;
+			ImGui::OpenPopup("About###AboutCspriteWindow");
 		}
 
 		if (FileDialog.showFileDialog(
@@ -190,6 +194,39 @@ int main() {
 			if (ImGui::Button("Cancel")) {
 				ImGui::CloseCurrentPopup();
 			}
+		END_POPUP()
+
+		BEGIN_POPUP("About###AboutCspriteWindow", ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
+			ImGui::SeparatorText("Thanks contributors!");
+			ImGui::Text("csprite is awesome because of the awesome people who decided");
+			ImGui::Text("to give their precious time to improve the project,");
+			ImGui::Text("you can see them by");
+			ImGui::SameLine();
+			static bool isTextHovered = false;
+			ImVec4 TextColor = isTextHovered ? ImGui::GetStyle().Colors[ImGuiCol_ButtonActive] : ImGui::GetStyle().Colors[ImGuiCol_Text];
+			ImGui::TextColored(TextColor, "clicking here");
+			ImVec2 Min = ImGui::GetItemRectMin();
+			ImVec2 Max = ImGui::GetItemRectMax();
+			Min.y = Max.y; // move the top left co-ordinate to bottom-left
+			ImGui::GetWindowDrawList()->AddLine(Min, Max, ImGui::GetColorU32(TextColor));
+			isTextHovered = ImGui::IsItemHovered();
+			if (isTextHovered) {
+				ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+			}
+			if (ImGui::IsItemClicked()) {
+				ImBase::Launcher::OpenUrl("https://github.com/csprite/csprite/graphs/contributors");
+			}
+
+			ImGui::SeparatorText("Thanks Open-Source Projects!");
+			ImGui::Text("csprite uses few open-source projects made by awesome people.\n\ngithub.com/");
+			ImGui::BulletText("csprite/imbase - BSD-3-Clause License:");
+			ImGui::Indent();
+			ImGui::BulletText("glfw/glfw (OpenGL, window & input) - Zlib License");
+			ImGui::BulletText("dav1dde/glad (OpenGL Function Loader) - Public Domain");
+			ImGui::BulletText("ocornut/imgui (User Interface) - MIT License");
+			ImGui::Unindent();
+			ImGui::BulletText("nothings/stb (Image Read/Write) - Public Domain");
+			ImGui::BulletText("gallickgunner/ImGui-Addons (File Browser) - MIT License");
 		END_POPUP()
 
 		#undef BEGIN_POPUP
