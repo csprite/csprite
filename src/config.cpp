@@ -98,7 +98,7 @@ AppConfig* LoadConfig(void) {
 		config = NULL;
 		return c;
 	} else {
-		log_error("failed to open \"%s\"!", configPath);
+		log_error("failed to open \"%s\"", configPath);
 		c->CheckerboardColor1.r = 0xC0;
 		c->CheckerboardColor1.g = 0xC0;
 		c->CheckerboardColor1.b = 0xC0;
