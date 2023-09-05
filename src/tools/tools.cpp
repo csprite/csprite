@@ -31,6 +31,7 @@ bool Tool_Brush(Pixel* Pixels, Pixel& Color, uint32_t st_x, uint32_t st_y, uint3
 	// dirX = direction X
 
 	// Loops From -BrushSize/2 To BrushSize/2, ex: -6/2 to 6/2 -> -3 to 3
+	int x = 0, y = 0;
 	for (int dirY = -BrushSize / 2; dirY < BrushSize / 2 + 1; dirY++) {
 		for (int dirX = -BrushSize / 2; dirX < BrushSize / 2 + 1; dirX++) {
 			if (st_x + dirX < 0 || st_x + dirX >= w || st_y + dirY < 0 || st_y + dirY > h)
@@ -39,8 +40,14 @@ bool Tool_Brush(Pixel* Pixels, Pixel& Color, uint32_t st_x, uint32_t st_y, uint3
 			if (BrushShape == BRUSH_SHAPE_CIRCLE && dirX * dirX + dirY * dirY > BrushSize / 2 * BrushSize / 2)
 				continue;
 
+			x = st_x + dirX;
+			y = st_y + dirY;
+			if (!(x >= 0 && y >= 0 && x < w && y < h))
+				continue;
+
 			Pixel& pixel = Pixels[((st_y + dirY) * w) + (st_x + dirX)];
 			pixel = Color;
+			didChange = true;
 		}
 	}
 	return didChange;
