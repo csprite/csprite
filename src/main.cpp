@@ -138,8 +138,13 @@ static inline void ProcessEvents();
 	} while(0)
 
 int main(int argc, char* argv[]) {
+	Sys_MakeDirRecursive(Sys_GetConfigDir());
 	FILE* LogFilePtr = fopen(Sys_GetLogFileName(), "w");
-	log_add_fp(LogFilePtr, LOG_TRACE);
+	if (LogFilePtr) {
+		log_add_fp(LogFilePtr, LOG_TRACE);
+	} else {
+		log_error("failed to open log file: \"%s\"", Sys_GetLogFileName());
+	}
 
 	Config = LoadConfig();
 	pMgr = new PaletteManager;
