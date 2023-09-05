@@ -1,5 +1,5 @@
 # <img src="https://github.com/pegvin/csprite/assets/75035219/5dc363b6-792e-4c57-a4f3-5631188339bb" height="128" title="csprite">
-csprite is a tiny pixel art tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
+csprite is a simple pixel art editor - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
 
 [![Continous Integration](https://img.shields.io/github/actions/workflow/status/pegvin/csprite/ci.yml?style=flat-square)](https://github.com/pegvin/csprite/actions/)
 [![Open Issues](https://img.shields.io/github/issues/pegvin/csprite?style=flat-square&color=%235cb85c)](https://github.com/pegvin/csprite/issues)
