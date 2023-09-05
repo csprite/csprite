@@ -23,6 +23,10 @@ csprite is a tiny pixel art tool - Fork of [@Falconerd's](https://github.com/fal
 ### Download
 - You can get csprite from [downloads page](https://csprite.github.io/downloads/) or you can build it from source from the instructions [here](https://csprite.github.io/wiki/latest-git/building-from-source.html).
 
+### Contributing
+
+If you would like to help, [checkout the guide on contributing](https://github.com/csprite/.github/blob/master/CONTRIBUTING.md).
+
 ### Credits
 the beautiful icon & banner are created ["Birds Probably" aka Lilith](https://www.instagram.com/birds_probably/), show the bird some love.
 
