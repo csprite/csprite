@@ -21,7 +21,9 @@
 #include "filebrowser/filebrowser.hpp"
 
 using json = nlohmann::json;
-
+void setLang(int langnum, int num){
+	langnum = num;
+}
 
 int main() {
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
@@ -144,14 +146,20 @@ int main() {
 			END_MENU()
 
 			BEGIN_MENU(data["Settings"].get_ref<const std::string&>().c_str())
-				BEGIN_MENUITEM(data["Language"].get_ref<const std::string&>().c_str(), "")
+				BEGIN_MENU(data["Language"].get_ref<const std::string&>().c_str())
 					BEGIN_MENUITEM(data["EN_UK"].get_ref<const std::string&>().c_str(), "")
 						setLang(language, 0);
+						std::ifstream langfile(languages[language]);
+						json data = json::parse(file);
+
 					END_MENUITEM()
 					BEGIN_MENUITEM(data["EN_US"].get_ref<const std::string&>().c_str(), "")
 						setLang(language, 1);
+						std::ifstream langfile(languages[language]);
+						json data = json::parse(file);
 					END_MENUITEM()
-				END_MENUITEM()
+					
+				END_MENU()
 			END_MENU()
 			MenuBarPos = ImGui::GetWindowPos();
 			MenuBarSize = ImGui::GetWindowSize();
@@ -429,7 +437,4 @@ void AdjustZoom(bool Increase, u32& ZoomLevel, String& ZoomText, Doc& d, json da
 	d.viewport.w = d.w * ZoomLevel;
 	d.viewport.h = d.h * ZoomLevel;
 	ZoomText = (String)(data["Zoom: "]) + std::to_string(ZoomLevel) + "x";
-}
-void setLang(int langnum, int num){
-	langnum = num;
 }
