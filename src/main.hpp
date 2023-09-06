@@ -1,0 +1,26 @@
+#ifndef CSP_MAIN_HPP_INCLUDED_
+#define CSP_MAIN_HPP_INCLUDED_
+#pragma once
+
+#include "types.hpp"
+#include "doc/doc.hpp"
+#include "palette/palette.hpp"
+#include "json.hpp"
+using json = nlohmann::json;
+
+struct DocumentState {
+	Pixel SelectedColor = { 255, 255, 255, 255 };
+	u16 PaletteIndex = 0;
+	Palette palette;
+	
+	u32 ZoomLevel = 4;
+	u16 SelectedLayer = 0;
+
+	Doc* doc = nullptr;
+	String FilePath = "";
+};
+
+void ZoomNCenterVP(u32 ZoomLevel, Doc& d);
+void AdjustZoom(bool Increase, u32& ZoomLevel, String& ZoomText, Doc& d, json data);
+
+#endif // CSP_MAIN_HPP_INCLUDED_

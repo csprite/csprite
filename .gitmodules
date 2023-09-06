@@ -1,0 +1,3 @@
+[submodule "third_party/imbase"]
+	path = third_party/imbase
+	url = https://github.com/csprite/imbase
