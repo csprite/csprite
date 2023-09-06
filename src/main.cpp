@@ -133,16 +133,16 @@ int main() {
 			
 
 #ifdef _DEBUG
-			BEGIN_MENU("Dev")
-				BEGIN_MENUITEM("Metrics", NULL) metricsWinVisible = !metricsWinVisible; END_MENUITEM()
+			BEGIN_MENU(data["Dev"].get_ref<const std::string&>().c_str())
+				BEGIN_MENUITEM(data["Metrics"].get_ref<const std::string&>().c_str(), NULL) metricsWinVisible = !metricsWinVisible; END_MENUITEM()
 			END_MENU()
 #endif
 
-			BEGIN_MENU("Help")
-				BEGIN_MENUITEM("About", NULL)
+			BEGIN_MENU(data["Help"].get_ref<const std::string&>().c_str())
+				BEGIN_MENUITEM(data["About"].get_ref<const std::string&>().c_str(), NULL)
 					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite/wiki/About-CSprite");
 				END_MENUITEM()
-				BEGIN_MENUITEM("GitHub", NULL)
+				BEGIN_MENUITEM(data["GitHub"].get_ref<const std::string&>().c_str(), NULL)
 					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
 				END_MENUITEM()
 			END_MENU()
