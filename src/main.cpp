@@ -27,12 +27,13 @@ int main() {
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
 		return 1;
 	}
-	const char* languages[2] = {"globale/EN_UK.json", "globale/EN_US.json"};
 	
-	std::ifstream EN_UK(languages[0]);
-	std::ifstream EN_US(languages[1]);
+	std::ifstream EN_UK("globale/EN_UK.json");
+	std::ifstream EN_US("globale/EN_US.json");
+	
 	json Langenuk = json::parse(EN_UK);
 	json Langenus = json::parse(EN_US);
+	
 	json data = Langenuk;
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
