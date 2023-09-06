@@ -21,18 +21,19 @@
 #include "filebrowser/filebrowser.hpp"
 
 using json = nlohmann::json;
-void setLang(int langnum, int num){
-	langnum = num;
-}
+
 
 int main() {
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
 		return 1;
 	}
 	const char* languages[2] = {"globale/EN_UK.json", "globale/EN_US.json"};
-	int language = 0;
-	std::ifstream file(languages[language]);
-	json data = json::parse(file);
+	
+	std::ifstream EN_UK(languages[0]);
+	std::ifstream EN_US(languages[1]);
+	json Langenuk = json::parse(EN_UK);
+	json Langenus = json::parse(EN_US);
+	json data = Langenuk;
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImBase::Window::NewFrame();
@@ -148,15 +149,15 @@ int main() {
 			BEGIN_MENU(data["Settings"].get_ref<const std::string&>().c_str())
 				BEGIN_MENU(data["Language"].get_ref<const std::string&>().c_str())
 					BEGIN_MENUITEM(data["EN_UK"].get_ref<const std::string&>().c_str(), "")
-						setLang(language, 0);
-						std::ifstream langfile(languages[language]);
-						json data = json::parse(file);
+						data = Langenuk;
+						
+						
 
 					END_MENUITEM()
 					BEGIN_MENUITEM(data["EN_US"].get_ref<const std::string&>().c_str(), "")
-						setLang(language, 1);
-						std::ifstream langfile(languages[language]);
-						json data = json::parse(file);
+						data = Langenus;
+						
+						
 					END_MENUITEM()
 					
 				END_MENU()
@@ -312,6 +313,7 @@ int main() {
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				if (io.MouseWheel > 0) AdjustZoom(true, dState.ZoomLevel, ZoomText, *dState.doc, data);
 				if (io.MouseWheel < 0) AdjustZoom(false, dState.ZoomLevel, ZoomText, *dState.doc, data);
+				
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
@@ -437,4 +439,5 @@ void AdjustZoom(bool Increase, u32& ZoomLevel, String& ZoomText, Doc& d, json da
 	d.viewport.w = d.w * ZoomLevel;
 	d.viewport.h = d.h * ZoomLevel;
 	ZoomText = (String)(data["Zoom: "]) + std::to_string(ZoomLevel) + "x";
+	
 }
