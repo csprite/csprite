@@ -25,6 +25,27 @@ int main() {
 	}
 
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	{
+		int uiFontSize = 0;
+		const void* uiFont = assets_get("data/fonts/NotoSans-Regular.ttf", &uiFontSize);
+		if (uiFont) {
+			constexpr float fontSizePx = 18.0f;
+			ImVector<ImWchar> ranges;
+			ImFontGlyphRangesBuilder builder;
+			builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+			builder.BuildRanges(&ranges);
+
+			io.Fonts->AddFontFromMemoryCompressedTTF(uiFont, uiFontSize, fontSizePx, nullptr, ranges.Data);
+			io.Fonts->Build();
+			if (!io.Fonts->IsBuilt()) {
+				printf("Failed to build the font!");
+			}
+		} else {
+			printf("Error: uiFont is NULL!\n");
+		}
+	}
+
 	ImBase::Window::NewFrame();
 	ImBase::Window::EndFrame();
 
