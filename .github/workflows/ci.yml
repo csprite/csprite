@@ -49,11 +49,7 @@ jobs:
         apt-get update -y
         apt-get install git gcc xorg-dev cmake ninja-build python3 python3-pil python3-numpy nodejs npm -y
 
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 16
-
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
