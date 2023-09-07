@@ -47,9 +47,12 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         apt-get update -y
-        apt-get install git gcc xorg-dev cmake ninja-build python3 python3-pil python3-numpy nodejs npm -y
+        apt-get install git curl bash gcc xorg-dev cmake ninja-build python3 python3-pil python3-numpy -y
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+        nvm install 16
+        nvm use 16
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
