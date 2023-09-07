@@ -22,12 +22,14 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            toolchain: gcc
+            pkgs: gcc
+            arch: x64
 
           - os: ubuntu-22.04
-            cc: clang
-            cxx: clang++
-            toolchain: clang
+            cc: gcc
+            cxx: g++
+            pkgs: lib32gcc-12-dev libc6-dev-i386 lib32stdc++-10-dev
+            arch: x32
 
           - os: macos-12
             arch: x86_64
@@ -47,7 +49,7 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         sudo apt-get update
-        sudo apt-get install gcc clang cmake ninja-build xorg-dev python3 python3-pip
+        sudo apt-get install ${{ matrix.pkgs }} cmake ninja-build xorg-dev python3 python3-pip
 
     - name: Lint Info.plist & Generate .icns (MacOS)
       if: ${{ matrix.os == 'macos-12' }}
@@ -96,7 +98,7 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       uses: actions/upload-artifact@v3
       with:
-        name: linux-x86_64-${{ matrix.toolchain }}
+        name: linux-${{ matrix.arch }}
         path: ./build/csprite
         if-no-files-found: error
 
@@ -144,13 +146,13 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: linux-x86_64-clang
-        path: ./linux-x86_64-clang/
+        name: linux-X64
+        path: ./linux-X64/
 
     - uses: actions/download-artifact@v3
       with:
-        name: linux-x86_64-gcc
-        path: ./linux-x86_64-gcc/
+        name: linux-x32
+        path: ./linux-x32/
 
     - uses: actions/download-artifact@v3
       with:
@@ -167,8 +169,8 @@ jobs:
         mv ./win-x64-vs17_2022/csprite.zip ./win-x64-vs17_2022.zip
         mv ./win-Win32-vs17_2022/csprite.zip ./win-x86-vs17_2022.zip
 
-        mv ./linux-x86_64-clang/csprite ./linux-x64-clang
-        mv ./linux-x86_64-gcc/csprite ./linux-x64-gcc
+        mv ./linux-x64/csprite ./linux-x64
+        mv ./linux-x32/csprite ./linux-x32
 
         mv ./osx-arm64-Xcode/csprite.zip ./osx-arm64-Xcode.zip
         mv ./osx-x86_64-Xcode/csprite.zip ./osx-x64-Xcode.zip
@@ -186,7 +188,7 @@ jobs:
         artifacts: |
           ./win-x64-vs17_2022.zip
           ./win-x86-vs17_2022.zip
-          ./linux-x64-gcc
-          ./linux-x64-clang
+          ./linux-x64
+          ./linux-x32
           ./osx-arm64-Xcode.zip
           ./osx-x64-Xcode.zip
