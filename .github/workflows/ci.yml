@@ -22,15 +22,13 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            pkgs: gcc xorg-dev
-            flags: ""
+            image: i386/ubuntu:latest
             arch: x64
 
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            pkgs: gcc-multilib g++-multilib libc6-dev-i386 lib32stdc++-10-dev xorg-dev:i386
-            flags: -m32
+            image: amd64/ubuntu:latest
             arch: x32
 
           - os: macos-12
@@ -42,6 +40,8 @@ jobs:
             gen: Xcode
 
     runs-on: ${{ matrix.os }}
+    if: ${{ matrix.os == 'ubuntu-22.04' }}
+    container: ${{ matrix.image }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -51,7 +51,7 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         sudo apt-get update
-        sudo apt-get install ${{ matrix.pkgs }} cmake ninja-build python3 python3-pip
+        sudo apt-get install gcc xorg-dev cmake ninja-build python3 python3-pip
 
     - name: Lint Info.plist & Generate .icns (MacOS)
       if: ${{ matrix.os == 'macos-12' }}
