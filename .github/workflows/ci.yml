@@ -42,8 +42,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     container:
       image: ${{ matrix.image }}
-      volumes:
-        - csprite/:csprite/
     steps:
     - uses: actions/checkout@v3
       with:
