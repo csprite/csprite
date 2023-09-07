@@ -22,13 +22,13 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            image: amd64/ubuntu:latest
+            image: amd64/ubuntu:rolling
             arch: x64
 
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            image: i386/ubuntu:latest
+            image: i386/ubuntu:rolling
             arch: x32
 
           - os: macos-12
@@ -47,7 +47,7 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         apt-get update -y
-        apt-get install git gcc xorg-dev cmake ninja-build python3 python3-pip -y
+        apt-get install git gcc xorg-dev cmake ninja-build python3 python3-pip nodejs npm -y
 
     - uses: actions/checkout@v3
       with:
