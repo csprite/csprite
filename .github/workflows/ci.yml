@@ -40,7 +40,6 @@ jobs:
             gen: Xcode
 
     runs-on: ${{ matrix.os }}
-    if: ${{ matrix.os == 'ubuntu-22.04' }}
     container:
       image: ${{ matrix.image }}
     steps:
