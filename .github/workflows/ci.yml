@@ -46,8 +46,8 @@ jobs:
     - name: Install Deps (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
-        sudo apt-get update
-        sudo apt-get install git gcc xorg-dev cmake ninja-build python3 python3-pip
+        apt-get update
+        apt-get install git gcc xorg-dev cmake ninja-build python3 python3-pip
 
     - uses: actions/checkout@v3
       with:
