@@ -1,3 +1,6 @@
 [submodule "third_party/imbase"]
 	path = third_party/imbase
 	url = https://github.com/csprite/imbase
+[submodule "third_party/simpleini"]
+	path = third_party/simpleini
+	url = https://github.com/csprite/simpleini
