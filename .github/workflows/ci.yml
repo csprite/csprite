@@ -28,7 +28,7 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            pkgs: gcc-multilib g++-multilib libx11-dev:i386 libxrandr-dev:i386 libxinerama-dev:i386 libxkbcommon-x11-dev:i386 libxkbfile-dev:i386 libxcursor-dev:i386 libxi-dev:i386
+            pkgs: gcc-multilib g++-multilib libx11-dev:i386 libxrandr-dev:i386 libxinerama-dev:i386 libxkbcommon-x11-dev:i386 libxkbfile-dev:i386 libxcursor-dev:i386 libxi-dev:i386 libgl-dev:i386
             flags: "-m32"
             arch: x32
 
