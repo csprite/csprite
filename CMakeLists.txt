@@ -45,6 +45,9 @@ else()
 	add_executable(csprite ${SRC_FILES})
 endif()
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/simpleini/)
+target_link_libraries(csprite PUBLIC SimpleIni)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/imbase/)
 target_link_libraries(csprite PUBLIC imbase)
 
