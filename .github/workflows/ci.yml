@@ -23,12 +23,14 @@ jobs:
             cc: gcc
             cxx: g++
             pkgs: gcc
+            flags: ""
             arch: x64
 
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
             pkgs: lib32gcc-12-dev libc6-dev-i386 lib32stdc++-10-dev
+            flags: -m32
             arch: x32
 
           - os: macos-12
@@ -79,6 +81,9 @@ jobs:
       run: |
         export CC=${{ matrix.cc }}
         export CXX=${{ matrix.cxx }}
+        export CXXFLAGS=${{ matrix.flags }}
+        export CFLAGS=${{ matrix.flags }}
+        export LDFLAGS=${{ matrix.flags }}
         make gen-assets
         make all GENERATOR=Ninja BUILD_TYPE=Release NUM_JOBS=4
 
