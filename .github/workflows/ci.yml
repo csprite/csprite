@@ -42,6 +42,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     container:
       image: ${{ matrix.image }}
+      volumes:
+        - /
     steps:
     - uses: actions/checkout@v3
       with:
