@@ -22,13 +22,14 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            image: amd64/debian:bookworm
+            pkgs: gcc xorg-dev
             arch: x64
 
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            image: i386/debian:bookworm
+            pkgs: gcc-multilib g++-multilib libx11-dev:i386 libxrandr-dev:i386 libxinerama-dev:i386 libxkbcommon-x11-dev:i386 libxkbfile-dev:i386 libxcursor-dev:i386 libxi-dev:i386
+            flags: "-m32"
             arch: x32
 
           - os: macos-12
@@ -40,18 +41,17 @@ jobs:
             gen: Xcode
 
     runs-on: ${{ matrix.os }}
-    container:
-      image: ${{ matrix.image }}
     steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
     - name: Install Deps (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
+        dpkg --add-architecture i386
         apt-get update -y
-        apt-get install git gcc xorg-dev cmake ninja-build python3 python3-pil python3-numpy nodejs npm -y
-
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+        apt-get install ${{ matrix.pkgs }} cmake ninja-build python3 python3-pip -y
 
     - name: Lint Info.plist & Generate .icns (MacOS)
       if: ${{ matrix.os == 'macos-12' }}
@@ -71,8 +71,7 @@ jobs:
         iconutil -c icns -o csprite.icns csprite.iconset
         rm -R csprite.iconset
 
-    - name: Install Python Deps (Except Linux)
-      if: ${{ matrix.os != 'ubuntu-22.04' }}
+    - name: Install Python Deps
       run: |
         python3 -m pip install --upgrade Pillow
         python3 -m pip install --upgrade numpy
