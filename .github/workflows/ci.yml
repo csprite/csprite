@@ -29,7 +29,7 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            pkgs: lib32gcc-12-dev libc6-dev-i386 lib32stdc++-10-dev
+            pkgs: gcc-multilib g++-multilib libc6-dev-i386 lib32stdc++-10-dev
             flags: -m32
             arch: x32
 
