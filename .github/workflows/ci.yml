@@ -20,17 +20,17 @@ jobs:
             gen_cmake_name: "Visual Studio 17 2022"
 
           - os: ubuntu-22.04
+            arch: x64
             cc: gcc
             cxx: g++
             pkgs: gcc xorg-dev
-            arch: x64
 
           - os: ubuntu-22.04
+            arch: x32
             cc: gcc
             cxx: g++
             pkgs: gcc-multilib g++-multilib libx11-dev:i386 libxrandr-dev:i386 libxinerama-dev:i386 libxkbcommon-x11-dev:i386 libxkbfile-dev:i386 libxcursor-dev:i386 libxi-dev:i386 libgl-dev:i386
             flags: "-m32"
-            arch: x32
 
           - os: macos-12
             arch: x86_64
