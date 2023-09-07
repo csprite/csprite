@@ -22,13 +22,13 @@ jobs:
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            image: amd64/ubuntu:rolling
+            image: amd64/debian:bookworm
             arch: x64
 
           - os: ubuntu-22.04
             cc: gcc
             cxx: g++
-            image: i386/ubuntu:rolling
+            image: i386/debian:bookworm
             arch: x32
 
           - os: macos-12
