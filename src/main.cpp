@@ -9,7 +9,7 @@
 
 #include "main.hpp"
 #include "types.hpp"
-#include "assets/assets.hpp"
+#include "assets/assets.h"
 #include "imbase/window.hpp"
 #include "imbase/launcher.hpp"
 #include "tools/tools.hpp"
