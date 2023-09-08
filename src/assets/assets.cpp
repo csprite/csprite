@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "assets.h"
+#include "assets/assets.hpp"
 
 typedef struct {
 	const char*     path;

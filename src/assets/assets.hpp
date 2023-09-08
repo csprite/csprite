@@ -1,9 +1,5 @@
-#ifndef ASSETS_H
-#define ASSETS_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef CSP_EMBEDDED_ASSETS_MANAGER_H
+#define CSP_EMBEDDED_ASSETS_MANAGER_H
 
 // All the assets are saved in binary directly in the code, using tool/create_assets.py.
 
@@ -28,9 +24,5 @@ const void* assets_get(const char *filePath, int *size);
 */
 int assets_list(const char* directoryPath, int (*callback)(int i, const char *path));
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif // ASSETS_H
+#endif // CSP_EMBEDDED_ASSETS_MANAGER_H
 

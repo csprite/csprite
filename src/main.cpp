@@ -7,9 +7,9 @@
 
 #include "imgui/imgui.h"
 
-#include "assets.h"
 #include "main.hpp"
 #include "types.hpp"
+#include "assets/assets.hpp"
 #include "imbase/window.hpp"
 #include "imbase/launcher.hpp"
 #include "tools/tools.hpp"
