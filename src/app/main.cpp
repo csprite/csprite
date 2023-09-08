@@ -18,6 +18,7 @@
 #include "doc/doc.hpp"
 #include "doc/parser/parser.hpp"
 #include "filebrowser/filebrowser.hpp"
+#include "fs/fs.hpp"
 
 int main() {
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
@@ -44,6 +45,18 @@ int main() {
 		} else {
 			printf("Error: uiFont is NULL!\n");
 		}
+	}
+
+	printf("Config Dir: %s\n",   Fs::GetConfigDir().c_str()); // ~/.config/csprite
+	printf("Parent Dir: %s\n",   Fs::GetParentDir(Fs::GetConfigDir()).c_str()); // ~/.config
+	printf("Base Name: %s\n",    Fs::GetBaseName(Fs::GetConfigDir()).c_str()); // csprite
+	printf("Language Dir: %s\n", Fs::GetLanguageDir().c_str()); // ~/.config/csprite/languages
+
+	i32 fSize = Fs::GetFileSize("./Makefile");
+	if (fSize < 0) {
+		printf("File Size (./Makefile): %s\n", strerror(errno));
+	} else {
+		printf("File Size (./Makefile): %d bytes\n", fSize);
 	}
 
 	ImBase::Window::NewFrame();
