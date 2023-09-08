@@ -4,6 +4,8 @@
 	#include <unistd.h>
 	#include <pwd.h>
 	#include <dirent.h>
+#elif defined(TARGET_WINDOWS)
+	#include "filebrowser/Dirent/dirent.h"
 #endif
 
 #include "fs/fs.hpp"
