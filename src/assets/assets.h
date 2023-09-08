@@ -1,6 +1,10 @@
 #ifndef CSP_EMBEDDED_ASSETS_MANAGER_H
 #define CSP_EMBEDDED_ASSETS_MANAGER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // All the assets are saved in binary directly in the code, using tool/create_assets.py.
 
 /*
@@ -23,6 +27,10 @@ const void* assets_get(const char *filePath, int *size);
 		callback: function to call on every item
 */
 int assets_list(const char* directoryPath, int (*callback)(int i, const char *path));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // CSP_EMBEDDED_ASSETS_MANAGER_H
 
