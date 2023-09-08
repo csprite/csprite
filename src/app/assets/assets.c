@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "assets/assets.h"
+#include "assets.h"
 
 typedef struct {
 	const char*     path;
@@ -13,7 +13,7 @@ typedef struct {
 } asset_t;
 
 static asset_t ASSETS[] = {
-	#include "assets/assets.inl"
+	#include "assets.inl"
 };
 
 #define NUM_ASSETS (int)(sizeof(ASSETS) / sizeof(asset_t))
