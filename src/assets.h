@@ -1,15 +1,9 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-bool str_startswith(const char *pre, const char *str);
 
 // All the assets are saved in binary directly in the code, using tool/create_assets.py.
 
@@ -39,3 +33,4 @@ int assets_list(const char* directoryPath, int (*callback)(int i, const char *pa
 #endif
 
 #endif // ASSETS_H
+

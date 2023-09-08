@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "assets.h"
 
 typedef struct {
@@ -12,17 +14,12 @@ typedef struct {
 
 static asset_t ASSETS[] = {
 	#include "assets/assets.inl"
-	{ NULL, 0, NULL } // NULL asset at the end of the list.
 };
 
-bool str_startswith(const char *pre, const char *str) {
-	return strncmp(pre, str, strlen(pre)) == 0;
-}
+static const int numAssets = sizeof(ASSETS) / sizeof(asset_t);
 
 const void* assets_get(const char *filePath, int *size) {
-	int i;
-	if (str_startswith("asset://", filePath) == true) filePath += 8; // Skip asset://
-	for (i = 0; ASSETS[i].path; i++) {
+	for (int i = 0; i < numAssets; i++) {
 		if (strcmp(ASSETS[i].path, filePath) == 0) {
 			if (size) *size = ASSETS[i].size;
 			return ASSETS[i].data;
@@ -31,12 +28,15 @@ const void* assets_get(const char *filePath, int *size) {
 	return NULL;
 }
 
+#define STARTS_WITH(prefix, str) (strncmp(prefix, str, strlen(prefix)) == 0)
+
 int assets_list(const char* directoryPath, int (*callback)(int i, const char *path)) {
-	int i, j = 0;
-	for (i = 0; ASSETS[i].path; i++) {
-		if (str_startswith(ASSETS[i].path, directoryPath)) {
+	int j = 0;
+	for (int i = 0; i < numAssets; i++) {
+		if (STARTS_WITH(ASSETS[i].path, directoryPath)) {
 			if (!callback || callback(j, ASSETS[i].path) == 0) j++;
 		}
 	}
 	return j;
 }
+
