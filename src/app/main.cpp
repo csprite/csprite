@@ -30,6 +30,7 @@ int main() {
 			ImVector<ImWchar> ranges;
 			ImFontGlyphRangesBuilder builder;
 			builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+			builder.AddRanges(io.Fonts->GetGlyphRangesGreek());
 			builder.BuildRanges(&ranges);
 
 			io.Fonts->AddFontFromMemoryCompressedTTF(uiFont, uiFontSize, fontSizePx, nullptr, ranges.Data);
@@ -243,7 +244,7 @@ int main() {
 			}
 
 			ImGui::SeparatorText(Lang[LangItem::POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER]);
-			ImGui::Text(Lang[LangItem::POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT]);
+			ImGui::TextWrapped(Lang[LangItem::POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT]);
 			ImGui::BulletText("csprite/imbase - BSD-3-Clause License:");
 			ImGui::Indent();
 			ImGui::BulletText("glfw/glfw (OpenGL, window & input) - Zlib License");
