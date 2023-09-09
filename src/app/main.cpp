@@ -1,9 +1,4 @@
-#include <iostream>
 #include <limits>
-
-// For Converting Strings To LowerCase in FixFileExtension function
-#include <algorithm>
-#include <cctype>
 
 #include "imgui/imgui.h"
 
@@ -18,7 +13,7 @@
 #include "doc/doc.hpp"
 #include "doc/parser/parser.hpp"
 #include "filebrowser/filebrowser.hpp"
-#include "fs/fs.hpp"
+#include "language/manager.hpp"
 
 int main() {
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
@@ -47,18 +42,6 @@ int main() {
 		}
 	}
 
-	printf("Config Dir: %s\n",   Fs::GetConfigDir().c_str()); // ~/.config/csprite
-	printf("Parent Dir: %s\n",   Fs::GetParentDir(Fs::GetConfigDir()).c_str()); // ~/.config
-	printf("Base Name: %s\n",    Fs::GetBaseName(Fs::GetConfigDir()).c_str()); // csprite
-	printf("Language Dir: %s\n", Fs::GetLanguageDir().c_str()); // ~/.config/csprite/languages
-
-	i32 fSize = Fs::GetFileSize("./Makefile");
-	if (fSize < 0) {
-		printf("File Size (./Makefile): %s\n", strerror(errno));
-	} else {
-		printf("File Size (./Makefile): %d bytes\n", fSize);
-	}
-
 	ImBase::Window::NewFrame();
 	ImBase::Window::EndFrame();
 
@@ -70,7 +53,6 @@ int main() {
 	ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
 
 	DocumentState dState;
-	String ZoomText = "Zoom: " + std::to_string(dState.ZoomLevel) + "x";
 
 	dState.palette.Add(Pixel{ 0,   0,   0,   255 });
 	dState.palette.Add(Pixel{ 29,  43,  83,  255 });
@@ -120,6 +102,8 @@ int main() {
 	bool ShowAboutWindow = false;
 	imgui_addons::ImGuiFileBrowser FileDialog;
 
+	const char** Lang = LanguageManager::Get(0);
+
 	while (!ImBase::Window::ShouldClose()) {
 		ImBase::Window::NewFrame();
 
@@ -142,11 +126,11 @@ int main() {
 		static ImVec2 MenuBarSize;
 
 		if (ImGui::BeginMainMenuBar()) {
-			BEGIN_MENU("File")
-				BEGIN_MENUITEM("New", "Ctrl+N")
+			BEGIN_MENU(Lang[LangItem::MENU_FILE])
+				BEGIN_MENUITEM(Lang[LangItem::MENU_NEW], "Ctrl+N")
 					ShowNewCanvasWindow = true;
 				END_MENUITEM()
-				BEGIN_MENUITEM("Open", "Ctrl+O")
+				BEGIN_MENUITEM(Lang[LangItem::MENU_OPEN], "Ctrl+O")
 					ShowOpenFileWindow = true;
 				END_MENUITEM()
 			END_MENU()
@@ -157,13 +141,21 @@ int main() {
 			END_MENU()
 #endif
 
-			BEGIN_MENU("Help")
-				BEGIN_MENUITEM("About", NULL)
+			BEGIN_MENU(Lang[LangItem::MENU_HELP])
+				BEGIN_MENUITEM(Lang[LangItem::MENU_ABOUT], NULL)
 					ShowAboutWindow = true;
 				END_MENUITEM()
-				BEGIN_MENUITEM("GitHub", NULL)
+				BEGIN_MENUITEM(Lang[LangItem::MENU_GITHUB], NULL)
 					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
 				END_MENUITEM()
+			END_MENU()
+
+			BEGIN_MENU("Language")
+				LanguageManager::ListAll([&](const char* name, u32 id) {
+					BEGIN_MENUITEM(name, NULL)
+						Lang = LanguageManager::Get(id);
+					END_MENUITEM()
+				});
 			END_MENU()
 
 			MenuBarPos = ImGui::GetWindowPos();
@@ -179,20 +171,20 @@ int main() {
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
-		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen("Open File###OpenFileWindow") || ImGui::IsPopupOpen("New Document###NewCanvasWindow") || ImGui::IsPopupOpen("About###AboutCspriteWindow"));
+		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen(Lang[LangItem::POPUP_OPEN_FILE]) || ImGui::IsPopupOpen(Lang[LangItem::POPUP_NEW_DOCUMENT]) || ImGui::IsPopupOpen(Lang[LangItem::POPUP_ABOUT_CSPRITE]));
 		if (ShowOpenFileWindow) {
 			ShowOpenFileWindow = false;
-			ImGui::OpenPopup("Open File###OpenFileWindow");
+			ImGui::OpenPopup(Lang[LangItem::POPUP_OPEN_FILE]);
 		} else if (ShowNewCanvasWindow) {
 			ShowNewCanvasWindow = false;
-			ImGui::OpenPopup("New Document###NewCanvasWindow");
+			ImGui::OpenPopup(Lang[LangItem::POPUP_NEW_DOCUMENT]);
 		} else if (ShowAboutWindow) {
 			ShowAboutWindow = false;
-			ImGui::OpenPopup("About###AboutCspriteWindow");
+			ImGui::OpenPopup(Lang[LangItem::POPUP_ABOUT_CSPRITE]);
 		}
 
 		if (FileDialog.showFileDialog(
-			"Open File###OpenFileWindow",
+			Lang[LangItem::POPUP_OPEN_FILE],
 			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
 			ImVec2(700, 310), ".png,.jpg,.jpeg,.bmp,.psd,.tga"
 		)) {
@@ -210,11 +202,11 @@ int main() {
 		#define END_POPUP() ImGui::EndPopup(); }
 
 		ImGui::SetNextWindowSize({280, 100}, 0);
-		BEGIN_POPUP("New Document###NewCanvasWindow", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
-			ImGui::InputInt("width", &NEW_DIMS[0], 1, 1, 0);
-			ImGui::InputInt("height", &NEW_DIMS[1], 1, 1, 0);
+		BEGIN_POPUP(Lang[LangItem::POPUP_NEW_DOCUMENT], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
+			ImGui::InputInt(Lang[LangItem::POPUP_NEW_DOCUMENT_WIDTH_INPUT], &NEW_DIMS[0], 1, 1, 0);
+			ImGui::InputInt(Lang[LangItem::POPUP_NEW_DOCUMENT_HEIGHT_INPUT], &NEW_DIMS[1], 1, 1, 0);
 
-			if (ImGui::Button("Ok")) {
+			if (ImGui::Button(Lang[LangItem::POPUP_NEW_DOCUMENT_OK_BUTTON])) {
 				delete dState.doc;
 				dState.doc = new Doc();
 				dState.doc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
@@ -225,25 +217,24 @@ int main() {
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("Cancel")) {
+			if (ImGui::Button(Lang[LangItem::POPUP_NEW_DOCUMENT_CANCEL_BUTTON])) {
 				ImGui::CloseCurrentPopup();
 			}
 		END_POPUP()
 
-		BEGIN_POPUP("About###AboutCspriteWindow", ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
-			ImGui::SeparatorText("Thanks contributors!");
-			ImGui::Text("csprite is awesome because of the awesome people who decided");
-			ImGui::Text("to give their precious time to improve the project,");
-			ImGui::Text("you can see them by");
-			ImGui::SameLine();
+		ImGui::SetNextWindowSize({480, 360}, 0);
+		BEGIN_POPUP(Lang[LangItem::POPUP_ABOUT_CSPRITE], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
+			ImGui::SeparatorText(Lang[LangItem::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER]);
+			ImGui::TextWrapped(Lang[LangItem::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH]);
+
 			static bool isTextHovered = false;
 			ImVec4 TextColor = isTextHovered ? ImGui::GetStyle().Colors[ImGuiCol_ButtonActive] : ImGui::GetStyle().Colors[ImGuiCol_Text];
-			ImGui::TextColored(TextColor, "clicking here");
+			ImGui::TextColored(TextColor, Lang[LangItem::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_LINK]);
 			ImVec2 Min = ImGui::GetItemRectMin();
 			ImVec2 Max = ImGui::GetItemRectMax();
 			Min.y = Max.y; // move the top left co-ordinate to bottom-left
-			ImGui::GetWindowDrawList()->AddLine(Min, Max, ImGui::GetColorU32(TextColor));
 			isTextHovered = ImGui::IsItemHovered();
+			ImGui::GetWindowDrawList()->AddLine(Min, Max, ImGui::GetColorU32(TextColor));
 			if (isTextHovered) {
 				ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
 			}
@@ -251,8 +242,8 @@ int main() {
 				ImBase::Launcher::OpenUrl("https://github.com/csprite/csprite/graphs/contributors");
 			}
 
-			ImGui::SeparatorText("Thanks Open-Source Projects!");
-			ImGui::Text("csprite uses few open-source projects made by awesome people.\n\ngithub.com/");
+			ImGui::SeparatorText(Lang[LangItem::POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER]);
+			ImGui::Text(Lang[LangItem::POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT]);
 			ImGui::BulletText("csprite/imbase - BSD-3-Clause License:");
 			ImGui::Indent();
 			ImGui::BulletText("glfw/glfw (OpenGL, window & input) - Zlib License");
@@ -284,39 +275,34 @@ int main() {
 		}
 #endif
 
-		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus |  ImGuiWindowFlags_NoFocusOnAppearing)
+		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize)
 			ImGui::SetWindowPos({0, MenuBarPos.y + MenuBarSize.y });
 			std::string selectedToolText;
 
 			switch (ToolManager::GetToolType()) {
 				case BRUSH:
 					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
-						selectedToolText = "Circle Brush - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+						ImGui::Text("Circle Brush - (Size: %u)", ToolManager::GetBrushSize());
 					} else {
-						selectedToolText = "Square Brush - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+						ImGui::Text("Square Brush - (Size: %u)", ToolManager::GetBrushSize());
 					}
 					break;
 				case ERASER:
 					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
-						selectedToolText = "Circle Eraser - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+						ImGui::Text("Circle Eraser - (Size: %u)", ToolManager::GetBrushSize());
 					} else {
-						selectedToolText = "Square Eraser - (Size: " + std::to_string(ToolManager::GetBrushSize()) + ")";
+						ImGui::Text("Square Eraser - (Size: %u)", ToolManager::GetBrushSize());
 					}
 					break;
 				case INK_DROPPER:
-					selectedToolText = "Ink Dropper";
+					ImGui::Text("Ink Dropper");
 					break;
 				case PAN:
-					selectedToolText = "Panning";
+					ImGui::Text("Panning");
 					break;
 			}
 
-			ImVec2 textSize1 = ImGui::CalcTextSize(selectedToolText.c_str(), NULL, false, -2.0f);
-			ImVec2 textSize2 = ImGui::CalcTextSize(ZoomText.c_str(), NULL, false, -2.0f);
-			ImGui::SetWindowSize({(float)(textSize1.x + textSize2.x), (float)(textSize1.y + textSize2.y) * 2}); // Make Sure Text is visible everytime.
-
-			ImGui::Text("%s", selectedToolText.c_str());
-			ImGui::Text("%s", ZoomText.c_str());
+			ImGui::Text("Zoom: %ux", dState.ZoomLevel);
 		END_WINDOW()
 
 		BEGIN_WINDOW("ColorPaletteWindow", NULL, window_flags)
@@ -351,17 +337,17 @@ int main() {
 			MousePosRel.y = (MousePos[1] - dState.doc->viewport.y) / dState.ZoomLevel;
 
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				if (io.MouseWheel > 0) AdjustZoom(true, dState.ZoomLevel, ZoomText, *dState.doc);
-				if (io.MouseWheel < 0) AdjustZoom(false, dState.ZoomLevel, ZoomText, *dState.doc);
+				if (io.MouseWheel > 0) AdjustZoom(true, dState.ZoomLevel, *dState.doc);
+				if (io.MouseWheel < 0) AdjustZoom(false, dState.ZoomLevel, *dState.doc);
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
-				if (io.KeyCtrl) AdjustZoom(true, dState.ZoomLevel, ZoomText, *dState.doc);
+				if (io.KeyCtrl) AdjustZoom(true, dState.ZoomLevel, *dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex >= dState.palette.Colors.size() - 1 ? 0 : dState.PaletteIndex + 1;
 				else ToolManager::SetBrushSize(ToolManager::GetBrushSize() + 1);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
-				if (io.KeyCtrl) AdjustZoom(false, dState.ZoomLevel, ZoomText, *dState.doc);
+				if (io.KeyCtrl) AdjustZoom(false, dState.ZoomLevel, *dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex > 0 ? dState.PaletteIndex - 1 : dState.palette.Colors.size() - 1;
 				else if (ToolManager::GetBrushSize() > 2)
@@ -460,7 +446,7 @@ inline void ZoomNCenterVP(u32 ZoomLevel, Doc& d) {
 	d.viewport.h = d.h * ZoomLevel;
 }
 
-void AdjustZoom(bool Increase, u32& ZoomLevel, String& ZoomText, Doc& d) {
+void AdjustZoom(bool Increase, u32& ZoomLevel, Doc& d) {
 	if (Increase == true) {
 		if (ZoomLevel < std::numeric_limits<u32>().max()) { // Max Value Of Unsigned int
 			ZoomLevel++;
@@ -477,5 +463,4 @@ void AdjustZoom(bool Increase, u32& ZoomLevel, String& ZoomText, Doc& d) {
 
 	d.viewport.w = d.w * ZoomLevel;
 	d.viewport.h = d.h * ZoomLevel;
-	ZoomText = "Zoom: " + std::to_string(ZoomLevel) + "x";
 }

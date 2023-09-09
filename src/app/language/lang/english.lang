@@ -1,0 +1,27 @@
+{
+	[MENU_FILE] = "File",
+		[MENU_NEW] = "New",
+		[MENU_OPEN] = "Open",
+
+	[MENU_HELP] = "Help",
+		[MENU_ABOUT] = "About",
+		[MENU_GITHUB] = "GitHub",
+
+	[POPUP_OPEN_FILE] = "Open File",
+	[POPUP_NEW_DOCUMENT] = "New Document",
+		[POPUP_NEW_DOCUMENT_WIDTH_INPUT] = "width",
+		[POPUP_NEW_DOCUMENT_HEIGHT_INPUT] = "height",
+		[POPUP_NEW_DOCUMENT_OK_BUTTON] = "Ok",
+		[POPUP_NEW_DOCUMENT_CANCEL_BUTTON] = "Cancel",
+
+	[POPUP_ABOUT_CSPRITE] = "About",
+		[POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER] = "Thanks contributors!",
+		[POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH] = "csprite is awesome because of the awesome people who decided to give their precious time to improve the project.",
+		[POPUP_ABOUT_CSPRITE_CONTRIBUTOR_LINK] = "List of contributors",
+
+		[POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER] = "Thanks Open-Source Projects!",
+		[POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT] = "csprite uses few open-source projects made by awesome people.\n\ngithub.com/",
+
+	[LANG_ITEM_NAME] = "English"
+},
+
