@@ -19,6 +19,6 @@ struct DocumentState {
 };
 
 void ZoomNCenterVP(u32 ZoomLevel, Doc& d);
-void AdjustZoom(bool Increase, u32& ZoomLevel, String& ZoomText, Doc& d);
+void AdjustZoom(bool Increase, u32& ZoomLevel, Doc& d);
 
 #endif // CSP_MAIN_HPP_INCLUDED_
