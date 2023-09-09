@@ -31,6 +31,25 @@ int main() {
 			ImFontGlyphRangesBuilder builder;
 			builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
 			builder.AddRanges(io.Fonts->GetGlyphRangesGreek());
+
+			// https://character-table.netlify.app/polish/
+			const ImWchar PolishRange[] = {
+				0x0104, 0x0107,
+				0x0118, 0x0119,
+				0x0141, 0x0144,
+				0x015A, 0x015B,
+				0x0179, 0x017C,
+				0x2010, 0x2011,
+				0x2013, 0x2014,
+				0x201D, 0x201E,
+				0x2020, 0x2021,
+				0x2032, 0x2033,
+				0
+			};
+			builder.AddChar(0x2026);
+			builder.AddChar(0x2030);
+			builder.AddChar(0x20AC);
+			builder.AddRanges(PolishRange);
 			builder.BuildRanges(&ranges);
 
 			io.Fonts->AddFontFromMemoryCompressedTTF(uiFont, uiFontSize, fontSizePx, nullptr, ranges.Data);
