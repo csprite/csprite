@@ -1,0 +1,29 @@
+// Translation By My Lovely Polski Friend: https://github.com/Nameniok
+
+{
+	[MENU_FILE] = "Plik",
+		[MENU_NEW] = "Nowy",
+		[MENU_OPEN] = "Otwórz",
+
+	[MENU_HELP] = "Pomoc",
+		[MENU_ABOUT] = "O aplikacji",
+		[MENU_GITHUB] = "GitHub",
+
+	[POPUP_OPEN_FILE] = "Otwórz plik",
+	[POPUP_NEW_DOCUMENT] = "Nowy dokument",
+		[POPUP_NEW_DOCUMENT_WIDTH_INPUT] = "szerokość",
+		[POPUP_NEW_DOCUMENT_HEIGHT_INPUT] = "wysokość",
+		[POPUP_NEW_DOCUMENT_OK_BUTTON] = "Ok",
+		[POPUP_NEW_DOCUMENT_CANCEL_BUTTON] = "Anuluj",
+
+	[POPUP_ABOUT_CSPRITE] = "O aplikacji",
+		[POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER] = "Dziękujemy współautorom!",
+		[POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH] = "csprite jest niesamowity dzięki niesamowitym ludziom, którzy zdecydowali się poświęcić swój cenny czas, aby ulepszyć projekt.",
+		[POPUP_ABOUT_CSPRITE_CONTRIBUTOR_LINK] = "Lista współtwórców",
+
+		[POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER] = "Dziękujemy projektom Open-Source!",
+		[POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT] = "csprite korzysta z kilku projektów open-source stworzonych przez niesamowitych ludzi.\n\ngithub.com/",
+
+	[LANG_ITEM_NAME] = "Polish"
+},
+
