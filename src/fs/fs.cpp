@@ -1,4 +1,5 @@
 #include <sys/stat.h>
+#include "fs/fs.hpp"
 
 #if defined(TARGET_LINUX)
 	#include <unistd.h>
@@ -7,8 +8,6 @@
 #elif defined(TARGET_WINDOWS)
 	#include "filebrowser/Dirent/dirent.h"
 #endif
-
-#include "fs/fs.hpp"
 
 String Fs::GetConfigDir() {
 	String fullPath = "";
@@ -61,6 +60,28 @@ String Fs::GetBaseName(const String &path) {
 	return "";
 }
 
+void Fs::MakeDir(const char* const path) {
+#if defined(TARGET_WINDOWS)
+	mkdir(path);
+#else
+	mkdir(path, S_IRWXU);
+#endif
+}
+
+void Fs::MakeDirRecursive(const String& _p) {
+	String path = _p;
+
+	if (path.back() == SYS_PATH_SEP_CHAR) path.pop_back();
+
+	for (u32 i = 0; i < path.length(); ++i) {
+		if (path[i] == SYS_PATH_SEP_CHAR) {
+			Fs::MakeDir(path.substr(0, i).c_str());
+		}
+	}
+
+    Fs::MakeDir(path.c_str());
+}
+
 i32 Fs::GetFileSize(const String &filePath) {
 	FILE* f = fopen(filePath.c_str(), "r");
 	if (f == NULL) return -1;
@@ -94,3 +115,4 @@ i32 Fs::IsRegularDir(const String& dirPath) {
 
 	return S_ISDIR(st.st_mode);
 }
+
