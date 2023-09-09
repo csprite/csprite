@@ -6,8 +6,10 @@
 
 #ifdef TARGET_WINDOWS
 	#define SYS_PATH_SEP "\\"
+	#define SYS_PATH_SEP_CHAR '\\'
 #else
 	#define SYS_PATH_SEP "/"
+	#define SYS_PATH_SEP_CHAR '/'
 #endif
 
 namespace Fs {
@@ -16,6 +18,10 @@ namespace Fs {
 
 	String GetParentDir(const String& path);
 	String GetBaseName(const String& path);
+
+	void MakeDir(const char* const path);
+	inline void MakeDir(const String& path) { Fs::MakeDir(path.c_str()); }
+	void MakeDirRecursive(const String& path);
 
 	// returns -1 on error, errno is set
 	i32 GetFileSize(const String& filePath);
