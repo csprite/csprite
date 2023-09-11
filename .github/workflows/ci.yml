@@ -107,7 +107,7 @@ jobs:
         if-no-files-found: error
         path: |
           ./build/csprite
-          ./data
+          ./assets
 
     - name: Upload artifacts (Windows)
       uses: actions/upload-artifact@v3
@@ -117,7 +117,7 @@ jobs:
         if-no-files-found: error
         path: |
           ./build/Release/csprite.exe
-          ./data
+          ./assets
 
     - name: Upload Artifacts (MacOS)
       uses: actions/upload-artifact@v3
@@ -127,7 +127,7 @@ jobs:
         if-no-files-found: error
         path: |
           ./build/Release/csprite
-          ./data
+          ./assets
 
   update-ci-release:
     needs: [build]
