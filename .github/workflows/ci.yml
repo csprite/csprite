@@ -104,24 +104,30 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: linux-${{ matrix.arch }}
-        path: ./build/csprite
         if-no-files-found: error
+        path: |
+          ./build/csprite
+          ./assets
 
     - name: Upload artifacts (Windows)
       uses: actions/upload-artifact@v3
       if: ${{ matrix.os == 'windows-2022' }}
       with:
-        name: win-${{ matrix.arch }}-${{ matrix.gen_short_name }}
+        name: win-${{ matrix.arch }}
         if-no-files-found: error
-        path: ./build/Release/*
+        path: |
+          ./build/Release/csprite.exe
+          ./assets
 
     - name: Upload Artifacts (MacOS)
       uses: actions/upload-artifact@v3
       if: ${{ matrix.os == 'macos-12' }}
       with:
-        name: osx-${{ matrix.arch }}-${{ matrix.gen }}
-        path: ./build/Release/csprite.app/
+        name: osx-${{ matrix.arch }}
         if-no-files-found: error
+        path: |
+          ./build/Release/csprite
+          ./assets
 
   update-ci-release:
     needs: [build]
@@ -141,13 +147,13 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: win-x64-vs17_2022
-        path: ./win-x64-vs17_2022/
+        name: win-x64
+        path: ./win-x64/
 
     - uses: actions/download-artifact@v3
       with:
-        name: win-Win32-vs17_2022
-        path: ./win-Win32-vs17_2022/
+        name: win-Win32
+        path: ./win-Win32/
 
     - uses: actions/download-artifact@v3
       with:
@@ -161,24 +167,24 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: osx-arm64-Xcode
-        path: ./osx-arm64-Xcode/
+        name: osx-arm64
+        path: ./osx-arm64/
 
     - uses: actions/download-artifact@v3
       with:
-        name: osx-x86_64-Xcode
-        path: ./osx-x86_64-Xcode/
+        name: osx-x86_64
+        path: ./osx-x86_64/
 
     - name: Rename
       run: |
-        mv ./win-x64-vs17_2022/csprite.zip ./win-x64-vs17_2022.zip
-        mv ./win-Win32-vs17_2022/csprite.zip ./win-x86-vs17_2022.zip
+        mv ./win-x64/csprite.zip ./win-x64.zip
+        mv ./win-Win32/csprite.zip ./win-x86.zip
 
         mv ./linux-x64/csprite ./linux-x64
         mv ./linux-x32/csprite ./linux-x32
 
-        mv ./osx-arm64-Xcode/csprite.zip ./osx-arm64-Xcode.zip
-        mv ./osx-x86_64-Xcode/csprite.zip ./osx-x64-Xcode.zip
+        mv ./osx-arm64/csprite.zip ./osx-arm64.zip
+        mv ./osx-x86_64/csprite.zip ./osx-x64.zip
 
     - uses: ncipollo/release-action@v1
       with:
@@ -191,9 +197,11 @@ jobs:
         generateReleaseNotes: true
         artifactErrorsFailBuild: true
         artifacts: |
-          ./win-x64-vs17_2022.zip
-          ./win-x86-vs17_2022.zip
+          ./win-x64.zip
+          ./win-x86.zip
           ./linux-x64
           ./linux-x32
-          ./osx-arm64-Xcode.zip
-          ./osx-x64-Xcode.zip
+          ./osx-arm64.zip
+          ./osx-x64.zip
+
+
