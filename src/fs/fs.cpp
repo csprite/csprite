@@ -116,3 +116,28 @@ i32 Fs::IsRegularDir(const String& dirPath) {
 	return S_ISDIR(st.st_mode);
 }
 
+i32 Fs::ListDir(const char* dirPath, OnListDirCB cb) {
+	DIR* dir = opendir(dirPath);
+	if (dir == NULL)
+		return -1;
+
+	int i = 0;
+	while (true) {
+		errno = 0;
+		struct dirent* dirent = readdir(dir);
+		if (dirent == NULL || errno != 0) {
+			closedir(dir);
+			return -1;
+		} else if (dirent->d_name[0] == '.') {
+			continue; // skip "." & ".." entries
+		} else if (cb(dirent->d_name, Fs::IsRegularFile(String(dirPath) + SYS_PATH_SEP + dirent->d_name)) == false) {
+			break;
+		}
+
+		i++;
+	}
+
+	closedir(dir);
+	return i;
+}
+
