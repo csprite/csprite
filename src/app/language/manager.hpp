@@ -32,8 +32,6 @@ enum UI_TEXT : u16 {
 	COUNT
 };
 
-using UiTextItemArr = std::array<const char*, UI_TEXT::COUNT>;
-
 namespace LanguageManager {
 
 	typedef std::function<void(const char* name)> OnListCB;
@@ -42,7 +40,7 @@ namespace LanguageManager {
 	bool LoadFile(const String& filePath);
 	void LoadDefault();
 
-	UiTextItemArr& Get();
+	const char** Get();
 }
 
 #endif // CSP_APP_LANGUAGE_MANAGER_HPP_INCLUDED_

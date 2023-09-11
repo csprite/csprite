@@ -9,9 +9,9 @@ using json = nlohmann::json;
 #include <array>
 
 static std::vector<String> LanguageFiles;
-static UiTextItemArr Language;
+static const char* Language[UI_TEXT::COUNT];
 
-UiTextItemArr& LanguageManager::Get() {
+const char** LanguageManager::Get() {
 	return Language;
 }
 
