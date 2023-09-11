@@ -15,8 +15,8 @@
 
 namespace Fs {
 	String GetConfigDir();
-	inline String GetLanguagesDir() { return String("./data") + SYS_PATH_SEP "languages"; }
-	inline String GetPalettesDir() { return String("./data") + SYS_PATH_SEP "palettes"; }
+	inline String GetLanguagesDir() { return String("./assets") + SYS_PATH_SEP "languages"; }
+	inline String GetPalettesDir() { return String("./assets") + SYS_PATH_SEP "palettes"; }
 
 	String GetParentDir(const String& path);
 	String GetBaseName(const String& path);
