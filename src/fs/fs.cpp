@@ -5,6 +5,7 @@
 	#include <unistd.h>
 	#include <pwd.h>
 #elif defined(TARGET_WINDOWS)
+	#include <direct.h>
 	#include "filebrowser/Dirent/dirent.h"
 #endif
 
@@ -65,7 +66,7 @@ String Fs::GetBaseName(const String &path) {
 
 void Fs::MakeDir(const char* const path) {
 #if defined(TARGET_WINDOWS)
-	mkdir(path);
+	_mkdir(path);
 #else
 	mkdir(path, S_IRWXU);
 #endif
