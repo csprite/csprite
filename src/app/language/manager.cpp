@@ -6,7 +6,6 @@ using json = nlohmann::json;
 
 #include <cstdlib>
 #include <fstream>
-#include <array>
 
 static std::vector<String> LanguageFiles;
 static const char* Language[UI_TEXT::COUNT];
