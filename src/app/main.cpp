@@ -125,7 +125,7 @@ int main() {
 
 	LanguageManager::UpdateEntries();
 	LanguageManager::LoadDefault();
-	UiTextItemArr& Lang = LanguageManager::Get();
+	const char** Lang = LanguageManager::Get();
 
 	while (!ImBase::Window::ShouldClose()) {
 		ImBase::Window::NewFrame();
