@@ -4,9 +4,12 @@
 #if defined(TARGET_LINUX)
 	#include <unistd.h>
 	#include <pwd.h>
-	#include <dirent.h>
 #elif defined(TARGET_WINDOWS)
 	#include "filebrowser/Dirent/dirent.h"
+#endif
+
+#ifndef TARGET_WINDOWS
+	#include <dirent.h>
 #endif
 
 String Fs::GetConfigDir() {
