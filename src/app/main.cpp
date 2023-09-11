@@ -14,6 +14,7 @@
 #include "doc/parser/parser.hpp"
 #include "filebrowser/filebrowser.hpp"
 #include "language/manager.hpp"
+#include "fs/fs.hpp"
 
 int main() {
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
@@ -122,7 +123,9 @@ int main() {
 	bool ShowAboutWindow = false;
 	imgui_addons::ImGuiFileBrowser FileDialog;
 
-	const char** Lang = LanguageManager::Get(0);
+	LanguageManager::UpdateEntries();
+	LanguageManager::LoadDefault();
+	const char** Lang = LanguageManager::Get();
 
 	while (!ImBase::Window::ShouldClose()) {
 		ImBase::Window::NewFrame();
@@ -146,11 +149,11 @@ int main() {
 		static ImVec2 MenuBarSize;
 
 		if (ImGui::BeginMainMenuBar()) {
-			BEGIN_MENU(Lang[LangItem::MENU_FILE])
-				BEGIN_MENUITEM(Lang[LangItem::MENU_NEW], "Ctrl+N")
+			BEGIN_MENU(Lang[UI_TEXT::MENU_FILE])
+				BEGIN_MENUITEM(Lang[UI_TEXT::MENU_NEW], "Ctrl+N")
 					ShowNewCanvasWindow = true;
 				END_MENUITEM()
-				BEGIN_MENUITEM(Lang[LangItem::MENU_OPEN], "Ctrl+O")
+				BEGIN_MENUITEM(Lang[UI_TEXT::MENU_OPEN], "Ctrl+O")
 					ShowOpenFileWindow = true;
 				END_MENUITEM()
 			END_MENU()
@@ -161,19 +164,23 @@ int main() {
 			END_MENU()
 #endif
 
-			BEGIN_MENU(Lang[LangItem::MENU_HELP])
-				BEGIN_MENUITEM(Lang[LangItem::MENU_ABOUT], NULL)
+			BEGIN_MENU(Lang[UI_TEXT::MENU_HELP])
+				BEGIN_MENUITEM(Lang[UI_TEXT::MENU_ABOUT], NULL)
 					ShowAboutWindow = true;
 				END_MENUITEM()
-				BEGIN_MENUITEM(Lang[LangItem::MENU_GITHUB], NULL)
+				BEGIN_MENUITEM(Lang[UI_TEXT::MENU_GITHUB], NULL)
 					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
 				END_MENUITEM()
 			END_MENU()
 
 			BEGIN_MENU("Language")
-				LanguageManager::ListAll([&](const char* name, u32 id) {
-					BEGIN_MENUITEM(name, NULL)
-						Lang = LanguageManager::Get(id);
+				LanguageManager::ListAll([&](const char* fileName) {
+					BEGIN_MENUITEM(fileName, NULL)
+						String filePath = Fs::GetLanguagesDir() + SYS_PATH_SEP + String(fileName);
+						if (!LanguageManager::LoadFile(filePath)) {
+							LanguageManager::LoadDefault();
+						}
+						Lang = LanguageManager::Get();
 					END_MENUITEM()
 				});
 			END_MENU()
@@ -191,20 +198,20 @@ int main() {
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
-		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen(Lang[LangItem::POPUP_OPEN_FILE]) || ImGui::IsPopupOpen(Lang[LangItem::POPUP_NEW_DOCUMENT]) || ImGui::IsPopupOpen(Lang[LangItem::POPUP_ABOUT_CSPRITE]));
+		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen(Lang[UI_TEXT::POPUP_OPEN_FILE]) || ImGui::IsPopupOpen(Lang[UI_TEXT::POPUP_NEW_DOCUMENT]) || ImGui::IsPopupOpen(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE]));
 		if (ShowOpenFileWindow) {
 			ShowOpenFileWindow = false;
-			ImGui::OpenPopup(Lang[LangItem::POPUP_OPEN_FILE]);
+			ImGui::OpenPopup(Lang[UI_TEXT::POPUP_OPEN_FILE]);
 		} else if (ShowNewCanvasWindow) {
 			ShowNewCanvasWindow = false;
-			ImGui::OpenPopup(Lang[LangItem::POPUP_NEW_DOCUMENT]);
+			ImGui::OpenPopup(Lang[UI_TEXT::POPUP_NEW_DOCUMENT]);
 		} else if (ShowAboutWindow) {
 			ShowAboutWindow = false;
-			ImGui::OpenPopup(Lang[LangItem::POPUP_ABOUT_CSPRITE]);
+			ImGui::OpenPopup(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE]);
 		}
 
 		if (FileDialog.showFileDialog(
-			Lang[LangItem::POPUP_OPEN_FILE],
+			Lang[UI_TEXT::POPUP_OPEN_FILE],
 			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
 			ImVec2(700, 310), ".png,.jpg,.jpeg,.bmp,.psd,.tga"
 		)) {
@@ -222,11 +229,11 @@ int main() {
 		#define END_POPUP() ImGui::EndPopup(); }
 
 		ImGui::SetNextWindowSize({280, 100}, 0);
-		BEGIN_POPUP(Lang[LangItem::POPUP_NEW_DOCUMENT], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
-			ImGui::InputInt(Lang[LangItem::POPUP_NEW_DOCUMENT_WIDTH_INPUT], &NEW_DIMS[0], 1, 1, 0);
-			ImGui::InputInt(Lang[LangItem::POPUP_NEW_DOCUMENT_HEIGHT_INPUT], &NEW_DIMS[1], 1, 1, 0);
+		BEGIN_POPUP(Lang[UI_TEXT::POPUP_NEW_DOCUMENT], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
+			ImGui::InputInt(Lang[UI_TEXT::POPUP_NEW_DOCUMENT_WIDTH_INPUT], &NEW_DIMS[0], 1, 1, 0);
+			ImGui::InputInt(Lang[UI_TEXT::POPUP_NEW_DOCUMENT_HEIGHT_INPUT], &NEW_DIMS[1], 1, 1, 0);
 
-			if (ImGui::Button(Lang[LangItem::POPUP_NEW_DOCUMENT_OK_BUTTON])) {
+			if (ImGui::Button(Lang[UI_TEXT::POPUP_NEW_DOCUMENT_OK_BUTTON])) {
 				delete dState.doc;
 				dState.doc = new Doc();
 				dState.doc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
@@ -237,19 +244,19 @@ int main() {
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
-			if (ImGui::Button(Lang[LangItem::POPUP_NEW_DOCUMENT_CANCEL_BUTTON])) {
+			if (ImGui::Button(Lang[UI_TEXT::POPUP_NEW_DOCUMENT_CANCEL_BUTTON])) {
 				ImGui::CloseCurrentPopup();
 			}
 		END_POPUP()
 
 		ImGui::SetNextWindowSize({480, 360}, 0);
-		BEGIN_POPUP(Lang[LangItem::POPUP_ABOUT_CSPRITE], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
-			ImGui::SeparatorText(Lang[LangItem::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER]);
-			ImGui::TextWrapped(Lang[LangItem::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH]);
+		BEGIN_POPUP(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
+			ImGui::SeparatorText(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER]);
+			ImGui::TextWrapped(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH]);
 
 			static bool isTextHovered = false;
 			ImVec4 TextColor = isTextHovered ? ImGui::GetStyle().Colors[ImGuiCol_ButtonActive] : ImGui::GetStyle().Colors[ImGuiCol_Text];
-			ImGui::TextColored(TextColor, Lang[LangItem::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_LINK]);
+			ImGui::TextColored(TextColor, Lang[UI_TEXT::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_LINK]);
 			ImVec2 Min = ImGui::GetItemRectMin();
 			ImVec2 Max = ImGui::GetItemRectMax();
 			Min.y = Max.y; // move the top left co-ordinate to bottom-left
@@ -262,8 +269,8 @@ int main() {
 				ImBase::Launcher::OpenUrl("https://github.com/csprite/csprite/graphs/contributors");
 			}
 
-			ImGui::SeparatorText(Lang[LangItem::POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER]);
-			ImGui::TextWrapped(Lang[LangItem::POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT]);
+			ImGui::SeparatorText(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER]);
+			ImGui::TextWrapped(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT]);
 			ImGui::BulletText("csprite/imbase - BSD-3-Clause License:");
 			ImGui::Indent();
 			ImGui::BulletText("glfw/glfw (OpenGL, window & input) - Zlib License");
