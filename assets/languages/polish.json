@@ -1,0 +1,33 @@
+{
+	"Name": "Polish",
+	"Comment": "Translation By My Lovely Polski Friend: https://github.com/Nameniok",
+	"FileMenu": {
+		"File": "Plik",
+		"New": "Nowy",
+		"Open": "Otwórz"
+	},
+	"HelpMenu": {
+		"Help": "Pomoc",
+		"About": "O aplikacji",
+		"GitHub": "GitHub"
+	},
+	"OpenFilePopup": {
+		"OpenFile": "Otwórz plik"
+	},
+	"NewDocumentPopup": {
+		"NewDocument": "Nowy dokument",
+		"WidthInput": "szerokość",
+		"HeightInput": "wysokość",
+		"OkButton": "Ok",
+		"CancelButton": "Anuluj"
+	},
+	"AboutCspritePopup": {
+		"AboutCsprite": "O aplikacji",
+		"ContributorHeader": "Dziękujemy współautorom!",
+		"ContributorParagraph": "csprite jest niesamowity dzięki niesamowitym ludziom, którzy zdecydowali się poświęcić swój cenny czas, aby ulepszyć projekt.",
+		"ContributorLink": "Lista współtwórców",
+		"OsProjectsHeader": "Dziękujemy projektom Open-Source!",
+		"OsProjectsText": "csprite korzysta z kilku projektów open-source stworzonych przez niesamowitych ludzi.\n\ngithub.com/"
+	}
+}
+

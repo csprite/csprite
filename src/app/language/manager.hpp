@@ -5,7 +5,7 @@
 #include <functional>
 #include "types.hpp"
 
-enum LangItem : u16 {
+enum UI_TEXT : u16 {
 	MENU_FILE = 0,
 		MENU_NEW,
 		MENU_OPEN,
@@ -29,17 +29,18 @@ enum LangItem : u16 {
 		POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER,
 		POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT,
 
-	LANG_ITEM_NAME,
-	LANG_ITEM_COUNT,
+	COUNT
 };
 
 namespace LanguageManager {
 
-	// typedef void(*OnListCB)(const char* name, u32 id);
-	typedef std::function<void(const char* name, u32 id)> OnListCB;
+	typedef std::function<void(const char* name)> OnListCB;
 	void ListAll(OnListCB cb);
+	void UpdateEntries();
+	bool LoadFile(const String& filePath);
+	void LoadDefault();
 
-	const char** Get(u32 id);
+	const char** Get();
 }
 
 #endif // CSP_APP_LANGUAGE_MANAGER_HPP_INCLUDED_
