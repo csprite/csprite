@@ -249,8 +249,8 @@ int main() {
 			}
 		END_POPUP()
 
-		ImGui::SetNextWindowSize({480, 360}, 0);
-		BEGIN_POPUP(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
+		ImGui::SetNextWindowSize({520, 0});
+		BEGIN_POPUP(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
 			ImGui::SeparatorText(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER]);
 			ImGui::TextWrapped(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH]);
 
@@ -272,13 +272,19 @@ int main() {
 			ImGui::SeparatorText(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER]);
 			ImGui::TextWrapped(Lang[UI_TEXT::POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT]);
 			ImGui::BulletText("csprite/imbase - BSD-3-Clause License:");
-			ImGui::Indent();
-			ImGui::BulletText("glfw/glfw (OpenGL, window & input) - Zlib License");
-			ImGui::BulletText("dav1dde/glad (OpenGL Function Loader) - Public Domain");
-			ImGui::BulletText("ocornut/imgui (User Interface) - MIT License");
+				ImGui::Indent();
+				ImGui::BulletText("glfw/glfw (OpenGL, window & input) - Zlib License");
+				ImGui::BulletText("dav1dde/glad (OpenGL Function Loader) - Public Domain");
+				ImGui::BulletText("ocornut/imgui (User Interface) - MIT License");
 			ImGui::Unindent();
 			ImGui::BulletText("nothings/stb (Image Read/Write) - Public Domain");
 			ImGui::BulletText("gallickgunner/ImGui-Addons (File Browser) - MIT License");
+			ImGui::BulletText("nlohmann/json (JSON Parser) - MIT License");
+				ImGui::Indent();
+				ImGui::BulletText("abseil/abseil-cpp - Apache 2.0 License");
+				ImGui::BulletText("UTF-8 Decoder by Bjoern Hoehrmann - MIT License");
+				ImGui::BulletText("Grisu2 algorithm by Florian Loitsch - MIT License");
+			ImGui::Unindent();
 		END_POPUP()
 
 		#undef BEGIN_POPUP
