@@ -15,15 +15,15 @@
 
 namespace Fs {
 	String GetConfigDir();
-	inline String GetLanguagesDir() { return String("./assets") + SYS_PATH_SEP "languages"; }
-	inline String GetPalettesDir() { return String("./assets") + SYS_PATH_SEP "palettes"; }
+	inline String GetLanguagesDir() { return Fs::GetConfigDir() + SYS_PATH_SEP "languages"; }
+	inline String GetPalettesDir() { return Fs::GetConfigDir() + SYS_PATH_SEP "palettes"; }
 
 	String GetParentDir(const String& path);
 	String GetBaseName(const String& path);
 
-	void MakeDir(const char* const path);
-	inline void MakeDir(const String& path) { Fs::MakeDir(path.c_str()); }
-	void MakeDirRecursive(const String& path);
+	int MakeDir(const char* const path);
+	inline int MakeDir(const String& path) { return Fs::MakeDir(path.c_str()); }
+	int MakeDirRecursive(const String& path);
 
 	// returns -1 on error, errno is set
 	i32 GetFileSize(const String& filePath);
