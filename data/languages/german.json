@@ -1,0 +1,32 @@
+{
+	"Name": "Deutsch"
+	"FileMenu": {
+		"File": "File",
+		"New": "Neu",
+		"Open": "Öffnen"
+	},
+	"HelpMenu": {
+		"Help": "Hilfe",
+		"About": "Über",
+		"GitHub": "GitHub"
+	},
+	"OpenFilePopup": {
+		"OpenFile": "Öffne eine Datendatei"
+	},
+	"NewDocumentPopup": {
+		"NewDocument": "Neues Dokument",
+		"WidthInput": "Breite",
+		"HeightInput": "Höhe",
+		"OkButton": "Ok",
+		"CancelButton": "Entziehen"
+	},
+	"AboutCspritePopup": {
+		"AboutCsprite": "Über",
+		"ContributorHeader": "Danke Beitragenden!",
+		"ContributorParagraph": "csprite ist sehr toll, weil die tollen Leute wer bestimmte bis geben ihre wertvolle Zeit zu dem Projekt aufbessern.",
+		"ContributorLink": "Liste der Beitragenden",
+
+		"OsProjectsHeader": "Danke Open-Source-Projekte!",
+		"OsProjectsText": "csprite benutzt einige Open-Source-Projekte machte von tollen Leute.\n\ngithub.com/"
+	}
+}
