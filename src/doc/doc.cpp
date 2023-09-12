@@ -57,12 +57,24 @@ void Doc::Render(RectI32& dirtyArea) {
 		std::memset(&finalRender[(y * dirtyArea.w) + dirtyArea.x], 0, sizeof(Pixel) * dirtyArea.w);
 	}
 
+	bool firstPass = true;
+
 	for (std::size_t i = 0; i < layers.size(); ++i) {
 		for (i32 y = dirtyArea.y; y < dirtyArea.h; ++y) {
 			for (i32 x = dirtyArea.x; x < dirtyArea.w; ++x) {
 				// Simple Alpha-Blending Being Done Here.
 				Pixel& frontPixel = layers[i]->pixels[(y * w) + x];
 				Pixel& backPixel = finalRender[(y * w) + x];
+
+				if (firstPass) {
+					// checkerboard pattern
+					#define PATTERN_SCALE 2
+					if (((x / PATTERN_SCALE + y / PATTERN_SCALE) % 2) == 0) {
+						backPixel = { 0x80, 0x80, 0x80, 255 };
+					} else {
+						backPixel = { 0xC0, 0xC0, 0xC0, 255 };
+					}
+				}
 
 				if (frontPixel.a == 255) {
 					backPixel = frontPixel;
@@ -87,6 +99,7 @@ void Doc::Render(RectI32& dirtyArea) {
 					), u8);
 			}
 		}
+		firstPass = false;
 	}
 
 	tex->Update((unsigned char*)finalRender);
