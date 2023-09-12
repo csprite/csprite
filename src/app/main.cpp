@@ -291,72 +291,118 @@ int main() {
 		#undef BEGIN_POPUP
 		#undef END_POPUP
 
-		// Saves Few CPU & GPU Time Since There's No Window Flags Processing Or Some Other Overhead.
-		ImGui::GetBackgroundDrawList()->AddRect(
-			{ dState.doc->viewport.x - 1, dState.doc->viewport.y - 1 },
-			{ dState.doc->viewport.w + dState.doc->viewport.x + 1, dState.doc->viewport.h + dState.doc->viewport.y + 1 },
-			ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
-		);
-		ImGui::GetBackgroundDrawList()->AddImage(
-			reinterpret_cast<ImTextureID>(dState.doc->tex->id),
-			{ dState.doc->viewport.x, dState.doc->viewport.y },
-			{ dState.doc->viewport.w + dState.doc->viewport.x, dState.doc->viewport.h + dState.doc->viewport.y }
-		);
-
 #ifdef _DEBUG
 		if (ShowMetricsWindow) {
 			ImGui::ShowMetricsWindow(NULL);
 		}
 #endif
 
-		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize)
-			ImGui::SetWindowPos({0, mBarPos.y + mBarSize.y });
-			std::string selectedToolText;
+		static ImVec2 LeftWinPos, LeftWinSize;
+		ImGui::SetNextWindowSizeConstraints({ 40, -1 }, { io.DisplaySize.x / 3, -1 });
+		ImGui::SetNextWindowPos({ 0, mBarPos.y + mBarSize.y });
+		ImGui::SetNextWindowSize({ 200, io.DisplaySize.y - (mBarPos.y + mBarSize.y)}, ImGuiCond_Once);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
+		BEGIN_WINDOW("Color Palette", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar)
+			for (auto i = 0UL; i < dState.palette.Colors.size(); i++) {
+				ImGui::PushID(&dState.palette[i]);
 
+				if (ImGui::ColorButton(dState.PaletteIndex == i ? "Selected Color" : "Color", dState.palette[i])) {
+					dState.PaletteIndex = i;
+					dState.SelectedColor = dState.palette[dState.PaletteIndex];
+				}
+
+				if (dState.PaletteIndex == i) {
+					ImVec2 rSz = ImGui::GetItemRectSize();
+					ImVec2 rMin = ImGui::GetItemRectMin();
+					ImVec2 rMax = ImGui::GetItemRectMax();
+
+					u8 r = dState.palette.Colors[i].r;
+					u8 g = dState.palette.Colors[i].g;
+					u8 b = dState.palette.Colors[i].b;
+
+					r = CLAMP_NUM_TO_TYPE((r > 127 ? r - 125 : r + 125), u8);
+					g = CLAMP_NUM_TO_TYPE((g > 127 ? g - 125 : g + 125), u8);
+					b = CLAMP_NUM_TO_TYPE((b > 127 ? b - 125 : b + 125), u8);
+
+					/* This Value Will Be Subtracted From Triangle's Positions
+					   Because Of Some Extra "Marginal" Space The Button Takes */
+					#define NEGATIVE_OFFSET 1.0f
+					ImGui::GetWindowDrawList()->AddTriangleFilled(
+						ImVec2(
+							rMax.x - NEGATIVE_OFFSET,
+							rMin.y + (rSz.y / 2.1f) - NEGATIVE_OFFSET
+						),
+						ImVec2(
+							rMin.x + (rSz.x / 2.1f) - NEGATIVE_OFFSET,
+							rMax.y - NEGATIVE_OFFSET
+						),
+						ImVec2(
+							rMax.x - NEGATIVE_OFFSET,
+							rMax.y - NEGATIVE_OFFSET
+						),
+						IM_COL32(r, g, b, 200)
+					);
+					ImGui::GetWindowDrawList()->AddRect(rMin, rMax, IM_COL32(r, g, b, 200));
+					#undef NEGATIVE_OFFSET
+				}
+
+				// Expected position if next button was on same line
+				float nextBtnSizeX = ImGui::GetItemRectMax().x + ImGui::GetItemRectSize().x + ImGui::GetStyle().ItemSpacing.x;
+				if (
+					i < dState.palette.Colors.size() - 1 &&
+					nextBtnSizeX < (ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x)
+				) ImGui::SameLine();
+
+				ImGui::PopID();
+			};
+			LeftWinPos = ImGui::GetWindowPos();
+			LeftWinSize = ImGui::GetWindowSize();
+		END_WINDOW()
+		ImGui::PopStyleVar();
+
+		static ImVec2 StatusWinPos, StatusWinSize;
+		ImGui::SetNextWindowPos({ LeftWinPos.x + LeftWinSize.x, LeftWinPos.y });
+		ImGui::SetNextWindowSize({ io.DisplaySize.x - (LeftWinPos.x + LeftWinSize.x), 0 });
+		BEGIN_WINDOW("StatusBarWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)
 			switch (ToolManager::GetToolType()) {
 				case BRUSH:
 					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
-						ImGui::Text("Circle Brush - (Size: %u)", ToolManager::GetBrushSize());
+						ImGui::Text("Circle Brush - (Size: %u) | Zoom: %ux", ToolManager::GetBrushSize(), dState.ZoomLevel);
 					} else {
-						ImGui::Text("Square Brush - (Size: %u)", ToolManager::GetBrushSize());
+						ImGui::Text("Square Brush - (Size: %u) | Zoom: %ux", ToolManager::GetBrushSize(), dState.ZoomLevel);
 					}
 					break;
 				case ERASER:
 					if (ToolManager::GetToolShape() == ToolShape::CIRCLE) {
-						ImGui::Text("Circle Eraser - (Size: %u)", ToolManager::GetBrushSize());
+						ImGui::Text("Circle Eraser - (Size: %u) | Zoom: %ux", ToolManager::GetBrushSize(), dState.ZoomLevel);
 					} else {
-						ImGui::Text("Square Eraser - (Size: %u)", ToolManager::GetBrushSize());
+						ImGui::Text("Square Eraser - (Size: %u) | Zoom: %ux", ToolManager::GetBrushSize(), dState.ZoomLevel);
 					}
 					break;
 				case INK_DROPPER:
-					ImGui::Text("Ink Dropper");
+					ImGui::Text("Ink Dropper | Zoom: %ux", dState.ZoomLevel);
 					break;
 				case PAN:
-					ImGui::Text("Panning");
+					ImGui::Text("Panning | Zoom: %ux", dState.ZoomLevel);
 					break;
 			}
-
-			ImGui::Text("Zoom: %ux", dState.ZoomLevel);
+			StatusWinPos = ImGui::GetWindowPos();
+			StatusWinSize = ImGui::GetWindowSize();
 		END_WINDOW()
 
-		BEGIN_WINDOW("ColorPaletteWindow", NULL, window_flags)
-			ImGui::SetWindowPos({ 0, io.DisplaySize.y - 35.0f });
-			for (auto i = 0UL; i < dState.palette.Colors.size(); i++) {
-				if (i != 0) ImGui::SameLine();
-				if (ImGui::ColorButton(
-					dState.PaletteIndex == i ? "Selected Color" : ("Color##" + std::to_string(i)).c_str(),
-					{(float)dState.palette[i].r/255, (float)dState.palette[i].g/255, (float)dState.palette[i].b/255, (float)dState.palette[i].a/255})
-				) {
-					dState.PaletteIndex = i;
-					dState.SelectedColor = dState.palette[dState.PaletteIndex];
-				}
-				if (dState.PaletteIndex == i)
-					ImGui::GetWindowDrawList()->AddRect(
-						ImGui::GetItemRectMin(),
-						ImGui::GetItemRectMax(),
-						IM_COL32_WHITE
-					);
-			};
+		ImGui::SetNextWindowPos({ LeftWinPos.x + LeftWinSize.x, StatusWinPos.y + StatusWinSize.y - 1 });
+		ImGui::SetNextWindowSize({ StatusWinSize.x, io.DisplaySize.y - (StatusWinPos.y + StatusWinSize.y) + 1 });
+		BEGIN_WINDOW("MainWindow", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize)
+			ImGui::GetWindowDrawList()->AddRect(
+				{ dState.doc->viewport.x - 1, dState.doc->viewport.y - 1 },
+				{ dState.doc->viewport.w + dState.doc->viewport.x + 1, dState.doc->viewport.h + dState.doc->viewport.y + 1 },
+				ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
+			);
+			ImGui::GetWindowDrawList()->AddImage(
+				reinterpret_cast<ImTextureID>(dState.doc->tex->id),
+				{ dState.doc->viewport.x, dState.doc->viewport.y },
+				{ dState.doc->viewport.w + dState.doc->viewport.x, dState.doc->viewport.h + dState.doc->viewport.y }
+			);
 		END_WINDOW()
 
 		#undef BEGIN_WINDOW
