@@ -126,7 +126,7 @@ jobs:
         name: osx-${{ matrix.arch }}
         if-no-files-found: error
         path: |
-          ./build/Release/csprite
+          ./build/Release/csprite.app
           ./assets
 
   update-ci-release:
