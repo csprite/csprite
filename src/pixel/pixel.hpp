@@ -3,6 +3,7 @@
 #pragma once
 
 #include "types.hpp"
+#include "imgui/imgui.h"
 
 #ifndef TARGET_IS_BIGENDIAN
 	#define PIXEL_RED_MASK   0xFF000000
@@ -35,6 +36,10 @@ struct Pixel {
 		b = rhs.b;
 		a = rhs.a;
 		return *this;
+	}
+
+	inline operator ImVec4() {
+		return { r / 255.f, g / 255.f, b / 255.f, a / 255.f };
 	}
 
 	inline bool operator == (const Pixel& rhs) const {
