@@ -124,7 +124,7 @@ int main() {
 	imgui_addons::ImGuiFileBrowser FileDialog;
 
 	LanguageManager::UpdateEntries();
-	LanguageManager::LoadDefault();
+	LanguageManager::LoadFile("./assets/languages/english.json");
 	const char** Lang = LanguageManager::Get();
 
 	while (!ImBase::Window::ShouldClose()) {
