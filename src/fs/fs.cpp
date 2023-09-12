@@ -64,26 +64,28 @@ String Fs::GetBaseName(const String &path) {
 	return "";
 }
 
-void Fs::MakeDir(const char* const path) {
+int Fs::MakeDir(const char* const path) {
 #if defined(TARGET_WINDOWS)
-	_mkdir(path);
+	return _mkdir(path);
 #else
-	mkdir(path, S_IRWXU);
+	return mkdir(path, S_IRWXU);
 #endif
 }
 
-void Fs::MakeDirRecursive(const String& _p) {
+int Fs::MakeDirRecursive(const String& _p) {
 	String path = _p;
 
 	if (path.back() == SYS_PATH_SEP_CHAR) path.pop_back();
 
 	for (u32 i = 0; i < path.length(); ++i) {
 		if (path[i] == SYS_PATH_SEP_CHAR) {
-			Fs::MakeDir(path.substr(0, i).c_str());
+			if (Fs::MakeDir(path.substr(0, i + 1).c_str()) != 0 && errno != EEXIST) {
+				return -1;
+			}
 		}
 	}
 
-    Fs::MakeDir(path.c_str());
+	return Fs::MakeDir(path.c_str());
 }
 
 i32 Fs::GetFileSize(const String &filePath) {
