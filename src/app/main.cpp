@@ -104,18 +104,13 @@ int main() {
 	dState.doc->viewport.w = dState.doc->w * dState.ZoomLevel;
 	dState.doc->viewport.h = dState.doc->h * dState.ZoomLevel;
 
-	ImGuiWindowFlags window_flags = 0;
-	window_flags |= ImGuiWindowFlags_NoBackground;
-	window_flags |= ImGuiWindowFlags_NoTitleBar;
-	window_flags |= ImGuiWindowFlags_NoResize;
-	window_flags |= ImGuiWindowFlags_NoMove;
-
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
 	ToolType LastToolType = ToolManager::GetToolType();
 	ToolShape LastToolShape = ToolManager::GetToolShape();
 	Pixel EmptyColor = { 0, 0, 0, 0 };
 
+	dState.doc->Render(dirtyArea);
 	ZoomNCenterVP(dState.ZoomLevel, *dState.doc);
 
 	imgui_addons::ImGuiFileBrowser FileDialog;
