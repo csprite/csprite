@@ -59,45 +59,44 @@ void Doc::Render(RectI32& dirtyArea) {
 
 	bool firstPass = true;
 	for (std::size_t j = 0; j < layers.size(); ++j) {
-		for (i32 i = 0; i < (dirtyArea.w * dirtyArea.h); i++) {
-			i32 x = (i % w) + dirtyArea.x;
-			i32 y = (i / w) + dirtyArea.y;
-			i32 idx = (y * w) + x;
+		for (i32 y = dirtyArea.y; y < dirtyArea.h; y++) {
+			for (i32 x = dirtyArea.x; x < dirtyArea.w; x++) {
+				i32 idx = (y * w) + x;
+				Pixel& frontPixel = layers[j]->pixels[idx];
+				Pixel& backPixel = finalRender[idx];
 
-			Pixel& frontPixel = layers[j]->pixels[idx];
-			Pixel& backPixel = finalRender[idx];
-
-			if (firstPass) {
-				// checkerboard pattern
-				#define PATTERN_SCALE 2
-				if (((x / PATTERN_SCALE + y / PATTERN_SCALE) % 2) == 0) {
-					backPixel = { 0x80, 0x80, 0x80, 255 };
-				} else {
-					backPixel = { 0xC0, 0xC0, 0xC0, 255 };
+				if (firstPass) {
+					// checkerboard pattern
+					#define PATTERN_SCALE 2
+					if (((x / PATTERN_SCALE + y / PATTERN_SCALE) % 2) == 0) {
+						backPixel = { 0x80, 0x80, 0x80, 255 };
+					} else {
+						backPixel = { 0xC0, 0xC0, 0xC0, 255 };
+					}
 				}
-			}
 
-			if (frontPixel.a == 255) {
-				backPixel = frontPixel;
-				continue;
-			}
+				if (frontPixel.a == 255) {
+					backPixel = frontPixel;
+					continue;
+				}
 
-			backPixel.r = CLAMP_NUM_TO_TYPE(
-				static_cast<u16>(
-					((u16)frontPixel.r * frontPixel.a + (u16)backPixel.r * (255 - frontPixel.a) / 255 * backPixel.a) / 255
-				), u8);
-			backPixel.g = CLAMP_NUM_TO_TYPE(
-				static_cast<u16>(
-					((u16)frontPixel.g * frontPixel.a + (u16)backPixel.g * (255 - frontPixel.a) / 255 * backPixel.a) / 255
-				), u8);
-			backPixel.b = CLAMP_NUM_TO_TYPE(
-				static_cast<u16>(
-					((u16)frontPixel.b * frontPixel.a + (u16)backPixel.b * (255 - frontPixel.a) / 255 * backPixel.a) / 255
-				), u8);
-			backPixel.a = CLAMP_NUM_TO_TYPE(
-				static_cast<u16>(
-					frontPixel.a + (u16)backPixel.a * (255 - frontPixel.a) / 255
-				), u8);
+				backPixel.r = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						((u16)frontPixel.r * frontPixel.a + (u16)backPixel.r * (255 - frontPixel.a) / 255 * backPixel.a) / 255
+					), u8);
+				backPixel.g = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						((u16)frontPixel.g * frontPixel.a + (u16)backPixel.g * (255 - frontPixel.a) / 255 * backPixel.a) / 255
+					), u8);
+				backPixel.b = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						((u16)frontPixel.b * frontPixel.a + (u16)backPixel.b * (255 - frontPixel.a) / 255 * backPixel.a) / 255
+					), u8);
+				backPixel.a = CLAMP_NUM_TO_TYPE(
+					static_cast<u16>(
+						frontPixel.a + (u16)backPixel.a * (255 - frontPixel.a) / 255
+					), u8);
+			}
 		}
 		firstPass = false;
 	}
