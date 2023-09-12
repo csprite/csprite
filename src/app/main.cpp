@@ -118,14 +118,18 @@ int main() {
 
 	ZoomNCenterVP(dState.ZoomLevel, *dState.doc);
 
-	bool ShowNewCanvasWindow = false; // Holds Whether to show new canvas window or not.
-	bool ShowOpenFileWindow = false;
-	bool ShowAboutWindow = false;
 	imgui_addons::ImGuiFileBrowser FileDialog;
 
 	LanguageManager::UpdateEntries();
 	LanguageManager::LoadFile("./assets/languages/english.json");
 	const char** Lang = LanguageManager::Get();
+
+	bool ShowNewDocumentWindow = false;
+	bool ShowOpenFileWindow = false;
+	bool ShowAboutWindow = false;
+#ifdef _DEBUG
+	bool ShowMetricsWindow = false;
+#endif
 
 	while (!ImBase::Window::ShouldClose()) {
 		ImBase::Window::NewFrame();
@@ -135,9 +139,6 @@ int main() {
 						io.MousePos.x < dState.doc->viewport.x + dState.doc->viewport.w &&
 						io.MousePos.y < dState.doc->viewport.y + dState.doc->viewport.h;
 
-#ifdef _DEBUG
-		static bool metricsWinVisible = false;
-#endif
 
 		#define BEGIN_MENU(label) if (ImGui::BeginMenu(label)) {
 		#define END_MENU() ImGui::EndMenu(); }
@@ -145,13 +146,12 @@ int main() {
 		#define BEGIN_MENUITEM(label, shortcut) if (ImGui::MenuItem(label, shortcut)) {
 		#define END_MENUITEM() }
 
-		static ImVec2 MenuBarPos;
-		static ImVec2 MenuBarSize;
-
+		static ImVec2 mBarPos;
+		static ImVec2 mBarSize;
 		if (ImGui::BeginMainMenuBar()) {
 			BEGIN_MENU(Lang[UI_TEXT::MENU_FILE])
 				BEGIN_MENUITEM(Lang[UI_TEXT::MENU_NEW], "Ctrl+N")
-					ShowNewCanvasWindow = true;
+					ShowNewDocumentWindow = true;
 				END_MENUITEM()
 				BEGIN_MENUITEM(Lang[UI_TEXT::MENU_OPEN], "Ctrl+O")
 					ShowOpenFileWindow = true;
@@ -160,7 +160,9 @@ int main() {
 
 #ifdef _DEBUG
 			BEGIN_MENU("Dev")
-				BEGIN_MENUITEM("Metrics", NULL) metricsWinVisible = !metricsWinVisible; END_MENUITEM()
+				BEGIN_MENUITEM("Metrics", NULL)
+					ShowMetricsWindow = !ShowMetricsWindow;
+				END_MENUITEM()
 			END_MENU()
 #endif
 
@@ -185,8 +187,8 @@ int main() {
 				});
 			END_MENU()
 
-			MenuBarPos = ImGui::GetWindowPos();
-			MenuBarSize = ImGui::GetWindowSize();
+			mBarPos = ImGui::GetWindowPos();
+			mBarSize = ImGui::GetWindowSize();
 			ImGui::EndMainMenuBar();
 		}
 
@@ -202,8 +204,8 @@ int main() {
 		if (ShowOpenFileWindow) {
 			ShowOpenFileWindow = false;
 			ImGui::OpenPopup(Lang[UI_TEXT::POPUP_OPEN_FILE]);
-		} else if (ShowNewCanvasWindow) {
-			ShowNewCanvasWindow = false;
+		} else if (ShowNewDocumentWindow) {
+			ShowNewDocumentWindow = false;
 			ImGui::OpenPopup(Lang[UI_TEXT::POPUP_NEW_DOCUMENT]);
 		} else if (ShowAboutWindow) {
 			ShowAboutWindow = false;
@@ -302,13 +304,13 @@ int main() {
 		);
 
 #ifdef _DEBUG
-		if (metricsWinVisible) {
+		if (ShowMetricsWindow) {
 			ImGui::ShowMetricsWindow(NULL);
 		}
 #endif
 
 		BEGIN_WINDOW("ToolAndZoomWindow", NULL, window_flags | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_AlwaysAutoResize)
-			ImGui::SetWindowPos({0, MenuBarPos.y + MenuBarSize.y });
+			ImGui::SetWindowPos({0, mBarPos.y + mBarSize.y });
 			std::string selectedToolText;
 
 			switch (ToolManager::GetToolType()) {
@@ -402,7 +404,7 @@ int main() {
 				ToolManager::SetToolType(LastToolType);
 				ToolManager::SetToolShape(LastToolShape);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
-				if (io.KeyCtrl) ShowNewCanvasWindow = true;
+				if (io.KeyCtrl) ShowNewDocumentWindow = true;
 			}
 
 			dState.SelectedColor = dState.palette[dState.PaletteIndex];
