@@ -228,8 +228,7 @@ int main() {
 		#define BEGIN_POPUP(name, flags) if (ImGui::BeginPopupModal(name, NULL, flags)) { isCanvasHovered = false;
 		#define END_POPUP() ImGui::EndPopup(); }
 
-		ImGui::SetNextWindowSize({280, 100}, 0);
-		BEGIN_POPUP(Lang[UI_TEXT::POPUP_NEW_DOCUMENT], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)
+		BEGIN_POPUP(Lang[UI_TEXT::POPUP_NEW_DOCUMENT], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
 			ImGui::InputInt(Lang[UI_TEXT::POPUP_NEW_DOCUMENT_WIDTH_INPUT], &NEW_DIMS[0], 1, 1, 0);
 			ImGui::InputInt(Lang[UI_TEXT::POPUP_NEW_DOCUMENT_HEIGHT_INPUT], &NEW_DIMS[1], 1, 1, 0);
 
