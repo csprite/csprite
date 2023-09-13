@@ -2,10 +2,11 @@
 #define CSP_APP_LANGUAGE_MANAGER_HPP_INCLUDED_ 1
 #pragma once
 
+#include <array>
 #include <functional>
 #include "types.hpp"
 
-enum UI_TEXT : u16 {
+enum UISTR : u16 {
 	MENU_FILE = 0,
 		MENU_NEW,
 		MENU_OPEN,
@@ -32,15 +33,16 @@ enum UI_TEXT : u16 {
 	COUNT
 };
 
-namespace LanguageManager {
+using UISTR_Arr = std::array<const char*, UISTR::COUNT>;
 
+namespace UIString {
 	typedef std::function<void(const char* name)> OnListCB;
 	void ListAll(OnListCB cb);
 	void UpdateEntries();
 	bool LoadFile(const String& filePath);
 	void LoadDefault();
 
-	const char** Get();
+	UISTR_Arr Get();
 }
 
 #endif // CSP_APP_LANGUAGE_MANAGER_HPP_INCLUDED_
