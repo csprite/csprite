@@ -5,6 +5,25 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install Linter
+      run: |
+        sudo apt-get update -y
+        sudo atp-get install python3-demjson -y
+
+    - name: Lint Languages Files
+      run: |
+        for file in ./assets/languages/*.json
+        do
+          jsonlint -s -e utf-16 "$file"
+        done
+
   build:
     strategy:
       matrix:
@@ -40,6 +59,7 @@ jobs:
             arch: arm64
             gen: Xcode
 
+    needs: [lint]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
