@@ -63,28 +63,28 @@ bool UIString::LoadFile(const String& filePath) {
 
 const char* GetEntryName(UISTR i) {
 	switch (i) {
-		case UISTR::MENU_FILE: return "File";
-		case UISTR::MENU_NEW: return "New";
-		case UISTR::MENU_OPEN: return "Open";
+		case UISTR::Menu_File: return "File";
+		case UISTR::MenuItem_New: return "New";
+		case UISTR::MenuItem_Open: return "Open";
 
-		case UISTR::MENU_HELP: return "Help";
-		case UISTR::MENU_ABOUT: return "About";
-		case UISTR::MENU_GITHUB: return "GitHub";
+		case UISTR::Menu_Help: return "Help";
+		case UISTR::MenuItem_About: return "About";
+		case UISTR::MenuItem_GitHub: return "GitHub";
 
-		case UISTR::POPUP_OPEN_FILE: return "OpenFile";
+		case UISTR::Popup_OpenFile: return "OpenFile";
 
-		case UISTR::POPUP_NEW_DOCUMENT: return "NewDocument";
-		case UISTR::POPUP_NEW_DOCUMENT_WIDTH_INPUT: return "WidthInput";
-		case UISTR::POPUP_NEW_DOCUMENT_HEIGHT_INPUT: return "HeightInput";
-		case UISTR::POPUP_NEW_DOCUMENT_OK_BUTTON: return "OkButton";
-		case UISTR::POPUP_NEW_DOCUMENT_CANCEL_BUTTON: return "CancelButton";
+		case UISTR::Popup_NewDocument: return "NewDocument";
+		case UISTR::Popup_NewDocument_WidthInput: return "WidthInput";
+		case UISTR::Popup_NewDocument_HeightInput: return "HeightInput";
+		case UISTR::Popup_NewDocument_OkButton: return "OkButton";
+		case UISTR::Popup_NewDocument_CancelButton: return "CancelButton";
 
-		case UISTR::POPUP_ABOUT_CSPRITE: return "AboutCsprite";
-		case UISTR::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER: return "ContributorHeader";
-		case UISTR::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH: return "ContributorParagraph";
-		case UISTR::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_LINK: return "ContributorLink";
-		case UISTR::POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER: return "OsProjectsHeader";
-		case UISTR::POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT: return "OsProjectsText";
+		case UISTR::Popup_AboutCsprite: return "AboutCsprite";
+		case UISTR::Popup_AboutCsprite_Contrib_Header: return "ContributorHeader";
+		case UISTR::Popup_AboutCsprite_Contrib_Paragraph: return "ContributorParagraph";
+		case UISTR::Popup_AboutCsprite_Contrib_Link: return "ContributorLink";
+		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Header: return "OsProjectsHeader";
+		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text: return "OsProjectsText";
 
 		default: return "";
 	}
@@ -92,28 +92,28 @@ const char* GetEntryName(UISTR i) {
 
 const char* GetPropertyName(UISTR i) {
 	switch (i) {
-		case UISTR::MENU_FILE: return "FileMenu";
-		case UISTR::MENU_NEW: return "FileMenu";
-		case UISTR::MENU_OPEN: return "FileMenu";
+		case UISTR::Menu_File: return "FileMenu";
+		case UISTR::MenuItem_New: return "FileMenu";
+		case UISTR::MenuItem_Open: return "FileMenu";
 
-		case UISTR::MENU_HELP: return "HelpMenu";
-		case UISTR::MENU_ABOUT: return "HelpMenu";
-		case UISTR::MENU_GITHUB: return "HelpMenu";
+		case UISTR::Menu_Help: return "HelpMenu";
+		case UISTR::MenuItem_About: return "HelpMenu";
+		case UISTR::MenuItem_GitHub: return "HelpMenu";
 
-		case UISTR::POPUP_OPEN_FILE: return "OpenFilePopup";
+		case UISTR::Popup_OpenFile: return "OpenFilePopup";
 
-		case UISTR::POPUP_NEW_DOCUMENT: return "NewDocumentPopup";
-		case UISTR::POPUP_NEW_DOCUMENT_WIDTH_INPUT: return "NewDocumentPopup";
-		case UISTR::POPUP_NEW_DOCUMENT_HEIGHT_INPUT: return "NewDocumentPopup";
-		case UISTR::POPUP_NEW_DOCUMENT_OK_BUTTON: return "NewDocumentPopup";
-		case UISTR::POPUP_NEW_DOCUMENT_CANCEL_BUTTON: return "NewDocumentPopup";
+		case UISTR::Popup_NewDocument: return "NewDocumentPopup";
+		case UISTR::Popup_NewDocument_WidthInput: return "NewDocumentPopup";
+		case UISTR::Popup_NewDocument_HeightInput: return "NewDocumentPopup";
+		case UISTR::Popup_NewDocument_OkButton: return "NewDocumentPopup";
+		case UISTR::Popup_NewDocument_CancelButton: return "NewDocumentPopup";
 
-		case UISTR::POPUP_ABOUT_CSPRITE: return "AboutCspritePopup";
-		case UISTR::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER: return "AboutCspritePopup";
-		case UISTR::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH: return "AboutCspritePopup";
-		case UISTR::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_LINK: return "AboutCspritePopup";
-		case UISTR::POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER: return "AboutCspritePopup";
-		case UISTR::POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT: return "AboutCspritePopup";
+		case UISTR::Popup_AboutCsprite: return "AboutCspritePopup";
+		case UISTR::Popup_AboutCsprite_Contrib_Header: return "AboutCspritePopup";
+		case UISTR::Popup_AboutCsprite_Contrib_Paragraph: return "AboutCspritePopup";
+		case UISTR::Popup_AboutCsprite_Contrib_Link: return "AboutCspritePopup";
+		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Header: return "AboutCspritePopup";
+		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text: return "AboutCspritePopup";
 
 		default: return "";
 	}

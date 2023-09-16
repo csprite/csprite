@@ -153,11 +153,11 @@ int main() {
 		static ImVec2 mBarPos;
 		static ImVec2 mBarSize;
 		if (ImGui::BeginMainMenuBar()) {
-			BEGIN_MENU(Lang[UISTR::MENU_FILE])
-				BEGIN_MENUITEM(Lang[UISTR::MENU_NEW], "Ctrl+N")
+			BEGIN_MENU(Lang[UISTR::Menu_File])
+				BEGIN_MENUITEM(Lang[UISTR::MenuItem_New], "Ctrl+N")
 					ShowNewDocumentWindow = true;
 				END_MENUITEM()
-				BEGIN_MENUITEM(Lang[UISTR::MENU_OPEN], "Ctrl+O")
+				BEGIN_MENUITEM(Lang[UISTR::MenuItem_Open], "Ctrl+O")
 					ShowOpenFileWindow = true;
 				END_MENUITEM()
 			END_MENU()
@@ -170,11 +170,11 @@ int main() {
 			END_MENU()
 #endif
 
-			BEGIN_MENU(Lang[UISTR::MENU_HELP])
-				BEGIN_MENUITEM(Lang[UISTR::MENU_ABOUT], NULL)
+			BEGIN_MENU(Lang[UISTR::Menu_Help])
+				BEGIN_MENUITEM(Lang[UISTR::MenuItem_About], NULL)
 					ShowAboutWindow = true;
 				END_MENUITEM()
-				BEGIN_MENUITEM(Lang[UISTR::MENU_GITHUB], NULL)
+				BEGIN_MENUITEM(Lang[UISTR::MenuItem_GitHub], NULL)
 					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
 				END_MENUITEM()
 			END_MENU()
@@ -204,20 +204,20 @@ int main() {
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
-		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen(Lang[UISTR::POPUP_OPEN_FILE]) || ImGui::IsPopupOpen(Lang[UISTR::POPUP_NEW_DOCUMENT]) || ImGui::IsPopupOpen(Lang[UISTR::POPUP_ABOUT_CSPRITE]));
+		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen(Lang[UISTR::Popup_OpenFile]) || ImGui::IsPopupOpen(Lang[UISTR::Popup_NewDocument]) || ImGui::IsPopupOpen(Lang[UISTR::Popup_AboutCsprite]));
 		if (ShowOpenFileWindow) {
 			ShowOpenFileWindow = false;
-			ImGui::OpenPopup(Lang[UISTR::POPUP_OPEN_FILE]);
+			ImGui::OpenPopup(Lang[UISTR::Popup_OpenFile]);
 		} else if (ShowNewDocumentWindow) {
 			ShowNewDocumentWindow = false;
-			ImGui::OpenPopup(Lang[UISTR::POPUP_NEW_DOCUMENT]);
+			ImGui::OpenPopup(Lang[UISTR::Popup_NewDocument]);
 		} else if (ShowAboutWindow) {
 			ShowAboutWindow = false;
-			ImGui::OpenPopup(Lang[UISTR::POPUP_ABOUT_CSPRITE]);
+			ImGui::OpenPopup(Lang[UISTR::Popup_AboutCsprite]);
 		}
 
 		if (FileDialog.showFileDialog(
-			Lang[UISTR::POPUP_OPEN_FILE],
+			Lang[UISTR::Popup_OpenFile],
 			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
 			ImVec2(700, 310), ".png,.jpg,.jpeg,.bmp,.psd,.tga"
 		)) {
@@ -234,11 +234,11 @@ int main() {
 		#define BEGIN_POPUP(name, flags) if (ImGui::BeginPopupModal(name, NULL, flags)) { isCanvasHovered = false;
 		#define END_POPUP() ImGui::EndPopup(); }
 
-		BEGIN_POPUP(Lang[UISTR::POPUP_NEW_DOCUMENT], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
-			ImGui::InputInt(Lang[UISTR::POPUP_NEW_DOCUMENT_WIDTH_INPUT], &NEW_DIMS[0], 1, 1, 0);
-			ImGui::InputInt(Lang[UISTR::POPUP_NEW_DOCUMENT_HEIGHT_INPUT], &NEW_DIMS[1], 1, 1, 0);
+		BEGIN_POPUP(Lang[UISTR::Popup_NewDocument], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
+			ImGui::InputInt(Lang[UISTR::Popup_NewDocument_WidthInput], &NEW_DIMS[0], 1, 1, 0);
+			ImGui::InputInt(Lang[UISTR::Popup_NewDocument_HeightInput], &NEW_DIMS[1], 1, 1, 0);
 
-			if (ImGui::Button(Lang[UISTR::POPUP_NEW_DOCUMENT_OK_BUTTON])) {
+			if (ImGui::Button(Lang[UISTR::Popup_NewDocument_OkButton])) {
 				delete dState.doc;
 				dState.doc = new Doc();
 				dState.doc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
@@ -249,19 +249,19 @@ int main() {
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
-			if (ImGui::Button(Lang[UISTR::POPUP_NEW_DOCUMENT_CANCEL_BUTTON])) {
+			if (ImGui::Button(Lang[UISTR::Popup_NewDocument_CancelButton])) {
 				ImGui::CloseCurrentPopup();
 			}
 		END_POPUP()
 
 		ImGui::SetNextWindowSize({520, 0});
-		BEGIN_POPUP(Lang[UISTR::POPUP_ABOUT_CSPRITE], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
-			ImGui::SeparatorText(Lang[UISTR::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER]);
-			ImGui::TextWrapped(Lang[UISTR::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH]);
+		BEGIN_POPUP(Lang[UISTR::Popup_AboutCsprite], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
+			ImGui::SeparatorText(Lang[UISTR::Popup_AboutCsprite_Contrib_Header]);
+			ImGui::TextWrapped(Lang[UISTR::Popup_AboutCsprite_Contrib_Paragraph]);
 
 			static bool isTextHovered = false;
 			ImVec4 TextColor = isTextHovered ? ImGui::GetStyle().Colors[ImGuiCol_ButtonActive] : ImGui::GetStyle().Colors[ImGuiCol_Text];
-			ImGui::TextColored(TextColor, Lang[UISTR::POPUP_ABOUT_CSPRITE_CONTRIBUTOR_LINK]);
+			ImGui::TextColored(TextColor, Lang[UISTR::Popup_AboutCsprite_Contrib_Link]);
 			ImVec2 Min = ImGui::GetItemRectMin();
 			ImVec2 Max = ImGui::GetItemRectMax();
 			Min.y = Max.y; // move the top left co-ordinate to bottom-left
@@ -274,8 +274,8 @@ int main() {
 				ImBase::Launcher::OpenUrl("https://github.com/csprite/csprite/graphs/contributors");
 			}
 
-			ImGui::SeparatorText(Lang[UISTR::POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER]);
-			ImGui::TextWrapped(Lang[UISTR::POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT]);
+			ImGui::SeparatorText(Lang[UISTR::Popup_AboutCsprite_OpenSrcProjects_Header]);
+			ImGui::TextWrapped(Lang[UISTR::Popup_AboutCsprite_OpenSrcProjects_Text]);
 			ImGui::BulletText("csprite/imbase - BSD-3-Clause License:");
 				ImGui::Indent();
 				ImGui::BulletText("glfw/glfw (OpenGL, window & input) - Zlib License");
