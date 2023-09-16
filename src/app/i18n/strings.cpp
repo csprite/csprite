@@ -119,7 +119,20 @@ const char* GetPropertyName(UISTR i) {
 	}
 }
 
+#include "app/assets/assets.h"
+
 void UIString::LoadDefault() {
+	i32 sz = 0;
+	const char* data = (const char*)assets_get("assets/languages/english.json", &sz);
+	json p = json::parse(data, data + sz);
+
+	for (u32 i = 0; i < UISTR::COUNT; i++) {
+		if (Language[i] != nullptr)
+			delete[] Language[i];
+
+		Language[i] = string_dup(p[GetPropertyName((UISTR)i)][GetEntryName((UISTR)i)].get<String>().c_str());
+	}
+
 	UIString::LoadFile(Fs::GetLanguagesDir() + SYS_PATH_SEP + "english.json");
 }
 
