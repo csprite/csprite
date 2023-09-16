@@ -15,8 +15,13 @@
 #include "filebrowser/filebrowser.hpp"
 #include "i18n/strings.hpp"
 #include "fs/fs.hpp"
+#include "assets/manager.hpp"
 
 int main() {
+	if (!Assets::EnsureFileSystem()) {
+		return 1;
+	}
+
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
 		return 1;
 	}

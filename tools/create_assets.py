@@ -31,6 +31,7 @@ TYPES = {
 	"csv":   { "text": True   },
 	"ini":   { "text": True   },
 	"glsl":  { "text": True   },
+	"json":  { "text": False  },
 	"png":   { "text": False  },
 	"ttf":   { "text": False  }
 }
@@ -126,7 +127,7 @@ files = []
 files.append(create_file("data/icons/icon-32.png"))
 files.append(create_file("data/fonts/NotoSans-Regular.ttf"))
 
-for f in glob.glob("data/languages/*.ini"):
+for f in glob.glob("assets/languages/*.json"):
 	if os.path.isfile(f):
 		files.append(create_file(f))
 
