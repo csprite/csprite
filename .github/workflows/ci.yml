@@ -21,7 +21,7 @@ jobs:
       run: |
         for file in ./assets/languages/*.json
         do
-          jsonlint -s -e utf-16 "$file"
+          jsonlint -s -e utf8 "$file"
         done
 
   build:
