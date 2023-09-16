@@ -7,28 +7,28 @@
 #include "types.hpp"
 
 enum UISTR : u16 {
-	MENU_FILE = 0,
-		MENU_NEW,
-		MENU_OPEN,
+	Menu_File = 0,
+		MenuItem_New,
+		MenuItem_Open,
 
-	MENU_HELP,
-		MENU_ABOUT,
-		MENU_GITHUB,
+	Menu_Help,
+		MenuItem_About,
+		MenuItem_GitHub,
 
-	POPUP_OPEN_FILE,
-	POPUP_NEW_DOCUMENT,
-		POPUP_NEW_DOCUMENT_WIDTH_INPUT,
-		POPUP_NEW_DOCUMENT_HEIGHT_INPUT,
-		POPUP_NEW_DOCUMENT_OK_BUTTON,
-		POPUP_NEW_DOCUMENT_CANCEL_BUTTON,
+	Popup_OpenFile,
+	Popup_NewDocument,
+		Popup_NewDocument_WidthInput,
+		Popup_NewDocument_HeightInput,
+		Popup_NewDocument_OkButton,
+		Popup_NewDocument_CancelButton,
 
-	POPUP_ABOUT_CSPRITE,
-		POPUP_ABOUT_CSPRITE_CONTRIBUTOR_HEADER,
-		POPUP_ABOUT_CSPRITE_CONTRIBUTOR_PARAGRAPH,
-		POPUP_ABOUT_CSPRITE_CONTRIBUTOR_LINK,
+	Popup_AboutCsprite,
+		Popup_AboutCsprite_Contrib_Header,
+		Popup_AboutCsprite_Contrib_Paragraph,
+		Popup_AboutCsprite_Contrib_Link,
 
-		POPUP_ABOUT_CSPRITE_OSPROJECTS_HEADER,
-		POPUP_ABOUT_CSPRITE_OSPROJECTS_TEXT,
+		Popup_AboutCsprite_OpenSrcProjects_Header,
+		Popup_AboutCsprite_OpenSrcProjects_Text,
 
 	COUNT
 };
