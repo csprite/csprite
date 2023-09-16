@@ -66,10 +66,15 @@ String Fs::GetBaseName(const String &path) {
 
 int Fs::MakeDir(const char* const path) {
 #if defined(TARGET_WINDOWS)
-	return _mkdir(path);
+	i32 res = _mkdir(path);
 #else
-	return mkdir(path, S_IRWXU);
+	i32 res = mkdir(path, S_IRWXU);
 #endif
+	if (res != 0 && errno == EEXIST && Fs::IsRegularDir(path) == 1) {
+		errno = 0;
+		return 0;
+	}
+	return res;
 }
 
 int Fs::MakeDirRecursive(const String& _p) {
