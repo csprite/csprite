@@ -58,6 +58,9 @@ set(JSON_SystemInclude                  OFF CACHE INTERNAL "")
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/json/)
 target_link_libraries(csprite PUBLIC nlohmann_json::nlohmann_json)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/log.c/)
+target_link_libraries(csprite PUBLIC rxi_log)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/imbase/)
 target_link_libraries(csprite PUBLIC imbase)
 
