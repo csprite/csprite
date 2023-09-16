@@ -282,6 +282,7 @@ int main() {
 				ImGui::BulletText("dav1dde/glad (OpenGL Function Loader) - Public Domain");
 				ImGui::BulletText("ocornut/imgui (User Interface) - MIT License");
 			ImGui::Unindent();
+			ImGui::BulletText("rxi/log.c (Logging) - MIT License");
 			ImGui::BulletText("nothings/stb (Image Read/Write) - Public Domain");
 			ImGui::BulletText("gallickgunner/ImGui-Addons (File Browser) - MIT License");
 			ImGui::BulletText("nlohmann/json (JSON Parser) - MIT License");
