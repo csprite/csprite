@@ -15,7 +15,7 @@ jobs:
     - name: Install Linter
       run: |
         sudo apt-get update -y
-        sudo atp-get install python3-demjson -y
+        sudo apt-get install python3-demjson -y
 
     - name: Lint Languages Files
       run: |
