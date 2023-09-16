@@ -1,6 +1,7 @@
 #include "manager.hpp"
 #include "fs/fs.hpp"
 #include "assets.h"
+#include "log/log.h"
 
 #include <cstdio>
 #include <cstring>
@@ -8,11 +9,11 @@
 
 bool Assets::EnsureFileSystem() {
 	if (Fs::MakeDirRecursive(Fs::GetConfigDir()) != 0) {
-		printf("Error: Fs::MakeDirRecursive(...) - %s\n", strerror(errno));
+		log_error("Fs::MakeDirRecursive(...) - %s", strerror(errno));
 		return false;
 	}
 	if (Fs::MakeDirRecursive(Fs::GetLanguagesDir()) != 0) {
-		printf("Error: Fs::MakeDirRecursive(...) - %s\n", strerror(errno));
+		log_error("Fs::MakeDirRecursive(...) - %s", strerror(errno));
 		return false;
 	}
 
@@ -21,7 +22,7 @@ bool Assets::EnsureFileSystem() {
 		FILE* f = fopen((Fs::GetLanguagesDir() + SYS_PATH_SEP + Fs::GetBaseName(path)).c_str(), "w");
 
 		if (f == NULL) {
-			printf("Error: fopen(...) - %s\n", strerror(errno));
+			log_error("fopen(...) - %s", strerror(errno));
 			return 0;
 		}
 
@@ -30,7 +31,7 @@ bool Assets::EnsureFileSystem() {
 		if (res != NULL && sz > 0) {
 			fwrite(res, 1, sz, f);
 		} else {
-			printf("Error: assets_get(...) - returned NULL\n");
+			log_error("assets_get(...) - returned NULL for '%s'", path);
 		}
 
 		fclose(f);

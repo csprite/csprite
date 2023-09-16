@@ -16,6 +16,7 @@
 #include "i18n/strings.hpp"
 #include "fs/fs.hpp"
 #include "assets/manager.hpp"
+#include "log/log.h"
 
 int main() {
 	if (!Assets::EnsureFileSystem()) {
@@ -61,10 +62,10 @@ int main() {
 			io.Fonts->AddFontFromMemoryCompressedTTF(uiFont, uiFontSize, fontSizePx, nullptr, ranges.Data);
 			io.Fonts->Build();
 			if (!io.Fonts->IsBuilt()) {
-				printf("Failed to build the font!");
+				log_error("io.Fonts->Build() - failed to build the font atlas");
 			}
 		} else {
-			printf("Error: uiFont is NULL!\n");
+			log_error("assets_get(...) - returned NULL");
 		}
 	}
 
