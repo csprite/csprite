@@ -2,6 +2,8 @@
 
 #include "assets.h"
 
+typedef unsigned char uint8_t;
+
 typedef struct {
 	const char*     path;
 	int             size;
@@ -33,7 +35,7 @@ const void* assets_get(const char *filePath, int *size) {
 int assets_list(const char* directoryPath, int (*callback)(int i, const char *path)) {
 	int j = 0;
 	for (int i = 0; i < NUM_ASSETS; i++) {
-		if (STARTS_WITH(ASSETS[i].path, directoryPath)) {
+		if (STARTS_WITH(directoryPath, ASSETS[i].path)) {
 			if (!callback || callback(j, ASSETS[i].path) == 0) j++;
 		}
 	}
