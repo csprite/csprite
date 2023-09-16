@@ -175,7 +175,7 @@ int main() {
 					ShowAboutWindow = true;
 				END_MENUITEM()
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_GitHub], NULL)
-					ImBase::Launcher::OpenUrl("https://github.com/pegvin/CSprite");
+					ImBase::Launcher::OpenUrl("https://github.com/csprite/csprite");
 				END_MENUITEM()
 			END_MENU()
 
