@@ -125,7 +125,7 @@ int main() {
 	imgui_addons::ImGuiFileBrowser FileDialog;
 
 	UIString::UpdateEntries();
-	UIString::LoadFile("./assets/languages/english.json");
+	UIString::LoadDefault();
 	UISTR_Arr Lang = UIString::Get();
 
 	bool ShowNewDocumentWindow = false;

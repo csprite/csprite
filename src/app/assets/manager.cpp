@@ -18,8 +18,8 @@ bool Assets::EnsureFileSystem() {
 	}
 
 	assets_list("assets/languages/", [](int i, const char* path) -> int {
-		(void)i;
-		FILE* f = fopen((Fs::GetLanguagesDir() + SYS_PATH_SEP + Fs::GetBaseName(path)).c_str(), "w");
+		String filePath = Fs::GetLanguagesDir() + SYS_PATH_SEP + Fs::GetBaseName(path);
+		FILE* f = fopen(filePath.c_str(), "w");
 
 		if (f == NULL) {
 			log_error("fopen(...) - %s", strerror(errno));
