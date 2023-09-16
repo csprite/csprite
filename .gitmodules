@@ -4,3 +4,6 @@
 [submodule "third_party/json"]
 	path = third_party/json
 	url = https://github.com/csprite/json
+[submodule "third_party/log.c"]
+	path = third_party/log.c
+	url = https://github.com/csprite/log.c

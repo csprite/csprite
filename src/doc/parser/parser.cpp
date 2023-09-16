@@ -3,13 +3,14 @@
 #include "types.hpp"
 #include "doc/parser/parser.hpp"
 #include "stb_image.h"
+#include "log/log.h"
 
 Doc* Parser::ParseImageFile(const char *const filePath) {
 	i32 width = 0, height = 0, c = 0;
 	u8* image = stbi_load(filePath, &width, &height, &c, 4);
 
 	if (image == NULL || width < 1 || height < 1) {
-		std::cout << "Error: stbi_load(...): " << stbi_failure_reason() << std::endl;
+		log_error("stbi_load(...) - %s", stbi_failure_reason());
 		return nullptr;
 	}
 
