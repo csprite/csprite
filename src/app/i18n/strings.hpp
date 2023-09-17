@@ -5,6 +5,7 @@
 #include <array>
 #include <functional>
 #include "types.hpp"
+#include "imgui/imgui.h"
 
 enum UISTR : u16 {
 	Menu_File = 0,
@@ -43,6 +44,7 @@ namespace UIString {
 	void LoadDefault();
 
 	const UISTR_Arr& Get();
+	const ImWchar* GetRanges();
 }
 
 #endif // CSP_APP_LANGUAGE_MANAGER_HPP_INCLUDED_

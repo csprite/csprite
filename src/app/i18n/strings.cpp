@@ -1,4 +1,5 @@
 #include <fstream>
+#include <string> // std::stoul
 
 #include "app/assets/assets.h"
 #include "app/i18n/strings.hpp"
@@ -10,9 +11,14 @@ using json = nlohmann::json;
 
 static std::vector<String> LanguageFiles;
 static UISTR_Arr Language;
+static ImVector<ImWchar> Range;
 
 const UISTR_Arr& UIString::Get() {
 	return Language;
+}
+
+const ImWchar* UIString::GetRanges() {
+	return Range.Data;
 }
 
 void UIString::UpdateEntries() {
@@ -45,7 +51,21 @@ char* string_dup(const char* const str) {
 	return nullptr;
 }
 
-bool UIString::LoadFile(const String& filePath) {
+void _ParseRange(json& p) {
+	Range.clear();
+	if (p.contains("UnicodeRange")) {
+		Vector<String> RangeStr = p["UnicodeRange"].get<Vector<String>>();
+		for (const String& s : RangeStr) {
+			Range.push_back(std::stoul(s, nullptr, 16));
+		}
+		Range.push_back(0);
+	}
+	Range.push_back(0);
+}
+
+bool UIString::LoadFile(const String& fileName) {
+	String filePath = Fs::GetLanguagesDir() + SYS_PATH_SEP + fileName;
+
 	if (Fs::IsRegularFile(filePath) != 1) {
 		return false;
 	}
@@ -59,6 +79,7 @@ bool UIString::LoadFile(const String& filePath) {
 
 		Language[i] = string_dup(p[GetPropertyName((UISTR)i)][GetEntryName((UISTR)i)].get<String>().c_str());
 	}
+	_ParseRange(p);
 
 	return true;
 }
@@ -74,6 +95,8 @@ void UIString::LoadDefault() {
 
 		Language[i] = string_dup(p[GetPropertyName((UISTR)i)][GetEntryName((UISTR)i)].get<String>().c_str());
 	}
+
+	_ParseRange(p);
 }
 
 const char* GetEntryName(UISTR i) {
