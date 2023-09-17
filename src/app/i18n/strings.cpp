@@ -1,7 +1,9 @@
 #include <fstream>
 
+#include "app/assets/assets.h"
 #include "app/i18n/strings.hpp"
 #include "fs/fs.hpp"
+#include "log/log.h"
 
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
@@ -9,7 +11,7 @@ using json = nlohmann::json;
 static std::vector<String> LanguageFiles;
 static UISTR_Arr Language;
 
-UISTR_Arr UIString::Get() {
+const UISTR_Arr& UIString::Get() {
 	return Language;
 }
 
@@ -59,6 +61,19 @@ bool UIString::LoadFile(const String& filePath) {
 	}
 
 	return true;
+}
+
+void UIString::LoadDefault() {
+	i32 sz = 0;
+	const char* data = (const char*)assets_get("assets/languages/english.json", &sz);
+	json p = json::parse(data, data + sz);
+
+	for (u32 i = 0; i < UISTR::COUNT; i++) {
+		if (Language[i] != nullptr)
+			delete[] Language[i];
+
+		Language[i] = string_dup(p[GetPropertyName((UISTR)i)][GetEntryName((UISTR)i)].get<String>().c_str());
+	}
 }
 
 const char* GetEntryName(UISTR i) {
@@ -117,22 +132,5 @@ const char* GetPropertyName(UISTR i) {
 
 		default: return "";
 	}
-}
-
-#include "app/assets/assets.h"
-
-void UIString::LoadDefault() {
-	i32 sz = 0;
-	const char* data = (const char*)assets_get("assets/languages/english.json", &sz);
-	json p = json::parse(data, data + sz);
-
-	for (u32 i = 0; i < UISTR::COUNT; i++) {
-		if (Language[i] != nullptr)
-			delete[] Language[i];
-
-		Language[i] = string_dup(p[GetPropertyName((UISTR)i)][GetEntryName((UISTR)i)].get<String>().c_str());
-	}
-
-	UIString::LoadFile(Fs::GetLanguagesDir() + SYS_PATH_SEP + "english.json");
 }
 
