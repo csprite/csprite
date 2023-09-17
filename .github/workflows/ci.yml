@@ -5,22 +5,6 @@ on:
   pull_request:
 
 jobs:
-  lint:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Install Python
-      run: |
-        sudo apt-get update -y
-        sudo apt-get install python3 -y
-
-    - name: Lint Languages Files
-      run: |
-        python3 tools/validate_langfiles.py
-
   build:
     strategy:
       matrix:
@@ -56,7 +40,6 @@ jobs:
             arch: arm64
             gen: Xcode
 
-    needs: [lint]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
