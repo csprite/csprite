@@ -18,6 +18,7 @@
 #include "fs/fs.hpp"
 #include "assets/manager.hpp"
 #include "log/log.h"
+#include "config.hpp"
 
 int main() {
 	EnableVT100();
@@ -26,11 +27,20 @@ int main() {
 		return 1;
 	}
 
+	Cfg::Load();
+	Cfg::Config& Conf = Cfg::Get();
+
+	UIString::UpdateEntries();
+	if (!UIString::LoadFile(Conf.langFileName)) {
+		UIString::LoadDefault();
+	}
+	const UISTR_Arr& Lang = UIString::Get();
+
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
 		return 1;
 	}
 
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGuiIO& io = ImGui::GetIO();
 
 	{
 		int uiFontSize = 0;
@@ -40,26 +50,7 @@ int main() {
 			ImVector<ImWchar> ranges;
 			ImFontGlyphRangesBuilder builder;
 			builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-			builder.AddRanges(io.Fonts->GetGlyphRangesGreek());
-
-			// https://character-table.netlify.app/polish/
-			const ImWchar PolishRange[] = {
-				0x0104, 0x0107,
-				0x0118, 0x0119,
-				0x0141, 0x0144,
-				0x015A, 0x015B,
-				0x0179, 0x017C,
-				0x2010, 0x2011,
-				0x2013, 0x2014,
-				0x201D, 0x201E,
-				0x2020, 0x2021,
-				0x2032, 0x2033,
-				0
-			};
-			builder.AddChar(0x2026);
-			builder.AddChar(0x2030);
-			builder.AddChar(0x20AC);
-			builder.AddRanges(PolishRange);
+			builder.AddRanges(UIString::GetRanges());
 			builder.BuildRanges(&ranges);
 
 			io.Fonts->AddFontFromMemoryCompressedTTF(uiFont, uiFontSize, fontSizePx, nullptr, ranges.Data);
@@ -124,10 +115,6 @@ int main() {
 
 	imgui_addons::ImGuiFileBrowser FileDialog;
 
-	UIString::UpdateEntries();
-	UIString::LoadDefault();
-	UISTR_Arr Lang = UIString::Get();
-
 	bool ShowNewDocumentWindow = false;
 	bool ShowOpenFileWindow = false;
 	bool ShowAboutWindow = false;
@@ -182,11 +169,7 @@ int main() {
 			BEGIN_MENU("Language")
 				UIString::ListAll([&](const char* fileName) {
 					BEGIN_MENUITEM(fileName, NULL)
-						String filePath = Fs::GetLanguagesDir() + SYS_PATH_SEP + String(fileName);
-						if (!UIString::LoadFile(filePath)) {
-							UIString::LoadDefault();
-						}
-						Lang = UIString::Get();
+						Conf.langFileName = fileName;
 					END_MENUITEM()
 				});
 			END_MENU()
@@ -521,6 +504,7 @@ int main() {
 
 	delete dState.doc;
 	ImBase::Window::Destroy();
+	Cfg::Write();
 	return 0;
 }
 
