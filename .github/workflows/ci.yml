@@ -15,14 +15,11 @@ jobs:
     - name: Install Linter
       run: |
         sudo apt-get update -y
-        sudo apt-get install python3-demjson -y
+        sudo apt-get install python3 -y
 
     - name: Lint Languages Files
       run: |
-        for file in ./assets/languages/*.json
-        do
-          jsonlint -s -e utf8 "$file"
-        done
+        python3 tools/validate_langfiles.py
 
   build:
     strategy:
