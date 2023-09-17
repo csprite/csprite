@@ -526,9 +526,17 @@ void AdjustZoom(bool Increase, u32& ZoomLevel, Doc& d) {
 		}
 	}
 
-	// Comment Out To Not Center When Zooming
-	d.viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)d.w * ZoomLevel / 2;
-	d.viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)d.h * ZoomLevel / 2;
+	// This Ensures That The Canvas Is Zoomed From It's Center And Not From The Bottom Left Position
+	RectI32 CurrRectCenter;
+	CurrRectCenter.x = (d.viewport.w / 2) + d.viewport.x;
+	CurrRectCenter.y = (d.viewport.h / 2) + d.viewport.y;
+
+	RectI32 NewRectCenter;
+	NewRectCenter.x = (d.w * ZoomLevel / 2) + (i32)d.viewport.x;
+	NewRectCenter.y = (d.h * ZoomLevel / 2) + (i32)d.viewport.y;
+
+	d.viewport.x -= NewRectCenter.x - CurrRectCenter.x;
+	d.viewport.y -= NewRectCenter.y - CurrRectCenter.y;
 
 	d.viewport.w = d.w * ZoomLevel;
 	d.viewport.h = d.h * ZoomLevel;
