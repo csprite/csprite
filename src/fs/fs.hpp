@@ -15,6 +15,7 @@
 
 namespace Fs {
 	String GetConfigDir();
+	inline String GetConfigFile() { return Fs::GetConfigDir() + SYS_PATH_SEP "config.json"; }
 	inline String GetLanguagesDir() { return Fs::GetConfigDir() + SYS_PATH_SEP "languages"; }
 	inline String GetPalettesDir() { return Fs::GetConfigDir() + SYS_PATH_SEP "palettes"; }
 
