@@ -42,7 +42,7 @@ namespace UIString {
 	bool LoadFile(const String& filePath);
 	void LoadDefault();
 
-	UISTR_Arr Get();
+	const UISTR_Arr& Get();
 }
 
 #endif // CSP_APP_LANGUAGE_MANAGER_HPP_INCLUDED_
