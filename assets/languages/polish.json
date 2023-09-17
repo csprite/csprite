@@ -27,6 +27,22 @@
 		"ContributorLink": "Lista współtwórców",
 		"OsProjectsHeader": "Dziękujemy projektom Open-Source!",
 		"OsProjectsText": "csprite korzysta z kilku projektów open-source stworzonych przez niesamowitych ludzi.\n\ngithub.com/"
-	}
+	},
+	"UnicodeRange": [
+		"0x0104", "0x0107",
+		"0x0118", "0x0119",
+		"0x0141", "0x0144",
+		"0x015A", "0x015B",
+		"0x0179", "0x017C",
+		"0x2010", "0x2011",
+		"0x2013", "0x2014",
+		"0x201D", "0x201E",
+		"0x2020", "0x2021",
+		"0x2032", "0x2033",
+
+		"0x2026", "0x2026",
+		"0x2030", "0x2030",
+		"0x20AC", "0x20AC"
+	]
 }
 
