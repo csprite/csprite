@@ -6,7 +6,7 @@
 
 namespace Cfg {
 	struct Config {
-		u32 fps = 30;
+		u32 fps = 50;
 		String langFileName = "english.json";
 	};
 
