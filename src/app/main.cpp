@@ -39,6 +39,7 @@ int main() {
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
 		return 1;
 	}
+	ImBase::Window::SetMaxFPS(Conf.fps);
 
 	ImGuiIO& io = ImGui::GetIO();
 
