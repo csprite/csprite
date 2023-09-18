@@ -43,25 +43,19 @@ int main() {
 
 	ImGuiIO& io = ImGui::GetIO();
 
-	{
-		int uiFontSize = 0;
-		const void* uiFont = assets_get("data/fonts/NotoSans-Regular.ttf", &uiFontSize);
-		if (uiFont) {
-			constexpr float fontSizePx = 18.0f;
-			ImVector<ImWchar> ranges;
-			ImFontGlyphRangesBuilder builder;
-			builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-			builder.AddRanges(UIString::GetRanges());
-			builder.BuildRanges(&ranges);
-
-			io.Fonts->AddFontFromMemoryCompressedTTF(uiFont, uiFontSize, fontSizePx, nullptr, ranges.Data);
-			io.Fonts->Build();
-			if (!io.Fonts->IsBuilt()) {
-				log_error("io.Fonts->Build() - failed to build the font atlas");
-			}
-		} else {
-			log_error("assets_get(...) - returned NULL");
-		}
+	int uiFontSzBytes = 0;
+	ImVector<ImWchar> FontRanges;
+	ImFontGlyphRangesBuilder FontBuilder;
+	FontBuilder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+	FontBuilder.AddRanges(UIString::GetRanges());
+	FontBuilder.BuildRanges(&FontRanges);
+	io.Fonts->AddFontFromMemoryCompressedTTF(
+		assets_get("data/fonts/NotoSans-Regular.ttf", &uiFontSzBytes),
+		uiFontSzBytes, 18.0f, nullptr, FontRanges.Data
+	);
+	io.Fonts->Build();
+	if (!io.Fonts->IsBuilt()) {
+		log_error("io.Fonts->Build() - failed to build the font atlas");
 	}
 
 	ImBase::Window::NewFrame();
