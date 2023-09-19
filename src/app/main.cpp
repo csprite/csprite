@@ -120,12 +120,6 @@ int main() {
 	while (!ImBase::Window::ShouldClose()) {
 		ImBase::Window::NewFrame();
 
-		bool isCanvasHovered = io.MousePos.x > dState.doc->viewport.x &&
-						io.MousePos.y > dState.doc->viewport.y &&
-						io.MousePos.x < dState.doc->viewport.x + dState.doc->viewport.w &&
-						io.MousePos.y < dState.doc->viewport.y + dState.doc->viewport.h;
-
-
 		#define BEGIN_MENU(label) if (ImGui::BeginMenu(label)) {
 		#define END_MENU() ImGui::EndMenu(); }
 
@@ -182,7 +176,6 @@ int main() {
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
-		isCanvasHovered = isCanvasHovered && !(ImGui::IsPopupOpen(Lang[UISTR::Popup_OpenFile]) || ImGui::IsPopupOpen(Lang[UISTR::Popup_NewDocument]) || ImGui::IsPopupOpen(Lang[UISTR::Popup_AboutCsprite]));
 		if (ShowOpenFileWindow) {
 			ShowOpenFileWindow = false;
 			ImGui::OpenPopup(Lang[UISTR::Popup_OpenFile]);
@@ -209,7 +202,7 @@ int main() {
 			}
 		}
 
-		#define BEGIN_POPUP(name, flags) if (ImGui::BeginPopupModal(name, NULL, flags)) { isCanvasHovered = false;
+		#define BEGIN_POPUP(name, flags) if (ImGui::BeginPopupModal(name, NULL, flags)) {
 		#define END_POPUP() ImGui::EndPopup(); }
 
 		BEGIN_POPUP(Lang[UISTR::Popup_NewDocument], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
@@ -373,9 +366,10 @@ int main() {
 			StatusWinSize = ImGui::GetWindowSize();
 		END_WINDOW()
 
+		static bool isMainWindowHovered = false;
 		ImGui::SetNextWindowPos({ LeftWinPos.x + LeftWinSize.x, StatusWinPos.y + StatusWinSize.y - 1 });
 		ImGui::SetNextWindowSize({ StatusWinSize.x, io.DisplaySize.y - (StatusWinPos.y + StatusWinSize.y) + 1 });
-		BEGIN_WINDOW("MainWindow", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize)
+		BEGIN_WINDOW("MainWindow", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize)
 			ImGui::GetWindowDrawList()->AddRect(
 				{ dState.doc->viewport.x - 1, dState.doc->viewport.y - 1 },
 				{ dState.doc->viewport.w + dState.doc->viewport.x + 1, dState.doc->viewport.h + dState.doc->viewport.y + 1 },
@@ -386,12 +380,13 @@ int main() {
 				{ dState.doc->viewport.x, dState.doc->viewport.y },
 				{ dState.doc->viewport.w + dState.doc->viewport.x, dState.doc->viewport.h + dState.doc->viewport.y }
 			);
+			isMainWindowHovered = ImGui::IsWindowHovered();
 		END_WINDOW()
 
 		#undef BEGIN_WINDOW
 		#undef END_WINDOW
 
-		if (isCanvasHovered) {
+		if (isMainWindowHovered) {
 			MousePosLast = MousePos;
 			MousePosRelLast = MousePosRel;
 
