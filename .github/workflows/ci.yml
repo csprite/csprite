@@ -51,7 +51,8 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update -y
-        sudo apt-get install ${{ matrix.pkgs }} cmake ninja-build python3 python3-pip -y
+        sudo apt-get install ${{ matrix.pkgs }} ninja-build python3 python3-pip -y
+        sudo snap install cmake --classic
 
     - name: Lint Info.plist & Generate .icns (MacOS)
       if: ${{ matrix.os == 'macos-12' }}
