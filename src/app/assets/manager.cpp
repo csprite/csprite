@@ -1,5 +1,7 @@
+#include "types.hpp"
 #include "manager.hpp"
 #include "fs/fs.hpp"
+#include "app/fswrapper.hpp"
 #include "assets.h"
 #include "log/log.h"
 
@@ -7,18 +9,21 @@
 #include <cstring>
 #include <cerrno>
 
+namespace Fs = FileSystem;
+
 bool Assets::EnsureFileSystem() {
-	if (Fs::MakeDirRecursive(Fs::GetConfigDir()) != 0) {
+	if (!Fs::MakeDirRecursive(Fs::GetConfigDir())) {
 		log_error("Fs::MakeDirRecursive(...) - %s", strerror(errno));
 		return false;
 	}
-	if (Fs::MakeDirRecursive(Fs::GetLanguagesDir()) != 0) {
+	if (!Fs::MakeDirRecursive(Fs::GetLanguagesDir())) {
 		log_error("Fs::MakeDirRecursive(...) - %s", strerror(errno));
 		return false;
 	}
 
 	assets_list("assets/languages/", [](int i, const char* path) -> int {
-		String filePath = Fs::GetLanguagesDir() + SYS_PATH_SEP + Fs::GetBaseName(path);
+		(void)i;
+		String filePath = Fs::GetLanguagesDir() + PATH_SEP + Fs::GetBaseName(path);
 		FILE* f = fopen(filePath.c_str(), "w");
 
 		if (f == NULL) {

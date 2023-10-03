@@ -3,11 +3,14 @@
 
 #include "app/assets/assets.h"
 #include "app/i18n/strings.hpp"
+#include "app/fswrapper.hpp"
 #include "fs/fs.hpp"
 #include "log/log.h"
 
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
+
+namespace Fs = FileSystem;
 
 static std::vector<String> LanguageFiles;
 static UISTR_Arr Language;
@@ -23,7 +26,8 @@ const ImWchar* UIString::GetRanges() {
 
 void UIString::UpdateEntries() {
 	LanguageFiles.clear();
-	Fs::ListDir(Fs::GetLanguagesDir().c_str(), [&](const char* entryName, bool isFile) -> bool {
+	Fs::ListDir(Fs::GetLanguagesDir(), [&](const String& entryName, bool isFile) -> bool {
+		// printf("%s\n", entryName.c_str());
 		if (isFile) {
 			LanguageFiles.push_back(entryName);
 		}
@@ -64,7 +68,7 @@ void _ParseRange(json& p) {
 }
 
 bool UIString::LoadFile(const String& fileName) {
-	String filePath = Fs::GetLanguagesDir() + SYS_PATH_SEP + fileName;
+	String filePath = Fs::GetLanguagesDir() + PATH_SEP + fileName;
 
 	if (Fs::IsRegularFile(filePath) != 1) {
 		return false;
