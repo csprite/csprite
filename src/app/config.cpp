@@ -1,11 +1,13 @@
 #include <cstdio>
 
 #include "app/config.hpp"
-#include "fs/fs.hpp"
+#include "fswrapper.hpp"
 #include "log/log.h"
 
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
+
+namespace Fs = FileSystem;
 
 static Cfg::Config conf;
 

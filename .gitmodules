@@ -10,3 +10,6 @@
 [submodule "assets/languages"]
 	path = assets/languages
 	url = https://github.com/csprite/languages
+[submodule "third_party/filesystem"]
+	path = third_party/filesystem
+	url = https://github.com/csprite/FileSystem
