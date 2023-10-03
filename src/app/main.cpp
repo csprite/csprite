@@ -15,7 +15,6 @@
 #include "doc/parser/parser.hpp"
 #include "filebrowser/filebrowser.hpp"
 #include "i18n/strings.hpp"
-#include "fs/fs.hpp"
 #include "assets/manager.hpp"
 #include "log/log.h"
 #include "config.hpp"
