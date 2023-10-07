@@ -369,6 +369,8 @@ int main() {
 		ImGui::SetNextWindowPos({ LeftWinPos.x + LeftWinSize.x, StatusWinPos.y + StatusWinSize.y - 1 });
 		ImGui::SetNextWindowSize({ StatusWinSize.x, io.DisplaySize.y - (StatusWinPos.y + StatusWinSize.y) + 1 });
 		BEGIN_WINDOW("MainWindow", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize)
+			isMainWindowHovered = ImGui::IsWindowHovered();
+
 			ImGui::GetWindowDrawList()->AddRect(
 				{ dState.doc->viewport.x - 1, dState.doc->viewport.y - 1 },
 				{ dState.doc->viewport.w + dState.doc->viewport.x + 1, dState.doc->viewport.h + dState.doc->viewport.y + 1 },
@@ -379,20 +381,39 @@ int main() {
 				{ dState.doc->viewport.x, dState.doc->viewport.y },
 				{ dState.doc->viewport.w + dState.doc->viewport.x, dState.doc->viewport.h + dState.doc->viewport.y }
 			);
-			isMainWindowHovered = ImGui::IsWindowHovered();
+
+			MousePosLast = MousePos;
+			MousePos = io.MousePos;
+			MousePosRelLast = MousePosRel;
+			MousePosRel.x = (MousePos[0] - dState.doc->viewport.x) / dState.ZoomLevel;
+			MousePosRel.y = (MousePos[1] - dState.doc->viewport.y) / dState.ZoomLevel;
+
+			bool MouseInBounds = MousePosRel.x >= 0 && MousePosRel.y >= 0 &&
+			                     MousePosRel.x < dState.doc->w && MousePosRel.y < dState.doc->h;
+
+			if (MouseInBounds && isMainWindowHovered) {
+				ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+				ImVec2 TopLeft = {
+					(dState.doc->viewport.x + ((i32)MousePosRel.x * dState.ZoomLevel)),
+					(dState.doc->viewport.y + ((i32)MousePosRel.y * dState.ZoomLevel))
+				};
+				ImVec2 BottomRight = {
+					TopLeft.x + dState.ZoomLevel,
+					TopLeft.y + dState.ZoomLevel
+				};
+				const Pixel& p = dState.doc->layers[0]->pixels[(i32)(MousePosRel.y * dState.doc->w) + (i32)MousePosRel.x];
+				ImU32 Color = (p.r * 0.299 + p.g * 0.587 + p.b * 0.114) > 186 ? 0xFF000000 : 0xFFFFFFFF;
+				ImGui::GetWindowDrawList()->AddRect(
+					TopLeft, BottomRight,
+					Color, 0, 0, 0.1 * dState.ZoomLevel
+				);
+			}
 		END_WINDOW()
 
 		#undef BEGIN_WINDOW
 		#undef END_WINDOW
 
 		if (isMainWindowHovered) {
-			MousePosLast = MousePos;
-			MousePosRelLast = MousePosRel;
-
-			MousePos = ImGui::GetMousePos();
-			MousePosRel.x = (MousePos[0] - dState.doc->viewport.x) / dState.ZoomLevel;
-			MousePosRel.y = (MousePos[1] - dState.doc->viewport.y) / dState.ZoomLevel;
-
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 				if (io.MouseWheel > 0) AdjustZoom(true, dState.ZoomLevel, *dState.doc);
 				if (io.MouseWheel < 0) AdjustZoom(false, dState.ZoomLevel, *dState.doc);
