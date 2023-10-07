@@ -407,7 +407,7 @@ int main() {
 				if (io.KeyCtrl) AdjustZoom(false, dState.ZoomLevel, *dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex > 0 ? dState.PaletteIndex - 1 : dState.palette.Colors.size() - 1;
-				else if (ToolManager::GetBrushSize() > 2)
+				else if (ToolManager::GetBrushSize() > 1)
 					ToolManager::SetBrushSize(ToolManager::GetBrushSize() - 1);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_B, false)) {
 				ToolManager::SetToolType(ToolType::BRUSH);
