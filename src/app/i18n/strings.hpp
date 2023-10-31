@@ -31,6 +31,8 @@ enum UISTR : u16 {
 		Popup_AboutCsprite_OpenSrcProjects_Header,
 		Popup_AboutCsprite_OpenSrcProjects_Text,
 
+		Popup_AboutCsprite_CloseButton,
+
 	COUNT
 };
 
