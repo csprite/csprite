@@ -7,8 +7,7 @@
 #include "fs/fs.hpp"
 #include "log/log.h"
 
-#include "nlohmann/json.hpp"
-using json = nlohmann::json;
+#include "SimpleIni.h"
 
 namespace Fs = FileSystem;
 
@@ -55,15 +54,15 @@ char* string_dup(const char* const str) {
 	return nullptr;
 }
 
-void _ParseRange(json& p) {
+void _ParseRange(CSimpleIniA& ini) {
 	Range.clear();
-	if (p.contains("UnicodeRange")) {
-		Vector<String> RangeStr = p["UnicodeRange"].get<Vector<String>>();
-		for (const String& s : RangeStr) {
-			Range.push_back(std::stoul(s, nullptr, 16));
-		}
-		Range.push_back(0);
-	}
+	//~ if (p.contains("UnicodeRange")) {
+		//~ Vector<String> RangeStr = p["UnicodeRange"].get<Vector<String>>();
+		//~ for (const String& s : RangeStr) {
+			//~ Range.push_back(std::stoul(s, nullptr, 16));
+		//~ }
+		//~ Range.push_back(0);
+	//~ }
 	Range.push_back(0);
 }
 
@@ -74,59 +73,63 @@ bool UIString::LoadFile(const String& fileName) {
 		return false;
 	}
 
-	std::ifstream f(filePath);
-	json p = json::parse(f);
+	CSimpleIniA ini;
+	ini.SetUnicode();
+	ini.LoadFile(filePath.c_str());
 
 	for (u32 i = 0; i < UISTR::COUNT; i++) {
 		if (Language[i] != nullptr)
 			delete[] Language[i];
 
-		Language[i] = string_dup(p[GetPropertyName((UISTR)i)][GetEntryName((UISTR)i)].get<String>().c_str());
+		Language[i] = string_dup(ini.GetValue(GetPropertyName((UISTR)i), GetEntryName((UISTR)i), "ERROR_404"));
 	}
-	_ParseRange(p);
+	_ParseRange(ini);
 
 	return true;
 }
 
 void UIString::LoadDefault() {
 	i32 sz = 0;
-	const char* data = (const char*)assets_get("assets/languages/english.json", &sz);
-	json p = json::parse(data, data + sz);
+	const char* data = (const char*)assets_get("assets/languages/english.ini", &sz);
+
+	CSimpleIniA ini;
+	ini.SetUnicode();
+	ini.LoadData(data, sz);
 
 	for (u32 i = 0; i < UISTR::COUNT; i++) {
 		if (Language[i] != nullptr)
 			delete[] Language[i];
 
-		Language[i] = string_dup(p[GetPropertyName((UISTR)i)][GetEntryName((UISTR)i)].get<String>().c_str());
+		Language[i] = string_dup(ini.GetValue(GetPropertyName((UISTR)i), GetEntryName((UISTR)i), "ERROR_404"));
 	}
 
-	_ParseRange(p);
+	_ParseRange(ini);
 }
 
 const char* GetEntryName(UISTR i) {
 	switch (i) {
-		case UISTR::Menu_File: return "File";
-		case UISTR::MenuItem_New: return "New";
-		case UISTR::MenuItem_Open: return "Open";
+		case UISTR::Menu_File: return "file";
+		case UISTR::MenuItem_New: return "new";
+		case UISTR::MenuItem_Open: return "open";
 
-		case UISTR::Menu_Help: return "Help";
-		case UISTR::MenuItem_About: return "About";
-		case UISTR::MenuItem_GitHub: return "GitHub";
+		case UISTR::Menu_Help: return "help";
+		case UISTR::MenuItem_About: return "about";
+		case UISTR::MenuItem_GitHub: return "github";
 
-		case UISTR::Popup_OpenFile: return "OpenFile";
+		case UISTR::Popup_OpenFile: return "open_file";
 
-		case UISTR::Popup_NewDocument: return "NewDocument";
-		case UISTR::Popup_NewDocument_WidthInput: return "WidthInput";
-		case UISTR::Popup_NewDocument_HeightInput: return "HeightInput";
-		case UISTR::Popup_NewDocument_OkButton: return "OkButton";
-		case UISTR::Popup_NewDocument_CancelButton: return "CancelButton";
+		case UISTR::Popup_NewDocument: return "title";
+		case UISTR::Popup_NewDocument_WidthInput: return "width_input";
+		case UISTR::Popup_NewDocument_HeightInput: return "height_input";
+		case UISTR::Popup_NewDocument_OkButton: return "ok_button";
+		case UISTR::Popup_NewDocument_CancelButton: return "cancel_button";
 
-		case UISTR::Popup_AboutCsprite: return "AboutCsprite";
-		case UISTR::Popup_AboutCsprite_Contrib_Header: return "ContributorHeader";
-		case UISTR::Popup_AboutCsprite_Contrib_Paragraph: return "ContributorParagraph";
-		case UISTR::Popup_AboutCsprite_Contrib_Link: return "ContributorLink";
-		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Header: return "OsProjectsHeader";
-		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text: return "OsProjectsText";
+		case UISTR::Popup_AboutCsprite: return "title";
+		case UISTR::Popup_AboutCsprite_Contrib_Header: return "contributors_header";
+		case UISTR::Popup_AboutCsprite_Contrib_Paragraph: return "contributors_paragraph";
+		case UISTR::Popup_AboutCsprite_Contrib_Link: return "contributors_link";
+		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Header: return "os_projects_header";
+		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text: return "os_projects_text";
 
 		default: return "";
 	}
@@ -134,28 +137,38 @@ const char* GetEntryName(UISTR i) {
 
 const char* GetPropertyName(UISTR i) {
 	switch (i) {
-		case UISTR::Menu_File: return "FileMenu";
-		case UISTR::MenuItem_New: return "FileMenu";
-		case UISTR::MenuItem_Open: return "FileMenu";
+		case UISTR::Menu_File:
+		case UISTR::MenuItem_New:
+		case UISTR::MenuItem_Open: {
+			return "file_menu";
+		}
 
-		case UISTR::Menu_Help: return "HelpMenu";
-		case UISTR::MenuItem_About: return "HelpMenu";
-		case UISTR::MenuItem_GitHub: return "HelpMenu";
+		case UISTR::Menu_Help:
+		case UISTR::MenuItem_About:
+		case UISTR::MenuItem_GitHub: {
+			return "help_menu";
+		}
 
-		case UISTR::Popup_OpenFile: return "OpenFilePopup";
+		case UISTR::Popup_OpenFile: {
+			return "open_file_popup";
+		}
 
-		case UISTR::Popup_NewDocument: return "NewDocumentPopup";
-		case UISTR::Popup_NewDocument_WidthInput: return "NewDocumentPopup";
-		case UISTR::Popup_NewDocument_HeightInput: return "NewDocumentPopup";
-		case UISTR::Popup_NewDocument_OkButton: return "NewDocumentPopup";
-		case UISTR::Popup_NewDocument_CancelButton: return "NewDocumentPopup";
+		case UISTR::Popup_NewDocument:
+		case UISTR::Popup_NewDocument_WidthInput:
+		case UISTR::Popup_NewDocument_HeightInput:
+		case UISTR::Popup_NewDocument_OkButton:
+		case UISTR::Popup_NewDocument_CancelButton: {
+			return "new_document_popup";
+		}
 
-		case UISTR::Popup_AboutCsprite: return "AboutCspritePopup";
-		case UISTR::Popup_AboutCsprite_Contrib_Header: return "AboutCspritePopup";
-		case UISTR::Popup_AboutCsprite_Contrib_Paragraph: return "AboutCspritePopup";
-		case UISTR::Popup_AboutCsprite_Contrib_Link: return "AboutCspritePopup";
-		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Header: return "AboutCspritePopup";
-		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text: return "AboutCspritePopup";
+		case UISTR::Popup_AboutCsprite:
+		case UISTR::Popup_AboutCsprite_Contrib_Header:
+		case UISTR::Popup_AboutCsprite_Contrib_Paragraph:
+		case UISTR::Popup_AboutCsprite_Contrib_Link:
+		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Header:
+		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text: {
+			return "about_csprite_popup";
+		}
 
 		default: return "";
 	}
