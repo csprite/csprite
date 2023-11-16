@@ -4,8 +4,7 @@
 #include "fswrapper.hpp"
 #include "log/log.h"
 
-#include "nlohmann/json.hpp"
-using json = nlohmann::json;
+#include "SimpleIni.h"
 
 namespace Fs = FileSystem;
 
@@ -16,34 +15,21 @@ Cfg::Config& Cfg::Get() {
 }
 
 void Cfg::Load() {
-	FILE* f = fopen(Fs::GetConfigFile().c_str(), "r");
-	if (f == NULL) {
-		log_error("fopen(...) - %s", strerror(errno));
+	CSimpleIniA ini;
+	ini.SetUnicode();
+	if (ini.LoadFile(Fs::GetConfigFile().c_str()) < 0) {
 		return;
 	}
 
-	json p = json::parse(f);
-	conf.fps = p["FPS"];
-	conf.langFileName = p["LangFile"];
-
-	fclose(f);
+	conf.fps = ini.GetLongValue("program", "fps", 50);
+	conf.langFileName = ini.GetValue("program", "language_file", "english.ini");
 }
 
 void Cfg::Write() {
-	FILE* f = fopen(Fs::GetConfigFile().c_str(), "w");
-	if (f == NULL) {
-		log_error("fopen(...) - %s", strerror(errno));
-		return;
-	}
-
-	json p;
-	p["FPS"] = conf.fps;
-	p["LangFile"] = conf.langFileName;
-	auto str = p.dump(1, '\t', false);
-	if (!str.empty()) {
-		fwrite(str.data(), 1, str.size(), f);
-	}
-
-	fclose(f);
+	CSimpleIniA ini;
+	ini.SetUnicode();
+	ini.SetLongValue("program", "fps", conf.fps);
+	ini.SetValue("program", "language_file", conf.langFileName.c_str());
+	ini.SaveFile(Fs::GetConfigFile().c_str());
 }
 

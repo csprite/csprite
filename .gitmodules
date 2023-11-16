@@ -13,3 +13,6 @@
 [submodule "third_party/filesystem"]
 	path = third_party/filesystem
 	url = https://github.com/csprite/FileSystem
+[submodule "third_party/simpleini"]
+	path = third_party/simpleini
+	url = https://github.com/brofield/simpleini
