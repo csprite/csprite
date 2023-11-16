@@ -127,7 +127,7 @@ files = []
 files.append(create_file("data/icons/icon-32.png"))
 files.append(create_file("data/fonts/NotoSans-Regular.ttf"))
 
-for f in glob.glob("assets/languages/*.json"):
+for f in glob.glob("assets/languages/*.ini"):
 	if os.path.isfile(f):
 		files.append(create_file(f))
 
