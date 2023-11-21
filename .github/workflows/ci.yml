@@ -130,6 +130,15 @@ jobs:
           ./build/Release/csprite.app
           ./assets
 
+  update-contributor-collage:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Update Contributor Image Cache
+      if: ${{ github.event.pull_request.merged == true }}
+      run: |
+        curl -X PURGE "https://contributors-img.firebaseapp.com/image?repo=csprite/csprite&max=100000"
+
   update-ci-release:
     needs: [build]
     permissions:
