@@ -77,11 +77,15 @@ bool UIString::LoadFile(const String& fileName) {
 	ini.SetUnicode();
 	ini.LoadFile(filePath.c_str());
 
+	UIString::LoadDefault();
+
 	for (u32 i = 0; i < UISTR::COUNT; i++) {
+		const char* str = string_dup(ini.GetValue(GetPropertyName((UISTR)i), GetEntryName((UISTR)i), Language[i]));
+
 		if (Language[i] != nullptr)
 			delete[] Language[i];
 
-		Language[i] = string_dup(ini.GetValue(GetPropertyName((UISTR)i), GetEntryName((UISTR)i), "ERROR_404"));
+		Language[i] = str;
 	}
 	_ParseRange(ini);
 
