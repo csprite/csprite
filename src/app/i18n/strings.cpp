@@ -168,7 +168,7 @@ const char* GetPropertyName(UISTR i) {
 		case UISTR::Popup_AboutCsprite_Contrib_Link:
 		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Header:
 		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text:
-    case UISTR::Popup_AboutCsprite_CloseButton: {
+		case UISTR::Popup_AboutCsprite_CloseButton: {
 			return "about_csprite_popup";
 		}
 
