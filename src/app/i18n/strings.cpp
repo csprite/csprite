@@ -80,10 +80,17 @@ bool UIString::LoadFile(const String& fileName) {
 	UIString::LoadDefault();
 
 	for (u32 i = 0; i < UISTR::COUNT; i++) {
-		const char* str = string_dup(ini.GetValue(GetPropertyName((UISTR)i), GetEntryName((UISTR)i), Language[i]));
+		const char* str = ini.GetValue(GetPropertyName((UISTR)i), GetEntryName((UISTR)i), NULL);
 
-		if (Language[i] != nullptr)
-			delete[] Language[i];
+		// This Logic Reduces Re-Duplication of String
+		if (str == NULL) {
+			str = Language[i];
+		} else {
+			str = string_dup(str);
+			if (Language[i] != nullptr) {
+				delete[] Language[i];
+			}
+		}
 
 		Language[i] = str;
 	}
