@@ -130,6 +130,7 @@ const char* GetEntryName(UISTR i) {
 		case UISTR::Popup_AboutCsprite_Contrib_Link: return "contributors_link";
 		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Header: return "os_projects_header";
 		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text: return "os_projects_text";
+		case UISTR::Popup_AboutCsprite_CloseButton: return "close_button";
 
 		default: return "";
 	}
@@ -166,7 +167,8 @@ const char* GetPropertyName(UISTR i) {
 		case UISTR::Popup_AboutCsprite_Contrib_Paragraph:
 		case UISTR::Popup_AboutCsprite_Contrib_Link:
 		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Header:
-		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text: {
+		case UISTR::Popup_AboutCsprite_OpenSrcProjects_Text:
+		case UISTR::Popup_AboutCsprite_CloseButton: {
 			return "about_csprite_popup";
 		}
 

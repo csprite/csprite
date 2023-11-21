@@ -261,6 +261,13 @@ int main() {
 				ImGui::BulletText("UTF-8 Decoder by Bjoern Hoehrmann - MIT License");
 				ImGui::BulletText("Grisu2 algorithm by Florian Loitsch - MIT License");
 			ImGui::Unindent();
+
+			ImGui::Spacing();
+			ImVec2 closeButtonSize(100.f, 0.f);
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetContentRegionAvail().x - closeButtonSize.x);
+			if (ImGui::Button(Lang[UISTR::Popup_AboutCsprite_CloseButton], closeButtonSize)) {
+				ImGui::CloseCurrentPopup();
+			}
 		END_POPUP()
 
 		#undef BEGIN_POPUP
