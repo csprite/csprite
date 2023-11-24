@@ -1,7 +1,3 @@
-#ifdef TARGET_WINDOWS
-	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
-#endif
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
