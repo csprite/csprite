@@ -13,6 +13,7 @@ struct CanvasLayer {
 	SDL_Texture* tex;
 	Pixel*       pixels;
 	History_T*   history;
+	float        alpha;
 
 	CanvasLayer(SDL_Renderer* ren, int32_t w, int32_t h, std::string name = "New Layer");
 	~CanvasLayer();
