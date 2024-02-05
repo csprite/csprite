@@ -33,7 +33,7 @@ the beautiful icon & banner are created ["Birds Probably" aka Lilith](https://ww
 ---
 ### Todo
 - [x] Custom File Format (.csprite)
-- [ ] Configurable Alpha For Each Layer
+- [x] Configurable Alpha For Each Layer
 - [ ] Configurable Blend Mode For Each Layer
 - [x] ReFactor Code
 - [x] Add Layers Support
