@@ -7,6 +7,7 @@ CanvasLayer::CanvasLayer(SDL_Renderer* ren, int32_t w, int32_t h, std::string na
 	this->pixels = new Pixel[w * h];
 	this->tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, w, h);
 	this->history = NULL;
+	this->alpha = 1.f;
 	SaveHistory(&this->history, w * h, this->pixels);
 
 	if (SDL_SetTextureBlendMode(this->tex, SDL_BLENDMODE_BLEND) != 0) {
@@ -94,10 +95,12 @@ void CanvasLayer_Manager::Draw(SDL_Rect* r, int32_t layerToUpdateIdx) {
 	SDL_SetRenderTarget(this->ren, this->render);
 	SDL_RenderCopy(this->ren, this->pattern, NULL, NULL);
 
+
 	for (int32_t i = 0; i < this->layers.size(); ++i) {
 		if (layerToUpdateIdx == i) {
 			SDL_UpdateTexture(this->layers[i]->tex, NULL, this->layers[i]->pixels, this->dims[0] * sizeof(Pixel));
 		}
+	  SDL_SetTextureAlphaMod(this->layers[i]->tex, this->layers[i]->alpha * 255);
 		SDL_RenderCopy(this->ren, this->layers[i]->tex, NULL, NULL);
 	}
 
