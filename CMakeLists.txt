@@ -41,6 +41,8 @@ if(APPLE AND BUILD_APPLE_BUNDLE)
 		MACOSX_BUNDLE_ICON_FILE "csprite.icns"               # CFBundleIconFile
 		MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/data/Info.plist
 	)
+elseif(WIN32)
+	add_executable(csprite WIN32 ${SRC_FILES})
 else()
 	add_executable(csprite ${SRC_FILES})
 endif()
