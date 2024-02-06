@@ -28,7 +28,6 @@ using Vector = std::vector<Type>;
 #define GEN_RECT_STRUCT(name, type) \
 	struct name { \
 		type x, y, w, h; \
-		name& operator = (const name& rhs); \
 		bool operator == (const name& rhs) const; \
 		bool operator != (const name& rhs) const; \
 	}
