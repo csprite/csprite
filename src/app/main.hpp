@@ -5,20 +5,19 @@
 #include "types.hpp"
 #include "doc/doc.hpp"
 #include "palette/palette.hpp"
+#include "tools/ToolManager.hpp"
 
 struct DocumentState {
-	Pixel SelectedColor = { 255, 255, 255, 255 };
-	u16 PaletteIndex = 0;
 	Palette palette;
-
-	u32 ZoomLevel = 4;
-	u16 SelectedLayer = 0;
+	u16 PaletteIndex = 0;
 
 	Doc* doc = nullptr;
 	String FilePath = "";
+
+	Tool::Manager tManager;
 };
 
-void ZoomNCenterVP(u32 ZoomLevel, Doc& d);
-void AdjustZoom(bool Increase, u32& ZoomLevel, Doc& d);
+inline void ZoomNCenterVP(Tool::Manager& mgr, const Doc& doc);
+inline void AdjustZoom(bool Increase, Tool::Manager& mgr, const Doc& doc);
 
 #endif // CSP_MAIN_HPP_INCLUDED_
