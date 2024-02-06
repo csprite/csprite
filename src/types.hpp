@@ -36,6 +36,12 @@ using Vector = std::vector<Type>;
 GEN_RECT_STRUCT(RectI32, i32);
 GEN_RECT_STRUCT(RectF32, f32);
 
+#define GEN_VECT_STRUCT(name, type) \
+	struct name { type x, y; }
+
+GEN_VECT_STRUCT(VecI32, i32);
+GEN_VECT_STRUCT(VecF32, f32);
+
 // Clamps "a" to the min & max value
 #define CLAMP_NUM(a, min, max) \
 	((a <= min ? min : a ) >= max ? max : (a <= min ? min : a))

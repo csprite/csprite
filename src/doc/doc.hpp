@@ -1,3 +1,4 @@
+#include <cstddef>
 #ifndef CSP_DOC_DOC_HPP_INCLUDED_
 #define CSP_DOC_DOC_HPP_INCLUDED_ 1
 #pragma once
@@ -21,7 +22,6 @@ struct Doc {
 	/* this is stored as pointer because it can be optional and not initialized
 	   if rendering without initializing a graphics context or a window */
 	ImBase::Texture* tex = nullptr;
-	RectF32 viewport = { 0, 0, 0, 0 };
 
 	/* headless means no calls to any graphics apis or windows will be done
 	   as they are not available. */
