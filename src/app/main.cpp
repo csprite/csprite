@@ -9,7 +9,6 @@
 #include "assets/assets.h"
 #include "imbase/window.hpp"
 #include "imbase/launcher.hpp"
-#include "tools/tools.hpp"
 #include "pixel/pixel.hpp"
 #include "palette/palette.hpp"
 #include "doc/doc.hpp"
