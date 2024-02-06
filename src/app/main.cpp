@@ -465,10 +465,10 @@ int main() {
 }
 
 inline void ZoomNCenterVP(Tool::Manager& mgr, const Doc& doc) {
-	mgr.viewport.x = ImGui::GetIO().DisplaySize.x / 2 - (float)doc.w * mgr.viewportScale / 2;
-	mgr.viewport.y = ImGui::GetIO().DisplaySize.y / 2 - (float)doc.h * mgr.viewportScale / 2;
-	mgr.viewport.w = doc.w * mgr.viewportScale;
-	mgr.viewport.h = doc.h * mgr.viewportScale;
+	mgr.UpdateViewportScale(doc);
+
+	mgr.viewport.x = (ImGui::GetIO().DisplaySize.x / 2) - (mgr.viewportScale / 2);
+	mgr.viewport.y = (ImGui::GetIO().DisplaySize.y / 2) - (mgr.viewportScale / 2);
 }
 
 void AdjustZoom(bool Increase, Tool::Manager& mgr, const Doc& doc) {
