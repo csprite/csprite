@@ -6,7 +6,8 @@
 #include "pixel/pixel.hpp"
 
 namespace Tool {
-	void Draw(
+	// Returns Dirty Area with Top Left & Bottom Right Coords
+	RectI32 Draw(
 		u16 x, u16 y, u16 w, u16 h,
 		bool isRounded, i32 strokeSize,
 		const Pixel& strokeColor, Pixel* pixels
