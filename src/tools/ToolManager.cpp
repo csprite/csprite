@@ -8,18 +8,18 @@ void Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
     MousePosDown = { x, y };
 	MousePosLast = { x, y };
 
-    VecI32 MousePosRel = {
-        (i32)((x - viewport.x) / viewportScale),
-        (i32)((y - viewport.y) / viewportScale)
-    };
-
 	switch (currTool) {
-		case BRUSH: {
-			Tool::Draw(MousePosRel.x, MousePosRel.y, doc.w, doc.h, isRounded, brushSize, primaryColor, doc.layers[0]->pixels);
-			break;
-		}
+		case BRUSH:
 		case ERASER: {
-			Tool::Draw(MousePosRel.x, MousePosRel.y, doc.w, doc.h, isRounded, brushSize, Pixel{ 0, 0, 0, 0 }, doc.layers[0]->pixels);
+			VecI32 MousePosRel = {
+				(i32)((x - viewport.x) / viewportScale),
+				(i32)((y - viewport.y) / viewportScale)
+			};
+			Tool::Draw(
+				MousePosRel.x, MousePosRel.y, doc.w, doc.h,
+				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
+				doc.layers[0]->pixels
+			);
 			break;
 		}
 		case NONE:
@@ -30,25 +30,23 @@ void Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
 }
 
 void Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
-    VecI32 MousePosRel = {
-        (i32)((x - viewport.x) / viewportScale),
-        (i32)((y - viewport.y) / viewportScale)
-    };
-
 	switch (currTool) {
-		case BRUSH: {
-			Tool::Draw(MousePosRel.x, MousePosRel.y, doc.w, doc.h, isRounded, brushSize, primaryColor, doc.layers[0]->pixels);
-			break;
-		}
+		case BRUSH:
 		case ERASER: {
-			Tool::Draw(MousePosRel.x, MousePosRel.y, doc.w, doc.h, isRounded, brushSize, Pixel{ 0, 0, 0, 0 }, doc.layers[0]->pixels);
+			VecI32 MousePosRel = {
+				(i32)((x - viewport.x) / viewportScale),
+				(i32)((y - viewport.y) / viewportScale)
+			};
+			Tool::Draw(
+				MousePosRel.x, MousePosRel.y, doc.w, doc.h,
+				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
+				doc.layers[0]->pixels
+			);
 			break;
 		}
 		case PAN: {
-			if (MousePosLast.x != INT_MIN && MousePosLast.y != INT_MAX) {
-				viewport.x += x - MousePosLast.x;
-				viewport.y += y - MousePosLast.y;
-			}
+			viewport.x += x - MousePosLast.x;
+			viewport.y += y - MousePosLast.y;
 			break;
 		}
 		case NONE: {
@@ -60,18 +58,18 @@ void Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
 }
 
 void Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
-    VecI32 MousePosRel = {
-        (i32)((x - viewport.x) / viewportScale),
-        (i32)((y - viewport.y) / viewportScale)
-    };
-
 	switch (currTool) {
-		case BRUSH: {
-			Tool::Draw(MousePosRel.x, MousePosRel.y, doc.w, doc.h, isRounded, brushSize, primaryColor, doc.layers[0]->pixels);
-			break;
-		}
+		case BRUSH:
 		case ERASER: {
-			Tool::Draw(MousePosRel.x, MousePosRel.y, doc.w, doc.h, isRounded, brushSize, Pixel{ 0, 0, 0, 0 }, doc.layers[0]->pixels);
+			VecI32 MousePosRel = {
+				(i32)((x - viewport.x) / viewportScale),
+				(i32)((y - viewport.y) / viewportScale)
+			};
+			Tool::Draw(
+				MousePosRel.x, MousePosRel.y, doc.w, doc.h,
+				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
+				doc.layers[0]->pixels
+			);
 			break;
 		}
 		case NONE:
@@ -79,9 +77,6 @@ void Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
 			break;
 		}
 	}
-
-	MousePosDown = { INT_MIN, INT_MIN };
-	MousePosLast = { INT_MIN, INT_MIN };
 }
 
 void Manager::UpdateViewportScale(const Doc& doc) {

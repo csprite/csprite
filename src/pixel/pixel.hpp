@@ -30,14 +30,6 @@
 struct Pixel {
 	u8 r = 0, g = 0, b = 0, a = 0;
 
-	inline Pixel& operator = (const Pixel& rhs) {
-		r = rhs.r;
-		g = rhs.g;
-		b = rhs.b;
-		a = rhs.a;
-		return *this;
-	}
-
 	inline operator ImVec4() {
 		return { r / 255.f, g / 255.f, b / 255.f, a / 255.f };
 	}

@@ -36,6 +36,8 @@ namespace Tool {
 
 		f32     viewportScale = 5; // Min Zoom 0.15
 		RectF32 viewport; // viewport position & scaled size
+
+		// recalculate Viewport position & size after `viewportScale` changes
 		void UpdateViewportScale(const Doc& doc);
 
 		void onMouseDown(i32 x, i32 y, Doc& doc);
@@ -43,8 +45,8 @@ namespace Tool {
 		void onMouseUp(i32 x, i32 y, Doc& doc);
 
 	private:
-		VecI32 MousePosDown = { INT_MIN, INT_MIN };
-		VecI32 MousePosLast = { INT_MIN, INT_MIN };
+		VecI32 MousePosDown = { 0, 0 };
+		VecI32 MousePosLast = { 0, 0 };
 	};
 }
 
