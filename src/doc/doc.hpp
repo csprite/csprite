@@ -34,8 +34,9 @@ struct Doc {
 	bool CreateNew(u16 w, u16 h, bool headless = false);
 	void Render(RectI32& dirtyArea);
 
+	// Only Adds/Removes The Layer, Calling Render() is still Upto You.
 	void AddLayer(const char* name);
-	void RemoveLayer(u16 index); // you need to call Render() yourself after this.
+	void RemoveLayer(u16 index);
 };
 
 #endif // CSP_DOC_DOC_HPP_INCLUDED_
