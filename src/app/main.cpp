@@ -82,7 +82,7 @@ int main() {
 	dState.doc = new Doc();
 	dState.doc->CreateNew(60, 40);
 	dState.doc->AddLayer("New Layer");
-	RectI32 dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
+	RectI32 dirtyArea = { 0, 0, dState.doc->w - 1, dState.doc->h - 1 };
 
 	// Initial Canvas Position & Size
 	dState.tManager.viewport.x = io.DisplaySize.x / 2 - (float)dState.doc->w * dState.tManager.viewportScale / 2;
@@ -97,6 +97,7 @@ int main() {
 
 	imgui_addons::ImGuiFileBrowser FileDialog;
 
+	ImVec2 MousePosRel;
 	bool ShowNewDocumentWindow = false;
 	bool ShowOpenFileWindow = false;
 	bool ShowAboutWindow = false;
@@ -337,20 +338,20 @@ int main() {
 			switch (dState.tManager.currTool) {
 				case Tool::Type::BRUSH:
 					if (dState.tManager.isRounded) {
-						ImGui::Text("Circle Brush - (Size: %u) | Zoom: %fx", dState.tManager.brushSize, dState.tManager.viewportScale);
+						ImGui::Text("Circle Brush - (Size: %u) | Zoom: %.2f | (%d, %d)", dState.tManager.brushSize, dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					} else {
-						ImGui::Text("Square Brush - (Size: %u) | Zoom: %fx", dState.tManager.brushSize, dState.tManager.viewportScale);
+						ImGui::Text("Square Brush - (Size: %u) | Zoom: %.2f | (%d, %d)", dState.tManager.brushSize, dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					}
 					break;
 				case Tool::Type::ERASER:
 					if (dState.tManager.isRounded) {
-						ImGui::Text("Circle Eraser - (Size: %u) | Zoom: %fx", dState.tManager.brushSize, dState.tManager.viewportScale);
+						ImGui::Text("Circle Eraser - (Size: %u) | Zoom: %.2f | (%d, %d)", dState.tManager.brushSize, dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					} else {
-						ImGui::Text("Square Eraser - (Size: %u) | Zoom: %fx", dState.tManager.brushSize, dState.tManager.viewportScale);
+						ImGui::Text("Square Eraser - (Size: %u) | Zoom: %.2f | (%d, %d)", dState.tManager.brushSize, dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					}
 					break;
 				case Tool::Type::PAN:
-					ImGui::Text("Panning | Zoom: %fx", dState.tManager.viewportScale);
+					ImGui::Text("Panning | Zoom: %.2f | (%d, %d)", dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					break;
 				default: break;
 			}
@@ -375,7 +376,6 @@ int main() {
 				{ dState.tManager.viewport.w + dState.tManager.viewport.x, dState.tManager.viewport.h + dState.tManager.viewport.y }
 			);
 
-			ImVec2 MousePosRel;
 			MousePosRel.x = (i32)((io.MousePos.x - dState.tManager.viewport.x) / dState.tManager.viewportScale);
 			MousePosRel.y = (i32)((io.MousePos.y - dState.tManager.viewport.y) / dState.tManager.viewportScale);
 
@@ -437,21 +437,21 @@ int main() {
 
 			dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 
-			bool render = false;
 			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-				dState.tManager.onMouseDown(io.MousePos.x, io.MousePos.y, *dState.doc);
-				render = true;
+				dirtyArea = dState.tManager.onMouseDown(io.MousePos.x, io.MousePos.y, *dState.doc);
 			}
 			if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.MouseDelta.x != 0 && io.MouseDelta.y != 0) {
-				dState.tManager.onMouseMove(io.MousePos.x, io.MousePos.y, *dState.doc);
-				render = true;
+				dirtyArea = dState.tManager.onMouseMove(io.MousePos.x, io.MousePos.y, *dState.doc);
 			}
 			if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-				dState.tManager.onMouseUp(io.MousePos.x, io.MousePos.y, *dState.doc);
-				render = true;
+				dirtyArea = dState.tManager.onMouseUp(io.MousePos.x, io.MousePos.y, *dState.doc);
 			}
-			if (render) {
+
+			// Width & Height are set if change occurs
+			if (dirtyArea.w > 0 && dirtyArea.h > 0) {
 				dState.doc->Render(dirtyArea);
+				dirtyArea.w = 0;
+				dirtyArea.h = 0;
 			}
 		}
 

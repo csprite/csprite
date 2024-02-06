@@ -32,6 +32,8 @@ struct Doc {
 	inline std::size_t GetTotalPixels() { return w * h; }
 
 	bool CreateNew(u16 w, u16 h, bool headless = false);
+
+	// Dirty Area Rect Containing Top Left & Bottom Right coords
 	void Render(RectI32& dirtyArea);
 
 	// Only Adds/Removes The Layer, Calling Render() is still Upto You.

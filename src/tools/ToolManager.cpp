@@ -1,12 +1,14 @@
+#include "types.hpp"
 #include "tools/tools.hpp"
 #include "tools/ToolManager.hpp"
 #include "doc/doc.hpp"
 
 using namespace Tool;
 
-void Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
+RectI32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
     MousePosDown = { x, y };
 	MousePosLast = { x, y };
+	RectI32 dirty = { 0, 0, 0, 0 };
 
 	switch (currTool) {
 		case BRUSH:
@@ -15,7 +17,7 @@ void Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
 				(i32)((x - viewport.x) / viewportScale),
 				(i32)((y - viewport.y) / viewportScale)
 			};
-			Tool::Draw(
+			dirty = Tool::Draw(
 				MousePosRel.x, MousePosRel.y, doc.w, doc.h,
 				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
 				doc.layers[0]->pixels
@@ -27,9 +29,13 @@ void Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
 			break;
 		}
 	}
+
+	return dirty;
 }
 
-void Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
+RectI32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
+	RectI32 dirty = { 0, 0, 0, 0 };
+
 	switch (currTool) {
 		case BRUSH:
 		case ERASER: {
@@ -37,7 +43,7 @@ void Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
 				(i32)((x - viewport.x) / viewportScale),
 				(i32)((y - viewport.y) / viewportScale)
 			};
-			Tool::Draw(
+			dirty = Tool::Draw(
 				MousePosRel.x, MousePosRel.y, doc.w, doc.h,
 				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
 				doc.layers[0]->pixels
@@ -55,9 +61,12 @@ void Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
 	}
 
 	MousePosLast = { x, y };
+	return dirty;
 }
 
-void Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
+RectI32 Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
+	RectI32 dirty = { 0, 0, 0, 0 };
+
 	switch (currTool) {
 		case BRUSH:
 		case ERASER: {
@@ -65,7 +74,7 @@ void Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
 				(i32)((x - viewport.x) / viewportScale),
 				(i32)((y - viewport.y) / viewportScale)
 			};
-			Tool::Draw(
+			dirty = Tool::Draw(
 				MousePosRel.x, MousePosRel.y, doc.w, doc.h,
 				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
 				doc.layers[0]->pixels
@@ -77,6 +86,8 @@ void Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
 			break;
 		}
 	}
+
+	return dirty;
 }
 
 void Manager::UpdateViewportScale(const Doc& doc) {
