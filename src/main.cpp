@@ -407,7 +407,7 @@ int main(int argc, char* argv[]) {
 						REDO();
 				}
 				if (ImGui::MenuItem("Draw/Erase/Fill/InkDropper", "Left Mouse", false, 0)) {
-					
+
 				}
 				ImGui::EndMenu();
 			}
@@ -796,14 +796,16 @@ int main(int argc, char* argv[]) {
 				}
 			}
 
+			ImGui::SliderFloat("Alpha", &CanvasLayerMgr->layers[CanvasLayerMgr->CurrentLayerIdx]->alpha, 0.0f, 1.0f);
+
 			int move_from = -1, move_to = -1;
 			for (int32_t i = 0; i < CanvasLayerMgr->layers.size(); ++i) {
 				if (ImGui::Selectable(CanvasLayerMgr->layers[i]->name.c_str(), CanvasLayerMgr->CurrentLayerIdx == i, ImGuiSelectableFlags_AllowDoubleClick)) {
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
 						ShowLayerRenameWindow = true;
-					} else {
-						CanvasLayerMgr->SetCurrentLayerIdx(i);
 					}
+
+					CanvasLayerMgr->SetCurrentLayerIdx(i);
 				}
 
 				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover | ImGuiDragDropFlags_SourceNoHoldToOpenOthers)) {
