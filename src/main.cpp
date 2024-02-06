@@ -803,10 +803,9 @@ int main(int argc, char* argv[]) {
 				if (ImGui::Selectable(CanvasLayerMgr->layers[i]->name.c_str(), CanvasLayerMgr->CurrentLayerIdx == i, ImGuiSelectableFlags_AllowDoubleClick)) {
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
 						ShowLayerRenameWindow = true;
-						CanvasLayerMgr->SetCurrentLayerIdx(i);
-					} else {
-						CanvasLayerMgr->SetCurrentLayerIdx(i);
 					}
+
+					CanvasLayerMgr->SetCurrentLayerIdx(i);
 				}
 
 				if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoDisableHover | ImGuiDragDropFlags_SourceNoHoldToOpenOthers)) {
