@@ -61,15 +61,7 @@ int main() {
 	ImBase::Window::NewFrame();
 	ImBase::Window::EndFrame();
 
-	// Mouse Position On Window
-	ImVec2 MousePos; // mouse position
-	ImVec2 MousePosLast; // mouse position last frame
-
-	ImVec2 MousePosRel; // mouse position relative to canvas
-	ImVec2 MousePosRelLast; // mouse position relative to canvas last frame
-
 	DocumentState dState;
-
 	dState.palette.Add(Pixel{ 0,   0,   0,   255 });
 	dState.palette.Add(Pixel{ 29,  43,  83,  255 });
 	dState.palette.Add(Pixel{ 126, 37,  83,  255 });
@@ -384,14 +376,11 @@ int main() {
 				{ dState.tManager.viewport.w + dState.tManager.viewport.x, dState.tManager.viewport.h + dState.tManager.viewport.y }
 			);
 
-			MousePosLast = MousePos;
-			MousePos = io.MousePos;
-			MousePosRelLast = MousePosRel;
-			MousePosRel.x = (i32)((MousePos[0] - dState.tManager.viewport.x) / dState.tManager.viewportScale);
-			MousePosRel.y = (i32)((MousePos[1] - dState.tManager.viewport.y) / dState.tManager.viewportScale);
+			ImVec2 MousePosRel;
+			MousePosRel.x = (i32)((io.MousePos.x - dState.tManager.viewport.x) / dState.tManager.viewportScale);
+			MousePosRel.y = (i32)((io.MousePos.y - dState.tManager.viewport.y) / dState.tManager.viewportScale);
 
-			bool MouseInBounds = MousePosRel.x >= 0 && MousePosRel.y >= 0 &&
-			                     MousePosRel.x < dState.doc->w && MousePosRel.y < dState.doc->h;
+			const bool MouseInBounds = MousePosRel.x >= 0 && MousePosRel.y >= 0 && MousePosRel.x < dState.doc->w && MousePosRel.y < dState.doc->h;
 
 			if (MouseInBounds && isMainWindowHovered) {
 				ImGui::SetMouseCursor(ImGuiMouseCursor_None);
@@ -449,16 +438,20 @@ int main() {
 
 			dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 
+			bool render = false;
 			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
 				dState.tManager.onMouseDown(io.MousePos.x, io.MousePos.y, *dState.doc);
-				dState.doc->Render(dirtyArea);
+				render = true;
 			}
 			if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.MouseDelta.x != 0 && io.MouseDelta.y != 0) {
 				dState.tManager.onMouseMove(io.MousePos.x, io.MousePos.y, *dState.doc);
-				dState.doc->Render(dirtyArea);
+				render = true;
 			}
 			if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
 				dState.tManager.onMouseUp(io.MousePos.x, io.MousePos.y, *dState.doc);
+				render = true;
+			}
+			if (render) {
 				dState.doc->Render(dirtyArea);
 			}
 		}
