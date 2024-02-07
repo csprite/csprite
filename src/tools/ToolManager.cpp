@@ -65,20 +65,9 @@ RectI32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
 }
 
 RectI32 Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
-	RectI32 dirty = { 0, 0, 0, 0 };
-
 	switch (currTool) {
 		case BRUSH:
 		case ERASER: {
-			VecI32 MousePosRel = {
-				(i32)((x - viewport.x) / viewportScale),
-				(i32)((y - viewport.y) / viewportScale)
-			};
-			dirty = Tool::Draw(
-				MousePosRel.x, MousePosRel.y, doc.w, doc.h,
-				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
-				doc.layers[0]->pixels
-			);
 			break;
 		}
 		case NONE:
@@ -87,7 +76,7 @@ RectI32 Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
 		}
 	}
 
-	return dirty;
+	return { 0, 0, 0, 0 };
 }
 
 void Manager::UpdateViewportScale(const Doc& doc) {
