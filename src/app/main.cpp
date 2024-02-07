@@ -274,10 +274,11 @@ int main() {
 		ImGui::SetNextWindowSize({ 200, io.DisplaySize.y - (mBarPos.y + mBarSize.y)}, ImGuiCond_Once);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 		BEGIN_WINDOW("Color Palette", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar)
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 2, 2 });
 			for (auto i = 0UL; i < dState.palette.Colors.size(); i++) {
 				ImGui::PushID(&dState.palette[i]);
 
-				if (ImGui::ColorButton(dState.PaletteIndex == i ? "Selected Color" : "Color", dState.palette[i])) {
+				if (ImGui::ColorButton(dState.PaletteIndex == i ? "Selected Color" : "Color", dState.palette[i], ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoBorder, { ImGui::GetFontSize() * 1.4f, ImGui::GetFontSize() * 1.4f })) {
 					dState.PaletteIndex = i;
 					dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 				}
@@ -297,14 +298,14 @@ int main() {
 
 					/* This Value Will Be Subtracted From Triangle's Positions
 					   Because Of Some Extra "Marginal" Space The Button Takes */
-					#define NEGATIVE_OFFSET 1.0f
+					#define NEGATIVE_OFFSET 0.5f
 					ImGui::GetWindowDrawList()->AddTriangleFilled(
 						ImVec2(
 							rMax.x - NEGATIVE_OFFSET,
-							rMin.y + (rSz.y / 2.1f) - NEGATIVE_OFFSET
+							rMin.y + (rSz.y / 2.5f) - NEGATIVE_OFFSET
 						),
 						ImVec2(
-							rMin.x + (rSz.x / 2.1f) - NEGATIVE_OFFSET,
+							rMin.x + (rSz.x / 2.5f) - NEGATIVE_OFFSET,
 							rMax.y - NEGATIVE_OFFSET
 						),
 						ImVec2(
@@ -326,6 +327,7 @@ int main() {
 
 				ImGui::PopID();
 			};
+			ImGui::PopStyleVar(1); // ImGuiStyleVar_ItemSpacing
 			LeftWinPos = ImGui::GetWindowPos();
 			LeftWinSize = ImGui::GetWindowSize();
 		END_WINDOW()
