@@ -8,13 +8,10 @@
 #include "tools/ToolManager.hpp"
 
 struct DocumentState {
+	Doc doc;
+	Tool::Manager tManager;
 	Palette palette;
 	u16 PaletteIndex = 0;
-
-	Doc doc;
-	String FilePath = "";
-
-	Tool::Manager tManager;
 };
 
 inline void ZoomNCenterVP(Tool::Manager& mgr, const Doc& doc);
