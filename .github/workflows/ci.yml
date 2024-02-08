@@ -87,12 +87,16 @@ jobs:
         export LDFLAGS=${{ matrix.flags }}
         make gen-assets
         make all GENERATOR=Ninja BUILD_TYPE=Release NUM_JOBS=4
+        cp -r ./assets/languages/ ./languages
+        cp -r ./build/csprite ./csprite
 
     - name: Generate Build Files & Build (Windows)
       if: ${{ matrix.os == 'windows-2022' }}
       run: |
         make gen-assets CXX=clang++
         make all GENERATOR="${{ matrix.gen_cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.arch }}" -T "ClangCL"'
+        xcopy ./assets/languages/ ./languages /s /e
+        xcopy ./build/Release/csprite.exe ./csprite.exe /s /e
 
     - name: Generate Build Files, Build & Zip (MacOS)
       if: ${{ matrix.os == 'macos-12' }}
@@ -107,8 +111,8 @@ jobs:
         name: linux-${{ matrix.arch }}
         if-no-files-found: error
         path: |
-          ./build/csprite
-          ./assets
+          ./csprite
+          ./languages/
 
     - name: Upload artifacts (Windows)
       uses: actions/upload-artifact@v3
@@ -117,8 +121,8 @@ jobs:
         name: win-${{ matrix.arch }}
         if-no-files-found: error
         path: |
-          ./build/Release/csprite.exe
-          ./assets
+          ./csprite.exe
+          ./languages
 
     - name: Upload Artifacts (MacOS)
       uses: actions/upload-artifact@v3
@@ -128,7 +132,6 @@ jobs:
         if-no-files-found: error
         path: |
           ./build/Release/csprite.app
-          ./assets
 
   update-contributor-collage:
     needs: [build]
