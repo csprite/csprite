@@ -23,8 +23,7 @@ String FileSystem::GetConfigDir() {
 		fullPath = String(configHome) + PATH_SEP "csprite";
 	}
 #elif defined(TARGET_WINDOWS)
-	const char* appdata = getenv("APPDATA");
-	fullPath = String(appdata) + PATH_SEP "csprite";
+	fullPath = "." PATH_SEP;
 #elif defined(TARGET_APPLE)
 	const char* home = getenv("HOME");
 	fullPath = String(home) + PATH_SEP "Library/Application Support";
