@@ -1,6 +1,5 @@
-#include <iostream>
+#include "image/parser.hpp"
 
-#include "doc/parser/parser.hpp"
 #include "stb_image.h"
 #include "log/log.h"
 

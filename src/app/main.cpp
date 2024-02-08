@@ -12,7 +12,7 @@
 #include "pixel/pixel.hpp"
 #include "palette/palette.hpp"
 #include "doc/doc.hpp"
-#include "doc/parser/parser.hpp"
+#include "image/parser.hpp"
 #include "filebrowser/filebrowser.hpp"
 #include "i18n/strings.hpp"
 #include "assets/manager.hpp"
