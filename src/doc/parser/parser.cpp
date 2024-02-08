@@ -1,27 +1,25 @@
 #include <iostream>
 
-#include "types.hpp"
 #include "doc/parser/parser.hpp"
 #include "stb_image.h"
 #include "log/log.h"
 
-Doc* Parser::ParseImageFile(const char *const filePath) {
+bool Parser::ParseImageFile(Doc& doc, const String filePath) {
 	i32 width = 0, height = 0, c = 0;
-	u8* image = stbi_load(filePath, &width, &height, &c, 4);
+	u8* image = stbi_load(filePath.c_str(), &width, &height, &c, 4);
 
 	if (image == NULL || width < 1 || height < 1) {
 		log_error("stbi_load(...) - %s", stbi_failure_reason());
-		return nullptr;
+		return false;
 	}
 
-	Doc* d = new Doc();
-	d->CreateNew(width, height);
-	d->AddLayer("New Layer");
-	DocLayer* dL = d->layers[0];
+	doc.Create(width, height);
+	doc.image.AddLayer("New Layer");
+	Layer& layer = doc.image.Layers[0];
 
 	for (i32 y = 0; y < height; ++y) {
 		for (i32 x = 0; x < width; ++x) {
-			Pixel& p = dL->pixels[(y * width) + x];
+			Pixel& p = layer.pixels[(y * width) + x];
 			u8* pSrc = &image[((y * width) + x) * 4];
 			p.r = *(pSrc + 0);
 			p.g = *(pSrc + 1);
@@ -33,6 +31,6 @@ Doc* Parser::ParseImageFile(const char *const filePath) {
 	stbi_image_free(image);
 	image = nullptr;
 
-	return d;
+	return true;
 }
 

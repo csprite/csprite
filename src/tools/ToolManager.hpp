@@ -40,9 +40,9 @@ namespace Tool {
 		// recalculate Viewport position & size after `viewportScale` changes
 		void UpdateViewportScale(const Doc& doc);
 
-		RectI32 onMouseDown(i32 x, i32 y, Doc& doc);
-		RectI32 onMouseMove(i32 x, i32 y, Doc& doc);
-		RectI32 onMouseUp(i32 x, i32 y, Doc& doc);
+		RectU32 onMouseDown(i32 x, i32 y, Doc& doc);
+		RectU32 onMouseMove(i32 x, i32 y, Doc& doc);
+		RectU32 onMouseUp(i32 x, i32 y, Doc& doc);
 
 	private:
 		VecI32 MousePosDown = { 0, 0 };

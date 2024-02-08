@@ -5,10 +5,10 @@
 
 using namespace Tool;
 
-RectI32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
+RectU32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
     MousePosDown = { x, y };
 	MousePosLast = { x, y };
-	RectI32 dirty = { 0, 0, 0, 0 };
+	RectU32 dirty = { 0, 0, 0, 0 };
 
 	switch (currTool) {
 		case BRUSH:
@@ -18,9 +18,9 @@ RectI32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
 				(i32)((y - viewport.y) / viewportScale)
 			};
 			dirty = Tool::Draw(
-				MousePosRel.x, MousePosRel.y, doc.w, doc.h,
+				MousePosRel.x, MousePosRel.y, doc.image.w, doc.image.h,
 				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
-				doc.layers[0]->pixels
+				doc.image.Layers[0].pixels
 			);
 			break;
 		}
@@ -33,8 +33,8 @@ RectI32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
 	return dirty;
 }
 
-RectI32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
-	RectI32 dirty = { 0, 0, 0, 0 };
+RectU32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
+	RectU32 dirty = { 0, 0, 0, 0 };
 
 	switch (currTool) {
 		case BRUSH:
@@ -44,9 +44,9 @@ RectI32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
 				(i32)((y - viewport.y) / viewportScale)
 			};
 			dirty = Tool::Draw(
-				MousePosRel.x, MousePosRel.y, doc.w, doc.h,
+				MousePosRel.x, MousePosRel.y, doc.image.w, doc.image.h,
 				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
-				doc.layers[0]->pixels
+				doc.image.Layers[0].pixels
 			);
 			break;
 		}
@@ -64,7 +64,7 @@ RectI32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
 	return dirty;
 }
 
-RectI32 Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
+RectU32 Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
 	switch (currTool) {
 		case BRUSH:
 		case ERASER: {
@@ -87,13 +87,13 @@ void Manager::UpdateViewportScale(const Doc& doc) {
 		(viewport.w / 2) + viewport.x, (viewport.h / 2) + viewport.y
 	};
 	VecF32 NewRectCenter = {
-		(doc.w * viewportScale / 2) + viewport.x,
-		(doc.h * viewportScale / 2) + viewport.y
+		(doc.image.w * viewportScale / 2) + viewport.x,
+		(doc.image.h * viewportScale / 2) + viewport.y
 	};
 	viewport.x -= NewRectCenter.x - CurrRectCenter.x;
 	viewport.y -= NewRectCenter.y - CurrRectCenter.y;
 
 	// Update The Size Of The ViewPort
-	viewport.w = doc.w * viewportScale;
-	viewport.h = doc.h * viewportScale;
+	viewport.w = doc.image.w * viewportScale;
+	viewport.h = doc.image.h * viewportScale;
 }
