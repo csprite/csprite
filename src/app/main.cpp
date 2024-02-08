@@ -184,7 +184,7 @@ int main() {
 			if (d != nullptr) {
 				delete dState.doc;
 				dState.doc = d;
-				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
+				dirtyArea = { 0, 0, dState.doc->w - 1, dState.doc->h - 1 };
 				ZoomNCenterVP(dState.tManager, *dState.doc);
 				dState.doc->Render(dirtyArea);
 			}
@@ -202,7 +202,7 @@ int main() {
 				dState.doc = new Doc();
 				dState.doc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
 				dState.doc->AddLayer("New Layers");
-				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
+				dirtyArea = { 0, 0, dState.doc->w - 1, dState.doc->h - 1 };
 
 				ZoomNCenterVP(dState.tManager, *dState.doc);
 				ImGui::CloseCurrentPopup();
