@@ -53,14 +53,14 @@ Doc::~Doc() {
 }
 
 void Doc::Render(RectI32& dirtyArea) {
-	for (auto y = dirtyArea.y; y <= dirtyArea.h; ++y) {
+	for (auto y = dirtyArea.y; y < dirtyArea.h; ++y) {
 		std::memset(&finalRender[(y * w) + dirtyArea.x], 0, sizeof(Pixel) * (dirtyArea.w - dirtyArea.x));
 	}
 
 	bool firstPass = true;
 	for (std::size_t j = 0; j < layers.size(); ++j) {
-		for (i32 y = dirtyArea.y; y <= dirtyArea.h; y++) {
-			for (i32 x = dirtyArea.x; x <= dirtyArea.w; x++) {
+		for (i32 y = dirtyArea.y; y < dirtyArea.h; y++) {
+			for (i32 x = dirtyArea.x; x < dirtyArea.w; x++) {
 				i32 idx = (y * w) + x;
 				Pixel& frontPixel = layers[j]->pixels[idx];
 				Pixel& backPixel = finalRender[idx];
