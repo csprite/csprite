@@ -82,7 +82,7 @@ int main() {
 	dState.doc = new Doc();
 	dState.doc->CreateNew(60, 40);
 	dState.doc->AddLayer("New Layer");
-	RectI32 dirtyArea = { 0, 0, dState.doc->w - 1, dState.doc->h - 1 };
+	RectI32 dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
 
 	// Initial Canvas Position & Size
 	dState.tManager.viewport.x = io.DisplaySize.x / 2 - (float)dState.doc->w * dState.tManager.viewportScale / 2;
@@ -184,7 +184,7 @@ int main() {
 			if (d != nullptr) {
 				delete dState.doc;
 				dState.doc = d;
-				dirtyArea = { 0, 0, dState.doc->w - 1, dState.doc->h - 1 };
+				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
 				ZoomNCenterVP(dState.tManager, *dState.doc);
 				dState.doc->Render(dirtyArea);
 			}
@@ -202,7 +202,7 @@ int main() {
 				dState.doc = new Doc();
 				dState.doc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
 				dState.doc->AddLayer("New Layers");
-				dirtyArea = { 0, 0, dState.doc->w - 1, dState.doc->h - 1 };
+				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
 
 				ZoomNCenterVP(dState.tManager, *dState.doc);
 				ImGui::CloseCurrentPopup();
