@@ -95,8 +95,8 @@ jobs:
       run: |
         make gen-assets CXX=clang++
         make all GENERATOR="${{ matrix.gen_cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.arch }}" -T "ClangCL"'
-        xcopy ./assets/languages/ ./languages /s /e
-        xcopy ./build/Release/csprite.exe ./csprite.exe /s /e
+        Copy-Item -Path ".\assets\languages\" -Destination ".\languages\" -Recurse
+        Copy-Item -Path ".\build\Release\csprite.exe" -Destination ".\csprite.exe" -Recurse
 
     - name: Generate Build Files, Build & Zip (MacOS)
       if: ${{ matrix.os == 'macos-12' }}
