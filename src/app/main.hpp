@@ -11,7 +11,7 @@ struct DocumentState {
 	Palette palette;
 	u16 PaletteIndex = 0;
 
-	Doc* doc = nullptr;
+	Doc doc;
 	String FilePath = "";
 
 	Tool::Manager tManager;

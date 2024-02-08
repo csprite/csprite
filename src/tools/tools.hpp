@@ -7,7 +7,7 @@
 
 namespace Tool {
 	// Returns Dirty Area with Top Left & Bottom Right Coords
-	RectI32 Draw(
+	RectU32 Draw(
 		u16 x, u16 y, u16 w, u16 h,
 		bool isRounded, i32 strokeSize,
 		const Pixel& strokeColor, Pixel* pixels

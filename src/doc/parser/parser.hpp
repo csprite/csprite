@@ -2,10 +2,11 @@
 #define CSP_DOC_PARSER_PARSER_HPP_INCLUDED_
 #pragma once
 
+#include "types.hpp"
 #include "doc/doc.hpp"
 
 namespace Parser {
-	Doc* ParseImageFile(const char* const filePath);
+	bool ParseImageFile(Doc& doc , const String filePath);
 }
 
 #endif // CSP_DOC_PARSER_PARSER_HPP_INCLUDED_

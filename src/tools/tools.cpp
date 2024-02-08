@@ -1,9 +1,9 @@
 #include "types.hpp"
 #include "tools/tools.hpp"
 
-RectI32 Tool::Draw(u16 x, u16 y, u16 w, u16 h, bool isRounded, i32 strokeSize, const Pixel &strokeColor, Pixel *pixels) {
+RectU32 Tool::Draw(u16 x, u16 y, u16 w, u16 h, bool isRounded, i32 strokeSize, const Pixel& strokeColor, Pixel* pixels) {
 	// top left is set to max value to trigger resetting it below
-	RectI32 dirty = { w, h, 0, 0 };
+	RectU32 dirty = { w, h, 0, 0 };
 
 	for (i32 dirY = -strokeSize / 2; dirY < strokeSize / 2 + 1; dirY++) {
 		for (i32 dirX = -strokeSize / 2; dirX < strokeSize / 2 + 1; dirX++) {

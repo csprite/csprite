@@ -1,4 +1,3 @@
-#include <cstddef>
 #ifndef CSP_DOC_DOC_HPP_INCLUDED_
 #define CSP_DOC_DOC_HPP_INCLUDED_ 1
 #pragma once
@@ -7,38 +6,28 @@
 #include "pixel/pixel.hpp"
 #include "imbase/texture.hpp"
 
-struct DocLayer {
-	String name;
-	Pixel* pixels = nullptr;
+#include "image/image.hpp"
+#include "image/blender.hpp"
 
-	~DocLayer();
-};
+// `Destroy()` resets the value to default, i.e. `nullptr`
+// Thus can be used to check if the struct is valid or not.
 
 struct Doc {
-	u16 w = 0, h = 0;
-	Vector<DocLayer*> layers;
-	Pixel* finalRender = nullptr;
+	Image image;
+	Pixel* render = nullptr;
+	ImBase::Texture* renderTex = nullptr;
 
-	/* this is stored as pointer because it can be optional and not initialized
-	   if rendering without initializing a graphics context or a window */
-	ImBase::Texture* tex = nullptr;
+	bool Create(u32 w, u32 h);
 
-	/* headless means no calls to any graphics apis or windows will be done
-	   as they are not available. */
-	bool headless = false;
+	// Blends The `image` to `render` & updates the `renderTex`
+	// Tip: read comment on `Blender::Blend` for more info about `dirtyArea`
+	inline void Render(const RectU32& dirtyArea) {
+		Blender::Blend(image, dirtyArea, render);
+		renderTex->Update((unsigned char*)render);
+	}
 
-	~Doc();
-
-	inline std::size_t GetTotalPixels() { return w * h; }
-
-	bool CreateNew(u16 w, u16 h, bool headless = false);
-
-	// Dirty Area Rect Containing Top Left & Bottom Right coords
-	void Render(RectI32& dirtyArea);
-
-	// Only Adds/Removes The Layer, Calling Render() is still Upto You.
-	void AddLayer(const char* name);
-	void RemoveLayer(u16 index);
+	void Destroy();
 };
 
 #endif // CSP_DOC_DOC_HPP_INCLUDED_
+
