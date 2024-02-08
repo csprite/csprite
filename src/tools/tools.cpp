@@ -24,8 +24,8 @@ RectI32 Tool::Draw(u16 x, u16 y, u16 w, u16 h, bool isRounded, i32 strokeSize, c
 
 				if (affectedX < dirty.x) dirty.x = affectedX < 0 ? 0 : affectedX;
 				if (affectedY < dirty.y) dirty.y = affectedY < 0 ? 0 : affectedY;
-				if (affectedX > dirty.w) dirty.w = affectedX > w ? w : affectedX;
-				if (affectedY > dirty.h) dirty.h = affectedY > h ? h : affectedY;
+				if (affectedX + 1 > dirty.w) dirty.w = affectedX > w ? w : affectedX + 1;
+				if (affectedY + 1 > dirty.h) dirty.h = affectedY > h ? h : affectedY + 1;
 			}
 		}
 	}
