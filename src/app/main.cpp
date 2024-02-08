@@ -79,21 +79,20 @@ int main() {
 	dState.palette.Add(Pixel{ 255, 204, 170, 255 });
 	dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 
-	dState.doc = new Doc();
-	dState.doc->CreateNew(60, 40);
-	dState.doc->AddLayer("New Layer");
-	RectI32 dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
+	dState.doc.Create(60, 40);
+	dState.doc.image.AddLayer("New Layer");
+	RectU32 dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
 
 	// Initial Canvas Position & Size
-	dState.tManager.viewport.x = io.DisplaySize.x / 2 - (float)dState.doc->w * dState.tManager.viewportScale / 2;
-	dState.tManager.viewport.y = io.DisplaySize.y / 2 - (float)dState.doc->h * dState.tManager.viewportScale / 2;
-	dState.tManager.viewport.w = dState.doc->w * dState.tManager.viewportScale;
-	dState.tManager.viewport.h = dState.doc->h * dState.tManager.viewportScale;
+	dState.tManager.viewport.x = io.DisplaySize.x / 2 - (float)dState.doc.image.w * dState.tManager.viewportScale / 2;
+	dState.tManager.viewport.y = io.DisplaySize.y / 2 - (float)dState.doc.image.h * dState.tManager.viewportScale / 2;
+	dState.tManager.viewport.w = dState.doc.image.w * dState.tManager.viewportScale;
+	dState.tManager.viewport.h = dState.doc.image.h * dState.tManager.viewportScale;
 
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
-	dState.doc->Render(dirtyArea);
-	ZoomNCenterVP(dState.tManager, *(dState.doc));
+	dState.doc.Render(dirtyArea);
+	ZoomNCenterVP(dState.tManager, dState.doc);
 
 	imgui_addons::ImGuiFileBrowser FileDialog;
 
@@ -180,13 +179,13 @@ int main() {
 			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
 			ImVec2(700, 310), ".png,.jpg,.jpeg,.bmp,.psd,.tga"
 		)) {
-			Doc* d = Parser::ParseImageFile(FileDialog.selected_path.c_str());
-			if (d != nullptr) {
-				delete dState.doc;
-				dState.doc = d;
-				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
-				ZoomNCenterVP(dState.tManager, *dState.doc);
-				dState.doc->Render(dirtyArea);
+			Doc newDoc;
+			if (Parser::ParseImageFile(newDoc, FileDialog.selected_path.c_str())) {
+				dState.doc.Destroy();
+				dState.doc = newDoc;
+				dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
+				ZoomNCenterVP(dState.tManager, dState.doc);
+				dState.doc.Render(dirtyArea);
 			}
 		}
 
@@ -198,13 +197,12 @@ int main() {
 			ImGui::InputInt(Lang[UISTR::Popup_NewDocument_HeightInput], &NEW_DIMS[1], 1, 1, 0);
 
 			if (ImGui::Button(Lang[UISTR::Popup_NewDocument_OkButton])) {
-				delete dState.doc;
-				dState.doc = new Doc();
-				dState.doc->CreateNew(NEW_DIMS[0], NEW_DIMS[1]);
-				dState.doc->AddLayer("New Layers");
-				dirtyArea = { 0, 0, dState.doc->w, dState.doc->h };
+				dState.doc.Destroy();
+				dState.doc.Create(NEW_DIMS[0], NEW_DIMS[1]);
+				dState.doc.image.AddLayer("New Layers");
+				dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
 
-				ZoomNCenterVP(dState.tManager, *dState.doc);
+				ZoomNCenterVP(dState.tManager, dState.doc);
 				ImGui::CloseCurrentPopup();
 			}
 			ImGui::SameLine();
@@ -373,7 +371,7 @@ int main() {
 				ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
 			);
 			ImGui::GetWindowDrawList()->AddImage(
-				reinterpret_cast<ImTextureID>(dState.doc->tex->id),
+				reinterpret_cast<ImTextureID>(dState.doc.renderTex->id),
 				{ dState.tManager.viewport.x, dState.tManager.viewport.y },
 				{ dState.tManager.viewport.w + dState.tManager.viewport.x, dState.tManager.viewport.h + dState.tManager.viewport.y }
 			);
@@ -381,7 +379,7 @@ int main() {
 			MousePosRel.x = (i32)((io.MousePos.x - dState.tManager.viewport.x) / dState.tManager.viewportScale);
 			MousePosRel.y = (i32)((io.MousePos.y - dState.tManager.viewport.y) / dState.tManager.viewportScale);
 
-			const bool MouseInBounds = MousePosRel.x >= 0 && MousePosRel.y >= 0 && MousePosRel.x < dState.doc->w && MousePosRel.y < dState.doc->h;
+			const bool MouseInBounds = MousePosRel.x >= 0 && MousePosRel.y >= 0 && MousePosRel.x < dState.doc.image.w && MousePosRel.y < dState.doc.image.h;
 
 			if (MouseInBounds && isMainWindowHovered) {
 				ImGui::SetMouseCursor(ImGuiMouseCursor_None);
@@ -393,7 +391,7 @@ int main() {
 					TopLeft.x + dState.tManager.viewportScale,
 					TopLeft.y + dState.tManager.viewportScale
 				};
-				const Pixel& p = dState.doc->layers[0]->pixels[(i32)(MousePosRel.y * dState.doc->w) + (i32)MousePosRel.x];
+				const Pixel& p = dState.doc.image.Layers[0].pixels[(i32)(MousePosRel.y * dState.doc.image.w) + (i32)MousePosRel.x];
 				ImU32 Color = (p.r * 0.299 + p.g * 0.587 + p.b * 0.114) > 186 ? 0xFF000000 : 0xFFFFFFFF;
 				ImGui::GetWindowDrawList()->AddRect(
 					TopLeft, BottomRight,
@@ -407,17 +405,17 @@ int main() {
 
 		if (isMainWindowHovered) {
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				if (io.MouseWheel > 0) AdjustZoom(true, dState.tManager, *dState.doc);
-				if (io.MouseWheel < 0) AdjustZoom(false, dState.tManager, *dState.doc);
+				if (io.MouseWheel > 0) AdjustZoom(true, dState.tManager, dState.doc);
+				if (io.MouseWheel < 0) AdjustZoom(false, dState.tManager, dState.doc);
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
-				if (io.KeyCtrl) AdjustZoom(true, dState.tManager, *dState.doc);
+				if (io.KeyCtrl) AdjustZoom(true, dState.tManager, dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex >= dState.palette.Colors.size() - 1 ? 0 : dState.PaletteIndex + 1;
 				else dState.tManager.brushSize += 1;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
-				if (io.KeyCtrl) AdjustZoom(false, dState.tManager, *dState.doc);
+				if (io.KeyCtrl) AdjustZoom(false, dState.tManager, dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex > 0 ? dState.PaletteIndex - 1 : dState.palette.Colors.size() - 1;
 				else if (dState.tManager.brushSize > 1)
@@ -440,18 +438,18 @@ int main() {
 			dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 
 			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-				dirtyArea = dState.tManager.onMouseDown(io.MousePos.x, io.MousePos.y, *dState.doc);
+				dirtyArea = dState.tManager.onMouseDown(io.MousePos.x, io.MousePos.y, dState.doc);
 			}
 			if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.MouseDelta.x != 0 && io.MouseDelta.y != 0) {
-				dirtyArea = dState.tManager.onMouseMove(io.MousePos.x, io.MousePos.y, *dState.doc);
+				dirtyArea = dState.tManager.onMouseMove(io.MousePos.x, io.MousePos.y, dState.doc);
 			}
 			if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-				dirtyArea = dState.tManager.onMouseUp(io.MousePos.x, io.MousePos.y, *dState.doc);
+				dirtyArea = dState.tManager.onMouseUp(io.MousePos.x, io.MousePos.y, dState.doc);
 			}
 
 			// Width & Height are set if change occurs
 			if (dirtyArea.w > 0 && dirtyArea.h > 0) {
-				dState.doc->Render(dirtyArea);
+				dState.doc.Render(dirtyArea);
 				dirtyArea.w = 0;
 				dirtyArea.h = 0;
 			}
@@ -460,7 +458,7 @@ int main() {
 		ImBase::Window::EndFrame();
 	}
 
-	delete dState.doc;
+	dState.doc.Destroy();
 	ImBase::Window::Destroy();
 	Cfg::Write();
 	return 0;

@@ -33,6 +33,7 @@ using Vector = std::vector<Type>;
 	}
 
 GEN_RECT_STRUCT(RectI32, i32);
+GEN_RECT_STRUCT(RectU32, u32);
 GEN_RECT_STRUCT(RectF32, f32);
 
 #define GEN_VECT_STRUCT(name, type) \
