@@ -180,7 +180,7 @@ int main() {
 			ImVec2(700, 310), ".png,.jpg,.jpeg,.bmp,.psd,.tga"
 		)) {
 			Doc newDoc;
-			if (Parser::ParseImageFile(newDoc, FileDialog.selected_path.c_str())) {
+			if (ImageParser::Parse(newDoc, FileDialog.selected_path.c_str())) {
 				dState.doc.Destroy();
 				dState.doc = newDoc;
 				dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };

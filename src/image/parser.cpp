@@ -3,7 +3,7 @@
 #include "stb_image.h"
 #include "log/log.h"
 
-bool Parser::ParseImageFile(Doc& doc, const String filePath) {
+bool ImageParser::Parse(Doc& doc, const String filePath) {
 	i32 width = 0, height = 0, c = 0;
 	u8* image = stbi_load(filePath.c_str(), &width, &height, &c, 4);
 
