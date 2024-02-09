@@ -267,9 +267,10 @@ int main() {
 #endif
 
 		static ImVec2 LeftWinPos, LeftWinSize;
-		ImGui::SetNextWindowSizeConstraints({ 40, -1 }, { io.DisplaySize.x / 3, -1 });
+		LeftWinSize.y = io.DisplaySize.y - (mBarPos.y + mBarSize.y); // Used as Constraint & To Reduce Duplicate Calculations
 		ImGui::SetNextWindowPos({ 0, mBarPos.y + mBarSize.y });
-		ImGui::SetNextWindowSize({ 200, io.DisplaySize.y - (mBarPos.y + mBarSize.y)}, ImGuiCond_Once);
+		ImGui::SetNextWindowSize({ 200, 0 }, ImGuiCond_Once);
+		ImGui::SetNextWindowSizeConstraints({ 40, LeftWinSize.y }, { io.DisplaySize.x / 3, LeftWinSize.y });
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 		BEGIN_WINDOW("Color Palette", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar)
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 2, 2 });
