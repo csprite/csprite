@@ -7,7 +7,6 @@
 
 struct Palette {
 	Vector<Pixel> Colors;
-	Pixel PrimaryColor;
 
 	Pixel& operator[](u32 i);
 
