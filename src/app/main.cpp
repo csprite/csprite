@@ -125,6 +125,16 @@ int main() {
 				END_MENUITEM()
 			END_MENU()
 
+			BEGIN_MENU("Edit")
+				BEGIN_MENU("Language")
+					UIString::ListAll([&](const char* fileName) {
+						BEGIN_MENUITEM(fileName, NULL)
+							Conf.langFileName = fileName;
+						END_MENUITEM()
+					});
+				END_MENU()
+			END_MENU()
+
 #ifdef _DEBUG
 			BEGIN_MENU("Dev")
 				BEGIN_MENUITEM("Metrics", NULL)
@@ -140,14 +150,6 @@ int main() {
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_GitHub], NULL)
 					ImBase::Launcher::OpenUrl("https://github.com/csprite/csprite");
 				END_MENUITEM()
-			END_MENU()
-
-			BEGIN_MENU("Language")
-				UIString::ListAll([&](const char* fileName) {
-					BEGIN_MENUITEM(fileName, NULL)
-						Conf.langFileName = fileName;
-					END_MENUITEM()
-				});
 			END_MENU()
 
 			mBarPos = ImGui::GetWindowPos();
