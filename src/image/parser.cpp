@@ -3,7 +3,7 @@
 #include "stb_image.h"
 #include "log/log.h"
 
-bool ImageParser::Parse(Doc& doc, const String filePath) {
+bool ImageParser::Parse(Image& img, const String filePath) {
 	i32 width = 0, height = 0, c = 0;
 	u8* image = stbi_load(filePath.c_str(), &width, &height, &c, 4);
 
@@ -12,9 +12,9 @@ bool ImageParser::Parse(Doc& doc, const String filePath) {
 		return false;
 	}
 
-	doc.Create(width, height);
-	doc.image.AddLayer("New Layer");
-	Layer& layer = doc.image.Layers[0];
+	img.Create(width, height);
+	img.AddLayer("New Layer");
+	Layer& layer = img.Layers[0];
 
 	for (i32 y = 0; y < height; ++y) {
 		for (i32 x = 0; x < width; ++x) {

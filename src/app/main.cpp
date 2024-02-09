@@ -179,10 +179,11 @@ int main() {
 			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
 			ImVec2(700, 310), ".png,.jpg,.jpeg,.bmp,.psd,.tga"
 		)) {
-			Doc newDoc;
-			if (ImageParser::Parse(newDoc, FileDialog.selected_path.c_str())) {
+			Image img;
+			if (ImageParser::Parse(img, FileDialog.selected_path.c_str())) {
 				dState.doc.Destroy();
-				dState.doc = std::move(newDoc);
+				dState.doc.Create(img.w, img.h);
+				dState.doc.image = std::move(img);
 				dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
 				ZoomNCenterVP(dState.tManager, dState.doc);
 				dState.doc.Render(dirtyArea);
