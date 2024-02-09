@@ -26,7 +26,6 @@ const ImWchar* UIString::GetRanges() {
 void UIString::UpdateEntries() {
 	LanguageFiles.clear();
 	Fs::ListDir(Fs::GetLanguagesDir(), [&](const String& entryName, bool isFile) -> bool {
-		// printf("%s\n", entryName.c_str());
 		if (isFile) {
 			LanguageFiles.push_back(entryName);
 		}
@@ -54,16 +53,57 @@ char* string_dup(const char* const str) {
 	return nullptr;
 }
 
+// Used in `_ParseRange` & returns 0 if can't parse
+unsigned long _stoul(const String& str, int base) {
+	try {
+		return std::stoul(str, nullptr, base);
+	} catch(std::exception) {
+		return 0;
+	}
+}
+
 void _ParseRange(CSimpleIniA& ini) {
+	if (!ini.KeyExists("unicode_range", "range")) return;
+	ImVector<ImWchar> rng;
+
+	String rngStr = ini.GetValue("unicode_range", "range");
+
+	size_t pos1 = 0;
+	String Item;
+	while ((pos1 = rngStr.find(",")) != String::npos) {
+		Item = rngStr.substr(0, pos1);
+
+		size_t split = 0;
+		for (size_t i = 0; i < Item.length(); i++) {
+			if (Item[i] == '-') {
+				split = i;
+			}
+		}
+
+		if (split > 0) {
+			String rangeStartStr = Item.substr(0, split);
+			String rangeEndStr = Item.substr(split + 1, Item.length() - split + 1);
+			auto rangeStartNum = _stoul(rangeStartStr, 16);
+			auto rangeEndNum = _stoul(rangeEndStr, 16);
+			if (rangeStartNum != 0 && rangeEndNum != 0) {
+				rng.push_back(rangeStartNum);
+				rng.push_back(rangeEndNum);
+			}
+		} else {
+			auto rangeNum = _stoul(Item, 16);
+			if (rangeNum != 0) {
+				rng.push_back(rangeNum);
+				rng.push_back(rangeNum);
+			}
+		}
+
+		rngStr.erase(0, pos1 + 1);
+	}
+
+	rng.push_back(0);
+
 	Range.clear();
-	//~ if (p.contains("UnicodeRange")) {
-		//~ Vector<String> RangeStr = p["UnicodeRange"].get<Vector<String>>();
-		//~ for (const String& s : RangeStr) {
-			//~ Range.push_back(std::stoul(s, nullptr, 16));
-		//~ }
-		//~ Range.push_back(0);
-	//~ }
-	Range.push_back(0);
+	Range = std::move(rng);
 }
 
 bool UIString::LoadFile(const String& fileName) {
