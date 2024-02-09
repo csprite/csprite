@@ -182,7 +182,7 @@ int main() {
 			Doc newDoc;
 			if (ImageParser::Parse(newDoc, FileDialog.selected_path.c_str())) {
 				dState.doc.Destroy();
-				dState.doc = newDoc;
+				dState.doc = std::move(newDoc);
 				dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
 				ZoomNCenterVP(dState.tManager, dState.doc);
 				dState.doc.Render(dirtyArea);
