@@ -19,6 +19,9 @@
 #include "log/log.h"
 #include "config.hpp"
 
+#include "fswrapper.hpp"
+#include "palette/parser.hpp"
+
 int main() {
 	EnableVT100();
 
@@ -29,6 +32,7 @@ int main() {
 	Cfg::Load();
 	Cfg::Config& Conf = Cfg::Get();
 
+	PaletteHelper::UpdateEntries();
 	UIString::UpdateEntries();
 	if (!UIString::LoadFile(Conf.langFileName)) {
 		UIString::LoadDefault();
@@ -126,6 +130,19 @@ int main() {
 			END_MENU()
 
 			BEGIN_MENU("Edit")
+				BEGIN_MENU("Palette")
+					PaletteHelper::ListAll([&](const char* fileName) {
+						BEGIN_MENUITEM(fileName, NULL)
+							const String filePath = FileSystem::GetPalettesDir() + PATH_SEP_CHAR + fileName;
+							Palette pal;
+							if (PaletteParser::Parse(pal, filePath)) {
+								dState.palette = std::move(pal);
+								dState.PaletteIndex = 0;
+								dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
+							}
+						END_MENUITEM()
+					});
+				END_MENU()
 				BEGIN_MENU("Language")
 					UIString::ListAll([&](const char* fileName) {
 						BEGIN_MENUITEM(fileName, NULL)

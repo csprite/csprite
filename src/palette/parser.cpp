@@ -21,6 +21,8 @@ bool PaletteParser::Parse(Palette& pal, const String filePath) {
 		}
 	}
 
+	palImg.Destroy();
+
 	return true;
 }
 
