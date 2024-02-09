@@ -2,6 +2,8 @@
 #define CSP_PALETTE_PALETTE_HPP_INCLUDED_ 1
 #pragma once
 
+#include <functional>
+
 #include "types.hpp"
 #include "pixel/pixel.hpp"
 
@@ -15,4 +17,11 @@ struct Palette {
 	void Remove(Pixel& color); // removes the color in the palette (duplicates are removed too)
 };
 
+namespace PaletteHelper {
+	typedef std::function<void(const char* name)> OnListCB;
+	void ListAll(OnListCB cb);
+	void UpdateEntries();
+};
+
 #endif // CSP_PALETTE_PALETTE_HPP_INCLUDED_
+

@@ -1,3 +1,4 @@
+#include "types.hpp"
 #include "palette/palette.hpp"
 
 Pixel& Palette::operator[](u32 i) {
@@ -24,3 +25,27 @@ void Palette::Remove(Pixel& color) {
 		}
 	}
 }
+
+#include "fs/fs.hpp"
+#include "app/fswrapper.hpp"
+
+namespace Fs = FileSystem;
+
+static std::vector<String> PaletteFiles;
+
+void PaletteHelper::UpdateEntries() {
+	PaletteFiles.clear();
+	Fs::ListDir(Fs::GetPalettesDir(), [&](const String& entryName, bool isFile) -> bool {
+		if (isFile) {
+			PaletteFiles.push_back(entryName);
+		}
+		return true;
+	});
+}
+
+void PaletteHelper::ListAll(OnListCB cb) {
+	for (auto const& filePath : PaletteFiles) {
+		cb(filePath.c_str());
+	}
+}
+
