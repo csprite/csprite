@@ -3,10 +3,10 @@
 #pragma once
 
 #include "types.hpp"
-#include "doc/doc.hpp"
+#include "image/image.hpp"
 
 namespace ImageParser {
-	bool Parse(Doc& doc, const String filePath);
+	bool Parse(Image& img, const String filePath);
 }
 
 #endif // CSP_DOC_PARSER_PARSER_HPP_INCLUDED_
