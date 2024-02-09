@@ -12,27 +12,26 @@ unsigned int CreateShaderProgram() {
 
 	const char* FragShaderSrc =
 		"#version 130\n"
-		"out lowp vec4 frag_color;\n"
-		"in lowp vec3 out_color;\n"
-		"in mediump vec2 out_tex_coords;\n"
-		"uniform sampler2D a_texture;\n"
-		"uniform mediump vec2 offset;\n"
-		"uniform lowp float alpha;\n"
+		"out vec4 FinalColor;\n"
+		"in vec3 InputColor;\n"
+		"in vec2 UV;\n"
+		"uniform sampler2D TexSampler;\n"
+		"uniform float alpha;\n"
 		"void main() {\n"
-		"	frag_color = vec4(out_color, alpha) * texture(a_texture, out_tex_coords + offset);\n"
+		"	FinalColor = vec4(InputColor, alpha) * texture(TexSampler, UV);\n"
 		"}";
 
 	const char* VertexShaderSrc =
 		"#version 130\n"
-		"in vec3 position;\n"
-		"in vec3 color;\n"
-		"in vec2 tex_coords;\n"
-		"out vec3 out_color;\n"
-		"out vec2 out_tex_coords;\n"
+		"in vec3 InputPos;\n"
+		"in vec3 InputColor;\n"
+		"in vec2 InputUV;\n"
+		"out vec3 OutColor;\n"
+		"out vec2 UV;\n"
 		"void main() {\n"
-		"	gl_Position = vec4(position, 1.0);\n"
-		"	out_color = color;\n"
-		"	out_tex_coords = tex_coords;\n"
+		"	gl_Position = vec4(InputPos, 1.0);\n"
+		"	OutColor = InputColor;\n"
+		"	UV = InputUV;\n"
 		"}";
 
 	VertShaderId = glCreateShader(GL_VERTEX_SHADER);
