@@ -83,8 +83,8 @@ unsigned char ShowNewCanvasWindow = 0; // Holds Whether to show new canvas windo
 
 GLfloat ViewPort[4];
 GLfloat CanvasVertices[] = {
-	//       Canvas              Color To       Texture
-	//     Coordinates          Blend With     Coordinates
+	//       Canvas             Color To           UV
+	//     Coordinates         Blend With      Coordinates
 	//  X      Y      Z      R     G     B      X     Y
 	   1.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 0.0f, // Top Right
 	   1.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // Bottom Right
@@ -378,8 +378,8 @@ int main(int argc, char **argv) {
 		unsigned int alpha_loc = glGetUniformLocation(shader_program, "alpha");
 		glUniform1f(alpha_loc, 0.2f);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
 		glUniform1f(alpha_loc, 1.0f);
+
 		glBindTexture(GL_TEXTURE_2D, texture);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CanvasDims[0], CanvasDims[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, CanvasData);
