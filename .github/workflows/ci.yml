@@ -180,7 +180,7 @@ jobs:
         mv osx-x86_64/csprite csprite-osx-x86_64
         mv osx-x86_64/csprite-osx.zip csprite-osx-x86_64.zip
 
-    - uses: dev-drprasad/delete-tag-and-release@latest
+    - uses: dev-drprasad/delete-tag-and-release@v0.2.1
       with:
         tag_name: v0.1.x-legacy
         delete_release: true
