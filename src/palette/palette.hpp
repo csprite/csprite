@@ -19,6 +19,7 @@ struct Palette {
 
 namespace PaletteHelper {
 	typedef std::function<void(const char* name)> OnListCB;
+	void LoadDefault(Palette& pal);
 	void ListAll(OnListCB cb);
 	void UpdateEntries();
 };
