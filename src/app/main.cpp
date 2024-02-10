@@ -65,22 +65,7 @@ int main() {
 	ImBase::Window::EndFrame();
 
 	DocumentState dState;
-	dState.palette.Add(Pixel{ 0,   0,   0,   255 });
-	dState.palette.Add(Pixel{ 29,  43,  83,  255 });
-	dState.palette.Add(Pixel{ 126, 37,  83,  255 });
-	dState.palette.Add(Pixel{ 0,   135, 81,  255 });
-	dState.palette.Add(Pixel{ 171, 82,  54,  255 });
-	dState.palette.Add(Pixel{ 95,  87,  79,  255 });
-	dState.palette.Add(Pixel{ 194, 195, 199, 255 });
-	dState.palette.Add(Pixel{ 255, 241, 232, 255 });
-	dState.palette.Add(Pixel{ 255, 0,   77,  255 });
-	dState.palette.Add(Pixel{ 255, 163, 0,   255 });
-	dState.palette.Add(Pixel{ 255, 236, 39,  255 });
-	dState.palette.Add(Pixel{ 0,   228, 54,  255 });
-	dState.palette.Add(Pixel{ 41,  173, 255, 255 });
-	dState.palette.Add(Pixel{ 131, 118, 156, 255 });
-	dState.palette.Add(Pixel{ 255, 119, 168, 255 });
-	dState.palette.Add(Pixel{ 255, 204, 170, 255 });
+	PaletteHelper::LoadDefault(dState.palette);
 	dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 
 	dState.doc.Create(60, 40);
