@@ -184,7 +184,7 @@ int main() {
 		if (FileDialog.showFileDialog(
 			Lang[UISTR::Popup_OpenFile],
 			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
-			ImVec2(700, 310), ".png,.jpg,.jpeg,.bmp,.psd,.tga"
+			ImVec2(700, 310), IMAGE_SUPPORTED_EXTENSIONS
 		)) {
 			Image img;
 			if (ImageParser::Parse(img, FileDialog.selected_path.c_str())) {
