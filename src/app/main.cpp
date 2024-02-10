@@ -131,6 +131,9 @@ int main() {
 
 			BEGIN_MENU("Edit")
 				BEGIN_MENU("Palette")
+					BEGIN_MENUITEM("Refresh", NULL)
+						PaletteHelper::UpdateEntries();
+					END_MENUITEM()
 					PaletteHelper::ListAll([&](const char* fileName) {
 						BEGIN_MENUITEM(fileName, NULL)
 							const String filePath = FileSystem::GetPalettesDir() + PATH_SEP_CHAR + fileName;
