@@ -1,5 +1,5 @@
-#include <fstream>
 #include <string> // std::stoul
+#include <cstring> // std::strncmp
 
 #include "app/assets/assets.h"
 #include "app/i18n/strings.hpp"
@@ -26,7 +26,7 @@ const ImWchar* UIString::GetRanges() {
 void UIString::UpdateEntries() {
 	LanguageFiles.clear();
 	Fs::ListDir(Fs::GetLanguagesDir(), [&](const String& entryName, bool isFile) -> bool {
-		if (isFile) {
+		if (isFile && std::strncmp(".ini", &entryName.c_str()[entryName.length() - 4], 4) == 0) {
 			LanguageFiles.push_back(entryName);
 		}
 		return true;
