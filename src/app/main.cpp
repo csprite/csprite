@@ -207,7 +207,7 @@ int main() {
 			if (ImGui::Button(Lang[UISTR::Popup_NewDocument_OkButton])) {
 				dState.doc.Destroy();
 				dState.doc.Create(NEW_DIMS[0], NEW_DIMS[1]);
-				dState.doc.image.AddLayer("New Layers");
+				dState.doc.image.AddLayer("New Layer");
 				dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
 
 				ZoomNCenterVP(dState.tManager, dState.doc);
