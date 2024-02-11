@@ -467,6 +467,20 @@ int main() {
 			};
 			ImGui::PopStyleVar(1); // ImGuiStyleVar_ItemSpacing
 
+			float _ColorPicker[4] = {
+				((float)dState.tManager.primaryColor.r) / 255,
+				((float)dState.tManager.primaryColor.g) / 255,
+				((float)dState.tManager.primaryColor.b) / 255,
+				((float)dState.tManager.primaryColor.a) / 255
+			};
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+			if (ImGui::ColorPicker4("##ColorPicker", (float*)&_ColorPicker, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview)) {
+				dState.tManager.primaryColor.r = _ColorPicker[0] * 255;
+				dState.tManager.primaryColor.g = _ColorPicker[1] * 255;
+				dState.tManager.primaryColor.b = _ColorPicker[2] * 255;
+				dState.tManager.primaryColor.a = _ColorPicker[3] * 255;
+			}
+
 			ImGui::SeparatorText("Layers");
 
 			if (ImGui::Button("+")) {
@@ -484,6 +498,9 @@ int main() {
 					dState.doc.ClearRender();
 				}
 			}
+
+			ImGui::BeginChild("##LayersList", { 0, 0 }, true);
+
 			for (size_t i = 0; i < dState.doc.image.Layers.size(); i++) {
 				const Layer& layer = dState.doc.image.Layers[i];
 				ImGui::PushID(i);
@@ -496,6 +513,8 @@ int main() {
 				}
 				ImGui::PopID();
 			}
+
+			ImGui::EndChild();
 
 			LeftWinPos = ImGui::GetWindowPos();
 			LeftWinSize = ImGui::GetWindowSize();
@@ -606,8 +625,6 @@ int main() {
 			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
 				if (io.KeyCtrl) ShowNewDocumentWindow = true;
 			}
-
-			dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 
 			if (dState.doc.image.Layers.size() > 0) {
 				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
