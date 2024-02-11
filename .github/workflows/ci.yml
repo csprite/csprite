@@ -127,15 +127,6 @@ jobs:
         if-no-files-found: error
         path: ./csprite.app
 
-  update-contributor-collage:
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Update Contributor Image Cache
-      if: ${{ github.event.pull_request.merged == true }}
-      run: |
-        curl -X PURGE "https://contributors-img.firebaseapp.com/image?repo=csprite/csprite&max=100000"
-
   update-ci-release:
     needs: [build]
     permissions:
@@ -164,8 +155,8 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: linux-X64
-        path: ./linux-X64/
+        name: linux-x64
+        path: ./linux-x64/
 
     - uses: actions/download-artifact@v3
       with:
