@@ -5,11 +5,11 @@ A simple pixel art editor
 
 ---
 ### Features
-- :beginner: Beginner Friendly
-- :zap: Extremely Fast
-- :package: Small (Just 1 MB)
-- :desktop_computer: Works On Windows & Linux
-- :moneybag: Free & Open Source
+- :beginner: Simple & intuitive
+- :zap: Extremely fast
+- :package: Small (Just ~2 MB)
+- :desktop_computer: Cross-platform
+- :moneybag: Free & open-source
 
 ### Requirements
 - 50MB of Usable RAM
