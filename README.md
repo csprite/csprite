@@ -12,24 +12,39 @@ A simple pixel art editor
 - :moneybag: Free & Open Source
 
 ### Requirements
-- Any PC With OpenGL 3.0 or higher Support.
+- 50MB of Usable RAM
+- OpenGL 3.0 or Higher
+- Windows, Linux & Mac (for Others See [Building From Source](https://csprite.github.io/wiki/latest-git/building-from-source.html))
+
+### Download
+- You can get csprite from [downloads page](https://csprite.github.io/downloads/) or you can build it from source from the instructions [here](https://csprite.github.io/wiki/latest-git/building-from-source.html)
+
+### Contributing
+If you would like to help, [checkout the guide on contributing](https://github.com/csprite/.github/blob/master/CONTRIBUTING.md)
+
+### Credits
+- The beautiful icon & banner are created ["Birds Probably" aka Lilith](https://www.instagram.com/birds_probably/), show the bird some love
+- [Sweetie 16](https://lospec.com/palette-list/sweetie-16) Palette By [GrafxKid](http://grafxkid.tumblr.com/palettes)
 
 ### Todo
-- [x] A Simple UI & Menu.
-- [x] Support For Windows.
-- [x] Square/Circle in Brush/Eraser.
-- [x] Adjustable Brush/Eraser Size.
-- [ ] Undo Redo.
-- [ ] Ink Dropper Tool.
-- [ ] Rectangle Tool.
-- [ ] Line Tool.
-- [ ] Circle Tool.
-- [ ] Flood/Bucket Fill Tool.
+- [x] A Simple UI & Menu
+- [x] Support For Windows
+- [x] Square/Circle in Brush/Eraser
+- [x] Adjustable Brush/Eraser Size
+- [ ] Undo Redo
+- [ ] Ink Dropper Tool
+- [ ] Rectangle Tool
+- [ ] Line Tool
+- [ ] Circle Tool
+- [ ] Flood/Bucket Fill Tool
+
+### References/Resources
+list of references & resources i used while developing csprite, might be good for learning.
+
+- Simple Alpha-Blending: https://stackoverflow.com/a/68936281/14516016
+- Talk/Coding live stream on color blending by TSoding: https://youtu.be/aKnl8-qifvE
+- Re-Orderable list in ImGui using Drag & Drop API: https://github.com/ocornut/imgui/issues/1931#issuecomment-403305945
+- LuaJIT in Csprite: https://github.com/pegvin/csprite/tree/luajit
 
 ---
-### Installation
-1. [Building From Source](https://csprite.github.io/wiki/rewrite/building-from-source.html)
-
----
-### Thanks
-
+## Thanks
