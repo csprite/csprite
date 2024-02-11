@@ -15,13 +15,16 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 - Any PC With OpenGL 3.0 or higher Support.
 
 ### Todo
-- [x] Undo Redo
-- [x] Ink Dropper Tool.
-- [x] Square/Circle in Brush/Eraser.
-- [x] Adjustable Brush/Eraser Size.
 - [x] A Simple UI & Menu.
 - [x] Support For Windows.
-- [x] Native File dialogs for Opening & Saving.
+- [x] Square/Circle in Brush/Eraser.
+- [x] Adjustable Brush/Eraser Size.
+- [ ] Undo Redo.
+- [ ] Ink Dropper Tool.
+- [ ] Rectangle Tool.
+- [ ] Line Tool.
+- [ ] Circle Tool.
+- [ ] Flood/Bucket Fill Tool.
 
 ---
 ### Installation
