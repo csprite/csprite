@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -10,7 +10,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-option(BUILD_APPLE_BUNDLE "Build Apple Bundle, Used For Releases & Is Ignored On Non-Apple Target" OFF)
+option(ENABLE_APPLE_BUNDLE "Build Apple Bundle, Used For Releases & Is Ignored On Non-Apple Target" OFF)
 
 project(csprite C CXX)
 
@@ -22,7 +22,7 @@ if(WIN32)
 	set(SRC_FILES ${SRC_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/data/windows.rc)
 endif()
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/common_defs.txt)
+include(${CMAKE_CURRENT_SOURCE_DIR}/common_defs.cmake)
 
 if(APPLE AND BUILD_APPLE_BUNDLE)
 	add_executable(csprite MACOSX_BUNDLE ${SRC_FILES})
@@ -41,27 +41,32 @@ if(APPLE AND BUILD_APPLE_BUNDLE)
 		MACOSX_BUNDLE_ICON_FILE "csprite.icns"               # CFBundleIconFile
 		MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/data/Info.plist
 	)
-elseif(WIN32)
-	add_executable(csprite WIN32 ${SRC_FILES})
 else()
 	add_executable(csprite ${SRC_FILES})
 endif()
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/)
-target_link_libraries(csprite PUBLIC third_party)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/simpleini/)
+target_link_libraries(csprite PUBLIC SimpleIni)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/log.c/)
+target_link_libraries(csprite PUBLIC rxi_log)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/imbase/)
+target_link_libraries(csprite PUBLIC imbase)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/)
+target_link_libraries(csprite PUBLIC stb_static)
+
+set(FILESYSTEM_BUILD_TESTS OFF CACHE INTERNAL "")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/filesystem/)
+target_link_libraries(csprite PUBLIC FileSystem)
 
 target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/)
-target_include_directories(csprite PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
-find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
-
-if(TARGET SDL2::SDL2main) # Required on Windows
-	target_link_libraries(csprite PUBLIC SDL2::SDL2main)
-endif()
-
-target_link_libraries(third_party PUBLIC SDL2::SDL2)
-target_link_libraries(csprite PUBLIC SDL2::SDL2)
+target_compile_options(csprite PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>:/W4>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+)
 
 if(WIN32)
 	add_custom_command(TARGET csprite POST_BUILD
@@ -69,3 +74,4 @@ if(WIN32)
 		COMMAND_EXPAND_LISTS
 	)
 endif()
+

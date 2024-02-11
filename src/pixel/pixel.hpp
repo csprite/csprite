@@ -3,6 +3,7 @@
 #pragma once
 
 #include "types.hpp"
+#include "imgui/imgui.h"
 
 #ifndef TARGET_IS_BIGENDIAN
 	#define PIXEL_RED_MASK   0xFF000000
@@ -27,17 +28,23 @@
 #endif
 
 struct Pixel {
-#if TARGET_IS_BIGENDIAN == 0
 	u8 r = 0, g = 0, b = 0, a = 0;
-#else
-	u8 a = 0, b = 0, g = 0, r = 0;
-#endif
 
-	Pixel& operator = (const u32 RGBA_Color);
-	Pixel& operator = (const Pixel& rhs);
-	bool operator == (const Pixel& rhs) const;
-	bool operator != (const Pixel& rhs) const;
-	explicit operator u8*(); // returns the pointer to the first element in the struct and other elements can be acced via struct[index]
+	inline operator ImVec4() {
+		return { r / 255.f, g / 255.f, b / 255.f, a / 255.f };
+	}
+
+	inline bool operator == (const Pixel& rhs) const {
+		return (r == rhs.r && g == rhs.g && b == rhs.b && a == rhs.a);
+	}
+
+	inline bool operator != (const Pixel& rhs) const {
+		return !(*this == rhs);
+	}
+
+	inline explicit operator u8*() {
+		return &r;
+	}
 };
 
 #endif // CSP_SRC_PIXEL_PIXEL_HPP_INCLUDED_

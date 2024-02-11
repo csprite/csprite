@@ -26,4 +26,4 @@ data/icon.ico
 
 build/
 .cache/
-
+src/gui/

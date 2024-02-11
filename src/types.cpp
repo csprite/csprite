@@ -1,21 +1,13 @@
 #include "types.hpp"
 
-inline Rect& Rect::operator = (const Rect& rhs) {
-	x = rhs.x;
-	y = rhs.y;
-	w = rhs.w;
-	h = rhs.h;
-	return *this;
-}
+#define GEN_STRUCT_OVERLOAD_FUNCS(name) \
+	bool name::operator == (const name& rhs) const { \
+		return (x == rhs.x && y == rhs.y && w == rhs.w && h == rhs.h); \
+	} \
+	bool name::operator != (const name& rhs) const { \
+		return !(*this == rhs); \
+	}
 
-inline bool Rect::operator == (const Rect& rhs) const {
-	return (x == rhs.x && y == rhs.y && w == rhs.w && h == rhs.h);
-}
+GEN_STRUCT_OVERLOAD_FUNCS(RectI32)
+GEN_STRUCT_OVERLOAD_FUNCS(RectF32)
 
-inline bool Rect::operator != (const Rect& rhs) const {
-	return !(*this != rhs);
-}
-
-inline Rect::operator SDL_Rect() const {
-	return { x, y, w, h };
-}
