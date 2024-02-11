@@ -1,7 +1,7 @@
 # csprite
-A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Sixel](https://github.com/falconerd/sixel)
+A simple pixel art editor
 
-![image](https://user-images.githubusercontent.com/75035219/170718904-9e3c0b00-4a1c-4d48-8876-5dd43d5f4d7b.png)
+![Csprite UI Preview](https://github.com/csprite/csprite/assets/75035219/7d5488ee-c26c-484b-8b18-1c62457c7af0)
 
 ---
 ### Features
@@ -28,24 +28,7 @@ A Tiny Pixel Art Tool - Fork of [@Falconerd's](https://github.com/falconerd) [Si
 
 ---
 ### Installation
-1. [Building From Source](https://csprite.github.io/wiki/rewrite/)
-
-### Controls
-| Key                          | Description                  |
-|------------------------------|------------------------------|
-| B                            | Circle Brush                 |
-| Shift + B                    | Square Brush                 |
-| E                            | Circle Eraser                |
-| Shift + E                    | Square Eraser                |
-| F                            | Fill                         |
-| I                            | Ink Dropper                  |
-| Plus/Minus                   | Brush Size Increase/Decrease |
-| Space + Mouse Move           | Pan                          |
-| Left Mouse                   | Draw/Erase/Fill/Ink Dropper  |
-| Ctrl + Plus / Scroll Up      | Zoom In                      |
-| Ctrl + Minus / Scroll Down   | Zoom Out                     |
-| Ctrl + Z                     | Undo                         |
-| Ctrl + Y                     | Redo                         |
+1. [Building From Source](https://csprite.github.io/wiki/rewrite/building-from-source.html)
 
 ---
 ### Thanks
