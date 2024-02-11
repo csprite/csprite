@@ -4,23 +4,26 @@
 
 #include "main.hpp"
 #include "misc.hpp"
-#include "tools/ToolManager.hpp"
+#include "prefs.hpp"
+#include "fswrapper.hpp"
+
 #include "types.hpp"
+#include "pixel/pixel.hpp"
+
+#include "log/log.h"
 #include "assets/assets.h"
+#include "assets/manager.hpp"
+
 #include "imbase/window.hpp"
 #include "imbase/launcher.hpp"
-#include "pixel/pixel.hpp"
-#include "palette/palette.hpp"
+#include "i18n/strings.hpp"
+
 #include "doc/doc.hpp"
 #include "image/parser.hpp"
-#include "filebrowser/filebrowser.hpp"
-#include "i18n/strings.hpp"
-#include "assets/manager.hpp"
-#include "log/log.h"
-#include "config.hpp"
-
-#include "fswrapper.hpp"
+#include "palette/palette.hpp"
 #include "palette/parser.hpp"
+#include "tools/ToolManager.hpp"
+#include "filebrowser/filebrowser.hpp"
 
 int main() {
 	EnableVT100();
@@ -29,12 +32,14 @@ int main() {
 		return 1;
 	}
 
-	Cfg::Load();
-	Cfg::Config& Conf = Cfg::Get();
+	Preferences AppPrefs;
+	if (!AppPrefs.Load(FileSystem::GetConfigFile().c_str())) {
+		AppPrefs = Preferences();
+	}
 
 	PaletteHelper::UpdateEntries();
 	UIString::UpdateEntries();
-	if (!UIString::LoadFile(Conf.langFileName)) {
+	if (!UIString::LoadFile(AppPrefs.langFileName)) {
 		UIString::LoadDefault();
 	}
 	const UISTR_Arr& Lang = UIString::Get();
@@ -42,7 +47,7 @@ int main() {
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
 		return 1;
 	}
-	ImBase::Window::SetMaxFPS(Conf.fps);
+	ImBase::Window::SetMaxFPS(AppPrefs.fps);
 
 	ImGuiIO& io = ImGui::GetIO();
 
@@ -89,7 +94,7 @@ int main() {
 	bool ShowNewDocumentWindow = false;
 	bool ShowOpenFileWindow = false;
 	bool ShowAboutWindow = false;
-	bool ShowConfigWindow = false;
+	bool ShowAppPrefsigWindow = false;
 #ifdef _DEBUG
 	bool ShowMetricsWindow = false;
 #endif
@@ -117,7 +122,7 @@ int main() {
 
 			BEGIN_MENU("Edit")
 				BEGIN_MENUITEM("Preferences", NULL)
-					ShowConfigWindow = true;
+					ShowAppPrefsigWindow = true;
 				END_MENUITEM()
 				BEGIN_MENU("Palette")
 					static bool hasItems = false;
@@ -178,8 +183,8 @@ int main() {
 		} else if (ShowAboutWindow) {
 			ShowAboutWindow = false;
 			ImGui::OpenPopup(Lang[UISTR::Popup_AboutCsprite]);
-		} else if (ShowConfigWindow) {
-			ShowConfigWindow = false;
+		} else if (ShowAppPrefsigWindow) {
+			ShowAppPrefsigWindow = false;
 			ImGui::OpenPopup("Preferences##CspritePref");
 		}
 
@@ -269,7 +274,7 @@ int main() {
 
 		ImGui::SetNextWindowSize({ 400, 250 });
 		BEGIN_POPUP("Preferences##CspritePref", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
-			static Cfg::Config tempConfig = Conf;
+			static Preferences tempPrefs = AppPrefs;
 			static int32_t CurrentSelection = 0;
 
 			ImGui::BeginTable("##PreferencesTable", 2, ImGuiTableFlags_BordersInnerV);
@@ -295,15 +300,15 @@ int main() {
 				case 0: {
 					u32 p_step = 1;
 					u32 p_stepFast = 5;
-					ImGui::InputScalar("Max FPS", ImGuiDataType_U32, &tempConfig.fps, &p_step, &p_stepFast);
-					tempConfig.fps = tempConfig.fps < 5 ? 5 : tempConfig.fps;
+					ImGui::InputScalar("Max FPS", ImGuiDataType_U32, &tempPrefs.fps, &p_step, &p_stepFast);
+					tempPrefs.fps = tempPrefs.fps < 5 ? 5 : tempPrefs.fps;
 					break;
 				}
 				case 1: {
-					if (ImGui::BeginCombo("##Language", tempConfig.langFileName.c_str())) {
+					if (ImGui::BeginCombo("##Language", tempPrefs.langFileName.c_str())) {
 						UIString::ListAll([&](const char* fileName) {
 							if (ImGui::Selectable(fileName)) {
-								tempConfig.langFileName = fileName;
+								tempPrefs.langFileName = fileName;
 							}
 						});
 						ImGui::EndCombo();
@@ -324,9 +329,9 @@ int main() {
 			ImGui::TableNextColumn();
 
 			if (ImGui::Button("Save")) {
-				Conf = tempConfig;
-				ImBase::Window::SetMaxFPS(Conf.fps);
-				Cfg::Write();
+				AppPrefs = tempPrefs;
+				ImBase::Window::SetMaxFPS(AppPrefs.fps);
+				AppPrefs.Write(FileSystem::GetConfigFile().c_str());
 				ImGui::CloseCurrentPopup();
 			}
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -334,7 +339,7 @@ int main() {
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Cancel")) {
-				tempConfig = Conf;
+				tempPrefs = AppPrefs;
 				ImGui::CloseCurrentPopup();
 			}
 
