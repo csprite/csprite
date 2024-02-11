@@ -102,6 +102,7 @@ jobs:
         make gen-assets
         make all GENERATOR="${{ matrix.gen }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-DBUILD_APPLE_BUNDLE=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}'
         mv ./build/Release/csprite.app ./csprite.app
+        zip -r ./csprite.zip ./csprite.app
 
     - name: Upload Artifacts (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
@@ -125,7 +126,7 @@ jobs:
       with:
         name: osx-${{ matrix.arch }}
         if-no-files-found: error
-        path: ./csprite.app
+        path: ./csprite.zip
 
   update-ci-release:
     needs: [build]
