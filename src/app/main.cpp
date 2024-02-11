@@ -1,6 +1,7 @@
 #include <limits>
 
 #include "imgui/imgui.h"
+#include "imgui_stdlib.h"
 
 #include "main.hpp"
 #include "misc.hpp"
@@ -95,6 +96,7 @@ int main() {
 	bool ShowOpenFileWindow = false;
 	bool ShowAboutWindow = false;
 	bool ShowAppPrefsigWindow = false;
+	bool ShowLayerPropertiesWindow = false;
 #ifdef _DEBUG
 	bool ShowMetricsWindow = false;
 #endif
@@ -186,6 +188,9 @@ int main() {
 		} else if (ShowAppPrefsigWindow) {
 			ShowAppPrefsigWindow = false;
 			ImGui::OpenPopup("Preferences##CspritePref");
+		} else if (ShowLayerPropertiesWindow) {
+			ShowLayerPropertiesWindow = false;
+			ImGui::OpenPopup("Properties##LayerProperties");
 		}
 
 		if (FileDialog.showFileDialog(
@@ -346,6 +351,49 @@ int main() {
 			ImGui::EndTable();
 		END_POPUP()
 
+		BEGIN_POPUP("Properties##LayerProperties", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
+			static bool isFirst = true;
+			static String nameTemp;
+			if (isFirst) {
+				nameTemp = dState.doc.image.Layers[dState.ActiveLayerIndex].name;
+				isFirst = false;
+			}
+
+			ImGui::InputText("Name", &nameTemp);
+
+			if (ImGui::Button("Save")) {
+				// https://stackoverflow.com/a/217605/14516016
+				// Trim Spaces From Start
+				nameTemp.erase(
+					nameTemp.begin(),
+					std::find_if(nameTemp.begin(), nameTemp.end(), [](unsigned char ch) {
+						return !std::isspace(ch);
+					})
+				);
+
+				// Trim Spaces From End
+				nameTemp.erase(
+					std::find_if(
+						nameTemp.rbegin(), nameTemp.rend(), [](unsigned char ch) {
+							return !std::isspace(ch);
+						}
+					).base(),
+					nameTemp.end()
+				);
+
+				if (!nameTemp.empty()) {
+					dState.doc.image.Layers[dState.ActiveLayerIndex].name = nameTemp;
+				}
+				isFirst = true;
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel")) {
+				isFirst = true;
+				ImGui::CloseCurrentPopup();
+			}
+		END_POPUP()
+
 		#undef BEGIN_POPUP
 		#undef END_POPUP
 
@@ -362,6 +410,8 @@ int main() {
 		ImGui::SetNextWindowSizeConstraints({ 40, LeftWinSize.y }, { io.DisplaySize.x / 3, LeftWinSize.y });
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 		BEGIN_WINDOW("Color Palette", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar)
+			ImGui::SeparatorText("Colors");
+
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 2, 2 });
 			for (auto i = 0UL; i < dState.palette.Colors.size(); i++) {
 				ImGui::PushID(&dState.palette[i]);
@@ -416,6 +466,37 @@ int main() {
 				ImGui::PopID();
 			};
 			ImGui::PopStyleVar(1); // ImGuiStyleVar_ItemSpacing
+
+			ImGui::SeparatorText("Layers");
+
+			if (ImGui::Button("+")) {
+				dState.doc.image.AddLayer("New Layer");
+				dState.ActiveLayerIndex = dState.doc.image.Layers.size() - 1;
+				dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("-")) {
+				dState.doc.image.RemoveLayer(dState.ActiveLayerIndex);
+				dState.ActiveLayerIndex = dState.doc.image.Layers.size() - 1;
+				if (dState.doc.image.Layers.size() > 0) {
+					dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
+				} else {
+					dState.doc.ClearRender();
+				}
+			}
+			for (size_t i = 0; i < dState.doc.image.Layers.size(); i++) {
+				const Layer& layer = dState.doc.image.Layers[i];
+				ImGui::PushID(i);
+				if (ImGui::Selectable(layer.name.c_str(), i == dState.ActiveLayerIndex, ImGuiSelectableFlags_AllowDoubleClick)) {
+					dState.ActiveLayerIndex = i;
+
+					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+						ShowLayerPropertiesWindow = true;
+					}
+				}
+				ImGui::PopID();
+			}
+
 			LeftWinPos = ImGui::GetWindowPos();
 			LeftWinSize = ImGui::GetWindowSize();
 		END_WINDOW()
@@ -450,6 +531,7 @@ int main() {
 		END_WINDOW()
 
 		static bool isMainWindowHovered = false;
+
 		ImGui::SetNextWindowPos({ LeftWinPos.x + LeftWinSize.x, StatusWinPos.y + StatusWinSize.y - 1 });
 		ImGui::SetNextWindowSize({ StatusWinSize.x, io.DisplaySize.y - (StatusWinPos.y + StatusWinSize.y) + 1 });
 		BEGIN_WINDOW("MainWindow", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize)
@@ -471,7 +553,7 @@ int main() {
 
 			const bool MouseInBounds = MousePosRel.x >= 0 && MousePosRel.y >= 0 && MousePosRel.x < dState.doc.image.w && MousePosRel.y < dState.doc.image.h;
 
-			if (MouseInBounds && isMainWindowHovered) {
+			if (MouseInBounds && isMainWindowHovered && dState.doc.image.Layers.size() > 0) {
 				ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 				ImVec2 TopLeft = {
 					(dState.tManager.viewport.x + ((i32)MousePosRel.x * dState.tManager.viewportScale)),
@@ -481,7 +563,7 @@ int main() {
 					TopLeft.x + dState.tManager.viewportScale,
 					TopLeft.y + dState.tManager.viewportScale
 				};
-				const Pixel& p = dState.doc.image.Layers[0].pixels[(i32)(MousePosRel.y * dState.doc.image.w) + (i32)MousePosRel.x];
+				const Pixel& p = dState.doc.image.Layers[dState.ActiveLayerIndex].pixels[(i32)(MousePosRel.y * dState.doc.image.w) + (i32)MousePosRel.x];
 				ImU32 Color = (p.r * 0.299 + p.g * 0.587 + p.b * 0.114) > 186 ? 0xFF000000 : 0xFFFFFFFF;
 				ImGui::GetWindowDrawList()->AddRect(
 					TopLeft, BottomRight,
@@ -527,21 +609,23 @@ int main() {
 
 			dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-				dirtyArea = dState.tManager.onMouseDown(io.MousePos.x, io.MousePos.y, dState.doc);
-			}
-			if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.MouseDelta.x != 0 && io.MouseDelta.y != 0) {
-				dirtyArea = dState.tManager.onMouseMove(io.MousePos.x, io.MousePos.y, dState.doc);
-			}
-			if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-				dirtyArea = dState.tManager.onMouseUp(io.MousePos.x, io.MousePos.y, dState.doc);
-			}
+			if (dState.doc.image.Layers.size() > 0) {
+				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+					dirtyArea = dState.tManager.onMouseDown(io.MousePos.x, io.MousePos.y, dState.doc);
+				}
+				if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.MouseDelta.x != 0 && io.MouseDelta.y != 0) {
+					dirtyArea = dState.tManager.onMouseMove(io.MousePos.x, io.MousePos.y, dState.doc);
+				}
+				if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+					dirtyArea = dState.tManager.onMouseUp(io.MousePos.x, io.MousePos.y, dState.doc);
+				}
 
-			// Width & Height are set if change occurs
-			if (dirtyArea.w > 0 && dirtyArea.h > 0) {
-				dState.doc.Render(dirtyArea);
-				dirtyArea.w = 0;
-				dirtyArea.h = 0;
+				// Width & Height are set if change occurs
+				if (dirtyArea.w > 0 && dirtyArea.h > 0) {
+					dState.doc.Render(dirtyArea);
+					dirtyArea.w = 0;
+					dirtyArea.h = 0;
+				}
 			}
 		}
 
