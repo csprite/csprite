@@ -89,6 +89,7 @@ int main() {
 	bool ShowNewDocumentWindow = false;
 	bool ShowOpenFileWindow = false;
 	bool ShowAboutWindow = false;
+	bool ShowConfigWindow = false;
 #ifdef _DEBUG
 	bool ShowMetricsWindow = false;
 #endif
@@ -115,6 +116,9 @@ int main() {
 			END_MENU()
 
 			BEGIN_MENU("Edit")
+				BEGIN_MENUITEM("Preferences", NULL)
+					ShowConfigWindow = true;
+				END_MENUITEM()
 				BEGIN_MENU("Palette")
 					static bool hasItems = false;
 					if (ImGui::Button("Refresh", { hasItems ? -1.f : 0, 0 } /* -1 = Fit To Parent, 0 = Default Height/Leave it upto ImGui to calc */)) {
@@ -130,18 +134,6 @@ int main() {
 								dState.PaletteIndex = 0;
 								dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 							}
-						END_MENUITEM()
-					});
-				END_MENU()
-				BEGIN_MENU("Language")
-					static bool hasItems = false;
-					if (ImGui::Button("Refresh", { hasItems ? -1.f : 0, 0 } /* -1 = Fit To Parent, 0 = Default Height/Leave it upto ImGui to calc */)) {
-						UIString::UpdateEntries();
-					}
-					UIString::ListAll([&](const char* fileName) {
-						hasItems = true;
-						BEGIN_MENUITEM(fileName, NULL)
-							Conf.langFileName = fileName;
 						END_MENUITEM()
 					});
 				END_MENU()
@@ -186,6 +178,9 @@ int main() {
 		} else if (ShowAboutWindow) {
 			ShowAboutWindow = false;
 			ImGui::OpenPopup(Lang[UISTR::Popup_AboutCsprite]);
+		} else if (ShowConfigWindow) {
+			ShowConfigWindow = false;
+			ImGui::OpenPopup("Preferences##CspritePref");
 		}
 
 		if (FileDialog.showFileDialog(
@@ -270,6 +265,80 @@ int main() {
 			if (ImGui::Button(Lang[UISTR::Popup_AboutCsprite_CloseButton], closeButtonSize)) {
 				ImGui::CloseCurrentPopup();
 			}
+		END_POPUP()
+
+		ImGui::SetNextWindowSize({ 400, 250 });
+		BEGIN_POPUP("Preferences##CspritePref", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
+			static Cfg::Config tempConfig = Conf;
+			static int32_t CurrentSelection = 0;
+
+			ImGui::BeginTable("##PreferencesTable", 2, ImGuiTableFlags_BordersInnerV);
+			ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthFixed, 110.0f, 0);
+			ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthStretch, 0.0f, 1);
+
+			// set the row height to maximum available content height in the window
+			auto vMin_y = ImGui::GetWindowContentRegionMin().y + ImGui::GetWindowPos().y;
+			auto vMax_y = ImGui::GetWindowContentRegionMax().y + ImGui::GetWindowPos().y;
+			ImGui::TableNextRow(ImGuiTableRowFlags_None, (vMax_y - vMin_y) - ImGui::GetFrameHeightWithSpacing());
+
+			ImGui::TableNextColumn();
+
+			if (ImGui::Selectable("General", CurrentSelection == 0, ImGuiSelectableFlags_DontClosePopups)) {
+				CurrentSelection = 0;
+			} else if (ImGui::Selectable("Languages", CurrentSelection == 1, ImGuiSelectableFlags_DontClosePopups)) {
+				CurrentSelection = 1;
+			}
+
+			ImGui::TableNextColumn();
+
+			switch (CurrentSelection) {
+				case 0: {
+					u32 p_step = 1;
+					u32 p_stepFast = 5;
+					ImGui::InputScalar("Max FPS", ImGuiDataType_U32, &tempConfig.fps, &p_step, &p_stepFast);
+					tempConfig.fps = tempConfig.fps < 5 ? 5 : tempConfig.fps;
+					break;
+				}
+				case 1: {
+					if (ImGui::BeginCombo("##Language", tempConfig.langFileName.c_str())) {
+						UIString::ListAll([&](const char* fileName) {
+							if (ImGui::Selectable(fileName)) {
+								tempConfig.langFileName = fileName;
+							}
+						});
+						ImGui::EndCombo();
+					}
+					ImGui::SameLine(0, 3);
+					if (ImGui::Button("Refresh")) {
+						UIString::UpdateEntries();
+					}
+					break;
+				}
+				default: {
+					ImGui::TextWrapped("Not-Reachable Section: %d, Please Report This To The Developer", CurrentSelection);
+					break;
+				}
+			}
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+
+			if (ImGui::Button("Save")) {
+				Conf = tempConfig;
+				ImBase::Window::SetMaxFPS(Conf.fps);
+				Cfg::Write();
+				ImGui::CloseCurrentPopup();
+			}
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+				ImGui::SetTooltip("Restart app to apply these changes");
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel")) {
+				tempConfig = Conf;
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndTable();
 		END_POPUP()
 
 		#undef BEGIN_POPUP
@@ -476,7 +545,6 @@ int main() {
 
 	dState.doc.Destroy();
 	ImBase::Window::Destroy();
-	Cfg::Write();
 	return 0;
 }
 
