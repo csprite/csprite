@@ -19,6 +19,19 @@ A simple pixel art editor
 ### Download
 - You can get csprite from [downloads page](https://csprite.github.io/downloads/) or you can build it from source from the instructions [here](https://csprite.github.io/wiki/latest-git/building-from-source.html)
 
+### Controls
+| Key                          | Description                  |
+|------------------------------|------------------------------|
+| B                            | Circle Brush                 |
+| Shift + B                    | Square Brush                 |
+| E                            | Circle Eraser                |
+| Shift + E                    | Square Eraser                |
+| Plus/Minus                   | Brush Size Increase/Decrease |
+| Space + Mouse Drag           | Pan                          |
+| Left Mouse                   | Draw/Erase                   |
+| Ctrl + Plus / Scroll Up      | Zoom In                      |
+| Ctrl + Minus / Scroll Down   | Zoom Out                     |
+
 ### Contributing
 If you would like to help, [checkout the guide on contributing](https://github.com/csprite/.github/blob/master/CONTRIBUTING.md)
 
