@@ -657,7 +657,7 @@ int main() {
 				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
 					dirtyArea = dState.tManager.onMouseDown(io.MousePos.x, io.MousePos.y, dState.doc);
 				}
-				if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && io.MouseDelta.x != 0 && io.MouseDelta.y != 0) {
+				if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && (io.MouseDelta.x != 0 || io.MouseDelta.y != 0)) {
 					dirtyArea = dState.tManager.onMouseMove(io.MousePos.x, io.MousePos.y, dState.doc);
 				}
 				if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
