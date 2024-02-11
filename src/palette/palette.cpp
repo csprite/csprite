@@ -38,7 +38,7 @@ static std::vector<String> PaletteFiles;
 void PaletteHelper::UpdateEntries() {
 	PaletteFiles.clear();
 
-	String SupportedExtStr = IMAGE_SUPPORTED_EXTENSIONS;
+	String SupportedExtStr = IMAGE_PARSER_SUPPORTED_EXTENSIONS;
 	Vector<String> SupportedExts;
 
 	size_t pos = 0;

@@ -21,6 +21,7 @@
 
 #include "doc/doc.hpp"
 #include "image/parser.hpp"
+#include "image/writer.hpp"
 #include "palette/palette.hpp"
 #include "palette/parser.hpp"
 #include "tools/ToolManager.hpp"
@@ -89,14 +90,15 @@ int main() {
 	dState.doc.Render(dirtyArea);
 	ZoomNCenterVP(dState.tManager, dState.doc);
 
-	imgui_addons::ImGuiFileBrowser FileDialog;
+	imgui_addons::ImGuiFileBrowser FileDialogOpen, FileDialogClose;
 
 	ImVec2 MousePosRel;
-	bool ShowNewDocumentWindow = false;
-	bool ShowOpenFileWindow = false;
-	bool ShowAboutWindow = false;
-	bool ShowAppPrefsigWindow = false;
-	bool ShowLayerPropertiesWindow = false;
+	bool ShowNewDocumentWindow = false,
+	     ShowSaveAsFileDialog = false,
+	     ShowOpenFileWindow = false,
+	     ShowAboutWindow = false,
+	     ShowAppPrefsigWindow = false,
+	     ShowLayerPropertiesWindow = false;
 #ifdef _DEBUG
 	bool ShowMetricsWindow = false;
 #endif
@@ -119,6 +121,16 @@ int main() {
 				END_MENUITEM()
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_Open], "Ctrl+O")
 					ShowOpenFileWindow = true;
+				END_MENUITEM()
+				BEGIN_MENUITEM("Save", "Ctrl+S")
+					if (dState.filePath.empty()) {
+						ShowSaveAsFileDialog = true;
+					} else {
+						ImageWriter::Write(dState.doc.image, dState.filePath);
+					}
+				END_MENUITEM()
+				BEGIN_MENUITEM("Save As", "Alt+S")
+					ShowSaveAsFileDialog = true;
 				END_MENUITEM()
 			END_MENU()
 
@@ -179,6 +191,9 @@ int main() {
 		if (ShowOpenFileWindow) {
 			ShowOpenFileWindow = false;
 			ImGui::OpenPopup(Lang[UISTR::Popup_OpenFile]);
+		} else if (ShowSaveAsFileDialog) {
+			ShowSaveAsFileDialog = false;
+			ImGui::OpenPopup("Save File##SaveFileDialog");
 		} else if (ShowNewDocumentWindow) {
 			ShowNewDocumentWindow = false;
 			ImGui::OpenPopup(Lang[UISTR::Popup_NewDocument]);
@@ -193,19 +208,29 @@ int main() {
 			ImGui::OpenPopup("Properties##LayerProperties");
 		}
 
-		if (FileDialog.showFileDialog(
+		if (FileDialogOpen.showFileDialog(
 			Lang[UISTR::Popup_OpenFile],
 			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
-			ImVec2(700, 310), IMAGE_SUPPORTED_EXTENSIONS
+			ImVec2(700, 310), IMAGE_PARSER_SUPPORTED_EXTENSIONS
 		)) {
 			Image img;
-			if (ImageParser::Parse(img, FileDialog.selected_path.c_str())) {
+			if (ImageParser::Parse(img, FileDialogOpen.selected_path.c_str())) {
 				dState.doc.Destroy();
 				dState.doc.Create(img.w, img.h);
 				dState.doc.image = std::move(img);
 				dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
 				ZoomNCenterVP(dState.tManager, dState.doc);
 				dState.doc.Render(dirtyArea);
+			}
+		}
+
+		if (FileDialogClose.showFileDialog(
+			"Save File##SaveFileDialog",
+			imgui_addons::ImGuiFileBrowser::DialogMode::SAVE,
+			ImVec2(700, 310), IMAGE_WRITER_SUPPORTED_EXTENSIONS
+		)) {
+			if (ImageWriter::Write(dState.doc.image, FileDialogClose.selected_path)) {
+				dState.filePath = FileDialogClose.selected_path;
 			}
 		}
 

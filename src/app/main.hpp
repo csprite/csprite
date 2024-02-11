@@ -11,6 +11,7 @@ struct DocumentState {
 	Doc doc;
 	Tool::Manager tManager;
 	Palette palette;
+	String filePath;
 	u32 PaletteIndex = 0;
 	u32 ActiveLayerIndex = 0;
 };
