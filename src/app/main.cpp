@@ -61,7 +61,7 @@ int main() {
 	FontBuilder.BuildRanges(&FontRanges);
 	io.Fonts->AddFontFromMemoryCompressedTTF(
 		assets_get("data/fonts/NotoSans-Regular.ttf", &uiFontSzBytes),
-		uiFontSzBytes, 18.0f, nullptr, FontRanges.Data
+		uiFontSzBytes, AppPrefs.fontSize, nullptr, FontRanges.Data
 	);
 	io.Fonts->Build();
 	if (!io.Fonts->IsBuilt()) {
@@ -332,6 +332,9 @@ int main() {
 					u32 p_stepFast = 5;
 					ImGui::InputScalar("Max FPS", ImGuiDataType_U32, &tempPrefs.fps, &p_step, &p_stepFast);
 					tempPrefs.fps = tempPrefs.fps < 5 ? 5 : tempPrefs.fps;
+
+					ImGui::InputScalar("Font Size", ImGuiDataType_U32, &tempPrefs.fontSize, &p_step, &p_stepFast);
+					tempPrefs.fontSize = tempPrefs.fontSize < 10 ? 10 : tempPrefs.fontSize;
 					break;
 				}
 				case 1: {
@@ -360,7 +363,6 @@ int main() {
 
 			if (ImGui::Button("Save")) {
 				AppPrefs = tempPrefs;
-				ImBase::Window::SetMaxFPS(AppPrefs.fps);
 				AppPrefs.Write(FileSystem::GetConfigFile().c_str());
 				ImGui::CloseCurrentPopup();
 			}

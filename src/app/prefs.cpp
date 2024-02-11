@@ -8,8 +8,11 @@ bool Preferences::Load(const char* filePath) {
 		return false;
 	}
 
-	fps = ini.GetLongValue("program", "fps", 50);
-	langFileName = ini.GetValue("program", "language_file", "english.ini");
+	fps = ini.GetLongValue("program", "fps", Preferences::fps);
+	fps = CLAMP_NUM(fps, 5, 999);
+	fontSize = ini.GetLongValue("program", "font_size", Preferences::fontSize);
+	fontSize = CLAMP_NUM(fontSize, 10, 999);
+	langFileName = ini.GetValue("program", "language_file", Preferences::langFileName.c_str());
 
 	return true;
 }
@@ -18,6 +21,7 @@ void Preferences::Write(const char* filePath) {
 	CSimpleIniA ini;
 	ini.SetUnicode();
 	ini.SetLongValue("program", "fps", fps);
+	ini.SetLongValue("program", "font_size", fontSize);
 	ini.SetValue("program", "language_file", langFileName.c_str());
 	ini.SaveFile(filePath);
 }
