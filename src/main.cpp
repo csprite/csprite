@@ -444,7 +444,6 @@ int main(int argc, char* argv[]) {
 			UPDATE_WINDOW_TITLE();
 			ifio_write(FilePath, CanvasLayerMgr);
 			free(_fName);
-			free(_fPath);
 			_fName = NULL;
 			_fPath = NULL;
 		}
