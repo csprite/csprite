@@ -116,10 +116,12 @@ int main() {
 
 			BEGIN_MENU("Edit")
 				BEGIN_MENU("Palette")
-					BEGIN_MENUITEM("Refresh", NULL)
+					static bool hasItems = false;
+					if (ImGui::Button("Refresh", { hasItems ? -1.f : 0, 0 } /* -1 = Fit To Parent, 0 = Default Height/Leave it upto ImGui to calc */)) {
 						PaletteHelper::UpdateEntries();
-					END_MENUITEM()
+					}
 					PaletteHelper::ListAll([&](const char* fileName) {
+						hasItems = true;
 						BEGIN_MENUITEM(fileName, NULL)
 							const String filePath = FileSystem::GetPalettesDir() + PATH_SEP_CHAR + fileName;
 							Palette pal;
@@ -132,7 +134,12 @@ int main() {
 					});
 				END_MENU()
 				BEGIN_MENU("Language")
+					static bool hasItems = false;
+					if (ImGui::Button("Refresh", { hasItems ? -1.f : 0, 0 } /* -1 = Fit To Parent, 0 = Default Height/Leave it upto ImGui to calc */)) {
+						UIString::UpdateEntries();
+					}
 					UIString::ListAll([&](const char* fileName) {
+						hasItems = true;
 						BEGIN_MENUITEM(fileName, NULL)
 							Conf.langFileName = fileName;
 						END_MENUITEM()
