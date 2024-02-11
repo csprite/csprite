@@ -175,14 +175,14 @@ jobs:
 
     - name: Rename
       run: |
-        mv ./win-x64/csprite.zip ./win-x64.zip
-        mv ./win-Win32/csprite.zip ./win-x86.zip
+        mv ./win-x64/csprite.exe ./csprite-win-x64.exe
+        mv ./win-Win32/csprite.exe ./csprite-win-x86.exe
 
-        mv ./linux-x64/csprite ./linux-x64
-        mv ./linux-x32/csprite ./linux-x32
+        mv ./linux-x64/csprite ./csprite-linux-x64
+        mv ./linux-x32/csprite ./csprite-linux-x32
 
-        mv ./osx-arm64/csprite.zip ./osx-arm64.zip
-        mv ./osx-x86_64/csprite.zip ./osx-x64.zip
+        mv ./osx-arm64/csprite.zip ./csprite-osx-arm64.zip
+        mv ./osx-x86_64/csprite.zip ./csprite-osx-x64.zip
 
     - uses: ncipollo/release-action@v1
       with:
@@ -195,10 +195,10 @@ jobs:
         generateReleaseNotes: true
         artifactErrorsFailBuild: true
         artifacts: |
-          ./win-x64.zip
-          ./win-x86.zip
-          ./linux-x64
-          ./linux-x32
-          ./osx-arm64.zip
-          ./osx-x64.zip
+          ./csprite-win-x64.exe
+          ./csprite-win-x86.exe
+          ./csprite-linux-x64
+          ./csprite-linux-x32
+          ./csprite-osx-arm64.zip
+          ./csprite-osx-x64.zip
 
