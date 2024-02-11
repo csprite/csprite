@@ -11,7 +11,8 @@ struct DocumentState {
 	Doc doc;
 	Tool::Manager tManager;
 	Palette palette;
-	u16 PaletteIndex = 0;
+	u32 PaletteIndex = 0;
+	u32 ActiveLayerIndex = 0;
 };
 
 inline void ZoomNCenterVP(Tool::Manager& mgr, const Doc& doc);

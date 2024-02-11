@@ -2,6 +2,8 @@
 #define CSP_DOC_DOC_HPP_INCLUDED_ 1
 #pragma once
 
+#include <cstring>
+
 #include "types.hpp"
 #include "pixel/pixel.hpp"
 #include "imbase/texture.hpp"
@@ -19,6 +21,11 @@ struct Doc {
 	ImBase::Texture* renderTex = nullptr;
 
 	bool Create(u32 w, u32 h);
+
+	inline void ClearRender() {
+		std::memset(render, 0, image.w * image.h * sizeof(Pixel));
+		renderTex->Update((unsigned char*)render);
+	}
 
 	// Blends The `image` to `render` & updates the `renderTex`
 	// Tip: read comment on `Blender::Blend` for more info about `dirtyArea`
