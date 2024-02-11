@@ -5,188 +5,59 @@ on:
   pull_request:
 
 jobs:
-  generate-assets:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - name: Generate Asset
-      run: |
-        python3 -m pip install --upgrade Pillow
-        python3 -m pip install --upgrade numpy
-        make gen-assets
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: data
-        path: ./data/
-        if-no-files-found: error
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: src-assets
-        path: ./src/assets/
-        if-no-files-found: error
-
-  linux-x86_64:
-    needs: [generate-assets]
-    runs-on: ubuntu-latest
+  build:
     strategy:
       matrix:
-        compiler: [
-          { cc: gcc, cxx: g++, toolchain: gcc },
-          { cc: clang, cxx: clang++, toolchain: clang }
-        ]
+        include:
+          - os: windows-2022
+            arch: x64
+            gen_short_name: "vs17_2022"
+            gen_cmake_name: "Visual Studio 17 2022"
+
+          - os: windows-2022
+            arch: Win32
+            gen_short_name: "vs17_2022"
+            gen_cmake_name: "Visual Studio 17 2022"
+
+          - os: ubuntu-22.04
+            arch: x64
+            cc: gcc
+            cxx: g++
+            pkgs: gcc xorg-dev
+
+          - os: ubuntu-22.04
+            arch: x32
+            cc: gcc
+            cxx: g++
+            pkgs: gcc-multilib g++-multilib libx11-dev:i386 libxrandr-dev:i386 libxinerama-dev:i386 libxkbcommon-x11-dev:i386 libxkbfile-dev:i386 libxcursor-dev:i386 libxi-dev:i386 libgl-dev:i386
+            flags: "-m32"
+
+          - os: macos-12
+            arch: x86_64
+            gen: Xcode
+
+          - os: macos-12
+            arch: arm64
+            gen: Xcode
+
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@v2
-      with:
-        name: src-assets
-        path: ./src/assets/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: data
-        path: ./data/
-
-    - name: Install Deps
+    - name: Install Deps (Linux)
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
-        sudo apt-get update
-        sudo apt-get install gcc clang cmake ninja-build libfuse2
-        wget -O appimage-builder-x86_64.AppImage https://github.com/AppImageCrafters/appimage-builder/releases/download/v1.0.0-beta.1/appimage-builder-1.0.0-677acbd-x86_64.AppImage
-        chmod +x appimage-builder-x86_64.AppImage
-        sudo mv appimage-builder-x86_64.AppImage /usr/local/bin/appimage-builder
+        sudo dpkg --add-architecture i386
+        sudo apt-get update -y
+        sudo apt-get install ${{ matrix.pkgs }} ninja-build python3 python3-pip -y
+        sudo snap install cmake --classic
 
-    - name: Build & Install SDL2
+    - name: Lint Info.plist & Generate .icns (MacOS)
+      if: ${{ matrix.os == 'macos-12' }}
       run: |
-        export CC=${{ matrix.compiler.cc }}
-        export CXX=${{ matrix.compiler.cxx }}
-        git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
-        cd SDL/
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
-        cmake --build ./build/ --config Release --parallel 3
-        sudo cmake --install ./build/ --strip --config Release
-
-    - name: Generate Build Files & Build
-      run: |
-        export CC=${{ matrix.compiler.cc }}
-        export CXX=${{ matrix.compiler.cxx }}
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "Ninja"
-        cmake --build ./build/ --config Release --parallel 3
-        mv ./build/csprite ./
-
-    - name: Build AppImage
-      run: |
-        make appimage MajVer=1 MinVer=0 PatVer=0
-        mv ./csprite-*.AppImage ./csprite-x86_64.AppImage
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: linux_appimage-x86_64-${{ matrix.compiler.toolchain }}
-        path: csprite-x86_64.AppImage
-        if-no-files-found: error
-
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: linux-x86_64-${{ matrix.compiler.toolchain }}
-        path: ./csprite
-        if-no-files-found: error
-
-  windows-x86_64:
-    needs: [generate-assets]
-    runs-on: windows-2022
-    strategy:
-      matrix:
-        architecture: [x64, Win32]
-        generator: [ { short_name: "vs17_2022", cmake_name: "Visual Studio 17 2022" } ]
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: src-assets
-        path: ./src/assets/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: data
-        path: ./data/
-
-    - name: Build & Install SDL2
-      run: |
-        git clone https://github.com/libsdl-org/SDL/ -b release-2.26.5
-        cd SDL/
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}"
-        cmake --build ./build/ --config Release --parallel 3
-        cmake --install ./build/ --strip --config Release
-
-    - name: Generate Build Files & Build
-      run: |
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -G "${{ matrix.generator.cmake_name }}" -A "${{ matrix.architecture }}" -T "ClangCL"
-        cmake --build ./build/ --config Release --parallel 3
-
-    - name: Zip Binaries
-      uses: vimtor/action-zip@v1
-      with:
-        files: ./build/Release/
-        recursive: true
-        dest: ./csprite.zip
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: win-${{ matrix.architecture }}-${{ matrix.generator.short_name }}
-        if-no-files-found: error
-        path: ./csprite.zip
-
-  osx_x86_64:
-    needs: [generate-assets]
-    runs-on: macos-12 # Monterey
-    strategy:
-      matrix:
-        architecture: [x86_64, arm64]
-        generator: [Xcode]
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: src-assets
-        path: ./src/assets/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: data
-        path: ./data/
-
-    - name: Lint Info.plist
-      run: plutil data/Info.plist
-
-    - name: Install SDL2
-      run: |
-        PACKAGES=(sdl2)
-        for PACKAGE in "${PACKAGES[@]}"
-        do
-          formulaResult=$(brew --cache --bottle-tag=${{ matrix.architecture }}_monterey $PACKAGE)
-          brew fetch --force --bottle-tag=${{ matrix.architecture }}_monterey $PACKAGE
-          brew install $formulaResult
-        done
-
-    - name: Generate .icns
-      run: |
+        plutil data/Info.plist
         mkdir csprite.iconset
         sips -z 16 16     data/icon-32x32.png --out csprite.iconset/icon_16x16.png
         sips -z 32 32     data/icon-32x32.png --out csprite.iconset/icon_16x16@2x.png
@@ -201,23 +72,72 @@ jobs:
         iconutil -c icns -o csprite.icns csprite.iconset
         rm -R csprite.iconset
 
-    - name: Generate Build Files & Build
+    - name: Install Python Deps
       run: |
-        cmake -S ./ -B ./build/ -DCMAKE_BUILD_TYPE=Release -DBUILD_APPLE_BUNDLE=ON -G "${{ matrix.generator }}" -DCMAKE_OSX_ARCHITECTURES=${{ matrix.architecture }}
-        cmake --build ./build/ --config Release
+        python3 -m pip install --upgrade Pillow
+        python3 -m pip install --upgrade numpy
 
-    - name: Create Zip
-      run: zip -r csprite.zip ./build/Release/csprite.app/
+    - name: Generate Build Files & Build (Linux)
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
+      run: |
+        export CC=${{ matrix.cc }}
+        export CXX=${{ matrix.cxx }}
+        export CXXFLAGS=${{ matrix.flags }}
+        export CFLAGS=${{ matrix.flags }}
+        export LDFLAGS=${{ matrix.flags }}
+        make gen-assets
+        make all GENERATOR=Ninja BUILD_TYPE=Release NUM_JOBS=4
+        cp -r ./build/csprite ./csprite
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+    - name: Generate Build Files & Build (Windows)
+      if: ${{ matrix.os == 'windows-2022' }}
+      run: |
+        make gen-assets CXX=clang++
+        make all GENERATOR="${{ matrix.gen_cmake_name }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-A "${{ matrix.arch }}" -T "ClangCL"'
+        Copy-Item -Path ".\build\Release\csprite.exe" -Destination ".\csprite.exe"
+
+    - name: Generate Build Files, Build & Zip (MacOS)
+      if: ${{ matrix.os == 'macos-12' }}
+      run: |
+        make gen-assets
+        make all GENERATOR="${{ matrix.gen }}" BUILD_TYPE=Release NUM_JOBS=4 CMAKE_GEN_FLAGS='-DBUILD_APPLE_BUNDLE=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}'
+        mv ./build/Release/csprite.app ./csprite.app
+
+    - name: Upload Artifacts (Linux)
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
+      uses: actions/upload-artifact@v3
       with:
-        name: osx-${{ matrix.architecture }}-${{ matrix.generator }}
-        path: ./csprite.zip
+        name: linux-${{ matrix.arch }}
         if-no-files-found: error
+        path: ./csprite
+
+    - name: Upload artifacts (Windows)
+      uses: actions/upload-artifact@v3
+      if: ${{ matrix.os == 'windows-2022' }}
+      with:
+        name: win-${{ matrix.arch }}
+        if-no-files-found: error
+        path: ./csprite.exe
+
+    - name: Upload Artifacts (MacOS)
+      uses: actions/upload-artifact@v3
+      if: ${{ matrix.os == 'macos-12' }}
+      with:
+        name: osx-${{ matrix.arch }}
+        if-no-files-found: error
+        path: ./csprite.app
+
+  update-contributor-collage:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Update Contributor Image Cache
+      if: ${{ github.event.pull_request.merged == true }}
+      run: |
+        curl -X PURGE "https://contributors-img.firebaseapp.com/image?repo=csprite/csprite&max=100000"
 
   update-ci-release:
-    needs: [linux-x86_64, windows-x86_64, osx_x86_64]
+    needs: [build]
     permissions:
       contents: write
     if: |
@@ -232,59 +152,46 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
-        name: win-x64-vs17_2022
-        path: ./win-x64-vs17_2022/
+        name: win-x64
+        path: ./win-x64/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
-        name: win-Win32-vs17_2022
-        path: ./win-Win32-vs17_2022/
+        name: win-Win32
+        path: ./win-Win32/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
-        name: linux_appimage-x86_64-clang
-        path: ./linux_appimage-x86_64-clang/
+        name: linux-X64
+        path: ./linux-X64/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
-        name: linux-x86_64-clang
-        path: ./linux-x86_64-clang/
+        name: linux-x32
+        path: ./linux-x32/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
-        name: linux_appimage-x86_64-gcc
-        path: ./linux_appimage-x86_64-gcc/
+        name: osx-arm64
+        path: ./osx-arm64/
 
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
-        name: linux-x86_64-gcc
-        path: ./linux-x86_64-gcc/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: osx-arm64-Xcode
-        path: ./osx-arm64-Xcode/
-
-    - uses: actions/download-artifact@v2
-      with:
-        name: osx-x86_64-Xcode
-        path: ./osx-x86_64-Xcode/
+        name: osx-x86_64
+        path: ./osx-x86_64/
 
     - name: Rename
       run: |
-        mv ./win-x64-vs17_2022/csprite.zip ./win-x64-vs17_2022.zip
-        mv ./win-Win32-vs17_2022/csprite.zip ./win-x86-vs17_2022.zip
+        mv ./win-x64/csprite.zip ./win-x64.zip
+        mv ./win-Win32/csprite.zip ./win-x86.zip
 
-        mv ./linux_appimage-x86_64-clang/*.AppImage ./linux-x64-clang.AppImage
-        mv ./linux-x86_64-clang/csprite ./linux-x64-clang
+        mv ./linux-x64/csprite ./linux-x64
+        mv ./linux-x32/csprite ./linux-x32
 
-        mv ./linux_appimage-x86_64-gcc/*.AppImage ./linux-x64-gcc.AppImage
-        mv ./linux-x86_64-gcc/csprite ./linux-x64-gcc
-
-        mv ./osx-arm64-Xcode/csprite.zip ./osx-arm64-Xcode.zip
-        mv ./osx-x86_64-Xcode/csprite.zip ./osx-x64-Xcode.zip
+        mv ./osx-arm64/csprite.zip ./osx-arm64.zip
+        mv ./osx-x86_64/csprite.zip ./osx-x64.zip
 
     - uses: ncipollo/release-action@v1
       with:
@@ -297,11 +204,10 @@ jobs:
         generateReleaseNotes: true
         artifactErrorsFailBuild: true
         artifacts: |
-          ./win-x64-vs17_2022.zip
-          ./win-x86-vs17_2022.zip
-          ./linux-x64-gcc.AppImage
-          ./linux-x64-gcc
-          ./linux-x64-clang.AppImage
-          ./linux-x64-clang
-          ./osx-arm64-Xcode.zip
-          ./osx-x64-Xcode.zip
+          ./win-x64.zip
+          ./win-x86.zip
+          ./linux-x64
+          ./linux-x32
+          ./osx-arm64.zip
+          ./osx-x64.zip
+

@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <SDL_rect.h>
+#include <limits>
 
 using u8  = std::uint8_t;
 using u16 = std::uint16_t;
@@ -25,15 +25,22 @@ using String = std::string;
 template<typename Type>
 using Vector = std::vector<Type>;
 
-struct Rect {
-	u16 x, y, w, h;
+#define GEN_RECT_STRUCT(name, type) \
+	struct name { \
+		type x, y, w, h; \
+		bool operator == (const name& rhs) const; \
+		bool operator != (const name& rhs) const; \
+	}
 
-	Rect& operator = (const Rect& rhs);
-	bool operator == (const Rect& rhs) const;
-	bool operator != (const Rect& rhs) const;
+GEN_RECT_STRUCT(RectI32, i32);
+GEN_RECT_STRUCT(RectU32, u32);
+GEN_RECT_STRUCT(RectF32, f32);
 
-	explicit operator SDL_Rect() const;
-};
+#define GEN_VECT_STRUCT(name, type) \
+	struct name { type x, y; }
+
+GEN_VECT_STRUCT(VecI32, i32);
+GEN_VECT_STRUCT(VecF32, f32);
 
 // Clamps "a" to the min & max value
 #define CLAMP_NUM(a, min, max) \
