@@ -20,7 +20,7 @@ RectU32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
 			dirty = Tool::Draw(
 				MousePosRel.x, MousePosRel.y, doc.image.w, doc.image.h,
 				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
-				doc.image.Layers[0].pixels
+				doc.image.Layers[activeLayer].pixels
 			);
 			break;
 		}
@@ -46,7 +46,7 @@ RectU32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
 			dirty = Tool::Draw(
 				MousePosRel.x, MousePosRel.y, doc.image.w, doc.image.h,
 				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
-				doc.image.Layers[0].pixels
+				doc.image.Layers[activeLayer].pixels
 			);
 			break;
 		}

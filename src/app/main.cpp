@@ -382,7 +382,7 @@ int main() {
 			static bool isFirst = true;
 			static String nameTemp;
 			if (isFirst) {
-				nameTemp = dState.doc.image.Layers[dState.ActiveLayerIndex].name;
+				nameTemp = dState.doc.image.Layers[dState.tManager.activeLayer].name;
 				isFirst = false;
 			}
 
@@ -409,7 +409,7 @@ int main() {
 				);
 
 				if (!nameTemp.empty()) {
-					dState.doc.image.Layers[dState.ActiveLayerIndex].name = nameTemp;
+					dState.doc.image.Layers[dState.tManager.activeLayer].name = nameTemp;
 				}
 				isFirst = true;
 				ImGui::CloseCurrentPopup();
@@ -512,13 +512,13 @@ int main() {
 
 			if (ImGui::Button("+")) {
 				dState.doc.image.AddLayer("New Layer");
-				dState.ActiveLayerIndex = dState.doc.image.Layers.size() - 1;
+				dState.tManager.activeLayer = dState.doc.image.Layers.size() - 1;
 				dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("-")) {
-				dState.doc.image.RemoveLayer(dState.ActiveLayerIndex);
-				dState.ActiveLayerIndex = dState.doc.image.Layers.size() - 1;
+				dState.doc.image.RemoveLayer(dState.tManager.activeLayer);
+				dState.tManager.activeLayer = dState.doc.image.Layers.size() - 1;
 				if (dState.doc.image.Layers.size() > 0) {
 					dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
 				} else {
@@ -531,8 +531,8 @@ int main() {
 			for (size_t i = 0; i < dState.doc.image.Layers.size(); i++) {
 				const Layer& layer = dState.doc.image.Layers[i];
 				ImGui::PushID(i);
-				if (ImGui::Selectable(layer.name.c_str(), i == dState.ActiveLayerIndex, ImGuiSelectableFlags_AllowDoubleClick)) {
-					dState.ActiveLayerIndex = i;
+				if (ImGui::Selectable(layer.name.c_str(), i == dState.tManager.activeLayer, ImGuiSelectableFlags_AllowDoubleClick)) {
+					dState.tManager.activeLayer = i;
 
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
 						ShowLayerPropertiesWindow = true;
@@ -609,7 +609,7 @@ int main() {
 					TopLeft.x + dState.tManager.viewportScale,
 					TopLeft.y + dState.tManager.viewportScale
 				};
-				const Pixel& p = dState.doc.image.Layers[dState.ActiveLayerIndex].pixels[(i32)(MousePosRel.y * dState.doc.image.w) + (i32)MousePosRel.x];
+				const Pixel& p = dState.doc.image.Layers[dState.tManager.activeLayer].pixels[(i32)(MousePosRel.y * dState.doc.image.w) + (i32)MousePosRel.x];
 				ImU32 Color = (p.r * 0.299 + p.g * 0.587 + p.b * 0.114) > 186 ? 0xFF000000 : 0xFFFFFFFF;
 				ImGui::GetWindowDrawList()->AddRect(
 					TopLeft, BottomRight,
