@@ -13,15 +13,17 @@ namespace Tool {
 		NONE = 0,
 		BRUSH,
 		ERASER,
-		PAN
+		PAN,
+		COLOR_PICKER
 	};
 
 	inline const char* ToolTypeToString(Tool::Type t) {
 		switch (t) {
-			case BRUSH:  return "Brush";
+			case BRUSH: return "Brush";
 			case ERASER: return "Eraser";
-			case PAN:    return "Pan";
-			default:     return "Unknown";
+			case PAN: return "Pan";
+			case COLOR_PICKER: return "Color picker";
+			default: return "Unknown";
 		}
 	}
 

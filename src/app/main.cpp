@@ -679,6 +679,8 @@ int main() {
 				dState.tManager.currTool = dState.tManager.prevTool;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
 				if (io.KeyCtrl) ShowNewDocumentWindow = true;
+			} else if (ImGui::IsKeyPressed(ImGuiKey_I, false)) {
+				dState.tManager.currTool = Tool::Type::COLOR_PICKER;
 			}
 
 			if (dState.doc.image.Layers.size() > 0) {

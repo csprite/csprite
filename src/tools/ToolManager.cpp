@@ -10,18 +10,29 @@ RectU32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
 	MousePosLast = { x, y };
 	RectU32 dirty = { 0, 0, 0, 0 };
 
+	VecI32 MousePosRel = {
+		(i32)((x - viewport.x) / viewportScale),
+		(i32)((y - viewport.y) / viewportScale)
+	};
+
 	switch (currTool) {
 		case BRUSH:
 		case ERASER: {
-			VecI32 MousePosRel = {
-				(i32)((x - viewport.x) / viewportScale),
-				(i32)((y - viewport.y) / viewportScale)
-			};
 			dirty = Tool::Draw(
 				MousePosRel.x, MousePosRel.y, doc.image.w, doc.image.h,
 				isRounded, brushSize, currTool == BRUSH ? primaryColor : Pixel{ 0, 0, 0, 0 },
 				doc.image.Layers[activeLayer].pixels
 			);
+			break;
+		}
+		case COLOR_PICKER: {
+			for (auto it = doc.image.Layers.rbegin(); it != doc.image.Layers.rend(); ++it) {
+				Pixel color = it->pixels[(MousePosRel.y * doc.image.w) + MousePosRel.x];
+				if (color.a > 0) {
+					primaryColor = color;
+					break;
+				}
+			}
 			break;
 		}
 		case NONE:
@@ -55,6 +66,7 @@ RectU32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
 			viewport.y += y - MousePosLast.y;
 			break;
 		}
+		case COLOR_PICKER:
 		case NONE: {
 			break;
 		}
@@ -71,6 +83,7 @@ RectU32 Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
 			break;
 		}
 		case NONE:
+		case COLOR_PICKER:
 		case PAN: {
 			break;
 		}
