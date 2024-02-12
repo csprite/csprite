@@ -33,6 +33,7 @@ namespace Tool {
 
 		// Secondary Color in Future? ;p
 		Pixel primaryColor;
+		u32   activeLayer = 0;
 
 		f32     viewportScale = 5; // Min Zoom 0.15
 		RectF32 viewport; // viewport position & scaled size

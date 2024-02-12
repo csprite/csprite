@@ -13,7 +13,6 @@ struct DocumentState {
 	Palette palette;
 	String filePath;
 	u32 PaletteIndex = 0;
-	u32 ActiveLayerIndex = 0;
 };
 
 inline void ZoomNCenterVP(Tool::Manager& mgr, const Doc& doc);
