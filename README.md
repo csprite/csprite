@@ -26,6 +26,7 @@ A simple pixel art editor
 | Shift + B                    | Square Brush                 |
 | E                            | Circle Eraser                |
 | Shift + E                    | Square Eraser                |
+| I                            | Color Picker/Ink Dropper     |
 | Plus/Minus                   | Brush Size Increase/Decrease |
 | Space + Mouse Drag           | Pan                          |
 | Left Mouse                   | Draw/Erase                   |
@@ -45,7 +46,7 @@ If you would like to help, [checkout the guide on contributing](https://github.c
 - [x] Square/Circle in Brush/Eraser
 - [x] Adjustable Brush/Eraser Size
 - [ ] Undo Redo
-- [ ] Ink Dropper Tool
+- [x] Ink Dropper Tool
 - [ ] Rectangle Tool
 - [ ] Line Tool
 - [ ] Circle Tool
