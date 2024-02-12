@@ -516,7 +516,7 @@ int main() {
 				dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("-")) {
+			if (ImGui::Button("-") && dState.doc.image.Layers.size() > 0) {
 				dState.doc.image.RemoveLayer(dState.tManager.activeLayer);
 				dState.tManager.activeLayer = dState.doc.image.Layers.size() - 1;
 				if (dState.doc.image.Layers.size() > 0) {
