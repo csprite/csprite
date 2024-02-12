@@ -439,6 +439,7 @@ int main() {
 		BEGIN_WINDOW("Color Palette", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar)
 			ImGui::SeparatorText("Colors");
 
+			bool isPrimaryInPalette = false;
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 2, 2 });
 			for (auto i = 0UL; i < dState.palette.Colors.size(); i++) {
 				ImGui::PushID(&dState.palette[i]);
@@ -448,7 +449,8 @@ int main() {
 					dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 				}
 
-				if (dState.PaletteIndex == i) {
+				if (dState.PaletteIndex == i && dState.tManager.primaryColor == dState.palette[i]) {
+					isPrimaryInPalette = true;
 					ImVec2 rSz = ImGui::GetItemRectSize();
 					ImVec2 rMin = ImGui::GetItemRectMin();
 					ImVec2 rMax = ImGui::GetItemRectMax();
@@ -494,18 +496,44 @@ int main() {
 			};
 			ImGui::PopStyleVar(1); // ImGuiStyleVar_ItemSpacing
 
-			float _ColorPicker[4] = {
+			if (isPrimaryInPalette) {
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+			}
+			if (ImGui::Button("Add") && !isPrimaryInPalette) {
+				dState.palette.Add(dState.tManager.primaryColor);
+				dState.PaletteIndex = dState.palette.Colors.size() - 1;
+				dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
+			}
+			if (isPrimaryInPalette) { ImGui::PopStyleVar(); ImGui::PopStyleColor(2); }
+
+			ImGui::SameLine();
+
+			if (!isPrimaryInPalette) {
+				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyle().Colors[ImGuiCol_Button]);
+			}
+			if (ImGui::Button("Remove") && isPrimaryInPalette) {
+				dState.palette.Remove(dState.tManager.primaryColor);
+				if (dState.PaletteIndex > 0) dState.PaletteIndex--;
+				dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
+			}
+			if (!isPrimaryInPalette) { ImGui::PopStyleVar(); ImGui::PopStyleColor(2); }
+
+			float ColorPicker[4] = {
 				((float)dState.tManager.primaryColor.r) / 255,
 				((float)dState.tManager.primaryColor.g) / 255,
 				((float)dState.tManager.primaryColor.b) / 255,
 				((float)dState.tManager.primaryColor.a) / 255
 			};
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-			if (ImGui::ColorPicker4("##ColorPicker", (float*)&_ColorPicker, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview)) {
-				dState.tManager.primaryColor.r = _ColorPicker[0] * 255;
-				dState.tManager.primaryColor.g = _ColorPicker[1] * 255;
-				dState.tManager.primaryColor.b = _ColorPicker[2] * 255;
-				dState.tManager.primaryColor.a = _ColorPicker[3] * 255;
+			if (ImGui::ColorPicker4("##ColorPicker", (float*)&ColorPicker, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview)) {
+				dState.tManager.primaryColor.r = ColorPicker[0] * 255;
+				dState.tManager.primaryColor.g = ColorPicker[1] * 255;
+				dState.tManager.primaryColor.b = ColorPicker[2] * 255;
+				dState.tManager.primaryColor.a = ColorPicker[3] * 255;
 			}
 
 			ImGui::SeparatorText("Layers");
