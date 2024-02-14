@@ -8,12 +8,13 @@
 // `Destroy()` resets the value to default, i.e. `nullptr` or `0`
 // Thus can be used to check if the structs below are valid.
 
+// https://lodev.org/cgtutor/imagearithmetic.html
 enum Blend {
 	Alpha,
-	Addition,
-	Subtraction,
-	Difference,
-	Multiply
+	Addition,   // src + dst
+	Subtraction,// src - dst
+	Difference, // abs(src - dst)
+	Multiply,   // ((src/255) * (dst/255)) * 255
 };
 
 struct Layer {
