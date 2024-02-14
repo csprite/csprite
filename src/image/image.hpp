@@ -10,7 +10,7 @@
 
 // https://lodev.org/cgtutor/imagearithmetic.html
 enum Blend {
-	Alpha,
+	Normal,
 	Addition,   // src + dst
 	Subtraction,// src - dst
 	Difference, // abs(src - dst)
@@ -22,7 +22,7 @@ enum Blend {
 
 struct Layer {
 	String name;
-	Blend  blend = Blend::Alpha;
+	Blend  blend = Blend::Normal;
 	Pixel* pixels = nullptr;
 
 	bool Create(u32 w, u32 h, String name);

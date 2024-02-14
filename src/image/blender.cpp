@@ -28,7 +28,7 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 				} else {
 					i32 r = 0, g = 0, b = 0, a = 0;
 					switch (img.Layers[j].blend) {
-						case Alpha: {
+						case Normal: {
 							r = frontPixel.r;
 							g = frontPixel.g;
 							b = frontPixel.b;
