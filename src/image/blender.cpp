@@ -40,6 +40,12 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 							b = frontPixel.b + backPixel.b;
 							break;
 						}
+						case Sub: {
+							r = frontPixel.r - backPixel.r;
+							g = frontPixel.g - backPixel.g;
+							b = frontPixel.b - backPixel.b;
+							break;
+						}
 					}
 					a = frontPixel.a + (u16)backPixel.a * (255 - frontPixel.a) / 255;
 
