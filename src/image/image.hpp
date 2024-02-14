@@ -12,7 +12,8 @@ enum Blend {
 	Alpha,
 	Addition,
 	Subtraction,
-	Difference
+	Difference,
+	Multiply
 };
 
 struct Layer {
