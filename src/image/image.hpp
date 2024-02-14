@@ -10,13 +10,13 @@
 
 enum Blend {
 	Alpha,
-	Add,
-	Sub
+	Addition,
+	Subtraction
 };
 
 struct Layer {
 	String name;
-	Blend  blend = Blend::Sub;
+	Blend  blend = Blend::Alpha;
 	Pixel* pixels = nullptr;
 
 	bool Create(u32 w, u32 h, String name);
