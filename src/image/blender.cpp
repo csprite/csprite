@@ -28,9 +28,9 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 					i32 r = 0, g = 0, b = 0, a = 0;
 					switch (img.Layers[j].blend) {
 						case Alpha: {
-							r = ((u16)frontPixel.r * frontPixel.a + (u16)backPixel.r * (255 - frontPixel.a) / 255 * backPixel.a) / 255;
-							g = ((u16)frontPixel.g * frontPixel.a + (u16)backPixel.g * (255 - frontPixel.a) / 255 * backPixel.a) / 255;
-							b = ((u16)frontPixel.b * frontPixel.a + (u16)backPixel.b * (255 - frontPixel.a) / 255 * backPixel.a) / 255;
+							r = frontPixel.r;
+							g = frontPixel.g;
+							b = frontPixel.b;
 							break;
 						}
 						case Addition: {
@@ -58,7 +58,14 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 							break;
 						}
 					}
-					a = frontPixel.a + (u16)backPixel.a * (255 - frontPixel.a) / 255;
+
+					// Normal Blending
+					if (frontPixel.a < 255) {
+						r = (r * frontPixel.a + (i32)backPixel.r * (255 - frontPixel.a) / 255 * backPixel.a) / 255;
+						g = (g * frontPixel.a + (i32)backPixel.g * (255 - frontPixel.a) / 255 * backPixel.a) / 255;
+						b = (b * frontPixel.a + (i32)backPixel.b * (255 - frontPixel.a) / 255 * backPixel.a) / 255;
+					}
+					a = frontPixel.a + (i32)backPixel.a * (255 - frontPixel.a) / 255;
 
 					backPixel.r = CLAMP_NUM_TO_TYPE(r, u8);
 					backPixel.g = CLAMP_NUM_TO_TYPE(g, u8);
