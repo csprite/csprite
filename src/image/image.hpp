@@ -9,7 +9,8 @@
 // Thus can be used to check if the structs below are valid.
 
 enum Blend {
-	Alpha
+	Alpha,
+	Add
 };
 
 struct Layer {
