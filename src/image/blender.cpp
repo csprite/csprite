@@ -70,6 +70,12 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 							b = std::min(backPixel.b, frontPixel.b);
 							break;
 						}
+						case Lighten: {
+							r = std::max(backPixel.r, frontPixel.r);
+							g = std::max(backPixel.g, frontPixel.g);
+							b = std::max(backPixel.b, frontPixel.b);
+							break;
+						}
 					}
 
 					// Normal Blending

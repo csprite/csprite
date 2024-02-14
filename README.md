@@ -60,7 +60,7 @@ If you would like to help, [checkout the guide on contributing](https://github.c
   - [x] Screen
   - [ ] Overlay
   - [x] Darken
-  - [ ] Lighten
+  - [x] Lighten
   - [ ] Color Dodge/Burn
   - [ ] Hard/Soft Light
   - [ ] Exclusion
