@@ -1,4 +1,5 @@
 #include <cstring>
+#include <cmath>
 #include "image/blender.hpp"
 
 void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, bool checkerboard) {
@@ -44,6 +45,12 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 							r = frontPixel.r - backPixel.r;
 							g = frontPixel.g - backPixel.g;
 							b = frontPixel.b - backPixel.b;
+							break;
+						}
+						case Difference: {
+							r = std::abs(frontPixel.r - backPixel.r);
+							g = std::abs(frontPixel.g - backPixel.g);
+							b = std::abs(frontPixel.b - backPixel.b);
 							break;
 						}
 					}
