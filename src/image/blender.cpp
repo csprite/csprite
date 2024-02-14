@@ -23,6 +23,8 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 
 				if (frontPixel.a == 255) {
 					backPixel = frontPixel;
+				} else if (frontPixel.a == 0) {
+					continue; // Keep `backPixel` as is, if nothing to blend with in front
 				} else {
 					u16 r = 0, g = 0, b = 0, a = 0;
 					switch (img.Layers[j].blend) {
