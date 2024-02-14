@@ -63,11 +63,6 @@ If you would like to help, [checkout the guide on contributing](https://github.c
   - [x] Lighten
   - [ ] Color Dodge/Burn
   - [ ] Hard/Soft Light
-  - [ ] Exclusion
-  - [ ] Hue
-  - [ ] Saturation
-  - [ ] Color
-  - [ ] Luminosity
 
 ### References/Resources
 list of references & resources i used while developing csprite, might be good for learning.
