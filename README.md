@@ -57,7 +57,7 @@ If you would like to help, [checkout the guide on contributing](https://github.c
   - [x] Subtraction
   - [x] Difference
   - [x] Multiply
-  - [ ] Screen
+  - [x] Screen
   - [ ] Overlay
   - [ ] Darken
   - [ ] Lighten

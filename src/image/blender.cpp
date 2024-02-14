@@ -57,6 +57,12 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 							b = ((frontPixel.b / 255.0f) * (backPixel.b / 255.0f)) * 255.0f;
 							break;
 						}
+						case Screen: {
+							r = (backPixel.r + frontPixel.r - (((frontPixel.r/255) * (backPixel.r/255)) * 255));
+							g = (backPixel.g + frontPixel.g - (((frontPixel.g/255) * (backPixel.g/255)) * 255));
+							b = (backPixel.b + frontPixel.b - (((frontPixel.b/255) * (backPixel.b/255)) * 255));
+							break;
+						};
 					}
 
 					// Normal Blending
