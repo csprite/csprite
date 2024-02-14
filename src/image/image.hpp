@@ -8,8 +8,13 @@
 // `Destroy()` resets the value to default, i.e. `nullptr` or `0`
 // Thus can be used to check if the structs below are valid.
 
+enum Blend {
+	Alpha
+};
+
 struct Layer {
 	String name;
+	Blend  blend = Blend::Alpha;
 	Pixel* pixels = nullptr;
 
 	bool Create(u32 w, u32 h, String name);
