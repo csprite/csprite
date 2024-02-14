@@ -18,7 +18,24 @@ enum Blend {
 	Screen,     // (dst + src - (((src/255) * (dst/255)) * 255))
 	Darken,     // min(dst, src)
 	Lighten,    // max(dst, src)
+
+	Count // For Development
 };
+
+inline const char* BlendModeToString(Blend mode) {
+	switch (mode) {
+		case Normal:      return "Normal";
+		case Addition:    return "Addition";
+		case Subtraction: return "Subtraction";
+		case Difference:  return "Difference";
+		case Multiply:    return "Multiply";
+		case Screen:      return "Screen";
+		case Darken:      return "Darken";
+		case Lighten:     return "Lighten";
+		case Count:       return "Unknown";
+	}
+	return "Unknown";
+}
 
 struct Layer {
 	String name;
