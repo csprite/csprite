@@ -59,7 +59,7 @@ If you would like to help, [checkout the guide on contributing](https://github.c
   - [x] Multiply
   - [x] Screen
   - [ ] Overlay
-  - [ ] Darken
+  - [x] Darken
   - [ ] Lighten
   - [ ] Color Dodge/Burn
   - [ ] Hard/Soft Light

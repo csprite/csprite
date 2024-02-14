@@ -1,5 +1,6 @@
 #include <cstring>
 #include <cmath>
+#include <algorithm> // min()/max()
 #include "image/blender.hpp"
 
 void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, bool checkerboard) {
@@ -62,7 +63,13 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 							g = (backPixel.g + frontPixel.g - (((frontPixel.g/255) * (backPixel.g/255)) * 255));
 							b = (backPixel.b + frontPixel.b - (((frontPixel.b/255) * (backPixel.b/255)) * 255));
 							break;
-						};
+						}
+						case Darken: {
+							r = std::min(backPixel.r, frontPixel.r);
+							g = std::min(backPixel.g, frontPixel.g);
+							b = std::min(backPixel.b, frontPixel.b);
+							break;
+						}
 					}
 
 					// Normal Blending

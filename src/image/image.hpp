@@ -16,6 +16,7 @@ enum Blend {
 	Difference, // abs(src - dst)
 	Multiply,   // ((src/255) * (dst/255)) * 255
 	Screen,     // (dst + src - (((src/255) * (dst/255)) * 255))
+	Darken,     // min(dst, src)
 };
 
 struct Layer {
