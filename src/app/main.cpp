@@ -380,36 +380,51 @@ int main() {
 
 		BEGIN_POPUP("Properties##LayerProperties", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
 			static bool isFirst = true;
-			static String nameTemp;
+			static Layer layerTemp;
 			if (isFirst) {
-				nameTemp = dState.doc.image.Layers[dState.tManager.activeLayer].name;
+				layerTemp = dState.doc.image.Layers[dState.tManager.activeLayer];
 				isFirst = false;
 			}
 
-			ImGui::InputText("Name", &nameTemp);
+			ImGui::InputText("Name", &layerTemp.name);
+			if (ImGui::BeginCombo("Blend Mode", BlendModeToString(layerTemp.blend))) {
+				for (size_t i = 0; i < Blend::Count; i++) {
+					if (ImGui::Selectable(BlendModeToString((Blend)i), layerTemp.blend == i)) {
+						layerTemp.blend = (Blend)i;
+					}
+				}
+				ImGui::EndCombo();
+			}
 
 			if (ImGui::Button("Save")) {
 				// https://stackoverflow.com/a/217605/14516016
 				// Trim Spaces From Start
-				nameTemp.erase(
-					nameTemp.begin(),
-					std::find_if(nameTemp.begin(), nameTemp.end(), [](unsigned char ch) {
+				layerTemp.name.erase(
+					layerTemp.name.begin(),
+					std::find_if(layerTemp.name.begin(), layerTemp.name.end(), [](unsigned char ch) {
 						return !std::isspace(ch);
 					})
 				);
 
 				// Trim Spaces From End
-				nameTemp.erase(
+				layerTemp.name.erase(
 					std::find_if(
-						nameTemp.rbegin(), nameTemp.rend(), [](unsigned char ch) {
+						layerTemp.name.rbegin(), layerTemp.name.rend(), [](unsigned char ch) {
 							return !std::isspace(ch);
 						}
 					).base(),
-					nameTemp.end()
+					layerTemp.name.end()
 				);
 
-				if (!nameTemp.empty()) {
-					dState.doc.image.Layers[dState.tManager.activeLayer].name = nameTemp;
+				if (!layerTemp.name.empty()) {
+					Layer& currLayer = dState.doc.image.Layers[dState.tManager.activeLayer];
+					bool blendChanged = currLayer.blend != layerTemp.blend;
+					currLayer = layerTemp;
+
+					// Re-Render Whole Document With Changed Blend Mode
+					if (blendChanged) {
+						dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
+					}
 				}
 				isFirst = true;
 				ImGui::CloseCurrentPopup();
