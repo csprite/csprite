@@ -23,25 +23,23 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 
 				if (frontPixel.a == 255) {
 					backPixel = frontPixel;
-					continue;
-				}
+				} else {
+					u16 r = 0, g = 0, b = 0, a = 0;
+					switch (img.Layers[j].blend) {
+						case Alpha: {
+							r = ((u16)frontPixel.r * frontPixel.a + (u16)backPixel.r * (255 - frontPixel.a) / 255 * backPixel.a) / 255;
+							g = ((u16)frontPixel.g * frontPixel.a + (u16)backPixel.g * (255 - frontPixel.a) / 255 * backPixel.a) / 255;
+							b = ((u16)frontPixel.b * frontPixel.a + (u16)backPixel.b * (255 - frontPixel.a) / 255 * backPixel.a) / 255;
+							a = frontPixel.a + (u16)backPixel.a * (255 - frontPixel.a) / 255;
+							break;
+						}
+					}
 
-				backPixel.r = CLAMP_NUM_TO_TYPE(
-					static_cast<u16>(
-						((u16)frontPixel.r * frontPixel.a + (u16)backPixel.r * (255 - frontPixel.a) / 255 * backPixel.a) / 255
-					), u8);
-				backPixel.g = CLAMP_NUM_TO_TYPE(
-					static_cast<u16>(
-						((u16)frontPixel.g * frontPixel.a + (u16)backPixel.g * (255 - frontPixel.a) / 255 * backPixel.a) / 255
-					), u8);
-				backPixel.b = CLAMP_NUM_TO_TYPE(
-					static_cast<u16>(
-						((u16)frontPixel.b * frontPixel.a + (u16)backPixel.b * (255 - frontPixel.a) / 255 * backPixel.a) / 255
-					), u8);
-				backPixel.a = CLAMP_NUM_TO_TYPE(
-					static_cast<u16>(
-						frontPixel.a + (u16)backPixel.a * (255 - frontPixel.a) / 255
-					), u8);
+					backPixel.r = CLAMP_NUM_TO_TYPE(static_cast<u16>(r), u8);
+					backPixel.g = CLAMP_NUM_TO_TYPE(static_cast<u16>(g), u8);
+					backPixel.b = CLAMP_NUM_TO_TYPE(static_cast<u16>(b), u8);
+					backPixel.a = CLAMP_NUM_TO_TYPE(static_cast<u16>(a), u8);
+				}
 			}
 		}
 		firstPass = false;
