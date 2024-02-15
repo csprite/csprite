@@ -40,6 +40,7 @@ inline const char* BlendModeToString(Blend mode) {
 struct Layer {
 	String name;
 	Blend  blend = Blend::Normal;
+	u8     opacity = 255;
 	Pixel* pixels = nullptr;
 
 	bool Create(u32 w, u32 h, String name);

@@ -387,6 +387,8 @@ int main() {
 			}
 
 			ImGui::InputText("Name", &layerTemp.name);
+			const i32 p_min = 0, p_max = 255;
+			ImGui::DragScalar("Opacity", ImGuiDataType_U8, &layerTemp.opacity, 1.0f, &p_min, &p_max);
 			if (ImGui::BeginCombo("Blend Mode", BlendModeToString(layerTemp.blend))) {
 				for (size_t i = 0; i < Blend::Count; i++) {
 					if (ImGui::Selectable(BlendModeToString((Blend)i), layerTemp.blend == i)) {
@@ -418,11 +420,10 @@ int main() {
 
 				if (!layerTemp.name.empty()) {
 					Layer& currLayer = dState.doc.image.Layers[dState.tManager.activeLayer];
-					bool blendChanged = currLayer.blend != layerTemp.blend;
+					bool doReRender = currLayer.blend != layerTemp.blend || currLayer.opacity != layerTemp.opacity;
 					currLayer = layerTemp;
 
-					// Re-Render Whole Document With Changed Blend Mode
-					if (blendChanged) {
+					if (doReRender) {
 						dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
 					}
 				}
