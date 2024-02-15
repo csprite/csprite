@@ -10,7 +10,7 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 		for (u32 y = dirtyArea.y; y < dirtyArea.h; y++) {
 			for (u32 x = dirtyArea.x; x < dirtyArea.w; x++) {
 				i32 idx = (y * img.w) + x;
-				Pixel& frontPixel = img.Layers[j].pixels[idx];
+				const Pixel& frontPixel = img.Layers[j].pixels[idx];
 				Pixel& backPixel = outBuff[idx];
 
 				if (firstPass) {
@@ -76,6 +76,7 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 							b = std::max(backPixel.b, frontPixel.b);
 							break;
 						}
+						case Count: break;
 					}
 
 					// Normal Blending
