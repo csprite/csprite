@@ -5,7 +5,6 @@
 #include "app/i18n/strings.hpp"
 #include "app/fswrapper.hpp"
 #include "fs/fs.hpp"
-#include "log/log.h"
 
 #include "SimpleIni.h"
 

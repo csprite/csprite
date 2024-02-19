@@ -2,7 +2,8 @@
 #define CSP_APP_FSWRAPPER_HPP_INCLUDED_
 #pragma once
 
-#include "fs/fs.hpp"
+#include "types.hpp"
+#include "fs/defs.hpp"
 
 namespace FileSystem {
 	String GetConfigDir();
