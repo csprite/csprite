@@ -109,7 +109,7 @@ void _ParseRange(CSimpleIniA& ini) {
 bool UIString::LoadFile(const String& fileName) {
 	String filePath = Fs::GetLanguagesDir() + PATH_SEP + fileName;
 
-	if (Fs::IsRegularFile(filePath) != 1) {
+	if (Fs::IsFile(filePath) != 1) {
 		return false;
 	}
 
