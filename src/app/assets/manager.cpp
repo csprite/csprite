@@ -16,32 +16,15 @@ bool Assets::EnsureFileSystem() {
 		log_error("Fs::MakeDirRecursive(...) - %s", strerror(errno));
 		return false;
 	}
-	if (!Fs::MakeDirRecursive(Fs::GetLanguagesDir())) {
-		log_error("Fs::MakeDirRecursive(...) - %s", strerror(errno));
+
+	if (!Fs::MakeDir(Fs::GetLanguagesDir())) {
+		log_error("Fs::MakeDir(...) - %s", strerror(errno));
 		return false;
 	}
-
-	assets_list("assets/languages/", [](int i, const char* path) -> int {
-		(void)i;
-		String filePath = Fs::GetLanguagesDir() + PATH_SEP + Fs::GetBaseName(path);
-		FILE* f = fopen(filePath.c_str(), "w");
-
-		if (f == NULL) {
-			log_error("fopen(...) - %s", strerror(errno));
-			return 0;
-		}
-
-		i32 sz = 0;
-		u8* res = (u8*)assets_get(path, &sz);
-		if (res != NULL && sz > 0) {
-			fwrite(res, 1, sz, f);
-		} else {
-			log_error("assets_get(...) - returned NULL for '%s'", path);
-		}
-
-		fclose(f);
-		return 0;
-	});
+	if (!Fs::MakeDir(Fs::GetPalettesDir())) {
+		log_error("Fs::MakeDir(...) - %s", strerror(errno));
+		return false;
+	}
 
 	return true;
 }
