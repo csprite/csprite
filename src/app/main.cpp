@@ -475,9 +475,9 @@ int main() {
 					u8 g = dState.palette.Colors[i].g;
 					u8 b = dState.palette.Colors[i].b;
 
-					r = CLAMP_NUM_TO_TYPE((r > 127 ? r - 125 : r + 125), u8);
-					g = CLAMP_NUM_TO_TYPE((g > 127 ? g - 125 : g + 125), u8);
-					b = CLAMP_NUM_TO_TYPE((b > 127 ? b - 125 : b + 125), u8);
+					r = MIN_MAX_OF_TYPE((r > 127 ? r - 125 : r + 125), u8);
+					g = MIN_MAX_OF_TYPE((g > 127 ? g - 125 : g + 125), u8);
+					b = MIN_MAX_OF_TYPE((b > 127 ? b - 125 : b + 125), u8);
 
 					/* This Value Will Be Subtracted From Triangle's Positions
 					   Because Of Some Extra "Marginal" Space The Button Takes */
