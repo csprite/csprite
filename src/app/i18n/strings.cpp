@@ -57,7 +57,7 @@ char* string_dup(const char* const str) {
 unsigned long _stoul(const String& str, int base) {
 	try {
 		return std::stoul(str, nullptr, base);
-	} catch(std::exception) {
+	} catch(const std::exception&) {
 		return 0;
 	}
 }
