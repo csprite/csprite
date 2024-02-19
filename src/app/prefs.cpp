@@ -9,9 +9,9 @@ bool Preferences::Load(const char* filePath) {
 	}
 
 	fps = ini.GetLongValue("program", "fps", Preferences::fps);
-	fps = CLAMP_NUM(fps, 5, 999);
+	fps = MIN_MAX(fps, 5, 999);
 	fontSize = ini.GetLongValue("program", "font_size", Preferences::fontSize);
-	fontSize = CLAMP_NUM(fontSize, 10, 999);
+	fontSize = MIN_MAX(fontSize, 10, 999);
 	langFileName = ini.GetValue("program", "language_file", Preferences::langFileName.c_str());
 
 	return true;

@@ -7,6 +7,17 @@
 #include "palette/palette.hpp"
 #include "tools/ToolManager.hpp"
 
+#include <limits>
+// Clamps "a" to the min & max value of "T", without overflowing.
+#define MIN_MAX_OF_TYPE(a, T)               \
+	static_cast<T>(                         \
+		MIN_MAX(                            \
+			a,                              \
+			std::numeric_limits<T>().min(), \
+			std::numeric_limits<T>().max()  \
+		)                                   \
+	)
+
 struct DocumentState {
 	Doc doc;
 	Tool::Manager tManager;

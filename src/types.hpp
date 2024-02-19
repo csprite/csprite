@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <limits>
 
 using u8  = std::uint8_t;
 using u16 = std::uint16_t;
@@ -42,18 +41,9 @@ GEN_RECT_STRUCT(RectF32, f32);
 GEN_VECT_STRUCT(VecI32, i32);
 GEN_VECT_STRUCT(VecF32, f32);
 
-// Clamps "a" to the min & max value
-#define CLAMP_NUM(a, min, max) \
-	((a <= min ? min : a ) >= max ? max : (a <= min ? min : a))
-
-// Clamps "a" to the min & max value of "targetType", without overflowing.
-#define CLAMP_NUM_TO_TYPE(a, targetType)             \
-	static_cast<targetType>(                         \
-		CLAMP_NUM(                                   \
-			a,                                       \
-			std::numeric_limits<targetType>().min(), \
-			std::numeric_limits<targetType>().max()  \
-		)                                            \
-	)
+#define MIN(a, min) (a <= min ? min : a)
+#define MAX(a, max) (a >= max ? max : a)
+#define MIN_MAX(a, min, max) MAX(MIN(a, min), max)
 
 #endif // CSP_TYPES_HPP_INCLUDED_
+

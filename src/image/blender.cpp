@@ -101,10 +101,10 @@ void Blender::Blend(const Image& img, const RectU32& dirtyArea, Pixel* outBuff, 
 						a = 255;
 					}
 
-					output.r = CLAMP_NUM_TO_TYPE(r, u8);
-					output.g = CLAMP_NUM_TO_TYPE(g, u8);
-					output.b = CLAMP_NUM_TO_TYPE(b, u8);
-					output.a = CLAMP_NUM_TO_TYPE(a, u8);
+					output.r = MIN_MAX(r, 0, 255);
+					output.g = MIN_MAX(g, 0, 255);
+					output.b = MIN_MAX(b, 0, 255);
+					output.a = MIN_MAX(a, 0, 255);
 				}
 			}
 		}
