@@ -27,8 +27,12 @@ using Vector = std::vector<Type>;
 #define GEN_RECT_STRUCT(name, type) \
 	struct name { \
 		type x, y, w, h; \
-		bool operator == (const name& rhs) const; \
-		bool operator != (const name& rhs) const; \
+		inline bool operator == (const name& rhs) const { \
+			return (x == rhs.x && y == rhs.y && w == rhs.w && h == rhs.h); \
+		} \
+		inline bool operator != (const name& rhs) const { \
+			return !(*this == rhs); \
+		} \
 	}
 
 GEN_RECT_STRUCT(RectI32, i32);
