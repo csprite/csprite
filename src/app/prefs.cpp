@@ -25,4 +25,3 @@ void Preferences::Write(const char* filePath) {
 	ini.SetValue("program", "language_file", langFileName.c_str());
 	ini.SaveFile(filePath);
 }
-

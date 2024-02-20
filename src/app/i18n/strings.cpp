@@ -140,7 +140,7 @@ bool UIString::LoadFile(const String& fileName) {
 
 void UIString::LoadDefault() {
 	i32 sz = 0;
-	const char* data = (const char*)assets_get("data/languages/english.ini", &sz);
+	const char* data = (const char*)assets_get("data/english.ini", &sz);
 
 	CSimpleIniA ini;
 	ini.SetUnicode();

@@ -32,7 +32,7 @@ int main() {
 
 	PaletteHelper::UpdateEntries();
 	UIString::UpdateEntries();
-	if (!UIString::LoadFile(AppPrefs.langFileName)) {
+	if (AppPrefs.langFileName.empty() || !UIString::LoadFile(AppPrefs.langFileName)) {
 		UIString::LoadDefault();
 	}
 	const UISTR_Arr& Lang = UIString::Get();
@@ -287,6 +287,9 @@ int main() {
 								tempPrefs.langFileName = fileName;
 							}
 						});
+						if (ImGui::Selectable("default")) {
+							tempPrefs.langFileName.clear();
+						}
 						ImGui::EndCombo();
 					}
 					ImGui::SameLine(0, 3);
