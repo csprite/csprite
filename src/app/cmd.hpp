@@ -9,7 +9,7 @@
 
 namespace Cmd {
 	enum Type {
-		New_File,        // ()
+		New_File,        // (Doc* doc, u32 widthNew, u32 heightNew)
 		Open_File,       // (Doc* doc, Tool::Manager* mgr)
 		Save_File,       // (const Image* img, String* filePath)
 		SaveAs_File,     // (const Image* img, String* filePath)
@@ -18,7 +18,6 @@ namespace Cmd {
 		ZoomOut_Viewport // (Tool::Manager* mgr, const Doc* doc)
 	};
 
-	void Draw(const UISTR_Arr& Lang, DocumentState& state);
 	bool Execute(Cmd::Type t, ...);
 }
 

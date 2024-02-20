@@ -79,8 +79,11 @@ int main() {
 	dState.doc.Render(dirtyArea);
 	Cmd::Execute(Cmd::Type::Center_Viewport, &dState.tManager, &dState.doc);
 
+	int NewCanvasRes[2] = {60, 40};
+
 	ImVec2 MousePosRel;
-	bool ShowAboutWindow = false,
+	bool ShowNewDocWindow = false,
+		 ShowAboutWindow = false,
 	     ShowAppPrefsigWindow = false,
 	     ShowLayerPropertiesWindow = false;
 #ifdef _DEBUG
@@ -101,7 +104,7 @@ int main() {
 		if (ImGui::BeginMainMenuBar()) {
 			BEGIN_MENU(Lang[UISTR::Menu_File])
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_New], "Ctrl+N")
-					Cmd::Execute(Cmd::Type::New_File);
+					ShowNewDocWindow = true;
 				END_MENUITEM()
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_Open], "Ctrl+O")
 					Cmd::Execute(Cmd::Type::Open_File, &dState.doc, &dState.tManager);
@@ -165,12 +168,13 @@ int main() {
 		#undef BEGIN_MENU
 		#undef END_MENU
 
-		Cmd::Draw(Lang, dState);
-
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
-		if (ShowAboutWindow) {
+		if (ShowNewDocWindow) {
+			ShowNewDocWindow = false;
+			ImGui::OpenPopup(Lang[UISTR::Popup_NewDocument]);
+		} else if (ShowAboutWindow) {
 			ShowAboutWindow = false;
 			ImGui::OpenPopup(Lang[UISTR::Popup_AboutCsprite]);
 		} else if (ShowAppPrefsigWindow) {
@@ -183,6 +187,22 @@ int main() {
 
 		#define BEGIN_POPUP(name, flags) if (ImGui::BeginPopupModal(name, NULL, flags)) {
 		#define END_POPUP() ImGui::EndPopup(); }
+
+		BEGIN_POPUP(Lang[UISTR::Popup_NewDocument], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
+			ImGui::InputInt(Lang[UISTR::Popup_NewDocument_WidthInput], &NewCanvasRes[0], 1, 1, 0);
+			ImGui::InputInt(Lang[UISTR::Popup_NewDocument_HeightInput], &NewCanvasRes[1], 1, 1, 0);
+
+			if (ImGui::Button(Lang[UISTR::Popup_NewDocument_OkButton])) {
+				Cmd::Execute(Cmd::Type::New_File, &dState.doc, NewCanvasRes[0], NewCanvasRes[1]);
+				Cmd::Execute(Cmd::Type::Center_Viewport, &dState.tManager, &dState.doc);
+
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button(Lang[UISTR::Popup_NewDocument_CancelButton])) {
+				ImGui::CloseCurrentPopup();
+			}
+		END_POPUP()
 
 		ImGui::SetNextWindowSize({520, 0});
 		BEGIN_POPUP(Lang[UISTR::Popup_AboutCsprite], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
@@ -622,7 +642,7 @@ int main() {
 			} else if (ImGui::IsKeyReleased(ImGuiKey_Space)) {
 				dState.tManager.currTool = dState.tManager.prevTool;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
-				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::New_File, &dState.tManager, &dState.doc);
+				if (io.KeyCtrl) ShowNewDocWindow = true;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_I, false)) {
 				dState.tManager.currTool = Tool::Type::COLOR_PICKER;
 			}
