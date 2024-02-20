@@ -226,21 +226,16 @@ int main() {
 
 			ImGui::SeparatorText(Lang[UISTR::Popup_AboutCsprite_OpenSrcProjects_Header]);
 			ImGui::TextWrapped(Lang[UISTR::Popup_AboutCsprite_OpenSrcProjects_Text]);
+			ImGui::Text("github.com/");
 			ImGui::BulletText("csprite/imbase - BSD-3-Clause License:");
 				ImGui::Indent();
 				ImGui::BulletText("glfw/glfw (OpenGL, window & input) - Zlib License");
 				ImGui::BulletText("dav1dde/glad (OpenGL Function Loader) - Public Domain");
 				ImGui::BulletText("ocornut/imgui (User Interface) - MIT License");
 			ImGui::Unindent();
-			ImGui::BulletText("rxi/log.c (Logging) - MIT License");
+			ImGui::BulletText("rxi/sfd (File Dialog) - MIT License");
+			ImGui::BulletText("brofield/simpleini (INI Read/Write) - MIT License");
 			ImGui::BulletText("nothings/stb (Image Read/Write) - Public Domain");
-			ImGui::BulletText("gallickgunner/ImGui-Addons (File Browser) - MIT License");
-			ImGui::BulletText("nlohmann/json (JSON Parser) - MIT License");
-				ImGui::Indent();
-				ImGui::BulletText("abseil/abseil-cpp - Apache 2.0 License");
-				ImGui::BulletText("UTF-8 Decoder by Bjoern Hoehrmann - MIT License");
-				ImGui::BulletText("Grisu2 algorithm by Florian Loitsch - MIT License");
-			ImGui::Unindent();
 
 			ImGui::Spacing();
 			ImVec2 closeButtonSize(100.f, 0.f);
