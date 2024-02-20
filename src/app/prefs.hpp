@@ -7,7 +7,7 @@
 struct Preferences {
 	u32 fps = 50;
 	u32 fontSize = 18;
-	String langFileName = "english.ini";
+	String langFileName = "";
 
 	bool Load(const char* filePath);
 	void Write(const char* filePath);
