@@ -10,6 +10,7 @@
 #include "image/writer.hpp"
 
 #include "sfd.h"
+#include "tools/ToolManager.hpp"
 
 static bool
 	IsOpen_NewDocumentWin = false;
@@ -44,7 +45,9 @@ void Cmd::Draw(const UISTR_Arr& Lang, DocumentState& state) {
 }
 
 bool Cmd::Execute(Cmd::Type t, ...) {
-	va_list args;
+	#define BEGIN_ARGS(num) va_list args; va_start(args, num)
+	#define GET_ARG(type, name) type name = va_arg(args, type)
+	#define END_ARGS() va_end(args)
 
 	switch (t) {
 		case New_File: {
@@ -52,9 +55,10 @@ bool Cmd::Execute(Cmd::Type t, ...) {
 			break;
 		}
 		case Open_File: {
-			va_start(args, 2);
-			Doc* doc = va_arg(args, Doc*);
-			Tool::Manager* mgr = va_arg(args, Tool::Manager*);
+			BEGIN_ARGS(2);
+				GET_ARG(Doc*, doc);
+				GET_ARG(Tool::Manager*, mgr);
+			END_ARGS();
 
 			sfd_Options opt = {};
 			opt.save = 0;
@@ -78,29 +82,26 @@ bool Cmd::Execute(Cmd::Type t, ...) {
 					log_error("Error: %s (%s)", ErrorLast, strerror(errno));
 				}
 			}
-			va_end(args);
 			break;
 		}
 		case Save_File: {
-			va_start(args, 2);
-
-			const Image* img = va_arg(args, const Image*);
-			String* fp = va_arg(args, String*);
+			BEGIN_ARGS(2);
+				GET_ARG(const Image*, img);
+				GET_ARG(String*, fp);
+			END_ARGS();
 
 			if (fp->empty()) {
 				return Cmd::Execute(Cmd::Type::SaveAs_File, img, fp);
 			} else {
 				return ImageWriter::Write(*img, *fp);
 			}
-
-			va_end(args);
 			break;
 		}
 		case SaveAs_File: {
-			va_start(args, 2);
-
-			const Image* img = va_arg(args, const Image*);
-			String* fp = va_arg(args, String*);
+			BEGIN_ARGS(2);
+				GET_ARG(const Image*, img);
+				GET_ARG(String*, fp);
+			END_ARGS();
 
 			sfd_Options opt = {};
 			opt.save = 1;
@@ -115,50 +116,42 @@ bool Cmd::Execute(Cmd::Type t, ...) {
 					*fp = filePath;
 				}
 			}
-
-			va_end(args);
 			break;
 		}
 		case Center_Viewport: {
-			va_start(args, 2);
-
-			Tool::Manager* mgr = va_arg(args, Tool::Manager*);
-			const Doc* doc = va_arg(args, const Doc*);
+			BEGIN_ARGS(2);
+				GET_ARG(Tool::Manager*, mgr);
+				GET_ARG(const Doc*, doc);
+			END_ARGS();
 
 			mgr->UpdateViewportScale(*doc);
 
 			mgr->viewport.x = (ImGui::GetIO().DisplaySize.x / 2) - (mgr->viewportScale / 2);
 			mgr->viewport.y = (ImGui::GetIO().DisplaySize.y / 2) - (mgr->viewportScale / 2);
-
-			va_end(args);
 			break;
 		}
 		case ZoomIn_Viewport: {
-			va_start(args, 2);
-
-			Tool::Manager* mgr = va_arg(args, Tool::Manager*);
-			const Doc* doc = va_arg(args, const Doc*);
+			BEGIN_ARGS(2);
+				GET_ARG(Tool::Manager*, mgr);
+				GET_ARG(const Doc*, doc);
+			END_ARGS();
 
 			if (mgr->viewportScale < 1000) {
 				mgr->viewportScale += 0.15;
 				mgr->UpdateViewportScale(*doc);
 			}
-
-			va_end(args);
 			break;
 		}
 		case ZoomOut_Viewport: {
-			va_start(args, 2);
-
-			Tool::Manager* mgr = va_arg(args, Tool::Manager*);
-			const Doc* doc = va_arg(args, const Doc*);
+			BEGIN_ARGS(2);
+				GET_ARG(Tool::Manager*, mgr);
+				GET_ARG(const Doc*, doc);
+			END_ARGS();
 
 			if (mgr->viewportScale >= 0.30) {
 				mgr->viewportScale -= 0.15;
 				mgr->UpdateViewportScale(*doc);
 			}
-
-			va_end(args);
 			break;
 		}
 	}
