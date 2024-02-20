@@ -62,10 +62,10 @@ unsigned long _stoul(const String& str, int base) {
 }
 
 void _ParseRange(CSimpleIniA& ini) {
-	if (!ini.KeyExists("unicode_range", "range[]")) return;
+	if (!ini.KeyExists("unicode_range", "range")) return;
 	ImVector<ImWchar> rng;
 
-	String rngStr = ini.GetValue("unicode_range", "range[]");
+	String rngStr = ini.GetValue("unicode_range", "range");
 
 	size_t pos1 = 0;
 	String Item;
