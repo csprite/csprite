@@ -7,6 +7,7 @@
 #include "misc.hpp"
 #include "prefs.hpp"
 #include "fswrapper.hpp"
+#include "app/cmd.hpp"
 
 #include "types.hpp"
 #include "pixel/pixel.hpp"
@@ -20,12 +21,9 @@
 #include "i18n/strings.hpp"
 
 #include "doc/doc.hpp"
-#include "image/parser.hpp"
-#include "image/writer.hpp"
 #include "palette/palette.hpp"
 #include "palette/parser.hpp"
 #include "tools/ToolManager.hpp"
-#include "filebrowser/filebrowser.hpp"
 
 int main() {
 	EnableVT100();
@@ -88,15 +86,10 @@ int main() {
 	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
 	dState.doc.Render(dirtyArea);
-	ZoomNCenterVP(dState.tManager, dState.doc);
-
-	imgui_addons::ImGuiFileBrowser FileDialogOpen, FileDialogClose;
+	Cmd::Execute(Cmd::Type::Center_Viewport, dState);
 
 	ImVec2 MousePosRel;
-	bool ShowNewDocumentWindow = false,
-	     ShowSaveAsFileDialog = false,
-	     ShowOpenFileWindow = false,
-	     ShowAboutWindow = false,
+	bool ShowAboutWindow = false,
 	     ShowAppPrefsigWindow = false,
 	     ShowLayerPropertiesWindow = false;
 #ifdef _DEBUG
@@ -117,20 +110,16 @@ int main() {
 		if (ImGui::BeginMainMenuBar()) {
 			BEGIN_MENU(Lang[UISTR::Menu_File])
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_New], "Ctrl+N")
-					ShowNewDocumentWindow = true;
+					Cmd::Execute(Cmd::Type::New_File, dState);
 				END_MENUITEM()
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_Open], "Ctrl+O")
-					ShowOpenFileWindow = true;
+					Cmd::Execute(Cmd::Type::Open_File, dState);
 				END_MENUITEM()
 				BEGIN_MENUITEM("Save", "Ctrl+S")
-					if (dState.filePath.empty()) {
-						ShowSaveAsFileDialog = true;
-					} else {
-						ImageWriter::Write(dState.doc.image, dState.filePath);
-					}
+					Cmd::Execute(Cmd::Type::Save_File, dState);
 				END_MENUITEM()
 				BEGIN_MENUITEM("Save As", "Alt+S")
-					ShowSaveAsFileDialog = true;
+					Cmd::Execute(Cmd::Type::SaveAs_File, dState);
 				END_MENUITEM()
 			END_MENU()
 
@@ -185,19 +174,12 @@ int main() {
 		#undef BEGIN_MENU
 		#undef END_MENU
 
+		Cmd::Draw(Lang, dState);
+
 		#define BEGIN_WINDOW(label, isOpenPtr, flags) if (ImGui::Begin(label, isOpenPtr, flags)) {
 		#define END_WINDOW() ImGui::End(); }
 
-		if (ShowOpenFileWindow) {
-			ShowOpenFileWindow = false;
-			ImGui::OpenPopup(Lang[UISTR::Popup_OpenFile]);
-		} else if (ShowSaveAsFileDialog) {
-			ShowSaveAsFileDialog = false;
-			ImGui::OpenPopup("Save File##SaveFileDialog");
-		} else if (ShowNewDocumentWindow) {
-			ShowNewDocumentWindow = false;
-			ImGui::OpenPopup(Lang[UISTR::Popup_NewDocument]);
-		} else if (ShowAboutWindow) {
+		if (ShowAboutWindow) {
 			ShowAboutWindow = false;
 			ImGui::OpenPopup(Lang[UISTR::Popup_AboutCsprite]);
 		} else if (ShowAppPrefsigWindow) {
@@ -208,53 +190,8 @@ int main() {
 			ImGui::OpenPopup("Properties##LayerProperties");
 		}
 
-		if (FileDialogOpen.showFileDialog(
-			Lang[UISTR::Popup_OpenFile],
-			imgui_addons::ImGuiFileBrowser::DialogMode::OPEN,
-			ImVec2(700, 310), IMAGE_PARSER_SUPPORTED_EXTENSIONS
-		)) {
-			Image img;
-			if (ImageParser::Parse(img, FileDialogOpen.selected_path.c_str())) {
-				dState.doc.Destroy();
-				dState.doc.Create(img.w, img.h);
-				dState.doc.image = std::move(img);
-				dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
-				ZoomNCenterVP(dState.tManager, dState.doc);
-				dState.doc.Render(dirtyArea);
-			}
-		}
-
-		if (FileDialogClose.showFileDialog(
-			"Save File##SaveFileDialog",
-			imgui_addons::ImGuiFileBrowser::DialogMode::SAVE,
-			ImVec2(700, 310), IMAGE_WRITER_SUPPORTED_EXTENSIONS
-		)) {
-			if (ImageWriter::Write(dState.doc.image, FileDialogClose.selected_path)) {
-				dState.filePath = FileDialogClose.selected_path;
-			}
-		}
-
 		#define BEGIN_POPUP(name, flags) if (ImGui::BeginPopupModal(name, NULL, flags)) {
 		#define END_POPUP() ImGui::EndPopup(); }
-
-		BEGIN_POPUP(Lang[UISTR::Popup_NewDocument], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
-			ImGui::InputInt(Lang[UISTR::Popup_NewDocument_WidthInput], &NEW_DIMS[0], 1, 1, 0);
-			ImGui::InputInt(Lang[UISTR::Popup_NewDocument_HeightInput], &NEW_DIMS[1], 1, 1, 0);
-
-			if (ImGui::Button(Lang[UISTR::Popup_NewDocument_OkButton])) {
-				dState.doc.Destroy();
-				dState.doc.Create(NEW_DIMS[0], NEW_DIMS[1]);
-				dState.doc.image.AddLayer("New Layer");
-				dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
-
-				ZoomNCenterVP(dState.tManager, dState.doc);
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::SameLine();
-			if (ImGui::Button(Lang[UISTR::Popup_NewDocument_CancelButton])) {
-				ImGui::CloseCurrentPopup();
-			}
-		END_POPUP()
 
 		ImGui::SetNextWindowSize({520, 0});
 		BEGIN_POPUP(Lang[UISTR::Popup_AboutCsprite], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
@@ -667,17 +604,17 @@ int main() {
 
 		if (isMainWindowHovered) {
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				if (io.MouseWheel > 0) AdjustZoom(true, dState.tManager, dState.doc);
-				if (io.MouseWheel < 0) AdjustZoom(false, dState.tManager, dState.doc);
+				if (io.MouseWheel > 0) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, dState);
+				if (io.MouseWheel < 0) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, dState);
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
-				if (io.KeyCtrl) AdjustZoom(true, dState.tManager, dState.doc);
+				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, dState);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex >= dState.palette.Colors.size() - 1 ? 0 : dState.PaletteIndex + 1;
 				else dState.tManager.brushSize += 1;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
-				if (io.KeyCtrl) AdjustZoom(false, dState.tManager, dState.doc);
+				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, dState);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex > 0 ? dState.PaletteIndex - 1 : dState.palette.Colors.size() - 1;
 				else if (dState.tManager.brushSize > 1)
@@ -694,7 +631,7 @@ int main() {
 			} else if (ImGui::IsKeyReleased(ImGuiKey_Space)) {
 				dState.tManager.currTool = dState.tManager.prevTool;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
-				if (io.KeyCtrl) ShowNewDocumentWindow = true;
+				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::New_File, dState);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_I, false)) {
 				dState.tManager.currTool = Tool::Type::COLOR_PICKER;
 			}
@@ -726,24 +663,3 @@ int main() {
 	ImBase::Window::Destroy();
 	return 0;
 }
-
-inline void ZoomNCenterVP(Tool::Manager& mgr, const Doc& doc) {
-	mgr.UpdateViewportScale(doc);
-
-	mgr.viewport.x = (ImGui::GetIO().DisplaySize.x / 2) - (mgr.viewportScale / 2);
-	mgr.viewport.y = (ImGui::GetIO().DisplaySize.y / 2) - (mgr.viewportScale / 2);
-}
-
-void AdjustZoom(bool Increase, Tool::Manager& mgr, const Doc& doc) {
-	if (Increase == true) {
-		if (mgr.viewportScale < (std::numeric_limits<f32>().max() - 1)) {
-			mgr.viewportScale += 0.5;
-		}
-	} else {
-		if (mgr.viewportScale >= 0.30) {
-			mgr.viewportScale -= 0.15;
-		}
-	}
-	mgr.UpdateViewportScale(doc);
-}
-

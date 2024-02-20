@@ -16,3 +16,6 @@
 [submodule "third_party/simpleini"]
 	path = third_party/simpleini
 	url = https://github.com/brofield/simpleini
+[submodule "third_party/sfd"]
+	path = third_party/sfd
+	url = https://github.com/csprite/sfd

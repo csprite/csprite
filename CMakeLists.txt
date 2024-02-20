@@ -48,6 +48,10 @@ endif()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/simpleini/)
 target_link_libraries(csprite PUBLIC SimpleIni)
 
+set(SFD_BUILD_EXAMPLE OFF CACHE INTERNAL "")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/sfd/)
+target_link_libraries(csprite PUBLIC Sfd)
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/log.c/)
 target_link_libraries(csprite PUBLIC rxi_log)
 

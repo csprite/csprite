@@ -6,7 +6,7 @@
 #include "image/image.hpp"
 
 // Todo: Automate This Process in Future
-#define IMAGE_WRITER_SUPPORTED_EXTENSIONS ".png,.jpg,.jpeg,.bmp,.psd,.tga"
+#define IMAGE_WRITER_SUPPORTED_EXTENSIONS "*.png|*.jpg|*.jpeg|*.bmp|*.psd|*.tga"
 
 namespace ImageWriter {
 	bool Write(const Image& img, const String filePath);

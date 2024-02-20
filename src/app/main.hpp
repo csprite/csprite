@@ -26,7 +26,4 @@ struct DocumentState {
 	u32 PaletteIndex = 0;
 };
 
-inline void ZoomNCenterVP(Tool::Manager& mgr, const Doc& doc);
-inline void AdjustZoom(bool Increase, Tool::Manager& mgr, const Doc& doc);
-
 #endif // CSP_MAIN_HPP_INCLUDED_
