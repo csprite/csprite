@@ -77,7 +77,7 @@ int main() {
 	dState.tManager.viewport.h = dState.doc.image.h * dState.tManager.viewportScale;
 
 	dState.doc.Render(dirtyArea);
-	Cmd::Execute(Cmd::Type::Center_Viewport, dState);
+	Cmd::Execute(Cmd::Type::Center_Viewport, &dState.tManager, &dState.doc);
 
 	ImVec2 MousePosRel;
 	bool ShowAboutWindow = false,
@@ -101,16 +101,16 @@ int main() {
 		if (ImGui::BeginMainMenuBar()) {
 			BEGIN_MENU(Lang[UISTR::Menu_File])
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_New], "Ctrl+N")
-					Cmd::Execute(Cmd::Type::New_File, dState);
+					Cmd::Execute(Cmd::Type::New_File);
 				END_MENUITEM()
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_Open], "Ctrl+O")
-					Cmd::Execute(Cmd::Type::Open_File, dState);
+					Cmd::Execute(Cmd::Type::Open_File, &dState.doc, &dState.tManager);
 				END_MENUITEM()
 				BEGIN_MENUITEM("Save", "Ctrl+S")
-					Cmd::Execute(Cmd::Type::Save_File, dState);
+					Cmd::Execute(Cmd::Type::Save_File, &dState.doc.image, &dState.filePath);
 				END_MENUITEM()
 				BEGIN_MENUITEM("Save As", "Alt+S")
-					Cmd::Execute(Cmd::Type::SaveAs_File, dState);
+					Cmd::Execute(Cmd::Type::SaveAs_File, &dState.doc.image, &dState.filePath);
 				END_MENUITEM()
 			END_MENU()
 
@@ -595,17 +595,17 @@ int main() {
 
 		if (isMainWindowHovered) {
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				if (io.MouseWheel > 0) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, dState);
-				if (io.MouseWheel < 0) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, dState);
+				if (io.MouseWheel > 0) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, &dState.tManager, &dState.doc);
+				if (io.MouseWheel < 0) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, &dState.tManager, &dState.doc);
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
-				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, dState);
+				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, &dState.tManager, &dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex >= dState.palette.Colors.size() - 1 ? 0 : dState.PaletteIndex + 1;
 				else dState.tManager.brushSize += 1;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
-				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, dState);
+				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, &dState.tManager, &dState.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
 					dState.PaletteIndex = dState.PaletteIndex > 0 ? dState.PaletteIndex - 1 : dState.palette.Colors.size() - 1;
 				else if (dState.tManager.brushSize > 1)
@@ -622,7 +622,7 @@ int main() {
 			} else if (ImGui::IsKeyReleased(ImGuiKey_Space)) {
 				dState.tManager.currTool = dState.tManager.prevTool;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
-				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::New_File, dState);
+				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::New_File, &dState.tManager, &dState.doc);
 			} else if (ImGui::IsKeyPressed(ImGuiKey_I, false)) {
 				dState.tManager.currTool = Tool::Type::COLOR_PICKER;
 			}

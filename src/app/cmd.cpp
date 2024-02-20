@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <cstring>
+#include <cstdarg>
 
 #include "cmd.hpp"
 #include "imgui/imgui.h"
@@ -28,7 +29,7 @@ void Cmd::Draw(const UISTR_Arr& Lang, DocumentState& state) {
 			state.doc.Create(NewCanvasRes[0], NewCanvasRes[1]);
 			state.doc.image.AddLayer("New Layer");
 			state.doc.Render({ 0, 0, state.doc.image.w, state.doc.image.h });
-			Cmd::Execute(Cmd::Type::Center_Viewport, state);
+			Cmd::Execute(Cmd::Type::Center_Viewport, state.tManager, &state.doc);
 
 			IsOpen_NewDocumentWin = false;
 		}
@@ -42,13 +43,19 @@ void Cmd::Draw(const UISTR_Arr& Lang, DocumentState& state) {
 	#undef BEGIN_POPUP
 }
 
-bool Cmd::Execute(Cmd::Type t, DocumentState& state) {
+bool Cmd::Execute(Cmd::Type t, ...) {
+	va_list args;
+
 	switch (t) {
 		case New_File: {
 			IsOpen_NewDocumentWin = true;
 			break;
 		}
 		case Open_File: {
+			va_start(args, 2);
+			Doc* doc = va_arg(args, Doc*);
+			Tool::Manager* mgr = va_arg(args, Tool::Manager*);
+
 			sfd_Options opt = {};
 			opt.save = 0;
 			opt.title = "Open File";
@@ -59,11 +66,11 @@ bool Cmd::Execute(Cmd::Type t, DocumentState& state) {
 			if (filePath != NULL) {
 				Image img;
 				if (ImageParser::Parse(img, filePath)) {
-					state.doc.Destroy();
-					state.doc.Create(img.w, img.h);
-					state.doc.image = std::move(img);
-					state.doc.Render({ 0, 0, state.doc.image.w, state.doc.image.h });
-					Cmd::Execute(Cmd::Type::Center_Viewport, state);
+					doc->Destroy();
+					doc->Create(img.w, img.h);
+					doc->image = std::move(img);
+					doc->Render({ 0, 0, doc->image.w, doc->image.h });
+					Cmd::Execute(Cmd::Type::Center_Viewport, mgr, doc);
 				}
 			} else {
 				const char* ErrorLast = sfd_get_error();
@@ -71,17 +78,30 @@ bool Cmd::Execute(Cmd::Type t, DocumentState& state) {
 					log_error("Error: %s (%s)", ErrorLast, strerror(errno));
 				}
 			}
+			va_end(args);
 			break;
 		}
 		case Save_File: {
-			if (state.filePath.empty()) {
-				return Cmd::Execute(Cmd::Type::SaveAs_File, state);
+			va_start(args, 2);
+
+			const Image* img = va_arg(args, const Image*);
+			String* fp = va_arg(args, String*);
+
+			if (fp->empty()) {
+				return Cmd::Execute(Cmd::Type::SaveAs_File, img, fp);
 			} else {
-				return ImageWriter::Write(state.doc.image, state.filePath);
+				return ImageWriter::Write(*img, *fp);
 			}
+
+			va_end(args);
 			break;
 		}
 		case SaveAs_File: {
+			va_start(args, 2);
+
+			const Image* img = va_arg(args, const Image*);
+			String* fp = va_arg(args, String*);
+
 			sfd_Options opt = {};
 			opt.save = 1;
 			opt.title = "Save File";
@@ -91,31 +111,54 @@ bool Cmd::Execute(Cmd::Type t, DocumentState& state) {
 			const char* filePath = sfd_open_dialog(&opt);
 
 			if (filePath != NULL) {
-				if (ImageWriter::Write(state.doc.image, filePath)) {
-					state.filePath = filePath;
+				if (ImageWriter::Write(*img, filePath)) {
+					*fp = filePath;
 				}
 			}
+
+			va_end(args);
 			break;
 		}
 		case Center_Viewport: {
-			state.tManager.UpdateViewportScale(state.doc);
+			va_start(args, 2);
 
-			state.tManager.viewport.x = (ImGui::GetIO().DisplaySize.x / 2) - (state.tManager.viewportScale / 2);
-			state.tManager.viewport.y = (ImGui::GetIO().DisplaySize.y / 2) - (state.tManager.viewportScale / 2);
+			Tool::Manager* mgr = va_arg(args, Tool::Manager*);
+			const Doc* doc = va_arg(args, const Doc*);
+
+			mgr->UpdateViewportScale(*doc);
+
+			mgr->viewport.x = (ImGui::GetIO().DisplaySize.x / 2) - (mgr->viewportScale / 2);
+			mgr->viewport.y = (ImGui::GetIO().DisplaySize.y / 2) - (mgr->viewportScale / 2);
+
+			va_end(args);
 			break;
 		}
 		case ZoomIn_Viewport: {
-			if (state.tManager.viewportScale < 1000) {
-				state.tManager.viewportScale += 0.15;
-				state.tManager.UpdateViewportScale(state.doc);
+			va_start(args, 2);
+
+			Tool::Manager* mgr = va_arg(args, Tool::Manager*);
+			const Doc* doc = va_arg(args, const Doc*);
+
+			if (mgr->viewportScale < 1000) {
+				mgr->viewportScale += 0.15;
+				mgr->UpdateViewportScale(*doc);
 			}
+
+			va_end(args);
 			break;
 		}
 		case ZoomOut_Viewport: {
-			if (state.tManager.viewportScale >= 0.30) {
-				state.tManager.viewportScale -= 0.15;
-				state.tManager.UpdateViewportScale(state.doc);
+			va_start(args, 2);
+
+			Tool::Manager* mgr = va_arg(args, Tool::Manager*);
+			const Doc* doc = va_arg(args, const Doc*);
+
+			if (mgr->viewportScale >= 0.30) {
+				mgr->viewportScale -= 0.15;
+				mgr->UpdateViewportScale(*doc);
 			}
+
+			va_end(args);
 			break;
 		}
 	}
