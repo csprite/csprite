@@ -9,17 +9,17 @@
 
 namespace Cmd {
 	enum Type {
-		Open_File,
-		New_File,
-		Save_File,
-		SaveAs_File,
-		Center_Viewport,
-		ZoomIn_Viewport,
-		ZoomOut_Viewport
+		New_File,        // ()
+		Open_File,       // (Doc* doc, Tool::Manager* mgr)
+		Save_File,       // (const Image* img, String* filePath)
+		SaveAs_File,     // (const Image* img, String* filePath)
+		Center_Viewport, // (Tool::Manager* mgr, const Doc* doc)
+		ZoomIn_Viewport, // (Tool::Manager* mgr, const Doc* doc)
+		ZoomOut_Viewport // (Tool::Manager* mgr, const Doc* doc)
 	};
 
 	void Draw(const UISTR_Arr& Lang, DocumentState& state);
-	bool Execute(Cmd::Type t, DocumentState& state);
+	bool Execute(Cmd::Type t, ...);
 }
 
 #endif // CSP_APP_CMD_HPP_INCLUDED_
