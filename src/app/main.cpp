@@ -1,29 +1,22 @@
-#include <limits>
-
 #include "imgui/imgui.h"
 #include "imgui_stdlib.h"
 
-#include "main.hpp"
-#include "misc.hpp"
-#include "prefs.hpp"
-#include "fswrapper.hpp"
+#include "app/main.hpp"
 #include "app/cmd.hpp"
-
-#include "types.hpp"
-#include "pixel/pixel.hpp"
+#include "app/misc.hpp"
+#include "app/prefs.hpp"
+#include "app/fswrapper.hpp"
+#include "app/i18n/strings.hpp"
 
 #include "log/log.h"
+#include "pixel/pixel.hpp"
+#include "palette/parser.hpp"
+
 #include "assets/assets.h"
 #include "assets/manager.hpp"
 
 #include "imbase/window.hpp"
 #include "imbase/launcher.hpp"
-#include "i18n/strings.hpp"
-
-#include "doc/doc.hpp"
-#include "palette/palette.hpp"
-#include "palette/parser.hpp"
-#include "tools/ToolManager.hpp"
 
 int main() {
 	EnableVT100();
@@ -82,8 +75,6 @@ int main() {
 	dState.tManager.viewport.y = io.DisplaySize.y / 2 - (float)dState.doc.image.h * dState.tManager.viewportScale / 2;
 	dState.tManager.viewport.w = dState.doc.image.w * dState.tManager.viewportScale;
 	dState.tManager.viewport.h = dState.doc.image.h * dState.tManager.viewportScale;
-
-	int NEW_DIMS[2] = {60, 40}; // Default Width, Height New Canvas if Created One
 
 	dState.doc.Render(dirtyArea);
 	Cmd::Execute(Cmd::Type::Center_Viewport, dState);
@@ -412,9 +403,9 @@ int main() {
 					u8 g = dState.palette.Colors[i].g;
 					u8 b = dState.palette.Colors[i].b;
 
-					r = MIN_MAX_OF_TYPE((r > 127 ? r - 125 : r + 125), u8);
-					g = MIN_MAX_OF_TYPE((g > 127 ? g - 125 : g + 125), u8);
-					b = MIN_MAX_OF_TYPE((b > 127 ? b - 125 : b + 125), u8);
+					r = MIN_MAX((r > 127 ? r - 125 : r + 125), 0, 255);
+					g = MIN_MAX((g > 127 ? g - 125 : g + 125), 0, 255);
+					b = MIN_MAX((b > 127 ? b - 125 : b + 125), 0, 255);
 
 					/* This Value Will Be Subtracted From Triangle's Positions
 					   Because Of Some Extra "Marginal" Space The Button Takes */
