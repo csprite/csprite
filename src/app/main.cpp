@@ -42,7 +42,7 @@ int main() {
 	}
 	ImBase::Window::SetMaxFPS(AppPrefs.fps);
 
-	ImGuiIO& io = ImGui::GetIO();
+	const ImGuiIO& io = ImGui::GetIO();
 
 	int uiFontSzBytes = 0;
 	ImVector<ImWchar> FontRanges;
