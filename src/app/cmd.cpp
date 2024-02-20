@@ -3,46 +3,14 @@
 #include <cstdarg>
 
 #include "cmd.hpp"
-#include "imgui/imgui.h"
 #include "log/log.h"
 
+#include "doc/doc.hpp"
 #include "image/parser.hpp"
 #include "image/writer.hpp"
-
-#include "sfd.h"
 #include "tools/ToolManager.hpp"
 
-static bool
-	IsOpen_NewDocumentWin = false;
-
-static int NewCanvasRes[2] = {60, 40};
-
-void Cmd::Draw(const UISTR_Arr& Lang, DocumentState& state) {
-	#define BEGIN_POPUP(name, flags) if (IsOpen_NewDocumentWin && ImGui::Begin(name, NULL, flags)) {
-	#define END_POPUP() ImGui::End(); }
-
-	BEGIN_POPUP(Lang[UISTR::Popup_NewDocument], ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_Modal)
-		ImGui::InputInt(Lang[UISTR::Popup_NewDocument_WidthInput], &NewCanvasRes[0], 1, 1, 0);
-		ImGui::InputInt(Lang[UISTR::Popup_NewDocument_HeightInput], &NewCanvasRes[1], 1, 1, 0);
-
-		if (ImGui::Button(Lang[UISTR::Popup_NewDocument_OkButton])) {
-			state.doc.Destroy();
-			state.doc.Create(NewCanvasRes[0], NewCanvasRes[1]);
-			state.doc.image.AddLayer("New Layer");
-			state.doc.Render({ 0, 0, state.doc.image.w, state.doc.image.h });
-			Cmd::Execute(Cmd::Type::Center_Viewport, state.tManager, &state.doc);
-
-			IsOpen_NewDocumentWin = false;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button(Lang[UISTR::Popup_NewDocument_CancelButton])) {
-			IsOpen_NewDocumentWin = false;
-		}
-	END_POPUP()
-
-	#undef END_POPUP
-	#undef BEGIN_POPUP
-}
+#include "sfd.h"
 
 bool Cmd::Execute(Cmd::Type t, ...) {
 	#define BEGIN_ARGS(num) va_list args; va_start(args, num)
@@ -51,7 +19,16 @@ bool Cmd::Execute(Cmd::Type t, ...) {
 
 	switch (t) {
 		case New_File: {
-			IsOpen_NewDocumentWin = true;
+			BEGIN_ARGS(3);
+				GET_ARG(Doc*, doc);
+				GET_ARG(u32, widthNew);
+				GET_ARG(u32, heightNew);
+			END_ARGS();
+
+			doc->Destroy();
+			doc->Create(widthNew, heightNew);
+			doc->image.AddLayer("New Layer");
+			doc->Render({ 0, 0, doc->image.w, doc->image.h });
 			break;
 		}
 		case Open_File: {
