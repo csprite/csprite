@@ -9,7 +9,7 @@ bool ImageWriter::Write(const Image& img, const String filePath) {
 	if (img.w < 1 || img.h < 1) return false;
 
 	Pixel* finalRender = new Pixel[img.w * img.h]{ 0, 0, 0, 0 };
-	BlendRect(img, { 0, 0, img.w, img.h }, finalRender, false);
+	BlendImage(img, { 0, 0, img.w, img.h }, finalRender, false);
 
 	const char* path = filePath.c_str();
 	size_t pathLen = filePath.size();

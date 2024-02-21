@@ -1,36 +1,32 @@
 #include <algorithm> // min()/max()
 #include "image/blender.h"
 
-void BlendRect(const Image& img, const mm_RectU32& dirtyArea, Pixel* outBuff, bool checkerboard) {
+void BlendImage(const Image& img, const mm_RectU32& dirtyArea, Pixel* outBuff, bool checkerboard) {
 	for (std::size_t j = 0; j < img.Layers.size(); ++j) {
 		for (u32 y = dirtyArea.min_y; y < dirtyArea.max_y; y++) {
 			for (u32 x = dirtyArea.min_x; x < dirtyArea.max_x; x++) {
 				u32 idx = (y * img.w) + x;
 				Pixel& output = outBuff[idx];
 
-				// If Blending The Very First Layer, Then The Backdrop
-				// Can be either Transparent (i.e. checkerboard = false)
-				// or we can determine the checkerboard pattern
 				if (j == 0 && checkerboard) {
-					// checkerboard pattern
 					#define PATTERN_SCALE 2
 					if (((x / PATTERN_SCALE + y / PATTERN_SCALE) % 2) == 0) {
 						output = { 0x80, 0x80, 0x80, 255 };
 					} else {
 						output = { 0xC0, 0xC0, 0xC0, 255 };
 					}
+					#undef PATTERN_SCALE
 				}
 
 				const Layer& layer = img.Layers[j];
+				const Pixel src = layer.pixels[idx];
 				const Pixel backdrop = output;
-				Pixel src = layer.pixels[idx];
 
-				if (src.a == 0 || layer.opacity == 0) {
-					continue; // Keep `output` as is, if nothing to blend with in front
-				} else {
-					src = BlendPixel(layer.blend, src, backdrop);
-					output = BlendAlpha(src, backdrop, layer.opacity);
-				}
+				if (src.a == 0 || layer.opacity == 0)
+					continue;
+
+				output = BlendPixel(layer.blend, src, backdrop);
+				output = BlendAlpha(output, backdrop, layer.opacity);
 			}
 		}
 	}

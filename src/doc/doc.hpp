@@ -28,9 +28,8 @@ struct Doc {
 	}
 
 	// Blends The `image` to `render` & updates the `renderTex`
-	// Tip: read comment on `Blender::Blend` for more info about `dirtyArea`
 	inline void Render(const mm_RectU32& dirtyArea) {
-		BlendRect(image, dirtyArea, render);
+		BlendImage(image, dirtyArea, render);
 		renderTex->Update((unsigned char*)render);
 	}
 

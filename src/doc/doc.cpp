@@ -1,4 +1,3 @@
-#include <cstring>
 #include "doc/doc.hpp"
 
 bool Doc::Create(u32 w, u32 h) {
@@ -18,4 +17,3 @@ void Doc::Destroy() {
 	delete renderTex;
 	renderTex = nullptr;
 }
-
