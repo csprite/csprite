@@ -50,9 +50,10 @@ If you would like to help, [checkout the guide on contributing](https://github.c
 - [ ] Rectangle Tool
 - [ ] Line Tool
 - [ ] Circle Tool
-- [ ] Flood/Bucket Fill Tool
+- [ ] Flood/Bucket Fill Tool (https://lodev.org/cgtutor/floodfill.html#Scanline_Floodfill_Algorithm_With_Stack)
 - [ ] https://lodev.org/cgtutor/painting.html
 - [ ] [Porter Duff's Alpha Functions](https://www.pismin.com/10.1145/800031.808606)
+- [ ] Line Tool (https://lodev.org/cgtutor/lineclipping.html)
 - [ ] Color Blending
   - [x] Alpha
   - [x] Addition
