@@ -1,7 +1,7 @@
 #ifndef CSP_IMAGE_BLENDER_HPP_INCLUDED_
 #define CSP_IMAGE_BLENDER_HPP_INCLUDED_
 
-#include "types.hpp"
+#include "types.h"
 #include "image/image.hpp"
 
 namespace Blender {

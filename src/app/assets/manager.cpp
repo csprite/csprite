@@ -1,4 +1,3 @@
-#include "types.hpp"
 #include "manager.hpp"
 #include "fs/fs.hpp"
 #include "app/fswrapper.hpp"
@@ -28,4 +27,3 @@ bool Assets::EnsureFileSystem() {
 
 	return true;
 }
-

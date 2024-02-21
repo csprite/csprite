@@ -2,7 +2,7 @@
 #define CSP_TOOLS_TOOLS_HPP_INCLUDED_ 1
 #pragma once
 
-#include "types.hpp"
+#include "types.h"
 #include "pixel/pixel.hpp"
 
 namespace Tool {

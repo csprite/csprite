@@ -1,4 +1,3 @@
-#include "types.hpp"
 #include "palette/palette.hpp"
 
 Pixel& Palette::operator[](u32 i) {

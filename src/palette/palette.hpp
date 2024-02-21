@@ -4,7 +4,7 @@
 
 #include <functional>
 
-#include "types.hpp"
+#include "types.h"
 #include "pixel/pixel.hpp"
 
 struct Palette {
