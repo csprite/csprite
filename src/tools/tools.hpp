@@ -8,14 +8,15 @@
 namespace Tool {
 	// Returns Dirty Area with Top Left & Bottom Right Coords
 	RectU32 Draw(
-		u16 x, u16 y, u16 w, u16 h,
+		u32 x, u32 y, u32 w, u32 h,
 		bool isRounded, i32 strokeSize,
 		const Pixel& strokeColor, Pixel* pixels
 	);
-	// void DrawBetween(
-	// 	u16 startX, u16 startY, u16 endX, u16 endY,
-	// 	u16 w, u16 h, const Pixel& strokeColor, Pixel* pixels
-	// );
+	RectU32 Line(
+		u32 startX, u32 startY, u32 endX, u32 endY,
+		u32 w, u32 h, bool isRounded, i32 strokeSize,
+		const Pixel& strokeColor, Pixel* pixels
+	);
 };
 
 #endif // CSP_TOOLS_TOOLS_HPP_INCLUDED_
