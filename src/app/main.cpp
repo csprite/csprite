@@ -657,10 +657,9 @@ int main() {
 				}
 
 				// Width & Height are set if change occurs
-				if (dirtyArea.w > 0 && dirtyArea.h > 0) {
+				if (dirtyArea.w > 0) {
 					dState.doc.Render(dirtyArea);
 					dirtyArea.w = 0;
-					dirtyArea.h = 0;
 				}
 			}
 		}
