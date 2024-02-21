@@ -14,10 +14,6 @@ else()
 	add_definitions(-D_NDEBUG)
 endif()
 
-if(CMAKE_CXX_BYTE_ORDER STREQUAL "BIG_ENDIAN")
-	add_definitions(-DTARGET_IS_BIGENDIAN=1)
-endif()
-
 if(WIN32)
 	add_definitions(-DTARGET_WINDOWS)
 elseif(CYGWIN)
