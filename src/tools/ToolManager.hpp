@@ -3,7 +3,7 @@
 #pragma once
 
 #include "types.h"
-#include "pixel/pixel.hpp"
+#include "pixel/pixel.h"
 #include <climits>
 
 struct Doc;

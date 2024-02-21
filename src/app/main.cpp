@@ -9,7 +9,7 @@
 #include "app/i18n/strings.hpp"
 
 #include "log/log.h"
-#include "pixel/pixel.hpp"
+#include "pixel/pixel.h"
 #include "palette/parser.hpp"
 
 #include "assets/assets.h"
