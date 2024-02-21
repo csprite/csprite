@@ -68,7 +68,7 @@ int main() {
 
 	dState.doc.Create(60, 40);
 	dState.doc.image.AddLayer("New Layer");
-	RectU32 dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
+	mm_RectU32 dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
 
 	// Initial Canvas Position & Size
 	dState.tManager.viewport.x = io.DisplaySize.x / 2 - (float)dState.doc.image.w * dState.tManager.viewportScale / 2;
@@ -657,9 +657,9 @@ int main() {
 				}
 
 				// Width & Height are set if change occurs
-				if (dirtyArea.w > 0) {
+				if (dirtyArea.max_x > 0) {
 					dState.doc.Render(dirtyArea);
-					dirtyArea.w = 0;
+					dirtyArea.max_x = 0;
 				}
 			}
 		}

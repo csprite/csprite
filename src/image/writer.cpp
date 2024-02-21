@@ -2,14 +2,14 @@
 
 #include "stb_image_write.h"
 #include "image/writer.hpp"
-#include "image/blender.hpp"
+#include "image/blender.h"
 #include "log/log.h"
 
 bool ImageWriter::Write(const Image& img, const String filePath) {
 	if (img.w < 1 || img.h < 1) return false;
 
 	Pixel* finalRender = new Pixel[img.w * img.h]{ 0, 0, 0, 0 };
-	Blender::Blend(img, { 0, 0, img.w, img.h }, finalRender, false);
+	BlendRect(img, { 0, 0, img.w, img.h }, finalRender, false);
 
 	const char* path = filePath.c_str();
 	size_t pathLen = filePath.size();

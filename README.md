@@ -51,6 +51,8 @@ If you would like to help, [checkout the guide on contributing](https://github.c
 - [ ] Line Tool
 - [ ] Circle Tool
 - [ ] Flood/Bucket Fill Tool
+- [ ] https://lodev.org/cgtutor/painting.html
+- [ ] [Porter Duff's Alpha Functions](https://www.pismin.com/10.1145/800031.808606)
 - [ ] Color Blending
   - [x] Alpha
   - [x] Addition

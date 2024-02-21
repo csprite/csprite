@@ -10,7 +10,7 @@
 
 #include "image/image.hpp"
 #include "image/parser.hpp"
-#include "image/blender.hpp"
+#include "image/blender.h"
 
 // `Destroy()` resets the value to default, i.e. `nullptr`
 // Thus can be used to check if the struct is valid or not.
@@ -29,8 +29,8 @@ struct Doc {
 
 	// Blends The `image` to `render` & updates the `renderTex`
 	// Tip: read comment on `Blender::Blend` for more info about `dirtyArea`
-	inline void Render(const RectU32& dirtyArea) {
-		Blender::Blend(image, dirtyArea, render);
+	inline void Render(const mm_RectU32& dirtyArea) {
+		BlendRect(image, dirtyArea, render);
 		renderTex->Update((unsigned char*)render);
 	}
 

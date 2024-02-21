@@ -5,10 +5,10 @@
 
 using namespace Tool;
 
-RectU32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
+mm_RectU32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
     MousePosDown = { x, y };
 	MousePosLast = { x, y };
-	RectU32 dirty = { 0, 0, 0, 0 };
+	mm_RectU32 dirty = { 0, 0, 0, 0 };
 
 	VecI32 MousePosRel = {
 		(i32)((x - viewport.x) / viewportScale),
@@ -44,8 +44,8 @@ RectU32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
 	return dirty;
 }
 
-RectU32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
-	RectU32 dirty = { 0, 0, 0, 0 };
+mm_RectU32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
+	mm_RectU32 dirty = { 0, 0, 0, 0 };
 
 	switch (currTool) {
 		case BRUSH:
@@ -76,7 +76,7 @@ RectU32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
 	return dirty;
 }
 
-RectU32 Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
+mm_RectU32 Manager::onMouseUp(i32 x, i32 y, Doc& doc) {
 	switch (currTool) {
 		case BRUSH:
 		case ERASER: {
