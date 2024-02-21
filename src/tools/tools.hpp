@@ -7,12 +7,12 @@
 
 namespace Tool {
 	// Returns Dirty Area with Top Left & Bottom Right Coords
-	RectU32 Draw(
+	mm_RectU32 Draw(
 		u32 x, u32 y, u32 w, u32 h,
 		bool isRounded, i32 strokeSize,
 		const Pixel& strokeColor, Pixel* pixels
 	);
-	RectU32 Line(
+	mm_RectU32 Line(
 		u32 startX, u32 startY, u32 endX, u32 endY,
 		u32 w, u32 h, bool isRounded, i32 strokeSize,
 		const Pixel& strokeColor, Pixel* pixels
