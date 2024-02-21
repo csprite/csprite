@@ -2,7 +2,7 @@
 #define CSP_MAIN_HPP_INCLUDED_
 #pragma once
 
-#include "types.hpp"
+#include "types.h"
 #include "doc/doc.hpp"
 #include "palette/palette.hpp"
 #include "tools/ToolManager.hpp"

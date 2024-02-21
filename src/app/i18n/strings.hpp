@@ -4,7 +4,7 @@
 
 #include <array>
 #include <functional>
-#include "types.hpp"
+#include "types.h"
 #include "imgui/imgui.h"
 
 enum UISTR : u16 {

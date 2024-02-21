@@ -2,7 +2,7 @@
 #define CSP_DOC_PARSER_PARSER_HPP_INCLUDED_
 #pragma once
 
-#include "types.hpp"
+#include "types.h"
 #include "image/image.hpp"
 
 // Todo: Automate This Process in Future

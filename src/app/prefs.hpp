@@ -2,7 +2,7 @@
 #define CSP_APP_PREFERENCES_HPP_INCLUDED_ 1
 #pragma once
 
-#include "types.hpp"
+#include "types.h"
 
 struct Preferences {
 	u32 fps = 50;

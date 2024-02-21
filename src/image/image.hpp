@@ -2,7 +2,7 @@
 #define CSP_IMAGE_IMAGE_HPP_INCLUDED_ 1
 #pragma once
 
-#include "types.hpp"
+#include "types.h"
 #include "pixel/pixel.hpp"
 
 // `Destroy()` resets the value to default, i.e. `nullptr` or `0`

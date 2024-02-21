@@ -1,6 +1,5 @@
 #include <cstring>
 
-#include "types.hpp"
 #include "stb_image_write.h"
 #include "image/writer.hpp"
 #include "image/blender.hpp"

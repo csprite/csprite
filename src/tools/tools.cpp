@@ -1,4 +1,3 @@
-#include "types.hpp"
 #include "tools/tools.hpp"
 
 RectU32 Tool::Draw(u32 x, u32 y, u32 w, u32 h, bool isRounded, i32 strokeSize, const Pixel& strokeColor, Pixel* pixels) {

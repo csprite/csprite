@@ -2,7 +2,7 @@
 #define CSP_SRC_PIXEL_PIXEL_HPP_INCLUDED_ 1
 #pragma once
 
-#include "types.hpp"
+#include "types.h"
 #include "imgui/imgui.h"
 
 #ifndef TARGET_IS_BIGENDIAN

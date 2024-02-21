@@ -2,7 +2,7 @@
 #define CSP_APP_FSWRAPPER_HPP_INCLUDED_
 #pragma once
 
-#include "types.hpp"
+#include "types.h"
 #include "fs/defs.hpp"
 
 namespace FileSystem {
