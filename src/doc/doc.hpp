@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include "types.h"
-#include "pixel/pixel.hpp"
+#include "pixel/pixel.h"
 #include "imbase/texture.hpp"
 
 #include "image/image.hpp"

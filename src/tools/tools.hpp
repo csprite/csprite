@@ -3,7 +3,7 @@
 #pragma once
 
 #include "types.h"
-#include "pixel/pixel.hpp"
+#include "pixel/pixel.h"
 
 namespace Tool {
 	// Returns Dirty Area with Top Left & Bottom Right Coords

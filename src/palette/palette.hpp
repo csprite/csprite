@@ -5,7 +5,7 @@
 #include <functional>
 
 #include "types.h"
-#include "pixel/pixel.hpp"
+#include "pixel/pixel.h"
 
 struct Palette {
 	Vector<Pixel> Colors;

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "types.h"
-#include "pixel/pixel.hpp"
+#include "pixel/pixel.h"
 
 // `Destroy()` resets the value to default, i.e. `nullptr` or `0`
 // Thus can be used to check if the structs below are valid.
