@@ -44,7 +44,7 @@ mm_RectU32 Manager::onMouseDown(i32 x, i32 y, Doc& doc) {
 	return dirty;
 }
 
-mm_RectU32 Manager::onMouseMove(i32 x, i32 y, Doc& doc) {
+mm_RectU32 Manager::onMouseDrag(i32 x, i32 y, Doc& doc) {
 	mm_RectU32 dirty = { doc.image.w, doc.image.h, 0, 0 };
 
 	switch (currTool) {

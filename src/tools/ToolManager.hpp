@@ -44,7 +44,7 @@ namespace Tool {
 		void UpdateViewportScale(const Doc& doc);
 
 		mm_RectU32 onMouseDown(i32 x, i32 y, Doc& doc);
-		mm_RectU32 onMouseMove(i32 x, i32 y, Doc& doc);
+		mm_RectU32 onMouseDrag(i32 x, i32 y, Doc& doc);
 		mm_RectU32 onMouseUp(i32 x, i32 y, Doc& doc);
 
 	private:
