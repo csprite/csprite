@@ -2,10 +2,9 @@
 #define CSP_APP_CMD_HPP_INCLUDED_ 1
 #pragma once
 
-#include "app/i18n/strings.hpp"
 #include "doc/doc.hpp"
+#include "app/i18n/strings.hpp"
 #include "tools/ToolManager.hpp"
-#include "app/main.hpp"
 
 namespace Cmd {
 	enum Type {
