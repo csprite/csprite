@@ -13,5 +13,8 @@ struct Preferences {
 	void Write(const char* filePath);
 };
 
+// Returns True to request closure of the popup/window
+bool Prefs_UI_Draw(Preferences& prefs);
+
 #endif // CSP_APP_PREFERENCES_HPP_INCLUDED_
 
