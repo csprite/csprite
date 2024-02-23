@@ -18,6 +18,10 @@
 #include "imbase/window.hpp"
 #include "imbase/launcher.hpp"
 
+#include "image/ui.hpp"
+#include "palette/ui.hpp"
+#include "tools/ui.hpp"
+
 int main() {
 	EnableVT100();
 
@@ -398,140 +402,16 @@ int main() {
 		ImGui::SetNextWindowSize({ 200, 0 }, ImGuiCond_Once);
 		ImGui::SetNextWindowSizeConstraints({ 40, LeftWinSize.y }, { io.DisplaySize.x / 3, LeftWinSize.y });
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
-		BEGIN_WINDOW("Color Palette", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar)
-			ImGui::SeparatorText("Colors");
+		BEGIN_WINDOW("Side Bar", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar)
+			Palette_UI_Draw(ed.pal, ed.mgr.primaryColorIdx, ed.mgr.primaryColor);
 
-			bool isPrimaryInPalette = false;
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 2, 2 });
-			for (auto i = 0UL; i < ed.pal.Colors.size(); i++) {
-				ImGui::PushID(&ed.pal[i]);
-
-				if (ImGui::ColorButton(ed.mgr.primaryColorIdx == i ? "Selected Color" : "Color", ed.pal[i], ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoBorder, { ImGui::GetFontSize() * 1.4f, ImGui::GetFontSize() * 1.4f })) {
-					ed.mgr.primaryColorIdx = i;
-					ed.mgr.primaryColor = ed.pal[ed.mgr.primaryColorIdx];
-				}
-
-				if (ed.mgr.primaryColorIdx == i && ed.mgr.primaryColor == ed.pal[i]) {
-					isPrimaryInPalette = true;
-					ImVec2 rSz = ImGui::GetItemRectSize();
-					ImVec2 rMin = ImGui::GetItemRectMin();
-					ImVec2 rMax = ImGui::GetItemRectMax();
-
-					u8 r = ed.pal.Colors[i].r;
-					u8 g = ed.pal.Colors[i].g;
-					u8 b = ed.pal.Colors[i].b;
-
-					r = MIN_MAX((r > 127 ? r - 125 : r + 125), 0, 255);
-					g = MIN_MAX((g > 127 ? g - 125 : g + 125), 0, 255);
-					b = MIN_MAX((b > 127 ? b - 125 : b + 125), 0, 255);
-
-					/* This Value Will Be Subtracted From Triangle's Positions
-					   Because Of Some Extra "Marginal" Space The Button Takes */
-					#define NEGATIVE_OFFSET 0.5f
-					ImGui::GetWindowDrawList()->AddTriangleFilled(
-						ImVec2(
-							rMax.x - NEGATIVE_OFFSET,
-							rMin.y + (rSz.y / 2.5f) - NEGATIVE_OFFSET
-						),
-						ImVec2(
-							rMin.x + (rSz.x / 2.5f) - NEGATIVE_OFFSET,
-							rMax.y - NEGATIVE_OFFSET
-						),
-						ImVec2(
-							rMax.x - NEGATIVE_OFFSET,
-							rMax.y - NEGATIVE_OFFSET
-						),
-						IM_COL32(r, g, b, 200)
-					);
-					ImGui::GetWindowDrawList()->AddRect(rMin, rMax, IM_COL32(r, g, b, 200));
-					#undef NEGATIVE_OFFSET
-				}
-
-				// Expected position if next button was on same line
-				float nextBtnSizeX = ImGui::GetItemRectMax().x + ImGui::GetItemRectSize().x + ImGui::GetStyle().ItemSpacing.x;
-				if (
-					i < ed.pal.Colors.size() - 1 &&
-					nextBtnSizeX < (ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x)
-				) ImGui::SameLine();
-
-				ImGui::PopID();
-			};
-			ImGui::PopStyleVar(1); // ImGuiStyleVar_ItemSpacing
-
-			if (isPrimaryInPalette) {
-				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_Button]);
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyle().Colors[ImGuiCol_Button]);
-			}
-			if (ImGui::Button("Add") && !isPrimaryInPalette) {
-				ed.pal.Add(ed.mgr.primaryColor);
-				ed.mgr.primaryColorIdx = ed.pal.Colors.size() - 1;
-				ed.mgr.primaryColor = ed.pal[ed.mgr.primaryColorIdx];
-			}
-			if (isPrimaryInPalette) { ImGui::PopStyleVar(); ImGui::PopStyleColor(2); }
-
-			ImGui::SameLine();
-
-			if (!isPrimaryInPalette) {
-				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyle().Colors[ImGuiCol_Button]);
-				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyle().Colors[ImGuiCol_Button]);
-			}
-			if (ImGui::Button("Remove") && isPrimaryInPalette) {
-				ed.pal.Remove(ed.mgr.primaryColor);
-				if (ed.mgr.primaryColorIdx > 0) ed.mgr.primaryColorIdx--;
-				ed.mgr.primaryColor = ed.pal[ed.mgr.primaryColorIdx];
-			}
-			if (!isPrimaryInPalette) { ImGui::PopStyleVar(); ImGui::PopStyleColor(2); }
-
-			float ColorPicker[4] = {
-				((float)ed.mgr.primaryColor.r) / 255,
-				((float)ed.mgr.primaryColor.g) / 255,
-				((float)ed.mgr.primaryColor.b) / 255,
-				((float)ed.mgr.primaryColor.a) / 255
-			};
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-			if (ImGui::ColorPicker4("##ColorPicker", (float*)&ColorPicker, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview)) {
-				ed.mgr.primaryColor.r = ColorPicker[0] * 255;
-				ed.mgr.primaryColor.g = ColorPicker[1] * 255;
-				ed.mgr.primaryColor.b = ColorPicker[2] * 255;
-				ed.mgr.primaryColor.a = ColorPicker[3] * 255;
-			}
-
-			ImGui::SeparatorText("Layers");
-
-			if (ImGui::Button("+")) {
-				ed.doc.image.AddLayer();
-				ed.mgr.activeLayer = ed.doc.image.Layers.size() - 1;
-				ed.doc.Render({ 0, 0, ed.doc.image.w, ed.doc.image.h });
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("-") && ed.doc.image.Layers.size() > 0) {
-				ed.doc.image.RemoveLayer(ed.mgr.activeLayer);
-				ed.mgr.activeLayer = ed.doc.image.Layers.size() - 1;
+			if (ImageLayers_UI_Draw(ed.doc.image, ed.mgr.activeLayer, ShowLayerPropertiesWindow)) {
 				if (ed.doc.image.Layers.size() > 0) {
 					ed.doc.Render({ 0, 0, ed.doc.image.w, ed.doc.image.h });
 				} else {
 					ed.doc.ClearRender();
 				}
 			}
-
-			ImGui::BeginChild("##LayersList", { 0, 0 }, true);
-
-			for (size_t i = 0; i < ed.doc.image.Layers.size(); i++) {
-				const Layer& layer = ed.doc.image.Layers[i];
-				ImGui::PushID(i);
-				if (ImGui::Selectable(layer.name.c_str(), i == ed.mgr.activeLayer, ImGuiSelectableFlags_AllowDoubleClick)) {
-					ed.mgr.activeLayer = i;
-
-					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
-						ShowLayerPropertiesWindow = true;
-					}
-				}
-				ImGui::PopID();
-			}
-
-			ImGui::EndChild();
 
 			LeftWinPos = ImGui::GetWindowPos();
 			LeftWinSize = ImGui::GetWindowSize();
@@ -542,26 +422,7 @@ int main() {
 		ImGui::SetNextWindowPos({ LeftWinPos.x + LeftWinSize.x, LeftWinPos.y });
 		ImGui::SetNextWindowSize({ io.DisplaySize.x - (LeftWinPos.x + LeftWinSize.x), 0 });
 		BEGIN_WINDOW("StatusBarWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize)
-			switch (ed.mgr.currTool) {
-				case Tool::Type::BRUSH:
-					if (ed.mgr.isRounded) {
-						ImGui::Text("Circle Brush - (Size: %u) | Zoom: %.2f | (%d, %d)", ed.mgr.brushSize, ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
-					} else {
-						ImGui::Text("Square Brush - (Size: %u) | Zoom: %.2f | (%d, %d)", ed.mgr.brushSize, ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
-					}
-					break;
-				case Tool::Type::ERASER:
-					if (ed.mgr.isRounded) {
-						ImGui::Text("Circle Eraser - (Size: %u) | Zoom: %.2f | (%d, %d)", ed.mgr.brushSize, ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
-					} else {
-						ImGui::Text("Square Eraser - (Size: %u) | Zoom: %.2f | (%d, %d)", ed.mgr.brushSize, ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
-					}
-					break;
-				case Tool::Type::PAN:
-					ImGui::Text("Panning | Zoom: %.2f | (%d, %d)", ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
-					break;
-				default: break;
-			}
+			Tools_UI_Draw(ed.mgr);
 			StatusWinPos = ImGui::GetWindowPos();
 			StatusWinSize = ImGui::GetWindowSize();
 		END_WINDOW()
