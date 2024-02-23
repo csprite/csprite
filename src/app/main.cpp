@@ -62,22 +62,22 @@ int main() {
 	ImBase::Window::NewFrame();
 	ImBase::Window::EndFrame();
 
-	DocumentState dState;
-	PaletteHelper::LoadDefault(dState.palette);
-	dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
+	Editor ed;
+	PaletteHelper::LoadDefault(ed.pal);
+	ed.mgr.primaryColor = ed.pal[ed.mgr.primaryColorIdx];
 
-	dState.doc.Create(60, 40);
-	dState.doc.image.AddLayer();
-	mm_RectU32 dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
+	ed.doc.Create(60, 40);
+	ed.doc.image.AddLayer();
+	mm_RectU32 dirtyArea = { 0, 0, ed.doc.image.w, ed.doc.image.h };
 
 	// Initial Canvas Position & Size
-	dState.tManager.viewport.x = io.DisplaySize.x / 2 - (float)dState.doc.image.w * dState.tManager.viewportScale / 2;
-	dState.tManager.viewport.y = io.DisplaySize.y / 2 - (float)dState.doc.image.h * dState.tManager.viewportScale / 2;
-	dState.tManager.viewport.w = dState.doc.image.w * dState.tManager.viewportScale;
-	dState.tManager.viewport.h = dState.doc.image.h * dState.tManager.viewportScale;
+	ed.mgr.viewport.x = io.DisplaySize.x / 2 - (float)ed.doc.image.w * ed.mgr.viewportScale / 2;
+	ed.mgr.viewport.y = io.DisplaySize.y / 2 - (float)ed.doc.image.h * ed.mgr.viewportScale / 2;
+	ed.mgr.viewport.w = ed.doc.image.w * ed.mgr.viewportScale;
+	ed.mgr.viewport.h = ed.doc.image.h * ed.mgr.viewportScale;
 
-	dState.doc.Render(dirtyArea);
-	Cmd::Execute(Cmd::Type::Center_Viewport, &dState.tManager, &dState.doc);
+	ed.doc.Render(dirtyArea);
+	Cmd::Execute(Cmd::Type::Center_Viewport, &ed.mgr, &ed.doc);
 
 	int NewCanvasRes[2] = {60, 40};
 
@@ -107,13 +107,13 @@ int main() {
 					ShowNewDocWindow = true;
 				END_MENUITEM()
 				BEGIN_MENUITEM(Lang[UISTR::MenuItem_Open], "Ctrl+O")
-					Cmd::Execute(Cmd::Type::Open_File, &dState.doc, &dState.tManager);
+					Cmd::Execute(Cmd::Type::Open_File, &ed.doc, &ed.mgr);
 				END_MENUITEM()
 				BEGIN_MENUITEM("Save", "Ctrl+S")
-					Cmd::Execute(Cmd::Type::Save_File, &dState.doc.image, &dState.filePath);
+					Cmd::Execute(Cmd::Type::Save_File, &ed.doc.image, &ed.filePath);
 				END_MENUITEM()
 				BEGIN_MENUITEM("Save As", "Alt+S")
-					Cmd::Execute(Cmd::Type::SaveAs_File, &dState.doc.image, &dState.filePath);
+					Cmd::Execute(Cmd::Type::SaveAs_File, &ed.doc.image, &ed.filePath);
 				END_MENUITEM()
 			END_MENU()
 
@@ -132,9 +132,9 @@ int main() {
 							const String filePath = FileSystem::GetPalettesDir() + PATH_SEP_CHAR + fileName;
 							Palette pal;
 							if (PaletteParser::Parse(pal, filePath)) {
-								dState.palette = std::move(pal);
-								dState.PaletteIndex = 0;
-								dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
+								ed.pal = std::move(pal);
+								ed.mgr.primaryColorIdx = 0;
+								ed.mgr.primaryColor = ed.pal[ed.mgr.primaryColorIdx];
 							}
 						END_MENUITEM()
 					});
@@ -193,8 +193,8 @@ int main() {
 			ImGui::InputInt(Lang[UISTR::Popup_NewDocument_HeightInput], &NewCanvasRes[1], 1, 1, 0);
 
 			if (ImGui::Button(Lang[UISTR::Popup_NewDocument_OkButton])) {
-				Cmd::Execute(Cmd::Type::New_File, &dState.doc, NewCanvasRes[0], NewCanvasRes[1]);
-				Cmd::Execute(Cmd::Type::Center_Viewport, &dState.tManager, &dState.doc);
+				Cmd::Execute(Cmd::Type::New_File, &ed.doc, NewCanvasRes[0], NewCanvasRes[1]);
+				Cmd::Execute(Cmd::Type::Center_Viewport, &ed.mgr, &ed.doc);
 
 				ImGui::CloseCurrentPopup();
 			}
@@ -328,7 +328,7 @@ int main() {
 			static bool isFirst = true;
 			static Layer layerTemp;
 			if (isFirst) {
-				layerTemp = dState.doc.image.Layers[dState.tManager.activeLayer];
+				layerTemp = ed.doc.image.Layers[ed.mgr.activeLayer];
 				isFirst = false;
 			}
 
@@ -365,12 +365,12 @@ int main() {
 				);
 
 				if (!layerTemp.name.empty()) {
-					Layer& currLayer = dState.doc.image.Layers[dState.tManager.activeLayer];
+					Layer& currLayer = ed.doc.image.Layers[ed.mgr.activeLayer];
 					bool doReRender = currLayer.blend != layerTemp.blend || currLayer.opacity != layerTemp.opacity;
 					currLayer = layerTemp;
 
 					if (doReRender) {
-						dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
+						ed.doc.Render({ 0, 0, ed.doc.image.w, ed.doc.image.h });
 					}
 				}
 				isFirst = true;
@@ -403,23 +403,23 @@ int main() {
 
 			bool isPrimaryInPalette = false;
 			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 2, 2 });
-			for (auto i = 0UL; i < dState.palette.Colors.size(); i++) {
-				ImGui::PushID(&dState.palette[i]);
+			for (auto i = 0UL; i < ed.pal.Colors.size(); i++) {
+				ImGui::PushID(&ed.pal[i]);
 
-				if (ImGui::ColorButton(dState.PaletteIndex == i ? "Selected Color" : "Color", dState.palette[i], ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoBorder, { ImGui::GetFontSize() * 1.4f, ImGui::GetFontSize() * 1.4f })) {
-					dState.PaletteIndex = i;
-					dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
+				if (ImGui::ColorButton(ed.mgr.primaryColorIdx == i ? "Selected Color" : "Color", ed.pal[i], ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoBorder, { ImGui::GetFontSize() * 1.4f, ImGui::GetFontSize() * 1.4f })) {
+					ed.mgr.primaryColorIdx = i;
+					ed.mgr.primaryColor = ed.pal[ed.mgr.primaryColorIdx];
 				}
 
-				if (dState.PaletteIndex == i && dState.tManager.primaryColor == dState.palette[i]) {
+				if (ed.mgr.primaryColorIdx == i && ed.mgr.primaryColor == ed.pal[i]) {
 					isPrimaryInPalette = true;
 					ImVec2 rSz = ImGui::GetItemRectSize();
 					ImVec2 rMin = ImGui::GetItemRectMin();
 					ImVec2 rMax = ImGui::GetItemRectMax();
 
-					u8 r = dState.palette.Colors[i].r;
-					u8 g = dState.palette.Colors[i].g;
-					u8 b = dState.palette.Colors[i].b;
+					u8 r = ed.pal.Colors[i].r;
+					u8 g = ed.pal.Colors[i].g;
+					u8 b = ed.pal.Colors[i].b;
 
 					r = MIN_MAX((r > 127 ? r - 125 : r + 125), 0, 255);
 					g = MIN_MAX((g > 127 ? g - 125 : g + 125), 0, 255);
@@ -450,7 +450,7 @@ int main() {
 				// Expected position if next button was on same line
 				float nextBtnSizeX = ImGui::GetItemRectMax().x + ImGui::GetItemRectSize().x + ImGui::GetStyle().ItemSpacing.x;
 				if (
-					i < dState.palette.Colors.size() - 1 &&
+					i < ed.pal.Colors.size() - 1 &&
 					nextBtnSizeX < (ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x)
 				) ImGui::SameLine();
 
@@ -464,9 +464,9 @@ int main() {
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyle().Colors[ImGuiCol_Button]);
 			}
 			if (ImGui::Button("Add") && !isPrimaryInPalette) {
-				dState.palette.Add(dState.tManager.primaryColor);
-				dState.PaletteIndex = dState.palette.Colors.size() - 1;
-				dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
+				ed.pal.Add(ed.mgr.primaryColor);
+				ed.mgr.primaryColorIdx = ed.pal.Colors.size() - 1;
+				ed.mgr.primaryColor = ed.pal[ed.mgr.primaryColorIdx];
 			}
 			if (isPrimaryInPalette) { ImGui::PopStyleVar(); ImGui::PopStyleColor(2); }
 
@@ -478,51 +478,51 @@ int main() {
 				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyle().Colors[ImGuiCol_Button]);
 			}
 			if (ImGui::Button("Remove") && isPrimaryInPalette) {
-				dState.palette.Remove(dState.tManager.primaryColor);
-				if (dState.PaletteIndex > 0) dState.PaletteIndex--;
-				dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
+				ed.pal.Remove(ed.mgr.primaryColor);
+				if (ed.mgr.primaryColorIdx > 0) ed.mgr.primaryColorIdx--;
+				ed.mgr.primaryColor = ed.pal[ed.mgr.primaryColorIdx];
 			}
 			if (!isPrimaryInPalette) { ImGui::PopStyleVar(); ImGui::PopStyleColor(2); }
 
 			float ColorPicker[4] = {
-				((float)dState.tManager.primaryColor.r) / 255,
-				((float)dState.tManager.primaryColor.g) / 255,
-				((float)dState.tManager.primaryColor.b) / 255,
-				((float)dState.tManager.primaryColor.a) / 255
+				((float)ed.mgr.primaryColor.r) / 255,
+				((float)ed.mgr.primaryColor.g) / 255,
+				((float)ed.mgr.primaryColor.b) / 255,
+				((float)ed.mgr.primaryColor.a) / 255
 			};
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 			if (ImGui::ColorPicker4("##ColorPicker", (float*)&ColorPicker, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview)) {
-				dState.tManager.primaryColor.r = ColorPicker[0] * 255;
-				dState.tManager.primaryColor.g = ColorPicker[1] * 255;
-				dState.tManager.primaryColor.b = ColorPicker[2] * 255;
-				dState.tManager.primaryColor.a = ColorPicker[3] * 255;
+				ed.mgr.primaryColor.r = ColorPicker[0] * 255;
+				ed.mgr.primaryColor.g = ColorPicker[1] * 255;
+				ed.mgr.primaryColor.b = ColorPicker[2] * 255;
+				ed.mgr.primaryColor.a = ColorPicker[3] * 255;
 			}
 
 			ImGui::SeparatorText("Layers");
 
 			if (ImGui::Button("+")) {
-				dState.doc.image.AddLayer();
-				dState.tManager.activeLayer = dState.doc.image.Layers.size() - 1;
-				dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
+				ed.doc.image.AddLayer();
+				ed.mgr.activeLayer = ed.doc.image.Layers.size() - 1;
+				ed.doc.Render({ 0, 0, ed.doc.image.w, ed.doc.image.h });
 			}
 			ImGui::SameLine();
-			if (ImGui::Button("-") && dState.doc.image.Layers.size() > 0) {
-				dState.doc.image.RemoveLayer(dState.tManager.activeLayer);
-				dState.tManager.activeLayer = dState.doc.image.Layers.size() - 1;
-				if (dState.doc.image.Layers.size() > 0) {
-					dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
+			if (ImGui::Button("-") && ed.doc.image.Layers.size() > 0) {
+				ed.doc.image.RemoveLayer(ed.mgr.activeLayer);
+				ed.mgr.activeLayer = ed.doc.image.Layers.size() - 1;
+				if (ed.doc.image.Layers.size() > 0) {
+					ed.doc.Render({ 0, 0, ed.doc.image.w, ed.doc.image.h });
 				} else {
-					dState.doc.ClearRender();
+					ed.doc.ClearRender();
 				}
 			}
 
 			ImGui::BeginChild("##LayersList", { 0, 0 }, true);
 
-			for (size_t i = 0; i < dState.doc.image.Layers.size(); i++) {
-				const Layer& layer = dState.doc.image.Layers[i];
+			for (size_t i = 0; i < ed.doc.image.Layers.size(); i++) {
+				const Layer& layer = ed.doc.image.Layers[i];
 				ImGui::PushID(i);
-				if (ImGui::Selectable(layer.name.c_str(), i == dState.tManager.activeLayer, ImGuiSelectableFlags_AllowDoubleClick)) {
-					dState.tManager.activeLayer = i;
+				if (ImGui::Selectable(layer.name.c_str(), i == ed.mgr.activeLayer, ImGuiSelectableFlags_AllowDoubleClick)) {
+					ed.mgr.activeLayer = i;
 
 					if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
 						ShowLayerPropertiesWindow = true;
@@ -542,23 +542,23 @@ int main() {
 		ImGui::SetNextWindowPos({ LeftWinPos.x + LeftWinSize.x, LeftWinPos.y });
 		ImGui::SetNextWindowSize({ io.DisplaySize.x - (LeftWinPos.x + LeftWinSize.x), 0 });
 		BEGIN_WINDOW("StatusBarWindow", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize)
-			switch (dState.tManager.currTool) {
+			switch (ed.mgr.currTool) {
 				case Tool::Type::BRUSH:
-					if (dState.tManager.isRounded) {
-						ImGui::Text("Circle Brush - (Size: %u) | Zoom: %.2f | (%d, %d)", dState.tManager.brushSize, dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
+					if (ed.mgr.isRounded) {
+						ImGui::Text("Circle Brush - (Size: %u) | Zoom: %.2f | (%d, %d)", ed.mgr.brushSize, ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					} else {
-						ImGui::Text("Square Brush - (Size: %u) | Zoom: %.2f | (%d, %d)", dState.tManager.brushSize, dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
+						ImGui::Text("Square Brush - (Size: %u) | Zoom: %.2f | (%d, %d)", ed.mgr.brushSize, ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					}
 					break;
 				case Tool::Type::ERASER:
-					if (dState.tManager.isRounded) {
-						ImGui::Text("Circle Eraser - (Size: %u) | Zoom: %.2f | (%d, %d)", dState.tManager.brushSize, dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
+					if (ed.mgr.isRounded) {
+						ImGui::Text("Circle Eraser - (Size: %u) | Zoom: %.2f | (%d, %d)", ed.mgr.brushSize, ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					} else {
-						ImGui::Text("Square Eraser - (Size: %u) | Zoom: %.2f | (%d, %d)", dState.tManager.brushSize, dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
+						ImGui::Text("Square Eraser - (Size: %u) | Zoom: %.2f | (%d, %d)", ed.mgr.brushSize, ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					}
 					break;
 				case Tool::Type::PAN:
-					ImGui::Text("Panning | Zoom: %.2f | (%d, %d)", dState.tManager.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
+					ImGui::Text("Panning | Zoom: %.2f | (%d, %d)", ed.mgr.viewportScale, (i32)MousePosRel.x, (i32)MousePosRel.y);
 					break;
 				default: break;
 			}
@@ -574,36 +574,36 @@ int main() {
 			isMainWindowHovered = ImGui::IsWindowHovered();
 
 			ImGui::GetWindowDrawList()->AddRect(
-				{ dState.tManager.viewport.x - 1, dState.tManager.viewport.y - 1 },
-				{ dState.tManager.viewport.w + dState.tManager.viewport.x + 1, dState.tManager.viewport.h + dState.tManager.viewport.y + 1 },
+				{ ed.mgr.viewport.x - 1, ed.mgr.viewport.y - 1 },
+				{ ed.mgr.viewport.w + ed.mgr.viewport.x + 1, ed.mgr.viewport.h + ed.mgr.viewport.y + 1 },
 				ImGui::GetColorU32(ImGuiCol_Border), 0.0f, 0, 1.0f
 			);
 			ImGui::GetWindowDrawList()->AddImage(
-				reinterpret_cast<ImTextureID>(dState.doc.renderTex->id),
-				{ dState.tManager.viewport.x, dState.tManager.viewport.y },
-				{ dState.tManager.viewport.w + dState.tManager.viewport.x, dState.tManager.viewport.h + dState.tManager.viewport.y }
+				reinterpret_cast<ImTextureID>(ed.doc.renderTex->id),
+				{ ed.mgr.viewport.x, ed.mgr.viewport.y },
+				{ ed.mgr.viewport.w + ed.mgr.viewport.x, ed.mgr.viewport.h + ed.mgr.viewport.y }
 			);
 
-			MousePosRel.x = (i32)((io.MousePos.x - dState.tManager.viewport.x) / dState.tManager.viewportScale);
-			MousePosRel.y = (i32)((io.MousePos.y - dState.tManager.viewport.y) / dState.tManager.viewportScale);
+			MousePosRel.x = (i32)((io.MousePos.x - ed.mgr.viewport.x) / ed.mgr.viewportScale);
+			MousePosRel.y = (i32)((io.MousePos.y - ed.mgr.viewport.y) / ed.mgr.viewportScale);
 
-			const bool MouseInBounds = MousePosRel.x >= 0 && MousePosRel.y >= 0 && MousePosRel.x < dState.doc.image.w && MousePosRel.y < dState.doc.image.h;
+			const bool MouseInBounds = MousePosRel.x >= 0 && MousePosRel.y >= 0 && MousePosRel.x < ed.doc.image.w && MousePosRel.y < ed.doc.image.h;
 
-			if (MouseInBounds && isMainWindowHovered && dState.doc.image.Layers.size() > 0) {
+			if (MouseInBounds && isMainWindowHovered && ed.doc.image.Layers.size() > 0) {
 				ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 				ImVec2 TopLeft = {
-					(dState.tManager.viewport.x + ((i32)MousePosRel.x * dState.tManager.viewportScale)),
-					(dState.tManager.viewport.y + ((i32)MousePosRel.y * dState.tManager.viewportScale))
+					(ed.mgr.viewport.x + ((i32)MousePosRel.x * ed.mgr.viewportScale)),
+					(ed.mgr.viewport.y + ((i32)MousePosRel.y * ed.mgr.viewportScale))
 				};
 				ImVec2 BottomRight = {
-					TopLeft.x + dState.tManager.viewportScale,
-					TopLeft.y + dState.tManager.viewportScale
+					TopLeft.x + ed.mgr.viewportScale,
+					TopLeft.y + ed.mgr.viewportScale
 				};
-				const Pixel& p = dState.doc.image.Layers[dState.tManager.activeLayer].pixels[(i32)(MousePosRel.y * dState.doc.image.w) + (i32)MousePosRel.x];
+				const Pixel& p = ed.doc.image.Layers[ed.mgr.activeLayer].pixels[(i32)(MousePosRel.y * ed.doc.image.w) + (i32)MousePosRel.x];
 				ImU32 Color = (p.r * 0.299 + p.g * 0.587 + p.b * 0.114) > 186 ? 0xFF000000 : 0xFFFFFFFF;
 				ImGui::GetWindowDrawList()->AddRect(
 					TopLeft, BottomRight,
-					Color, 0, 0, 0.1 * dState.tManager.viewportScale
+					Color, 0, 0, 0.1 * ed.mgr.viewportScale
 				);
 			}
 		END_WINDOW()
@@ -613,52 +613,52 @@ int main() {
 
 		if (isMainWindowHovered) {
 			if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-				if (io.MouseWheel > 0) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, &dState.tManager, &dState.doc);
-				if (io.MouseWheel < 0) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, &dState.tManager, &dState.doc);
+				if (io.MouseWheel > 0) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, &ed.mgr, &ed.doc);
+				if (io.MouseWheel < 0) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, &ed.mgr, &ed.doc);
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Equal, false)) {
-				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, &dState.tManager, &dState.doc);
+				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomIn_Viewport, &ed.mgr, &ed.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
-					dState.PaletteIndex = dState.PaletteIndex >= dState.palette.Colors.size() - 1 ? 0 : dState.PaletteIndex + 1;
-				else dState.tManager.brushSize += 1;
+					ed.mgr.primaryColorIdx = ed.mgr.primaryColorIdx >= ed.pal.Colors.size() - 1 ? 0 : ed.mgr.primaryColorIdx + 1;
+				else ed.mgr.brushSize += 1;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Minus, false)) {
-				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, &dState.tManager, &dState.doc);
+				if (io.KeyCtrl) Cmd::Execute(Cmd::Type::ZoomOut_Viewport, &ed.mgr, &ed.doc);
 				else if (io.KeyShift && !io.KeyCtrl)
-					dState.PaletteIndex = dState.PaletteIndex > 0 ? dState.PaletteIndex - 1 : dState.palette.Colors.size() - 1;
-				else if (dState.tManager.brushSize > 1)
-					dState.tManager.brushSize -= 1;
+					ed.mgr.primaryColorIdx = ed.mgr.primaryColorIdx > 0 ? ed.mgr.primaryColorIdx - 1 : ed.pal.Colors.size() - 1;
+				else if (ed.mgr.brushSize > 1)
+					ed.mgr.brushSize -= 1;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_B, false)) {
-				dState.tManager.currTool = Tool::Type::BRUSH;
-				dState.tManager.isRounded = io.KeyShift ? false : true;
+				ed.mgr.currTool = Tool::Type::BRUSH;
+				ed.mgr.isRounded = io.KeyShift ? false : true;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_E, false)) {
-				dState.tManager.currTool = Tool::Type::ERASER;
-				dState.tManager.isRounded = io.KeyShift ? false : true;
+				ed.mgr.currTool = Tool::Type::ERASER;
+				ed.mgr.isRounded = io.KeyShift ? false : true;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Space, false)) {
-				dState.tManager.prevTool = dState.tManager.currTool;
-				dState.tManager.currTool = Tool::Type::PAN;
+				ed.mgr.prevTool = ed.mgr.currTool;
+				ed.mgr.currTool = Tool::Type::PAN;
 			} else if (ImGui::IsKeyReleased(ImGuiKey_Space)) {
-				dState.tManager.currTool = dState.tManager.prevTool;
+				ed.mgr.currTool = ed.mgr.prevTool;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_N, false)) {
 				if (io.KeyCtrl) ShowNewDocWindow = true;
 			} else if (ImGui::IsKeyPressed(ImGuiKey_I, false)) {
-				dState.tManager.currTool = Tool::Type::COLOR_PICKER;
+				ed.mgr.currTool = Tool::Type::COLOR_PICKER;
 			}
 
-			if (dState.doc.image.Layers.size() > 0) {
+			if (ed.doc.image.Layers.size() > 0) {
 				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-					dirtyArea = dState.tManager.onMouseDown(io.MousePos.x, io.MousePos.y, dState.doc);
+					dirtyArea = ed.mgr.onMouseDown(io.MousePos.x, io.MousePos.y, ed.doc);
 				}
 				if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
-					dirtyArea = dState.tManager.onMouseDrag(io.MousePos.x, io.MousePos.y, dState.doc);
+					dirtyArea = ed.mgr.onMouseDrag(io.MousePos.x, io.MousePos.y, ed.doc);
 				}
 				if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-					dirtyArea = dState.tManager.onMouseUp(io.MousePos.x, io.MousePos.y, dState.doc);
+					dirtyArea = ed.mgr.onMouseUp(io.MousePos.x, io.MousePos.y, ed.doc);
 				}
 
 				// Width & Height are set if change occurs
 				if (dirtyArea.max_x > 0) {
-					dState.doc.Render(dirtyArea);
+					ed.doc.Render(dirtyArea);
 					dirtyArea.max_x = 0;
 				}
 			}
@@ -667,7 +667,7 @@ int main() {
 		ImBase::Window::EndFrame();
 	}
 
-	dState.doc.Destroy();
+	ed.doc.Destroy();
 	ImBase::Window::Destroy();
 	return 0;
 }

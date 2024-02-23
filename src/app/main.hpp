@@ -7,12 +7,11 @@
 #include "palette/palette.hpp"
 #include "tools/ToolManager.hpp"
 
-struct DocumentState {
-	Doc doc;
-	Tool::Manager tManager;
-	Palette palette;
-	String filePath;
-	u32 PaletteIndex = 0;
+struct Editor {
+	Doc           doc;
+	Tool::Manager mgr;
+	Palette       pal;
+	String   filePath;
 };
 
 #endif // CSP_MAIN_HPP_INCLUDED_
