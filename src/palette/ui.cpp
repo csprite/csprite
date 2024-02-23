@@ -17,7 +17,8 @@ void Palette_UI_Draw(Palette& p, u32& index, Pixel& color) {
 			color = p[i];
 		}
 
-		if (index == i && color == p[i]) {
+		bool isColorSelected = index == i && color == p[i];
+		if (isColorSelected || ImGui::IsItemHovered()) {
 			ImVec2 rSz = ImGui::GetItemRectSize();
 			ImVec2 rMin = ImGui::GetItemRectMin();
 			ImVec2 rMax = ImGui::GetItemRectMax();
@@ -33,22 +34,27 @@ void Palette_UI_Draw(Palette& p, u32& index, Pixel& color) {
 			/* This Value Will Be Subtracted From Triangle's Positions
 			   Because Of Some Extra "Marginal" Space The Button Takes */
 			#define NEGATIVE_OFFSET 0.5f
-			ImGui::GetWindowDrawList()->AddTriangleFilled(
-				ImVec2(
-					rMax.x - NEGATIVE_OFFSET,
-					rMin.y + (rSz.y / 2.5f) - NEGATIVE_OFFSET
-				),
-				ImVec2(
-					rMin.x + (rSz.x / 2.5f) - NEGATIVE_OFFSET,
-					rMax.y - NEGATIVE_OFFSET
-				),
-				ImVec2(
-					rMax.x - NEGATIVE_OFFSET,
-					rMax.y - NEGATIVE_OFFSET
-				),
-				IM_COL32(r, g, b, 200)
+			if (isColorSelected) {
+				ImGui::GetWindowDrawList()->AddTriangleFilled(
+					ImVec2(
+						rMax.x - NEGATIVE_OFFSET,
+						rMin.y + (rSz.y / 2.5f) - NEGATIVE_OFFSET
+					),
+					ImVec2(
+						rMin.x + (rSz.x / 2.5f) - NEGATIVE_OFFSET,
+						rMax.y - NEGATIVE_OFFSET
+					),
+					ImVec2(
+						rMax.x - NEGATIVE_OFFSET,
+						rMax.y - NEGATIVE_OFFSET
+					),
+					IM_COL32(r, g, b, 200)
+				);
+			}
+			ImGui::GetWindowDrawList()->AddRect(
+				rMin, rMax, IM_COL32(r, g, b, 200),
+				0, 0, isColorSelected ? 1.0f : 2.0f
 			);
-			ImGui::GetWindowDrawList()->AddRect(rMin, rMax, IM_COL32(r, g, b, 200));
 			#undef NEGATIVE_OFFSET
 		}
 
