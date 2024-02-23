@@ -38,12 +38,12 @@ inline const char* BlendModeToString(Blend mode) {
 }
 
 struct Layer {
-	String name;
+	String name = "New Layer";
 	Blend  blend = Blend::Normal;
 	u8     opacity = 255;
 	Pixel* pixels = nullptr;
 
-	bool Create(u32 w, u32 h, String name);
+	bool Create(u32 w, u32 h);
 	void Destroy();
 };
 
@@ -53,11 +53,10 @@ struct Image {
 
 	bool Create(u32 w, u32 h);
 
-	void AddLayer(String name);
+	void AddLayer();
 	void RemoveLayer(u32 index); // NOTE: doesn't check if the index is valid/in-range or not
 
 	void Destroy();
 };
 
 #endif // CSP_IMAGE_IMAGE_HPP_INCLUDED_
-

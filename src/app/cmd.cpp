@@ -27,7 +27,7 @@ bool Cmd::Execute(Cmd::Type t, ...) {
 
 			doc->Destroy();
 			doc->Create(widthNew, heightNew);
-			doc->image.AddLayer("New Layer");
+			doc->image.AddLayer();
 			doc->Render({ 0, 0, doc->image.w, doc->image.h });
 			break;
 		}

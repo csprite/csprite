@@ -67,7 +67,7 @@ int main() {
 	dState.tManager.primaryColor = dState.palette[dState.PaletteIndex];
 
 	dState.doc.Create(60, 40);
-	dState.doc.image.AddLayer("New Layer");
+	dState.doc.image.AddLayer();
 	mm_RectU32 dirtyArea = { 0, 0, dState.doc.image.w, dState.doc.image.h };
 
 	// Initial Canvas Position & Size
@@ -501,7 +501,7 @@ int main() {
 			ImGui::SeparatorText("Layers");
 
 			if (ImGui::Button("+")) {
-				dState.doc.image.AddLayer("New Layer");
+				dState.doc.image.AddLayer();
 				dState.tManager.activeLayer = dState.doc.image.Layers.size() - 1;
 				dState.doc.Render({ 0, 0, dState.doc.image.w, dState.doc.image.h });
 			}

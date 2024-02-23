@@ -13,7 +13,7 @@ bool ImageParser::Parse(Image& img, const String filePath) {
 	}
 
 	img.Create(width, height);
-	img.AddLayer("New Layer");
+	img.AddLayer();
 	Layer& layer = img.Layers[0];
 
 	for (i32 y = 0; y < height; ++y) {

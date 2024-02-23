@@ -1,12 +1,11 @@
 #include "image/image.hpp"
 
-bool Layer::Create(u32 w, u32 h, String _nm) {
+bool Layer::Create(u32 w, u32 h) {
 	pixels = new Pixel[w * h]{ 0, 0, 0, 0 };
 	if (pixels == nullptr) {
 		return false;
 	}
 
-	name = _nm;
 	return true;
 }
 
@@ -23,9 +22,9 @@ bool Image::Create(u32 _w, u32 _h) {
 	return true;
 }
 
-void Image::AddLayer(String name) {
+void Image::AddLayer() {
 	Layer layer;
-	layer.Create(w, h, name);
+	layer.Create(w, h);
 	Layers.push_back(layer);
 }
 
@@ -42,4 +41,3 @@ void Image::Destroy() {
 	w = 0;
 	h = 0;
 }
-
