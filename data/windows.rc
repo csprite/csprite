@@ -8,9 +8,9 @@ BEGIN
   BEGIN
     BLOCK "080904E4"
     BEGIN
-      VALUE "FileDescription", "A tiny pixel art tool"
+      VALUE "FileDescription", "a simple pixel art editor"
       VALUE "InternalName", "csprite"
-      VALUE "LegalCopyright", "Aditya Mishra"
+      VALUE "LegalCopyright", "Aditya"
       VALUE "OriginalFilename", "csprite.exe"
       VALUE "ProductName", "csprite"
       VALUE "ProductVersion", "1.0.0"
@@ -21,4 +21,3 @@ BEGIN
     VALUE "Translation", 0x809, 1252
   END
 END
-
