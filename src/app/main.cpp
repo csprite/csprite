@@ -55,7 +55,7 @@ int main() {
 	FontBuilder.AddRanges(UIString::GetRanges());
 	FontBuilder.BuildRanges(&FontRanges);
 	io.Fonts->AddFontFromMemoryCompressedTTF(
-		assets_get("data/fonts/NotoSans-Regular.ttf", &uiFontSzBytes),
+		assets_get("data/fonts/NotoSansMono.ttf", &uiFontSzBytes),
 		uiFontSzBytes, AppPrefs.fontSize, nullptr, FontRanges.Data
 	);
 	io.Fonts->Build();

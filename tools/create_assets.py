@@ -125,7 +125,7 @@ def create_file(f):
 files = []
 
 files.append(create_file("data/icons/icon-32.png"))
-files.append(create_file("data/fonts/NotoSans-Regular.ttf"))
+files.append(create_file("data/fonts/NotoSansMono.ttf"))
 files.append(create_file("data/english.ini"))
 
 out = open("src/app/assets/assets.inl", "w")
