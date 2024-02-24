@@ -1,7 +1,7 @@
 # csprite
 A simple pixel art editor
 
-![Csprite UI Preview](https://github.com/csprite/csprite/assets/75035219/7d5488ee-c26c-484b-8b18-1c62457c7af0)
+![Csprite UI Preview](https://csprite.github.io/assets/csprite-preview.png)
 
 ---
 ### Features
