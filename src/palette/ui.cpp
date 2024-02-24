@@ -18,6 +18,9 @@ void Palette_UI_Draw(Palette& p, u32& index, Pixel& color) {
 		}
 
 		bool isColorSelected = index == i && color == p[i];
+        if (ImGui::IsItemHovered()) {
+          ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        }
 		if (isColorSelected || ImGui::IsItemHovered()) {
 			ImVec2 rSz = ImGui::GetItemRectSize();
 			ImVec2 rMin = ImGui::GetItemRectMin();
@@ -82,4 +85,7 @@ void Palette_UI_Draw(Palette& p, u32& index, Pixel& color) {
 		color.b = ColorPicker[2] * 255;
 		color.a = ColorPicker[3] * 255;
 	}
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+    }
 }
