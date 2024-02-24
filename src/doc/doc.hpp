@@ -9,7 +9,6 @@
 #include "imbase/texture.hpp"
 
 #include "image/image.hpp"
-#include "image/parser.hpp"
 #include "image/blender.h"
 
 // `Destroy()` resets the value to default, i.e. `nullptr`
