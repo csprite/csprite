@@ -7,7 +7,7 @@
 #include "types.h"
 #include "imgui/imgui.h"
 
-enum UISTR : u16 {
+enum UISTR {
 	Menu_File = 0,
 		MenuItem_New,
 		MenuItem_Open,

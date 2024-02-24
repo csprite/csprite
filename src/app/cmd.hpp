@@ -2,10 +2,6 @@
 #define CSP_APP_CMD_HPP_INCLUDED_ 1
 #pragma once
 
-#include "doc/doc.hpp"
-#include "app/i18n/strings.hpp"
-#include "tools/ToolManager.hpp"
-
 namespace Cmd {
 	enum Type {
 		New_File,        // (Doc* doc, u32 widthNew, u32 heightNew)
