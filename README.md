@@ -37,8 +37,9 @@ A simple pixel art editor
 If you would like to help, [checkout the guide on contributing](https://github.com/csprite/.github/blob/master/CONTRIBUTING.md)
 
 ### Credits
-- The beautiful icon & banner are created ["Birds Probably" aka Lilith](https://www.instagram.com/birds_probably/), show the bird some love
-- [Sweetie 16](https://lospec.com/palette-list/sweetie-16) Palette By [GrafxKid](http://grafxkid.tumblr.com/palettes)
+- The beautiful icon & banner are created ["Birds Probably" aka Lilith](https://www.instagram.com/birds_probably/), Show the bird some love
+- [Sweetie 16](https://lospec.com/palette-list/sweetie-16) Palette By [GrafxKid](http://grafxkid.tumblr.com/palettes).
+- [Noto Sans Mono](https://fonts.google.com/noto/specimen/Noto+Sans+Mono) UI Font.
 
 ### Todo
 - [x] A Simple UI & Menu
