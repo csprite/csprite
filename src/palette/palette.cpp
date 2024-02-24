@@ -43,7 +43,7 @@ void PaletteHelper::UpdateEntries() {
 	size_t pos = 0;
 	String token;
 	while ((pos = SupportedExtStr.find("|")) != std::string::npos) {
-		token = SupportedExtStr.substr(1, pos);
+		token = SupportedExtStr.substr(1, pos - 1);
 		SupportedExts.push_back(token);
 		SupportedExtStr.erase(0, pos + 1);
 	}
