@@ -51,6 +51,9 @@ If you would like to help, [checkout the guide on contributing](https://github.c
 - [ ] Rectangle Tool
 - [ ] Line Tool
 - [ ] Circle Tool
+- [ ] Configurable Option To Let Choose How Brush/Eye-Dropper Work
+  - For Eye Dropper, Users can either select the pixel value in that layer or the composited/blended pixel value
+  - For Brush Tool, Users can either replace the pixel on that layer or they can draw and the color will be blended with it.
 - [ ] Flood/Bucket Fill Tool (https://lodev.org/cgtutor/floodfill.html#Scanline_Floodfill_Algorithm_With_Stack)
 - [ ] https://lodev.org/cgtutor/painting.html
 - [ ] [Porter Duff's Alpha Functions](https://www.pismin.com/10.1145/800031.808606)
