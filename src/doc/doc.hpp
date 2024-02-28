@@ -23,13 +23,18 @@ struct Doc {
 
 	inline void ClearRender() {
 		std::memset(render, 0, image.w * image.h * sizeof(Pixel));
-		renderTex->Update((unsigned char*)render);
+		renderTex->Update((unsigned char*)render, 0, 0, image.w, image.h);
 	}
 
 	// Blends The `image` to `render` & updates the `renderTex`
 	inline void Render(const mm_RectU32& dirtyArea) {
 		BlendImage(image, dirtyArea, render);
-		renderTex->Update((unsigned char*)render);
+		renderTex->Update(
+			(unsigned char*)render,
+			dirtyArea.min_x, dirtyArea.min_y,
+			dirtyArea.max_x - dirtyArea.min_x,
+			dirtyArea.max_y - dirtyArea.min_y
+		);
 	}
 
 	void Destroy();
