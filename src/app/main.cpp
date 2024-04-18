@@ -227,19 +227,24 @@ int main() {
 			if (ImGui::IsItemClicked()) {
 				ImBase::Launcher::OpenUrl("https://github.com/csprite/csprite/graphs/contributors");
 			}
+			#define TEXT_BULLET(bullet, text) ImGui::TextWrapped(bullet); ImGui::SameLine(); ImGui::TextWrapped(text);
 
 			ImGui::SeparatorText(Lang[UISTR::Popup_AboutCsprite_OpenSrcProjects_Header]);
 			ImGui::TextWrapped(Lang[UISTR::Popup_AboutCsprite_OpenSrcProjects_Text]);
-			ImGui::Text("github.com/");
-			ImGui::BulletText("csprite/imbase - BSD-3-Clause License:");
+			ImGui::TextWrapped("github.com/");
+			ImGui::Indent();
+			TEXT_BULLET("-", "csprite/imbase - BSD-3-Clause License:");
 				ImGui::Indent();
-				ImGui::BulletText("glfw/glfw (OpenGL, window & input) - Zlib License");
-				ImGui::BulletText("dav1dde/glad (OpenGL Function Loader) - Public Domain");
-				ImGui::BulletText("ocornut/imgui (User Interface) - MIT License");
+				TEXT_BULLET("$", "glfw/glfw (OpenGL, window & input) - Zlib License");
+				TEXT_BULLET("$", "dav1dde/glad (OpenGL Function Loader) - Public Domain");
+				TEXT_BULLET("$", "ocornut/imgui (User Interface) - MIT License");
 			ImGui::Unindent();
-			ImGui::BulletText("rxi/sfd (File Dialog) - MIT License");
-			ImGui::BulletText("brofield/simpleini (INI Read/Write) - MIT License");
-			ImGui::BulletText("nothings/stb (Image Read/Write) - Public Domain");
+			TEXT_BULLET("-", "rxi/sfd (File Dialog) - MIT License");
+			TEXT_BULLET("-", "brofield/simpleini (INI Read/Write) - MIT License");
+			TEXT_BULLET("-", "nothings/stb (Image Read/Write) - Public Domain");
+			ImGui::Unindent();
+
+			#undef TEXT_BULLET
 
 			ImGui::Spacing();
 			ImVec2 closeButtonSize(100.f, 0.f);
