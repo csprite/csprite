@@ -284,20 +284,18 @@ int main() {
 			if (ImGui::Button("Save")) {
 				// https://stackoverflow.com/a/217605/14516016
 				// Trim Spaces From Start
+				auto isNotSpaceCB = [](unsigned char ch) -> bool {
+					return !std::isspace(ch);
+				};
+
 				layerTemp.name.erase(
 					layerTemp.name.begin(),
-					std::find_if(layerTemp.name.begin(), layerTemp.name.end(), [](unsigned char ch) {
-						return !std::isspace(ch);
-					})
+					std::find_if(layerTemp.name.begin(), layerTemp.name.end(), isNotSpaceCB)
 				);
 
 				// Trim Spaces From End
 				layerTemp.name.erase(
-					std::find_if(
-						layerTemp.name.rbegin(), layerTemp.name.rend(), [](unsigned char ch) {
-							return !std::isspace(ch);
-						}
-					).base(),
+					std::find_if(layerTemp.name.rbegin(), layerTemp.name.rend(), isNotSpaceCB).base(),
 					layerTemp.name.end()
 				);
 
