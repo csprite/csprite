@@ -3,21 +3,17 @@
 
 #include "app/app.hh"
 #include "log/log.h"
-
-#include "app/misc.hpp"
-
 #include "fs/fs.hpp"
-
 #include "palette/palette.hpp"
 #include "app/i18n/strings.hpp"
-
 #include "imbase/window.hpp"
-
 #include "assets/assets.h"
+
+inline void _EnableVT100(void);
 
 bool App_Initialize(Preferences& prefs) {
 	/* Enable VT100 Mode For Logging */
-	EnableVT100();
+	_EnableVT100();
 
 	/* Ensure Required Directories Exist */
 	if (!FileSystem::MakeDirRecursive(App_GetConfigDir())) {
@@ -114,4 +110,24 @@ String App_GetConfigDir() {
 
 	return fullPath;
 }
+
+#ifdef TARGET_WINDOWS
+#include <windows.h>
+
+inline void _EnableVT100(void) {
+	DWORD iMode = 0;
+	HANDLE iHandle = GetStdHandle(STD_INPUT_HANDLE);
+	if (iHandle == INVALID_HANDLE_VALUE || iHandle == NULL) return;
+	GetConsoleMode(iHandle, &iMode);
+	SetConsoleMode(iHandle, iMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
+	DWORD oMode = 0;
+	HANDLE oHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (oHandle == INVALID_HANDLE_VALUE || oHandle == NULL) return;
+	GetConsoleMode(oHandle, &oMode);
+	SetConsoleMode(oHandle, oMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+}
+#else
+inline void _EnableVT100() {}
+#endif
 
