@@ -14,7 +14,7 @@ option(ENABLE_APPLE_BUNDLE "Build Apple Bundle, Used For Releases & Is Ignored O
 
 project(csprite C CXX)
 
-file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.c)
+file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.cc src/*.c)
 
 # On Windows, Enable RC Language & Add It To Sources
 if(WIN32)

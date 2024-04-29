@@ -1,9 +1,9 @@
 #include "imgui/imgui.h"
 #include "imgui_stdlib.h"
 
+#include "app/app.hh"
 #include "app/main.hpp"
 #include "app/cmd.hpp"
-#include "app/misc.hpp"
 #include "app/prefs.hpp"
 #include "app/fswrapper.hpp"
 #include "app/i18n/strings.hpp"
@@ -13,7 +13,6 @@
 #include "palette/parser.hpp"
 
 #include "assets/assets.h"
-#include "assets/manager.hpp"
 
 #include "imbase/window.hpp"
 #include "imbase/launcher.hpp"
@@ -23,9 +22,7 @@
 #include "tools/ui.hpp"
 
 int main(void) {
-	EnableVT100();
-
-	if (!Assets::EnsureFileSystem()) {
+	if (!App_Initialize()) {
 		return 1;
 	}
 
