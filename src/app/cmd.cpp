@@ -102,9 +102,8 @@ bool Cmd::Execute(Cmd::Type t, ...) {
 			END_ARGS();
 
 			mgr->UpdateViewportScale(*doc);
-
-			mgr->viewport.x = (ImGui::GetIO().DisplaySize.x / 2) - (mgr->viewportScale / 2);
-			mgr->viewport.y = (ImGui::GetIO().DisplaySize.y / 2) - (mgr->viewportScale / 2);
+			mgr->viewport.x = (ImGui::GetIO().DisplaySize.x / 2) - ((doc->image.w * mgr->viewportScale) / 2);
+			mgr->viewport.y = (ImGui::GetIO().DisplaySize.y / 2) - ((doc->image.h * mgr->viewportScale) / 2);
 			break;
 		}
 		case ZoomIn_Viewport: {

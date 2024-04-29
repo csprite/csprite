@@ -62,12 +62,6 @@ int main(void) {
 	ed.doc.image.AddLayer();
 	mm_RectU32 dirtyArea = { 0, 0, ed.doc.image.w, ed.doc.image.h };
 
-	// Initial Canvas Position & Size
-	ed.mgr.viewport.x = io.DisplaySize.x / 2 - (float)ed.doc.image.w * ed.mgr.viewportScale / 2;
-	ed.mgr.viewport.y = io.DisplaySize.y / 2 - (float)ed.doc.image.h * ed.mgr.viewportScale / 2;
-	ed.mgr.viewport.w = ed.doc.image.w * ed.mgr.viewportScale;
-	ed.mgr.viewport.h = ed.doc.image.h * ed.mgr.viewportScale;
-
 	ed.doc.Render(dirtyArea);
 	Cmd::Execute(Cmd::Type::Center_Viewport, &ed.mgr, &ed.doc);
 
