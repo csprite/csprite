@@ -3,7 +3,7 @@
 
 #include "app/assets/assets.h"
 #include "app/i18n/strings.hpp"
-#include "app/fswrapper.hpp"
+#include "app/app.hh"
 #include "fs/fs.hpp"
 
 #include "SimpleIni.h"
@@ -24,7 +24,7 @@ const ImWchar* UIString::GetRanges() {
 
 void UIString::UpdateEntries() {
 	LanguageFiles.clear();
-	Fs::ListDir(Fs::GetLanguagesDir(), [&](const String& entryName, bool isFile) -> bool {
+	Fs::ListDir(App_GetLanguagesDir(), [&](const String& entryName, bool isFile) -> bool {
 		if (isFile && std::strncmp(".ini", &entryName.c_str()[entryName.length() - 4], 4) == 0) {
 			LanguageFiles.push_back(entryName);
 		}
@@ -106,7 +106,7 @@ void _ParseRange(CSimpleIniA& ini) {
 }
 
 bool UIString::LoadFile(const String& fileName) {
-	String filePath = Fs::GetLanguagesDir() + PATH_SEP + fileName;
+	String filePath = App_GetLanguagesDir() + PATH_SEP + fileName;
 
 	if (Fs::IsFile(filePath) != 1) {
 		return false;

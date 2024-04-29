@@ -27,7 +27,7 @@ void Preferences::Write(const char* filePath) {
 }
 
 #include "imgui/imgui.h"
-#include "app/fswrapper.hpp"
+#include "app/app.hh"
 #include "app/i18n/strings.hpp"
 
 bool Prefs_UI_Draw(Preferences& prefs) {
@@ -95,7 +95,7 @@ bool Prefs_UI_Draw(Preferences& prefs) {
 
 	if (ImGui::Button("Save")) {
 		prefs = tempPrefs;
-		prefs.Write(FileSystem::GetConfigFile().c_str());
+		prefs.Write(App_GetConfigFile().c_str());
 		res = true;
 		ImGui::CloseCurrentPopup();
 	}

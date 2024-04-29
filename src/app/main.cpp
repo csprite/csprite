@@ -5,7 +5,6 @@
 #include "app/main.hpp"
 #include "app/cmd.hpp"
 #include "app/prefs.hpp"
-#include "app/fswrapper.hpp"
 #include "app/i18n/strings.hpp"
 
 #include "pixel/pixel.h"
@@ -91,7 +90,7 @@ int main(void) {
 					PaletteHelper::ListAll([&](const char* fileName) {
 						hasItems = true;
 						BEGIN_MENUITEM(fileName, NULL)
-							const String filePath = FileSystem::GetPalettesDir() + PATH_SEP_CHAR + fileName;
+							const String filePath = App_GetPalettesDir() + PATH_SEP_CHAR + fileName;
 							Palette pal;
 							if (PaletteParser::Parse(pal, filePath)) {
 								ed.pal = std::move(pal);

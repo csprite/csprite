@@ -7,7 +7,6 @@
 #include "app/misc.hpp"
 
 #include "fs/fs.hpp"
-#include "app/fswrapper.hpp"
 
 #include "palette/palette.hpp"
 #include "app/i18n/strings.hpp"
@@ -21,22 +20,22 @@ bool App_Initialize(Preferences& prefs) {
 	EnableVT100();
 
 	/* Ensure Required Directories Exist */
-	if (!FileSystem::MakeDirRecursive(FileSystem::GetConfigDir())) {
+	if (!FileSystem::MakeDirRecursive(App_GetConfigDir())) {
 		log_error("FileSystem::MakeDirRecursive(...) - %s", strerror(errno));
 		return false;
 	}
 
-	if (!FileSystem::MakeDir(FileSystem::GetLanguagesDir())) {
+	if (!FileSystem::MakeDir(App_GetLanguagesDir())) {
 		log_error("FileSystem::MakeDir(...) - %s", strerror(errno));
 		return false;
 	}
-	if (!FileSystem::MakeDir(FileSystem::GetPalettesDir())) {
+	if (!FileSystem::MakeDir(App_GetPalettesDir())) {
 		log_error("FileSystem::MakeDir(...) - %s", strerror(errno));
 		return false;
 	}
 
 	/* Load User Preferences */
-	if (!prefs.Load(FileSystem::GetConfigFile().c_str())) {
+	if (!prefs.Load(App_GetConfigFile().c_str())) {
 		prefs = Preferences();
 	}
 
@@ -78,5 +77,41 @@ bool App_Initialize(Preferences& prefs) {
 
 void App_Release(void) {
 	ImBase::Window::Destroy();
+}
+
+#include <cstdlib> // getenv
+
+#if defined(TARGET_LINUX)
+	#include <unistd.h>
+	#include <pwd.h>
+#endif
+
+String App_GetConfigDir() {
+	String fullPath = "";
+
+#if defined(TARGET_LINUX)
+	const char* configHome = NULL;
+	configHome = getenv("XDG_CONFIG_HOME");
+	if (!configHome) {
+		configHome = getenv("HOME");
+		if (!configHome) {
+			configHome = getpwuid(getuid())->pw_dir;
+			if (!configHome) return NULL;
+		}
+		fullPath = String(configHome) + PATH_SEP ".config" PATH_SEP "csprite";
+	} else {
+		fullPath = String(configHome) + PATH_SEP "csprite";
+	}
+#elif defined(TARGET_WINDOWS)
+	const char* appdata = getenv("APPDATA");
+	fullPath = String(appdata) + PATH_SEP "csprite";
+#elif defined(TARGET_APPLE)
+	const char* home = getenv("HOME");
+	fullPath = String(home) + PATH_SEP "Library/Application Support";
+#else
+	#error "No Implementation of Sys::GetConfigDir, please report this issue!"
+#endif
+
+	return fullPath;
 }
 
