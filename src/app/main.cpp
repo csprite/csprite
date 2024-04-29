@@ -22,26 +22,17 @@
 #include "tools/ui.hpp"
 
 int main(void) {
-	if (!App_Initialize()) {
+	Preferences prefs;
+	if (!App_Initialize(prefs)) {
 		return 1;
 	}
 
-	Preferences AppPrefs;
-	if (!AppPrefs.Load(FileSystem::GetConfigFile().c_str())) {
-		AppPrefs = Preferences();
-	}
-
-	PaletteHelper::UpdateEntries();
-	UIString::UpdateEntries();
-	if (AppPrefs.langFileName.empty() || !UIString::LoadFile(AppPrefs.langFileName)) {
-		UIString::LoadDefault();
-	}
 	const UISTR_Arr& Lang = UIString::Get();
 
 	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
 		return 1;
 	}
-	ImBase::Window::SetMaxFPS(AppPrefs.fps);
+	ImBase::Window::SetMaxFPS(prefs.fps);
 
 	const ImGuiIO& io = ImGui::GetIO();
 
@@ -53,7 +44,7 @@ int main(void) {
 	FontBuilder.BuildRanges(&FontRanges);
 	io.Fonts->AddFontFromMemoryCompressedTTF(
 		assets_get("data/fonts/NotoSansMono.ttf", &uiFontSzBytes),
-		uiFontSzBytes, AppPrefs.fontSize, nullptr, FontRanges.Data
+		uiFontSzBytes, prefs.fontSize, nullptr, FontRanges.Data
 	);
 	io.Fonts->Build();
 	if (!io.Fonts->IsBuilt()) {
@@ -85,7 +76,7 @@ int main(void) {
 	ImVec2 MousePosRel;
 	bool ShowNewDocWindow = false,
 		 ShowAboutWindow = false,
-	     ShowAppPrefsigWindow = false,
+	     ShowprefsigWindow = false,
 	     ShowLayerPropertiesWindow = false;
 #ifdef _DEBUG
 	bool ShowMetricsWindow = false;
@@ -120,7 +111,7 @@ int main(void) {
 
 			BEGIN_MENU("Edit")
 				BEGIN_MENUITEM("Preferences", NULL)
-					ShowAppPrefsigWindow = true;
+					ShowprefsigWindow = true;
 				END_MENUITEM()
 				BEGIN_MENU("Palette")
 					static bool hasItems = false;
@@ -178,8 +169,8 @@ int main(void) {
 		} else if (ShowAboutWindow) {
 			ShowAboutWindow = false;
 			ImGui::OpenPopup(Lang[UISTR::Popup_AboutCsprite]);
-		} else if (ShowAppPrefsigWindow) {
-			ShowAppPrefsigWindow = false;
+		} else if (ShowprefsigWindow) {
+			ShowprefsigWindow = false;
 			ImGui::OpenPopup("Preferences##CspritePref");
 		} else if (ShowLayerPropertiesWindow) {
 			ShowLayerPropertiesWindow = false;
@@ -253,7 +244,7 @@ int main(void) {
 
 		ImGui::SetNextWindowSize({ 400, 250 });
 		BEGIN_POPUP("Preferences##CspritePref", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize)
-			if (Prefs_UI_Draw(AppPrefs)) {
+			if (Prefs_UI_Draw(prefs)) {
 				ImGui::CloseCurrentPopup();
 			}
 		END_POPUP()
