@@ -27,7 +27,7 @@ void Palette::Remove(Pixel& color) {
 
 #include <cstring>
 #include "fs/fs.hpp"
-#include "app/fswrapper.hpp"
+#include "app/app.hh"
 #include "image/parser.hpp"
 
 namespace Fs = FileSystem;
@@ -48,7 +48,7 @@ void PaletteHelper::UpdateEntries() {
 		SupportedExtStr.erase(0, pos + 1);
 	}
 
-	Fs::ListDir(Fs::GetPalettesDir(), [&](const String& entryName, bool isFile) -> bool {
+	Fs::ListDir(App_GetPalettesDir(), [&](const String& entryName, bool isFile) -> bool {
 		if (isFile) {
 			for (String& ext : SupportedExts) {
 				if (std::strncmp(ext.c_str(), &entryName.c_str()[entryName.length() - ext.length()], ext.length()) == 0) {
