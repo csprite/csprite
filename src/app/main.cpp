@@ -22,7 +22,7 @@
 #include "palette/ui.hpp"
 #include "tools/ui.hpp"
 
-int main() {
+int main(void) {
 	EnableVT100();
 
 	if (!Assets::EnsureFileSystem()) {
