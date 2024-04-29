@@ -8,11 +8,8 @@
 #include "app/fswrapper.hpp"
 #include "app/i18n/strings.hpp"
 
-#include "log/log.h"
 #include "pixel/pixel.h"
 #include "palette/parser.hpp"
-
-#include "assets/assets.h"
 
 #include "imbase/window.hpp"
 #include "imbase/launcher.hpp"
@@ -25,30 +22,6 @@ int main(void) {
 	Preferences prefs;
 	if (!App_Initialize(prefs)) {
 		return 1;
-	}
-
-	const UISTR_Arr& Lang = UIString::Get();
-
-	if (ImBase::Window::Init(700, 500, "csprite") != 0) {
-		return 1;
-	}
-	ImBase::Window::SetMaxFPS(prefs.fps);
-
-	const ImGuiIO& io = ImGui::GetIO();
-
-	int uiFontSzBytes = 0;
-	ImVector<ImWchar> FontRanges;
-	ImFontGlyphRangesBuilder FontBuilder;
-	FontBuilder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-	FontBuilder.AddRanges(UIString::GetRanges());
-	FontBuilder.BuildRanges(&FontRanges);
-	io.Fonts->AddFontFromMemoryCompressedTTF(
-		assets_get("data/fonts/NotoSansMono.ttf", &uiFontSzBytes),
-		uiFontSzBytes, prefs.fontSize, nullptr, FontRanges.Data
-	);
-	io.Fonts->Build();
-	if (!io.Fonts->IsBuilt()) {
-		log_error("io.Fonts->Build() - failed to build the font atlas");
 	}
 
 	ImBase::Window::NewFrame();
@@ -75,6 +48,9 @@ int main(void) {
 #ifdef _DEBUG
 	bool ShowMetricsWindow = false;
 #endif
+
+	const ImGuiIO& io = ImGui::GetIO();
+	const UISTR_Arr& Lang = UIString::Get();
 
 	while (!ImBase::Window::ShouldClose()) {
 		ImBase::Window::NewFrame();
@@ -442,6 +418,6 @@ int main(void) {
 	}
 
 	ed.doc.Destroy();
-	ImBase::Window::Destroy();
+	App_Release();
 	return 0;
 }
