@@ -171,7 +171,7 @@ int main(void) {
 			ImGui::TextWrapped(Lang[UISTR::Popup_AboutCsprite_Contrib_Paragraph]);
 
 			static bool isTextHovered = false;
-			ImVec4 TextColor = isTextHovered ? ImGui::GetStyle().Colors[ImGuiCol_ButtonActive] : ImGui::GetStyle().Colors[ImGuiCol_Text];
+			ImVec4 TextColor = isTextHovered ? ImColor(0xFF, 0xAA, 0xFF).Value : ImGui::GetStyle().Colors[ImGuiCol_Text];
 			ImGui::TextColored(TextColor, Lang[UISTR::Popup_AboutCsprite_Contrib_Link]);
 			ImVec2 Min = ImGui::GetItemRectMin();
 			ImVec2 Max = ImGui::GetItemRectMax();

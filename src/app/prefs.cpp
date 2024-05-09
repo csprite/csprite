@@ -35,7 +35,7 @@ bool Prefs_UI_Draw(Preferences& prefs) {
 	static int32_t CurrentSelection = 0;
 
 	ImGui::BeginTable("##PreferencesTable", 2, ImGuiTableFlags_BordersInnerV);
-	ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthFixed, 110.0f, 0);
+	ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthFixed, 115.0f, 0);
 	ImGui::TableSetupColumn(NULL, ImGuiTableColumnFlags_WidthStretch, 0.0f, 1);
 
 	// set the row height to maximum available content height in the window

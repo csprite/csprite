@@ -68,6 +68,26 @@ bool App_Initialize(Preferences& prefs) {
 		return false;
 	}
 
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.Colors[ImGuiCol_Button] = ImColor(44, 44, 44);
+	style.Colors[ImGuiCol_ButtonHovered] = ImColor(55, 55, 55);
+	style.Colors[ImGuiCol_ButtonActive] = ImColor(66, 66, 66);
+
+	style.Colors[ImGuiCol_TitleBg] = ImColor(0xFF, 0xAA, 0xFF);
+	style.Colors[ImGuiCol_TitleBgActive] = ImColor(0xAA, 0x55, 0xAA);
+
+	style.Colors[ImGuiCol_CheckMark] = ImColor(0xAA, 0xAA, 0xAA);
+	style.Colors[ImGuiCol_SliderGrab] = ImColor(0xAA, 0xAA, 0xAA);
+	style.Colors[ImGuiCol_SliderGrabActive] = ImColor(0xFF, 0xFF, 0xFF);
+
+	style.Colors[ImGuiCol_FrameBg] = ImColor(44, 44, 44);
+	style.Colors[ImGuiCol_FrameBgHovered] = ImColor(55, 55, 55);
+	style.Colors[ImGuiCol_FrameBgActive] = ImColor(66, 66, 66);
+
+	style.Colors[ImGuiCol_Header] = ImColor(55, 55, 55);
+	style.Colors[ImGuiCol_HeaderHovered] = ImColor(66, 66, 66);
+	style.Colors[ImGuiCol_HeaderActive] = ImColor(77, 77, 77);
+
 	return true;
 }
 
