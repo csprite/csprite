@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "assets.h"
+#include "assets/assets.h"
 
 typedef unsigned char uint8_t;
 
@@ -15,7 +15,7 @@ typedef struct {
 } asset_t;
 
 static asset_t ASSETS[] = {
-	#include "assets.inl"
+	#include "assets/assets.inl"
 };
 
 #define NUM_ASSETS (int)(sizeof(ASSETS) / sizeof(asset_t))
