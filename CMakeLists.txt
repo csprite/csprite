@@ -24,11 +24,11 @@ add_executable(csprite ${SRC_FILES})
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/sfd/)
 #target_link_libraries(csprite PUBLIC Sfd)
 
-#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/log.c/)
-#target_link_libraries(csprite PUBLIC rxi_log)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/log.c/)
+target_link_libraries(csprite PUBLIC rxi_log)
 
-#add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/imbase/)
-#target_link_libraries(csprite PUBLIC imbase)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/imbase/)
+target_link_libraries(csprite PUBLIC imbase)
 
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/)
 #target_link_libraries(csprite PUBLIC stb_static)

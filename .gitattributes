@@ -1,4 +1,4 @@
 data/** linguist-vendored
 tools/** linguist-vendored
-third_party/** linguist-vendored
+vendor/** linguist-vendored
 

@@ -1,0 +1,6 @@
+[submodule "vendor/imbase"]
+	path = vendor/imbase
+	url = https://github.com/csprite/imbase
+[submodule "vendor/log.c"]
+	path = vendor/log.c
+	url = https://github.com/csprite/log.c
