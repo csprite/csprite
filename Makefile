@@ -9,7 +9,7 @@ LDFLAGS  =
 BUILD    = build
 BIN      = $(BUILD)/csprite
 LIBS     = vendor/cimgui/build/cimgui.a vendor/glad/build/glad.a
-SOURCES  = $(addprefix src/,main.c app/window.c) $(addprefix vendor/,log.c/src/log.c)
+SOURCES  = $(addprefix src/,main.c assets/assets.c app/window.c) $(addprefix vendor/,log.c/src/log.c)
 OBJECTS  = $(patsubst %,$(BUILD)/%,$(SOURCES:.c=.c.o))
 DEPENDS  = $(OBJECTS:.o=.d)
 
@@ -45,12 +45,20 @@ $(BIN): $(OBJECTS) $(LIBS)
 	@echo "LD  -" $@
 	@$(CXX) $(OBJECTS) $(LIBS) $(LDFLAGS) -o $@
 
+$(eval PYTHON := $(if $(PYTHON),$(PYTHON),python3))
+
+gen-assets:
+	@$(PYTHON) tools/create_icons.py
+	@echo "PY  -" tools/create_icons.py
+	@$(PYTHON) tools/create_assets.py --cxx=$(CXX)
+	@echo "PY  -" tools/create_assets.py
+
 .PHONY: run clean
 
 run: all
 	@./$(BIN)
 
 clean:
-	@$(RM) -rv $(BIN) $(BUILD)
+	@$(RM) -rv $(BIN) $(BUILD) src/assets/assets.inl
 	@$(MAKE) --no-print-directory -C vendor/cimgui/ clean
 	@$(MAKE) --no-print-directory -C vendor/glad/ clean
