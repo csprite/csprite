@@ -1,5 +1,6 @@
 # Requires GNU Make
 CC       = gcc
+AR       = ar
 CXX      = g++
 FLAGS    = -MMD -MP -Wall -Wextra -pedantic
 INCLUDES = src/ vendor/glad/include/ vendor/log.c/include/ vendor/cimgui
@@ -7,7 +8,8 @@ CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE
 LDFLAGS  =
 BUILD    = build
 BIN      = $(BUILD)/csprite
-SOURCES  = $(addprefix src/,main.c app/window.c) $(addprefix vendor/,glad/glad.c log.c/src/log.c)
+LIBS     = vendor/cimgui/build/cimgui.a vendor/glad/build/glad.a
+SOURCES  = $(addprefix src/,main.c app/window.c) $(addprefix vendor/,log.c/src/log.c)
 OBJECTS  = $(patsubst %,$(BUILD)/%,$(SOURCES:.c=.c.o))
 DEPENDS  = $(OBJECTS:.o=.d)
 
@@ -28,17 +30,20 @@ endif
 
 all: $(BIN)
 
-cimgui:
-	@$(MAKE) --no-print-directory -C vendor/cimgui/ all BUILD=build FLAGS='-O3 -DIMGUI_IMPL_API="extern \"C\""'
+vendor/cimgui/build/cimgui.a:
+	@$(MAKE) --no-print-directory -C vendor/cimgui/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3 -DIMGUI_IMPL_API="extern \"C\""'
+
+vendor/glad/build/glad.a:
+	@$(MAKE) --no-print-directory -C vendor/glad/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3'
 
 $(BUILD)/%.c.o: %.c
 	@echo "CC  -" $<
 	@mkdir -p "$$(dirname "$@")"
 	@$(BEAR) $(CC) $(FLAGS) $(CFLAGS) -c $< -o $@
 
-$(BIN): cimgui $(OBJECTS)
+$(BIN): $(OBJECTS) $(LIBS)
 	@echo "LD  -" $@
-	@$(CXX) $(OBJECTS) vendor/cimgui/build/cimgui.a $(LDFLAGS) -o $@
+	@$(CXX) $(OBJECTS) $(LIBS) $(LDFLAGS) -o $@
 
 .PHONY: run clean
 
@@ -48,3 +53,4 @@ run: all
 clean:
 	@$(RM) -rv $(BIN) $(BUILD)
 	@$(MAKE) --no-print-directory -C vendor/cimgui/ clean
+	@$(MAKE) --no-print-directory -C vendor/glad/ clean
