@@ -31,7 +31,7 @@ endif
 all: $(BIN)
 
 vendor/cimgui/build/cimgui.a:
-	@$(MAKE) --no-print-directory -C vendor/cimgui/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3 -DIMGUI_IMPL_API="extern \"C\""'
+	@$(MAKE) --no-print-directory -C vendor/cimgui/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3 -g3 -DIMGUI_IMPL_API="extern \"C\""'
 
 vendor/glad/build/glad.a:
 	@$(MAKE) --no-print-directory -C vendor/glad/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3'
