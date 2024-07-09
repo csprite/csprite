@@ -1,15 +1,14 @@
 # Requires GNU Make
 CC       = gcc
 CXX      = g++
-FLAGS    = -MMD -MP -Wall -Wextra -pedantic -Ivendor/cimgui/ -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_NO_EXPORT=1
-CFLAGS   = -std=c99 -Isrc/ -Ivendor/glad/include/ -Ivendor/log.c/include/ -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1
-CXXFLAGS = -std=c++11 -DIMGUI_IMPL_API="extern \"C\""
-LDFLAGS  = -lm
+FLAGS    = -MMD -MP -Wall -Wextra -pedantic
+INCLUDES = src/ vendor/glad/include/ vendor/log.c/include/ vendor/cimgui
+CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1
+LDFLAGS  =
 BUILD    = build
 BIN      = $(BUILD)/csprite
-SRC_C    = $(addprefix src/,main.c app/window.c) $(addprefix vendor/,glad/glad.c log.c/src/log.c)
-SRC_CPP  = $(addprefix vendor/cimgui/,cimgui.cpp imgui/imgui.cpp imgui/imgui_draw.cpp imgui/imgui_impl_glfw.cpp imgui/imgui_impl_opengl3.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp)
-OBJECTS  = $(patsubst %,$(BUILD)/%,$(SRC_C:.c=.c.o)) $(patsubst %,$(BUILD)/%,$(SRC_CPP:.cpp=.cpp.o))
+SOURCES  = $(addprefix src/,main.c app/window.c) $(addprefix vendor/,glad/glad.c log.c/src/log.c)
+OBJECTS  = $(patsubst %,$(BUILD)/%,$(SOURCES:.c=.c.o))
 DEPENDS  = $(OBJECTS:.o=.d)
 
 # Check if `bear` command is available, Bear is used to generate
@@ -25,33 +24,21 @@ endif
 
 -include config.mk
 
-ifeq ($(GLFW_STATIC),true)
-	LDFLAGS += -Wl,-Bstatic -lglfw -Wl,-Bdynamic
-else
-	LDFLAGS += -lglfw
-endif
-
-ifeq ($(LOG_ENABLE_COLOR),true)
-	CFLAGS += -DLOG_USE_COLOR=1
-endif
-
 -include $(DEPENDS)
 
 all: $(BIN)
+
+cimgui:
+	@$(MAKE) --no-print-directory -C vendor/cimgui/ all BUILD=build FLAGS='-O3 -DIMGUI_IMPL_API="extern \"C\""'
 
 $(BUILD)/%.c.o: %.c
 	@echo "CC  -" $<
 	@mkdir -p "$$(dirname "$@")"
 	@$(BEAR) $(CC) $(FLAGS) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/%.cpp.o: %.cpp
-	@echo "CXX -" $<
-	@mkdir -p "$$(dirname "$@")"
-	@$(BEAR) $(CXX) $(FLAGS) $(CXXFLAGS) -c $< -o $@
-
-$(BIN): $(OBJECTS)
+$(BIN): cimgui $(OBJECTS)
 	@echo "LD  -" $@
-	@$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
+	@$(CXX) $(OBJECTS) vendor/cimgui/build/cimgui.a $(LDFLAGS) -o $@
 
 .PHONY: run clean
 
@@ -60,3 +47,4 @@ run: all
 
 clean:
 	@$(RM) -rv $(BIN) $(BUILD)
+	@$(MAKE) --no-print-directory -C vendor/cimgui/ clean
