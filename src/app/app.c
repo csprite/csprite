@@ -63,15 +63,32 @@ int AppInit(void) {
 	return 0;
 }
 
+#include "sfd.h"
+
 int AppMainLoop(void) {
 	while (!WindowShouldClose()) {
 		WindowNewFrame();
 
 		igBeginMainMenuBar();
 			if (igBeginMenu("File", true)) {
-				igEndMenu();
-			}
-			if (igBeginMenu("Edit", true)) {
+				if (igMenuItem_Bool("Open", NULL, false, true)) {
+					const char* filePath = sfd_open_dialog(&(sfd_Options){
+						.title        = "Open Image File",
+						.filter_name  = "Image File",
+						.filter       = "*.png|*.jpg",
+						.save         = 0
+					});
+					if (filePath) {
+						printf("File: '%s'\n", filePath);
+					} else {
+						const char* LastError = sfd_get_error();
+						if (LastError != NULL) {
+							printf("Error: %s\n", LastError);
+						} else {
+							printf("Open canceled\n");
+						}
+					}
+				}
 				igEndMenu();
 			}
 			if (igBeginMenu("Help", true)) {

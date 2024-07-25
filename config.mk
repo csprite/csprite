@@ -4,8 +4,25 @@ GLFW_STATIC=false
 LOG_ENABLE_COLOR=true
 # Possible Values: debug, release
 BUILD_TYPE = debug
+# SimpleFileDialog Backend: win32, zenity
+SFD_BACKEND =
 
 # Append Variables According To Config
+
+ifeq ($(OS),Windows_NT)
+	CFLAGS += -DTARGET_WINDOWS
+	SFD_BACKEND = win32
+	LFLAGS += -lcomdlg32
+else
+	SFD_BACKEND = zenity
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		CFLAGS += -DTARGET_LINUX
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		CFLAGS += -DTARGET_APPLE
+	endif
+endif
 
 ifeq ($(BUILD_TYPE),debug)
 	FLAGS += -O0 -g3 -fsanitize=address,undefined
@@ -27,16 +44,3 @@ endif
 ifeq ($(LOG_ENABLE_COLOR),true)
 	CFLAGS += -DLOG_USE_COLOR=1
 endif
-
-ifeq ($(OS),Windows_NT)
-	CFLAGS += -DTARGET_WINDOWS
-else
-	UNAME_S := $(shell uname -s)
-	ifeq ($(UNAME_S),Linux)
-		CFLAGS += -DTARGET_LINUX
-	endif
-	ifeq ($(UNAME_S),Darwin)
-		CFLAGS += -DTARGET_APPLE
-	endif
-endif
-
