@@ -9,7 +9,7 @@ LDFLAGS  =
 BUILD    = build
 BIN      = $(BUILD)/csprite
 LIBS     = vendor/cimgui/build/cimgui.a vendor/glad/build/glad.a
-SOURCES  = $(addprefix src/,main.c assets/assets.c app/app.c app/window.c) $(addprefix vendor/,log.c/src/log.c stb/impl.c)
+SOURCES  = $(addprefix src/,main.c assets/assets.c app/app.c app/window.c app/texture.c) $(addprefix vendor/,log.c/src/log.c stb/impl.c)
 OBJECTS  = $(patsubst %,$(BUILD)/%,$(SOURCES:.c=.c.o))
 DEPENDS  = $(OBJECTS:.o=.d)
 
