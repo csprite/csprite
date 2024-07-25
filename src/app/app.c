@@ -21,7 +21,7 @@ int AppInit(void) {
 	ImFontGlyphRangesBuilder_BuildRanges(FontBuilder, &FontRanges);
 	ImFontAtlas_AddFontFromMemoryCompressedTTF(
 	    io->Fonts, assets_get("data/fonts/Inter.ttf", &fontDataSize),
-		fontDataSize, 16.0f, NULL, FontRanges.Data
+		fontDataSize, 18, NULL, FontRanges.Data
 	);
 	ImFontAtlas_Build(io->Fonts);
 	if (!ImFontAtlas_IsBuilt(io->Fonts)) {
@@ -66,6 +66,22 @@ int AppInit(void) {
 int AppMainLoop(void) {
 	while (!WindowShouldClose()) {
 		WindowNewFrame();
+
+		igBeginMainMenuBar();
+			if (igBeginMenu("File", true)) {
+				igEndMenu();
+			}
+			if (igBeginMenu("Edit", true)) {
+				igEndMenu();
+			}
+			if (igBeginMenu("Help", true)) {
+				if (igMenuItem_Bool("About", NULL, false, true)) {
+					AppOpenURL("https://csprite.github.io");
+				}
+				igEndMenu();
+			}
+		igEndMainMenuBar();
+
 		WindowEndFrame();
 	}
 	return 0;
@@ -73,4 +89,37 @@ int AppMainLoop(void) {
 
 void AppDestroy(void) {
 	WindowDestroy();
+}
+
+#if defined(TARGET_WINDOWS)
+	#include <windows.h>
+	#include <shellapi.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void AppOpenURL(const char* url) {
+#if defined(TARGET_WINDOWS)
+	ShellExecute(0, 0, url, 0, 0, SW_SHOW);
+#elif defined(TARGET_APPLE) || defined(TARGET_LINUX)
+	unsigned int len = strlen(url) + 100;
+	char* cmd = malloc(len);
+	int ret = snprintf(
+	    cmd, len,
+		#ifdef TARGET_APPLE
+			"open \"%s\"",
+		#else
+		    "setsid xdg-open \"%s\"",
+		#endif
+	    url
+	);
+	if (ret > 0 && ret < len) {
+		system(cmd);
+	}
+	free(cmd);
+#else
+	#error "AppOpenUrl(...) Not Implemented For Target"
+#endif
 }

@@ -2,8 +2,10 @@
 #define CSPRITE_SRC_APP_TEXTURE_H_INCLUDED_
 #pragma once
 
-unsigned int TextureInit(int width, int height);
-void TextureUpdate(unsigned int id, int tWidth, int tHeight, unsigned char* data);
-void TextureDestroy(unsigned int id);
+typedef unsigned int texture_t;
+
+texture_t TextureInit(int width, int height);
+void TextureUpdate(texture_t id, int tWidth, int tHeight, unsigned char* data);
+void TextureDestroy(texture_t id);
 
 #endif
