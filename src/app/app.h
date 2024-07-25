@@ -6,4 +6,6 @@ int AppInit(void);
 int AppMainLoop(void);
 void AppDestroy(void);
 
+void AppOpenURL(const char* url);
+
 #endif

@@ -2,8 +2,8 @@
 #include <glad/glad.h>
 #include <stdlib.h>
 
-unsigned int TextureInit(int width, int height) {
-	unsigned int id = 0;
+texture_t TextureInit(int width, int height) {
+	texture_t id = 0;
 	glGenTextures(1, &id);
 	glBindTexture(GL_TEXTURE_2D, id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -18,7 +18,7 @@ unsigned int TextureInit(int width, int height) {
 	return id;
 }
 
-void TextureUpdate(unsigned int id, int tWidth, int tHeight, unsigned char* data) {
+void TextureUpdate(texture_t id, int tWidth, int tHeight, unsigned char* data) {
 	glBindTexture(GL_TEXTURE_2D, id);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, tWidth);
 	glTexSubImage2D(
@@ -31,6 +31,6 @@ void TextureUpdate(unsigned int id, int tWidth, int tHeight, unsigned char* data
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TextureDestroy(unsigned int id) {
+void TextureDestroy(texture_t id) {
 	glDeleteTextures(1, &id);
 }

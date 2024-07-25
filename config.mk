@@ -28,3 +28,15 @@ ifeq ($(LOG_ENABLE_COLOR),true)
 	CFLAGS += -DLOG_USE_COLOR=1
 endif
 
+ifeq ($(OS),Windows_NT)
+	CFLAGS += -DTARGET_WINDOWS
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		CFLAGS += -DTARGET_LINUX
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		CFLAGS += -DTARGET_APPLE
+	endif
+endif
+
