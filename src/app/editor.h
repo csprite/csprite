@@ -6,13 +6,13 @@
 #include <stdbool.h>
 #include "pixel.h"
 #include "app/texture.h"
+#include "image/image.h"
 
 typedef struct {
 	struct {
-		pixel_t* pixels;
+		image_t image;
 		texture_t texture;
-		uint32_t width, height;
-	} image;
+	} canvas;
 	struct {
 		char* path;
 		char* name;
