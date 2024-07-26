@@ -35,6 +35,7 @@ int EditorInitFrom(editor_t* ed, const char* filePath) {
 	EditorInit(ed, img.width, img.height);
 	ImageDestroy(&ed->canvas.image);
 	ed->canvas.image = img;
+	TextureUpdate(ed->canvas.texture, ed->canvas.image.width, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
 
 	return 0;
 }
