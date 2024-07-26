@@ -3,9 +3,14 @@
 #include "log/log.h"
 
 int ImageInit(image_t* img, uint32_t width, uint32_t height) {
+	img->pixels = calloc(width * height, sizeof(pixel_t));
+	if (img->pixels == NULL) {
+		log_error("Allocation failed");
+		return 1;
+	}
+
 	img->width = width;
 	img->height = height;
-	img->pixels = calloc(width * height, sizeof(pixel_t));
 	return 0;
 }
 
