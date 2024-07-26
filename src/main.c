@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "app/app.h"
+#include "fs/fs.h"
 
 int main(void) {
 	if (AppInit()) {
@@ -10,6 +11,7 @@ int main(void) {
 	}
 
 	AppDestroy();
+
 	return 0;
 }
 
