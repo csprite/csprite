@@ -15,7 +15,7 @@ typedef struct {
 	} canvas;
 	struct {
 		char* path;
-		char* name;
+		char* name; // Points to start of filename in `path`
 	} file;
 	struct {
 		bool rounded;
@@ -32,7 +32,8 @@ typedef struct {
 	} mouse;
 } editor_t;
 
-int EditorInit(editor_t* ed);
+int EditorInit(editor_t* ed, uint32_t width, uint32_t height);
+int EditorInitFrom(editor_t* ed, const char* filePath);
 void EditorDestroy(editor_t* ed);
 
 void EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y);
