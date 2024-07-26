@@ -64,11 +64,24 @@ int AppInit(void) {
 }
 
 #include "sfd.h"
+#include "app/editor.h"
 
 int AppMainLoop(void) {
+	WindowNewFrame();
+	WindowEndFrame();
+
+	ImGuiIO* io = igGetIO();
+
+	editor_t ed = {0};
+	EditorInit(&ed, 320, 240);
+	ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
+	ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
+
 	while (!WindowShouldClose()) {
 		WindowNewFrame();
 
+		ImVec2 mBarPos;
+		ImVec2 mBarSize;
 		igBeginMainMenuBar();
 			if (igBeginMenu("File", true)) {
 				if (igMenuItem_Bool("Open", NULL, false, true)) {
@@ -97,10 +110,79 @@ int AppMainLoop(void) {
 				}
 				igEndMenu();
 			}
+			igGetWindowPos(&mBarPos);
+			igGetWindowSize(&mBarSize);
 		igEndMainMenuBar();
+
+		bool isMainWindowHovered = false;
+		igSetNextWindowPos((ImVec2){ 0, mBarPos.y + mBarSize.y }, ImGuiCond_Always, (ImVec2){ 0, 0 });
+		igSetNextWindowSize((ImVec2){ io->DisplaySize.x, io->DisplaySize.y - (mBarPos.y + mBarSize.y) + 1 }, ImGuiCond_Always);
+		if (igBegin("Main", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
+			ImDrawList_AddRect(
+			    igGetWindowDrawList(),
+			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
+			    igGetColorU32_Col(ImGuiCol_Border, 1), 0, 0, 1
+			);
+			ImDrawList_AddImage(
+			    igGetWindowDrawList(), (ImTextureID)ed.canvas.texture,
+			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
+			    (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, 0xFFFFFFFF
+			);
+			isMainWindowHovered = igIsWindowHovered(0);
+			igEnd();
+		}
+
+		mmRect_t dirtyArea = {0};
+		mmRect_t totalDirty = { ed.canvas.image.width, ed.canvas.image.height, 0, 0 };
+		if (isMainWindowHovered) {
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
+				if (io->MouseWheel > 0) ed.view.scale += 0.15f;
+				if (io->MouseWheel < 0) ed.view.scale += 0.15f;
+			}
+
+			if (igIsKeyPressed_Bool(ImGuiKey_Equal, false)) {
+				if (io->KeyCtrl) ed.view.scale += 0.15f;
+				else ed.tool.brush.size += 1;
+			} else if (igIsKeyPressed_Bool(ImGuiKey_Minus, false)) {
+				if (io->KeyCtrl) ed.view.scale -= 0.15f;
+				else if (ed.tool.brush.size > 1) ed.tool.brush.size -= 1;
+			} else if (igIsKeyPressed_Bool(ImGuiKey_B, false)) {
+				ed.tool.type.current = TOOL_BRUSH;
+				ed.tool.brush.rounded = io->KeyShift ? false : true;
+			} else if (igIsKeyPressed_Bool(ImGuiKey_E, false)) {
+				ed.tool.type.current = TOOL_ERASER;
+				ed.tool.brush.rounded = io->KeyShift ? false : true;
+			} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
+				ed.tool.type.previous = ed.tool.type.current;
+				ed.tool.type.current = TOOL_PAN;
+			} else if (igIsKeyReleased_Nil(ImGuiKey_Space)) {
+				ed.tool.type.current = ed.tool.type.previous;
+			}
+
+			if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
+				dirtyArea = EditorOnMouseDown(&ed, io->MousePos.x, io->MousePos.y);
+			}
+			if (igIsMouseDragging(ImGuiMouseButton_Left, 0)) {
+				dirtyArea = EditorOnMouseMove(&ed, io->MousePos.x, io->MousePos.y);
+			}
+			if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
+				dirtyArea = EditorOnMouseUp(&ed, io->MousePos.x, io->MousePos.y);
+			}
+
+			if (dirtyArea.min_x < totalDirty.min_x) totalDirty.min_x = dirtyArea.min_x;
+			if (dirtyArea.min_y < totalDirty.min_y) totalDirty.min_y = dirtyArea.min_y;
+			if (dirtyArea.max_x > totalDirty.max_x) totalDirty.max_x = dirtyArea.max_x;
+			if (dirtyArea.max_y > totalDirty.max_y) totalDirty.max_y = dirtyArea.max_y;
+
+			if (igIsMouseReleased_Nil(ImGuiMouseButton_Left) && totalDirty.max_x > 0) {
+				totalDirty = (mmRect_t){ ed.canvas.image.width, ed.canvas.image.height, 0, 0 };
+			}
+		}
 
 		WindowEndFrame();
 	}
+
+	EditorDestroy(&ed);
 	return 0;
 }
 

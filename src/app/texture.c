@@ -1,10 +1,17 @@
 #include "app/texture.h"
+#include "log/log.h"
 #include <glad/glad.h>
 #include <stdlib.h>
 
 texture_t TextureInit(int width, int height) {
 	texture_t id = 0;
 	glGenTextures(1, &id);
+
+	if (id == 0) {
+		log_error("Failed to create texture on GPU");
+		return 0;
+	}
+
 	glBindTexture(GL_TEXTURE_2D, id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -12,6 +19,12 @@ texture_t TextureInit(int width, int height) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	unsigned char* pixels = calloc(width * height, 4);
+	if (pixels == NULL) {
+		log_error("Failed to allocate memory");
+		TextureDestroy(id);
+		return 0;
+	}
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	free(pixels);
