@@ -38,6 +38,8 @@ int ImageInitFrom(image_t* img, const char* filePath) {
 		out->a = data[(i * 4) + 3];
 	}
 
+	stbi_image_free(data);
+
 	return 0;
 }
 

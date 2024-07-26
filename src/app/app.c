@@ -66,6 +66,8 @@ int AppInit(void) {
 #include "sfd.h"
 #include "app/editor.h"
 
+static void _MainWinProcessInput(editor_t* ed);
+
 int AppMainLoop(void) {
 	WindowNewFrame();
 	WindowEndFrame();
@@ -92,13 +94,17 @@ int AppMainLoop(void) {
 						.save         = 0
 					});
 					if (filePath) {
-						printf("File: '%s'\n", filePath);
+						editor_t new = {0};
+						if (!EditorInitFrom(&new, filePath)) {
+							EditorDestroy(&ed);
+							ed = new;
+							ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
+							ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
+						}
 					} else {
 						const char* LastError = sfd_get_error();
 						if (LastError != NULL) {
-							printf("Error: %s\n", LastError);
-						} else {
-							printf("Open canceled\n");
+							printf("Failed to launch dialog: %s", LastError);
 						}
 					}
 				}
@@ -135,29 +141,7 @@ int AppMainLoop(void) {
 		mmRect_t dirtyArea = {0};
 		mmRect_t totalDirty = { ed.canvas.image.width, ed.canvas.image.height, 0, 0 };
 		if (isMainWindowHovered) {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
-				if (io->MouseWheel > 0) ed.view.scale += 0.15f;
-				if (io->MouseWheel < 0) ed.view.scale += 0.15f;
-			}
-
-			if (igIsKeyPressed_Bool(ImGuiKey_Equal, false)) {
-				if (io->KeyCtrl) ed.view.scale += 0.15f;
-				else ed.tool.brush.size += 1;
-			} else if (igIsKeyPressed_Bool(ImGuiKey_Minus, false)) {
-				if (io->KeyCtrl) ed.view.scale -= 0.15f;
-				else if (ed.tool.brush.size > 1) ed.tool.brush.size -= 1;
-			} else if (igIsKeyPressed_Bool(ImGuiKey_B, false)) {
-				ed.tool.type.current = TOOL_BRUSH;
-				ed.tool.brush.rounded = io->KeyShift ? false : true;
-			} else if (igIsKeyPressed_Bool(ImGuiKey_E, false)) {
-				ed.tool.type.current = TOOL_ERASER;
-				ed.tool.brush.rounded = io->KeyShift ? false : true;
-			} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
-				ed.tool.type.previous = ed.tool.type.current;
-				ed.tool.type.current = TOOL_PAN;
-			} else if (igIsKeyReleased_Nil(ImGuiKey_Space)) {
-				ed.tool.type.current = ed.tool.type.previous;
-			}
+			_MainWinProcessInput(&ed);
 
 			if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
 				dirtyArea = EditorOnMouseDown(&ed, io->MousePos.x, io->MousePos.y);
@@ -184,6 +168,35 @@ int AppMainLoop(void) {
 
 	EditorDestroy(&ed);
 	return 0;
+}
+
+static void _MainWinProcessInput(editor_t* ed) {
+	ImGuiIO* io = igGetIO();
+
+	if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
+		if (io->MouseWheel > 0) ed->view.scale += 0.15f;
+		if (io->MouseWheel < 0) ed->view.scale -= 0.15f;
+		EditorUpdateView(ed);
+	}
+
+	if (igIsKeyPressed_Bool(ImGuiKey_Equal, false)) {
+		if (io->KeyCtrl) { ed->view.scale += 0.15f;EditorUpdateView(ed); }
+		else ed->tool.brush.size += 1;
+	} else if (igIsKeyPressed_Bool(ImGuiKey_Minus, false)) {
+		if (io->KeyCtrl) { ed->view.scale -= 0.15f; EditorUpdateView(ed); }
+		else if (ed->tool.brush.size > 1) ed->tool.brush.size -= 1;
+	} else if (igIsKeyPressed_Bool(ImGuiKey_B, false)) {
+		ed->tool.type.current = TOOL_BRUSH;
+		ed->tool.brush.rounded = io->KeyShift ? false : true;
+	} else if (igIsKeyPressed_Bool(ImGuiKey_E, false)) {
+		ed->tool.type.current = TOOL_ERASER;
+		ed->tool.brush.rounded = io->KeyShift ? false : true;
+	} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
+		ed->tool.type.previous = ed->tool.type.current;
+		ed->tool.type.current = TOOL_PAN;
+	} else if (igIsKeyReleased_Nil(ImGuiKey_Space)) {
+		ed->tool.type.current = ed->tool.type.previous;
+	}
 }
 
 void AppDestroy(void) {
