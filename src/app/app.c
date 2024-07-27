@@ -116,13 +116,51 @@ int AppMainLoop(void) {
 				}
 				igEndMenu();
 			}
+
+			ImVec2 winSize, textSize;
+			igGetWindowSize(&winSize);
+			igCalcTextSize(&textSize, ed.file.name, NULL, false, -1);
+			igSetCursorPosX((winSize.x - textSize.x) * 0.5);
+			igText("%s", ed.file.name);
+
 			igGetWindowPos(&mBarPos);
 			igGetWindowSize(&mBarSize);
 		igEndMainMenuBar();
 
-		bool isMainWindowHovered = false;
+		static ImVec2 SidebarPos, SidebarSize;
+		SidebarSize.y = io->DisplaySize.y - (mBarPos.y + mBarSize.y); // Used as Constraint & To Reduce Duplicate Calculations
 		igSetNextWindowPos((ImVec2){ 0, mBarPos.y + mBarSize.y }, ImGuiCond_Always, (ImVec2){ 0, 0 });
-		igSetNextWindowSize((ImVec2){ io->DisplaySize.x, io->DisplaySize.y - (mBarPos.y + mBarSize.y) + 1 }, ImGuiCond_Always);
+		igSetNextWindowSize((ImVec2){ 200, 0 }, ImGuiCond_Once);
+		igSetNextWindowSizeConstraints((ImVec2){ 40, SidebarSize.y }, (ImVec2){ io->DisplaySize.x / 3, SidebarSize.y }, NULL, NULL);
+		igPushStyleVar_Float(ImGuiStyleVar_WindowBorderSize, 0);
+		if (igBegin("##Sidebar", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar)) {
+			igGetWindowPos(&SidebarPos);
+			igGetWindowSize(&SidebarSize);
+			igEnd();
+		}
+		igPopStyleVar(1);
+
+		ImVec2 statusBarPos, statusBarSize;
+		igSetNextWindowPos((ImVec2){ SidebarPos.x + SidebarSize.x, mBarPos.y + mBarSize.y }, ImGuiCond_Always, (ImVec2){ 0, 0 });
+		igSetNextWindowSize((ImVec2){ io->DisplaySize.x, 0 }, ImGuiCond_Always);
+		if (igBegin("##StatusBar", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize)) {
+			igSetNextItemWidth(150);
+			igSliderInt("##BrushSize", (int*)&ed.tool.brush.size, 1, 64, "%d", 0);
+			igSameLine(0, -1);
+
+			igCheckbox("Rounded", &ed.tool.brush.rounded);
+			igSameLine(0, -1);
+
+			igText("- Zoom: %.2f", ed.view.scale);
+
+			igGetWindowPos(&statusBarPos);
+			igGetWindowSize(&statusBarSize);
+			igEnd();
+		}
+
+		bool isMainWindowHovered = false;
+		igSetNextWindowPos((ImVec2){ SidebarPos.x + SidebarSize.x, statusBarPos.y + statusBarSize.y }, ImGuiCond_Always, (ImVec2){ 0, 0 });
+		igSetNextWindowSize((ImVec2){ io->DisplaySize.x, io->DisplaySize.y - (statusBarPos.y + statusBarSize.y) + 1 }, ImGuiCond_Always);
 		if (igBegin("Main", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
 			ImDrawList_AddRect(
 			    igGetWindowDrawList(),
