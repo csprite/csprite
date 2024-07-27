@@ -59,6 +59,12 @@ mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
 		case TOOL_ERASER: {
+			pixel_t color = ed->tool.type.current == TOOL_BRUSH ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
+			ed->canvas.image.pixels[(MouseRelY * ed->canvas.image.width) + MouseRelX] = color;
+			dirty.min_x = MouseRelX;
+			dirty.min_y = MouseRelY;
+			dirty.max_x = MouseRelX + 1;
+			dirty.max_y = MouseRelY + 1;
 			break;
 		}
 		case TOOL_NONE:
@@ -73,9 +79,18 @@ mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 	mmRect_t dirty = { ed->canvas.image.width, ed->canvas.image.height, 0, 0 };
 
+	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
+	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
+
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
 		case TOOL_ERASER: {
+			pixel_t color = ed->tool.type.current == TOOL_BRUSH ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
+			ed->canvas.image.pixels[(MouseRelY * ed->canvas.image.width) + MouseRelX] = color;
+			dirty.min_x = MouseRelX;
+			dirty.min_y = MouseRelY;
+			dirty.max_x = MouseRelX + 1;
+			dirty.max_y = MouseRelY + 1;
 			break;
 		}
 		case TOOL_PAN: {
