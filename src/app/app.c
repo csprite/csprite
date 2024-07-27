@@ -199,6 +199,12 @@ int AppMainLoop(void) {
 			if (igIsMouseReleased_Nil(ImGuiMouseButton_Left) && totalDirty.max_x > 0) {
 				totalDirty = (mmRect_t){ ed.canvas.image.width, ed.canvas.image.height, 0, 0 };
 			}
+
+			// Width & Height are set if change occurs
+			if (dirtyArea.max_x > 0) {
+				TextureUpdate(ed.canvas.texture, ed.canvas.image.width, ed.canvas.image.height, (unsigned char*)ed.canvas.image.pixels);
+				dirtyArea.max_x = 0;
+			}
 		}
 
 		WindowEndFrame();
