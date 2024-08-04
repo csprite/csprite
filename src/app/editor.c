@@ -79,6 +79,8 @@ mmRect_t plotLine(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 		}
 	}
 
+	dirty.max_x++;
+	dirty.max_y++;
 	return dirty;
 }
 
