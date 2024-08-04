@@ -147,7 +147,6 @@ int AppMainLoop(void) {
 		}
 
 		mmRect_t dirtyArea = {0};
-		mmRect_t totalDirty = { ed.canvas.image.width, ed.canvas.image.height, 0, 0 };
 		if (isMainWindowHovered) {
 			_MainWinProcessInput(&ed);
 
@@ -159,15 +158,6 @@ int AppMainLoop(void) {
 			}
 			if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
 				dirtyArea = EditorOnMouseUp(&ed, io->MousePos.x, io->MousePos.y);
-			}
-
-			if (dirtyArea.min_x < totalDirty.min_x) totalDirty.min_x = dirtyArea.min_x;
-			if (dirtyArea.min_y < totalDirty.min_y) totalDirty.min_y = dirtyArea.min_y;
-			if (dirtyArea.max_x > totalDirty.max_x) totalDirty.max_x = dirtyArea.max_x;
-			if (dirtyArea.max_y > totalDirty.max_y) totalDirty.max_y = dirtyArea.max_y;
-
-			if (igIsMouseReleased_Nil(ImGuiMouseButton_Left) && totalDirty.max_x > 0) {
-				totalDirty = (mmRect_t){ ed.canvas.image.width, ed.canvas.image.height, 0, 0 };
 			}
 
 			// Width & Height are set if change occurs
