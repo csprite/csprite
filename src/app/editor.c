@@ -201,7 +201,7 @@ mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
 			int32_t MouseRelY = ((y - ed->view.y) / ed->view.scale);
 			int32_t MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
-			dirty = plotLine(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, (pixel_t){ 255, 255, 255, 255 });
+			dirty = plotLine(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color);
 			break;
 		}
 	}
