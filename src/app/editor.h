@@ -15,6 +15,7 @@ typedef struct {
 typedef enum {
 	TOOL_BRUSH,
 	TOOL_ERASER,
+	TOOL_LINE,
 	TOOL_PAN,
 	TOOL_NONE
 } tool_t;

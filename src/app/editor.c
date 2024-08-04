@@ -1,4 +1,6 @@
 #include "app/editor.h"
+#include "cimgui.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -103,6 +105,7 @@ mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 			dirty.max_y = MouseRelY + 1;
 			break;
 		}
+		case TOOL_LINE:
 		case TOOL_NONE:
 		case TOOL_PAN: {
 			break;
@@ -148,6 +151,29 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 			ed->view.y += y - ed->mouse.last.y;
 			break;
 		}
+		case TOOL_LINE: {
+			int MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
+			int MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
+			ImDrawList_AddRect(
+			    igGetForegroundDrawList_Nil(),
+				(ImVec2){ (MouseDownRelX * ed->view.scale) + ed->view.x, (MouseDownRelY * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((MouseDownRelX + 1) * ed->view.scale) + ed->view.x, ((MouseDownRelY + 1) * ed->view.scale) + ed->view.y },
+			    igGetColorU32_Col(ImGuiCol_ButtonActive, 1), 0, 0, 1
+			);
+			ImDrawList_AddLine(
+				igGetForegroundDrawList_Nil(),
+				(ImVec2){ ((MouseDownRelX + 0.5) * ed->view.scale) + ed->view.x, ((MouseDownRelY + 0.5) * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((MouseRelX + 0.5) * ed->view.scale) + ed->view.x, ((MouseRelY + 0.5) * ed->view.scale) + ed->view.y },
+			    igGetColorU32_Col(ImGuiCol_ButtonActive, 1),
+			    ed->view.scale / 3
+			);
+			ImDrawList_AddRect(
+			    igGetForegroundDrawList_Nil(),
+				(ImVec2){ (MouseRelX * ed->view.scale) + ed->view.x, (MouseRelY * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
+			    igGetColorU32_Col(ImGuiCol_ButtonActive, 1), 0, 0, 1
+			);
+		}
 		case TOOL_NONE: {
 			break;
 		}
@@ -159,12 +185,30 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 }
 
 mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
+	mmRect_t dirty = { ed->canvas.image.width, ed->canvas.image.height, 0, 0 };
+
+	switch (ed->tool.type.current) {
+		case TOOL_BRUSH:
+		case TOOL_ERASER:
+		case TOOL_PAN:
+		case TOOL_NONE: {
+			break;
+		}
+		case TOOL_LINE: {
+			int32_t MouseRelX = ((x - ed->view.x) / ed->view.scale);
+			int32_t MouseRelY = ((y - ed->view.y) / ed->view.scale);
+			int32_t MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
+			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
+			dirty = plotLine(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, (pixel_t){ 255, 255, 255, 255 });
+			break;
+		}
+	}
+
 	ed->mouse.down.x = INT_MIN;
 	ed->mouse.down.y = INT_MIN;
 	ed->mouse.last.x = INT_MIN;
 	ed->mouse.last.y = INT_MIN;
 
-	mmRect_t dirty = { ed->canvas.image.width, ed->canvas.image.height, 0, 0 };
 	return dirty;
 }
 
@@ -209,8 +253,6 @@ void EditorZoomIn(editor_t* ed) {
 	EditorUpdateView(ed);
 }
 
-#include "cimgui.h"
-
 void EditorProcessInput(editor_t* ed) {
 	ImGuiIO* io = igGetIO();
 
@@ -230,6 +272,8 @@ void EditorProcessInput(editor_t* ed) {
 		} else if (igIsKeyPressed_Bool(ImGuiKey_E, false)) {
 			ed->tool.type.current = TOOL_ERASER;
 			ed->tool.brush.rounded = io->KeyShift ? false : true;
+		} else if (igIsKeyPressed_Bool(ImGuiKey_L, false)) {
+			ed->tool.type.current = TOOL_LINE;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
 			ed->tool.type.previous = ed->tool.type.current;
 			ed->tool.type.current = TOOL_PAN;
