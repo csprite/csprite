@@ -98,6 +98,15 @@ int AppMainLoop(void) {
 			igCheckbox("Rounded", &ed.tool.brush.rounded);
 			igSameLine(0, -1);
 
+			switch (ed.tool.type.current) {
+				case TOOL_BRUSH:  igText("Brush"); break;
+				case TOOL_ERASER: igText("Eraser"); break;
+				case TOOL_LINE:   igText("Line"); break;
+				case TOOL_PAN:    igText("Pan"); break;
+				case TOOL_NONE:   igText("None"); break;
+			}
+			igSameLine(0, -1);
+
 			igText("- Zoom: %.2f - %d,%d", ed.view.scale, (int)((io->MousePos.x - ed.view.x)/ed.view.scale), (int)((io->MousePos.y - ed.view.y)/ed.view.scale));
 
 			igGetWindowPos(&statusBarPos);
