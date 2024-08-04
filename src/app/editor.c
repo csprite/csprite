@@ -187,3 +187,76 @@ void EditorUpdateView(editor_t* ed) {
 }
 
 int EditorSetFilePath(editor_t* ed, const char* filePath);
+
+void EditorZoomOut(editor_t* ed) {
+	if (ed->view.scale > 1) {
+		ed->view.scale -= 0.15;
+	} else {
+		ed->view.scale -= 0.05;
+	}
+
+	ed->view.scale = ed->view.scale <= 0.05 ? 0.05 : ed->view.scale;
+	EditorUpdateView(ed);
+}
+
+void EditorZoomIn(editor_t* ed) {
+	if (ed->view.scale > 1) {
+		ed->view.scale += 0.15;
+	} else {
+		ed->view.scale += 0.05;
+	}
+
+	EditorUpdateView(ed);
+}
+
+#include "cimgui.h"
+
+void EditorProcessInput(editor_t* ed) {
+	ImGuiIO* io = igGetIO();
+
+	if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
+		if (io->MouseWheel > 0) EditorZoomIn(ed);
+		if (io->MouseWheel < 0) EditorZoomOut(ed);
+
+		if (igIsKeyPressed_Bool(ImGuiKey_Equal, false)) {
+			if (io->KeyCtrl) { EditorZoomIn(ed); }
+			else ed->tool.brush.size += 1;
+		} else if (igIsKeyPressed_Bool(ImGuiKey_Minus, false)) {
+			if (io->KeyCtrl) { EditorZoomOut(ed); }
+			else if (ed->tool.brush.size > 1) ed->tool.brush.size -= 1;
+		} else if (igIsKeyPressed_Bool(ImGuiKey_B, false)) {
+			ed->tool.type.current = TOOL_BRUSH;
+			ed->tool.brush.rounded = io->KeyShift ? false : true;
+		} else if (igIsKeyPressed_Bool(ImGuiKey_E, false)) {
+			ed->tool.type.current = TOOL_ERASER;
+			ed->tool.brush.rounded = io->KeyShift ? false : true;
+		} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
+			ed->tool.type.previous = ed->tool.type.current;
+			ed->tool.type.current = TOOL_PAN;
+		} else if (igIsKeyReleased_Nil(ImGuiKey_Space)) {
+			ed->tool.type.current = ed->tool.type.previous;
+		}
+	}
+
+	mmRect_t dirty = {0};
+
+	if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
+		dirty = EditorOnMouseDown(ed, io->MousePos.x, io->MousePos.y);
+	}
+	if (igIsMouseDragging(ImGuiMouseButton_Left, -1.0)) {
+		dirty = EditorOnMouseMove(ed, io->MousePos.x, io->MousePos.y);
+	}
+	if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
+		dirty = EditorOnMouseUp(ed, io->MousePos.x, io->MousePos.y);
+	}
+
+	// Width & Height are set if change occurs
+	if (dirty.max_x > 0) {
+		TextureUpdate(
+			ed->canvas.texture, dirty.min_x, dirty.min_y,
+			dirty.max_x - dirty.min_x, dirty.max_y - dirty.min_y,
+			ed->canvas.image.width, (unsigned char*)ed->canvas.image.pixels
+		);
+		dirty.max_x = 0;
+	}
+}

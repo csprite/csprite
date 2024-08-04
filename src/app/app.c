@@ -8,8 +8,6 @@
 #include "sfd.h"
 #include "app/editor.h"
 
-static void _MainWinProcessInput(editor_t* ed);
-
 void _AppOpenFile(editor_t* ed, const char* filePath) {
 	if (filePath == NULL) {
 		filePath = sfd_open_dialog(&(sfd_Options){
@@ -34,27 +32,6 @@ void _AppOpenFile(editor_t* ed, const char* filePath) {
 			printf("Failed to launch dialog: %s", LastError);
 		}
 	}
-}
-
-void _AppZoomOut(editor_t* ed) {
-	if (ed->view.scale > 1) {
-		ed->view.scale -= 0.15;
-	} else {
-		ed->view.scale -= 0.05;
-	}
-
-	ed->view.scale = ed->view.scale <= 0.05 ? 0.05 : ed->view.scale;
-	EditorUpdateView(ed);
-}
-
-void _AppZoomIn(editor_t* ed) {
-	if (ed->view.scale > 1) {
-		ed->view.scale += 0.15;
-	} else {
-		ed->view.scale += 0.05;
-	}
-
-	EditorUpdateView(ed);
 }
 
 int AppMainLoop(void) {
@@ -146,29 +123,8 @@ int AppMainLoop(void) {
 			igEnd();
 		}
 
-		mmRect_t dirtyArea = {0};
 		if (isMainWindowHovered) {
-			_MainWinProcessInput(&ed);
-
-			if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
-				dirtyArea = EditorOnMouseDown(&ed, io->MousePos.x, io->MousePos.y);
-			}
-			if (igIsMouseDragging(ImGuiMouseButton_Left, -1.0)) {
-				dirtyArea = EditorOnMouseMove(&ed, io->MousePos.x, io->MousePos.y);
-			}
-			if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
-				dirtyArea = EditorOnMouseUp(&ed, io->MousePos.x, io->MousePos.y);
-			}
-
-			// Width & Height are set if change occurs
-			if (dirtyArea.max_x > 0) {
-				TextureUpdate(
-					ed.canvas.texture, dirtyArea.min_x, dirtyArea.min_y,
-					dirtyArea.max_x - dirtyArea.min_x, dirtyArea.max_y - dirtyArea.min_y,
-					ed.canvas.image.width, (unsigned char*)ed.canvas.image.pixels
-				);
-				dirtyArea.max_x = 0;
-			}
+			EditorProcessInput(&ed);
 		}
 
 		WindowEndFrame();
@@ -176,34 +132,6 @@ int AppMainLoop(void) {
 
 	EditorDestroy(&ed);
 	return 0;
-}
-
-static void _MainWinProcessInput(editor_t* ed) {
-	ImGuiIO* io = igGetIO();
-
-	if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
-		if (io->MouseWheel > 0) _AppZoomIn(ed);
-		if (io->MouseWheel < 0) _AppZoomOut(ed);
-	}
-
-	if (igIsKeyPressed_Bool(ImGuiKey_Equal, false)) {
-		if (io->KeyCtrl) { _AppZoomIn(ed); }
-		else ed->tool.brush.size += 1;
-	} else if (igIsKeyPressed_Bool(ImGuiKey_Minus, false)) {
-		if (io->KeyCtrl) { _AppZoomOut(ed); }
-		else if (ed->tool.brush.size > 1) ed->tool.brush.size -= 1;
-	} else if (igIsKeyPressed_Bool(ImGuiKey_B, false)) {
-		ed->tool.type.current = TOOL_BRUSH;
-		ed->tool.brush.rounded = io->KeyShift ? false : true;
-	} else if (igIsKeyPressed_Bool(ImGuiKey_E, false)) {
-		ed->tool.type.current = TOOL_ERASER;
-		ed->tool.brush.rounded = io->KeyShift ? false : true;
-	} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
-		ed->tool.type.previous = ed->tool.type.current;
-		ed->tool.type.current = TOOL_PAN;
-	} else if (igIsKeyReleased_Nil(ImGuiKey_Space)) {
-		ed->tool.type.current = ed->tool.type.previous;
-	}
 }
 
 int AppInit(void) {
