@@ -67,6 +67,54 @@ int AppInit(void) {
 #include "app/editor.h"
 
 static void _MainWinProcessInput(editor_t* ed);
+static void _AppOpenFile(editor_t* ed, const char* filePath);
+
+void _AppOpenFile(editor_t* ed, const char* filePath) {
+	if (filePath == NULL) {
+		filePath = sfd_open_dialog(&(sfd_Options){
+			.title        = "Open Image File",
+			.filter_name  = "Image File",
+			.filter       = "*.png|*.jpg",
+			.save         = 0
+		});
+	}
+
+	if (filePath) {
+		editor_t new = {0};
+		if (!EditorInitFrom(&new, filePath)) {
+			EditorDestroy(ed);
+			*ed = new;
+			ed->view.x = (igGetIO()->DisplaySize.x / 2) - (ed->view.w / 2);
+			ed->view.y = (igGetIO()->DisplaySize.y / 2) - (ed->view.h / 2);
+		}
+	} else {
+		const char* LastError = sfd_get_error();
+		if (LastError != NULL) {
+			printf("Failed to launch dialog: %s", LastError);
+		}
+	}
+}
+
+void _AppZoomOut(editor_t* ed) {
+	if (ed->view.scale > 1) {
+		ed->view.scale -= 0.15;
+	} else {
+		ed->view.scale -= 0.05;
+	}
+
+	ed->view.scale = ed->view.scale <= 0.05 ? 0.05 : ed->view.scale;
+	EditorUpdateView(ed);
+}
+
+void _AppZoomIn(editor_t* ed) {
+	if (ed->view.scale > 1) {
+		ed->view.scale += 0.15;
+	} else {
+		ed->view.scale += 0.05;
+	}
+
+	EditorUpdateView(ed);
+}
 
 int AppMainLoop(void) {
 	WindowNewFrame();
@@ -87,26 +135,7 @@ int AppMainLoop(void) {
 		igBeginMainMenuBar();
 			if (igBeginMenu("File", true)) {
 				if (igMenuItem_Bool("Open", NULL, false, true)) {
-					const char* filePath = sfd_open_dialog(&(sfd_Options){
-						.title        = "Open Image File",
-						.filter_name  = "Image File",
-						.filter       = "*.png|*.jpg",
-						.save         = 0
-					});
-					if (filePath) {
-						editor_t new = {0};
-						if (!EditorInitFrom(&new, filePath)) {
-							EditorDestroy(&ed);
-							ed = new;
-							ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
-							ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
-						}
-					} else {
-						const char* LastError = sfd_get_error();
-						if (LastError != NULL) {
-							printf("Failed to launch dialog: %s", LastError);
-						}
-					}
+					_AppOpenFile(&ed, NULL);
 				}
 				igEndMenu();
 			}
@@ -222,16 +251,15 @@ static void _MainWinProcessInput(editor_t* ed) {
 	ImGuiIO* io = igGetIO();
 
 	if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
-		if (io->MouseWheel > 0) ed->view.scale += 0.15f;
-		if (io->MouseWheel < 0) ed->view.scale -= 0.15f;
-		EditorUpdateView(ed);
+		if (io->MouseWheel > 0) _AppZoomIn(ed);
+		if (io->MouseWheel < 0) _AppZoomOut(ed);
 	}
 
 	if (igIsKeyPressed_Bool(ImGuiKey_Equal, false)) {
-		if (io->KeyCtrl) { ed->view.scale += 0.15f;EditorUpdateView(ed); }
+		if (io->KeyCtrl) { _AppZoomIn(ed); }
 		else ed->tool.brush.size += 1;
 	} else if (igIsKeyPressed_Bool(ImGuiKey_Minus, false)) {
-		if (io->KeyCtrl) { ed->view.scale -= 0.15f; EditorUpdateView(ed); }
+		if (io->KeyCtrl) { _AppZoomOut(ed); }
 		else if (ed->tool.brush.size > 1) ed->tool.brush.size -= 1;
 	} else if (igIsKeyPressed_Bool(ImGuiKey_B, false)) {
 		ed->tool.type.current = TOOL_BRUSH;
