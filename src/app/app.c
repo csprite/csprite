@@ -78,9 +78,28 @@ int AppMainLoop(void) {
 		SidebarSize.y = io->DisplaySize.y - (mBarPos.y + mBarSize.y); // Used as Constraint & To Reduce Duplicate Calculations
 		igSetNextWindowPos((ImVec2){ 0, mBarPos.y + mBarSize.y }, ImGuiCond_Always, (ImVec2){ 0, 0 });
 		igSetNextWindowSize((ImVec2){ 200, 0 }, ImGuiCond_Once);
-		igSetNextWindowSizeConstraints((ImVec2){ 40, SidebarSize.y }, (ImVec2){ io->DisplaySize.x / 3, SidebarSize.y }, NULL, NULL);
+		igSetNextWindowSizeConstraints((ImVec2){ 100, SidebarSize.y }, (ImVec2){ io->DisplaySize.x / 3, SidebarSize.y }, NULL, NULL);
 		igPushStyleVar_Float(ImGuiStyleVar_WindowBorderSize, 0);
 		if (igBegin("##Sidebar", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar)) {
+			float color_float[4] = {
+				ed.tool.brush.color.r / 255.0f,
+				ed.tool.brush.color.g / 255.0f,
+				ed.tool.brush.color.b / 255.0f,
+				ed.tool.brush.color.a / 255.0f
+			};
+			ImVec2 availReg;
+			igGetContentRegionAvail(&availReg);
+			igSetNextItemWidth(availReg.x);
+			if (igColorPicker4("##ColorPicker", (float*)&color_float, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview, NULL)) {
+				ed.tool.brush.color.r = color_float[0] * 255;
+				ed.tool.brush.color.g = color_float[1] * 255;
+				ed.tool.brush.color.b = color_float[2] * 255;
+				ed.tool.brush.color.a = color_float[3] * 255;
+			}
+			if (igIsItemHovered(0)) {
+				igSetMouseCursor(ImGuiMouseCursor_Hand);
+			}
+
 			igGetWindowPos(&SidebarPos);
 			igGetWindowSize(&SidebarSize);
 			igEnd();
