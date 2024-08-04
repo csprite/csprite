@@ -156,24 +156,24 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 		case TOOL_LINE: {
 			int MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 			int MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
-			ImDrawList_AddRect(
+			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (MouseDownRelX * ed->view.scale) + ed->view.x, (MouseDownRelY * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((MouseDownRelX + 1) * ed->view.scale) + ed->view.x, ((MouseDownRelY + 1) * ed->view.scale) + ed->view.y },
-			    igGetColorU32_Col(ImGuiCol_ButtonActive, 1), 0, 0, 1
+				*(uint32_t*)&ed->tool.brush.color, 0, 0
 			);
 			ImDrawList_AddLine(
 				igGetForegroundDrawList_Nil(),
 				(ImVec2){ ((MouseDownRelX + 0.5) * ed->view.scale) + ed->view.x, ((MouseDownRelY + 0.5) * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((MouseRelX + 0.5) * ed->view.scale) + ed->view.x, ((MouseRelY + 0.5) * ed->view.scale) + ed->view.y },
-			    igGetColorU32_Col(ImGuiCol_ButtonActive, 1),
-			    ed->view.scale / 3
+				*(uint32_t*)&ed->tool.brush.color,
+				ed->view.scale / 3
 			);
-			ImDrawList_AddRect(
+			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (MouseRelX * ed->view.scale) + ed->view.x, (MouseRelY * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
-			    igGetColorU32_Col(ImGuiCol_ButtonActive, 1), 0, 0, 1
+				*(uint32_t*)&ed->tool.brush.color, 0, 0
 			);
 		}
 		case TOOL_NONE: {

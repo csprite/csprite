@@ -156,7 +156,7 @@ int AppMainLoop(void) {
 				    igGetWindowDrawList(),
 					(ImVec2){ (MouseRelX * ed.view.scale) + ed.view.x, (MouseRelY * ed.view.scale) + ed.view.y },
 					(ImVec2){ ((MouseRelX + 1) * ed.view.scale) + ed.view.x, ((MouseRelY + 1) * ed.view.scale) + ed.view.y },
-				    igGetColorU32_Col(ImGuiCol_Border, 1), 0, 0, 1
+					*(uint32_t*)&ed.tool.brush.color, 0, 0, 1
 				);
 			}
 			isMainWindowHovered = igIsWindowHovered(0);
