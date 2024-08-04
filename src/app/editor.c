@@ -169,7 +169,7 @@ mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
 }
 
 void EditorUpdateView(editor_t* ed) {
-	ed->view.scale = ed->view.scale > 0.15f ? ed->view.scale : 0.05f;
+	ed->view.scale = ed->view.scale < 0.01 ? 0.01 : ed->view.scale;
 
 	// Ensures That The viewRect is Centered From The Center
 	float currX = (ed->view.w / 2) + ed->view.x;
