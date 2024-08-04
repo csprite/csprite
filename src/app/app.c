@@ -151,7 +151,7 @@ int AppMainLoop(void) {
 			igCheckbox("Rounded", &ed.tool.brush.rounded);
 			igSameLine(0, -1);
 
-			igText("- Zoom: %.2f", ed.view.scale);
+			igText("- Zoom: %.2f - %d,%d", ed.view.scale, (int)((io->MousePos.x - ed.view.x)/ed.view.scale), (int)((io->MousePos.y - ed.view.y)/ed.view.scale));
 
 			igGetWindowPos(&statusBarPos);
 			igGetWindowSize(&statusBarSize);
