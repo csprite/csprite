@@ -47,6 +47,8 @@ int AppMainLoop(void) {
 	ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
 	EditorUpdateView(&ed);
 
+	bool doOpenNewFileModal = false;
+
 	while (!WindowShouldClose()) {
 		WindowNewFrame();
 
@@ -54,6 +56,9 @@ int AppMainLoop(void) {
 		ImVec2 mBarSize;
 		igBeginMainMenuBar();
 			if (igBeginMenu("File", true)) {
+				if (igMenuItem_Bool("New", NULL, false, true)) {
+					doOpenNewFileModal = true;
+				}
 				if (igMenuItem_Bool("Open", NULL, false, true)) {
 					_AppOpenFile(&ed, NULL);
 				}
@@ -149,7 +154,7 @@ int AppMainLoop(void) {
 			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
 			    (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, 0xFFFFFFFF
 			);
-			if (!igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
+			if (!igIsMouseClicked_Bool(ImGuiMouseButton_Left, false) && igIsWindowHovered(0)) {
 				int32_t MouseRelX = (int32_t)((io->MousePos.x - ed.view.x) / ed.view.scale);
 				int32_t MouseRelY = (int32_t)((io->MousePos.y - ed.view.y) / ed.view.scale);
 				ImDrawList_AddRect(
@@ -161,6 +166,39 @@ int AppMainLoop(void) {
 			}
 			isMainWindowHovered = igIsWindowHovered(0);
 			igEnd();
+		}
+
+		if (doOpenNewFileModal) {
+			doOpenNewFileModal = false;
+			igOpenPopup_Str("##NewFileModal", 0);
+		}
+		if (igBeginPopupModal("##NewFileModal", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
+			static int width = 20, height = 20;
+			if (igInputInt("Width", &width, 1, 5, 0)) width = width < 2 ? 2 : width;
+			if (igInputInt("Height", &height, 1, 5, 0)) height = height < 2 ? 2 : height;
+
+			if (igButton("Create", (ImVec2){0,0})) {
+				editor_t new = {0};
+				if (!EditorInit(&new, width, height)) {
+					EditorDestroy(&ed);
+					ed = new;
+					ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
+					ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
+					EditorUpdateView(&ed);
+				}
+
+				igCloseCurrentPopup();
+				width = 20;
+				height = 20;
+			}
+			igSameLine(0, -1);
+			if (igButton("Cancel", (ImVec2){0,0})) {
+				igCloseCurrentPopup();
+				width = 20;
+				height = 20;
+			}
+
+			igEndPopup();
 		}
 
 		if (isMainWindowHovered) {
