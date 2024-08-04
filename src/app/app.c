@@ -75,7 +75,7 @@ int AppMainLoop(void) {
 	ImGuiIO* io = igGetIO();
 
 	editor_t ed = {0};
-	EditorInit(&ed, 320, 240);
+	EditorInit(&ed, 120, 90);
 	ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
 	ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
 
@@ -184,7 +184,7 @@ int AppMainLoop(void) {
 			if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
 				dirtyArea = EditorOnMouseDown(&ed, io->MousePos.x, io->MousePos.y);
 			}
-			if (igIsMouseDragging(ImGuiMouseButton_Left, 0)) {
+			if (igIsMouseDragging(ImGuiMouseButton_Left, -1.0)) {
 				dirtyArea = EditorOnMouseMove(&ed, io->MousePos.x, io->MousePos.y);
 			}
 			if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
@@ -202,7 +202,11 @@ int AppMainLoop(void) {
 
 			// Width & Height are set if change occurs
 			if (dirtyArea.max_x > 0) {
-				TextureUpdate(ed.canvas.texture, ed.canvas.image.width, ed.canvas.image.height, (unsigned char*)ed.canvas.image.pixels);
+				TextureUpdate(
+					ed.canvas.texture, dirtyArea.min_x, dirtyArea.min_y,
+					dirtyArea.max_x - dirtyArea.min_x, dirtyArea.max_y - dirtyArea.min_y,
+					ed.canvas.image.width, (unsigned char*)ed.canvas.image.pixels
+				);
 				dirtyArea.max_x = 0;
 			}
 		}

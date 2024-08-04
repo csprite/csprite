@@ -31,14 +31,14 @@ texture_t TextureInit(int width, int height) {
 	return id;
 }
 
-void TextureUpdate(texture_t id, int tWidth, int tHeight, unsigned char* data) {
+void TextureUpdate(texture_t id, int subreg_x, int subreg_y, int subreg_w, int subreg_h, int tWidth, unsigned char* data) {
 	glBindTexture(GL_TEXTURE_2D, id);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, tWidth);
 	glTexSubImage2D(
 		GL_TEXTURE_2D, 0,
-		0, 0, tWidth, tHeight,
+		subreg_x, subreg_y, subreg_w, subreg_h,
 		GL_RGBA, GL_UNSIGNED_BYTE,
-		data
+		&data[((subreg_y * tWidth) + subreg_x) * 4]
 	);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
