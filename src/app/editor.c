@@ -16,7 +16,7 @@ int EditorInit(editor_t* ed, uint32_t width, uint32_t height) {
 	ed->tool.brush.color = (pixel_t){ 255, 255, 255, 255 };
 	ed->tool.brush.rounded = false;
 	ed->tool.brush.size = 1;
-	ed->tool.type.current = TOOL_NONE;
+	ed->tool.type.current = TOOL_BRUSH;
 	ed->view.scale = 1.5f;
 	ed->file.path = malloc(sizeof("untitled.png"));
 	ed->file.name = ed->file.path;
@@ -35,7 +35,7 @@ int EditorInitFrom(editor_t* ed, const char* filePath) {
 	EditorInit(ed, img.width, img.height);
 	ImageDestroy(&ed->canvas.image);
 	ed->canvas.image = img;
-	TextureUpdate(ed->canvas.texture, ed->canvas.image.width, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
+	TextureUpdate(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
 
 	return 0;
 }
@@ -55,6 +55,7 @@ mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
 
 	mmRect_t dirty = { ed->canvas.image.width, ed->canvas.image.height, 0, 0 };
+	if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX >= ed->canvas.image.width || MouseRelY >= ed->canvas.image.height) return dirty;
 
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
@@ -81,6 +82,7 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
+	if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX >= ed->canvas.image.width || MouseRelY >= ed->canvas.image.height) return dirty;
 
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
@@ -114,7 +116,7 @@ mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
 }
 
 void EditorUpdateView(editor_t* ed) {
-	ed->view.scale = ed->view.scale > 0.15f ? ed->view.scale : 0.15f;
+	ed->view.scale = ed->view.scale > 0.15f ? ed->view.scale : 0.05f;
 
 	// Ensures That The viewRect is Centered From The Center
 	float currX = (ed->view.w / 2) + ed->view.x;

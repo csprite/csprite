@@ -5,7 +5,7 @@
 typedef unsigned int texture_t;
 
 texture_t TextureInit(int width, int height); // Zero = Error
-void TextureUpdate(texture_t id, int tWidth, int tHeight, unsigned char* data);
+void TextureUpdate(texture_t id, int subreg_x, int subreg_y, int subreg_w, int subreg_h, int tWidth, unsigned char* data);
 void TextureDestroy(texture_t id);
 
 #endif
