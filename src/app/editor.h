@@ -52,9 +52,14 @@ int EditorInit(editor_t* ed, uint32_t width, uint32_t height);
 int EditorInitFrom(editor_t* ed, const char* filePath);
 void EditorDestroy(editor_t* ed);
 
+void EditorProcessInput(editor_t* ed);
+
 mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y);
 mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y);
 mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y);
+
+void EditorZoomOut(editor_t* ed);
+void EditorZoomIn(editor_t* ed);
 
 void EditorUpdateView(editor_t* ed); // When ed.view.scale changes
 int EditorSetFilePath(editor_t* ed, const char* filePath);
