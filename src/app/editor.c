@@ -17,8 +17,6 @@ int EditorInit(editor_t* ed, uint32_t width, uint32_t height) {
 	}
 
 	ed->tool.brush.color = (pixel_t){ 255, 255, 255, 255 };
-	ed->tool.brush.rounded = false;
-	ed->tool.brush.size = 1;
 	ed->tool.type.current = TOOL_BRUSH;
 	ed->view.scale = 1.5f;
 	ed->file.path = malloc(sizeof("untitled.png"));
@@ -264,16 +262,12 @@ void EditorProcessInput(editor_t* ed) {
 
 		if (igIsKeyPressed_Bool(ImGuiKey_Equal, false)) {
 			if (io->KeyCtrl) { EditorZoomIn(ed); }
-			else ed->tool.brush.size += 1;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_Minus, false)) {
 			if (io->KeyCtrl) { EditorZoomOut(ed); }
-			else if (ed->tool.brush.size > 1) ed->tool.brush.size -= 1;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_B, false)) {
 			ed->tool.type.current = TOOL_BRUSH;
-			ed->tool.brush.rounded = io->KeyShift ? false : true;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_E, false)) {
 			ed->tool.type.current = TOOL_ERASER;
-			ed->tool.brush.rounded = io->KeyShift ? false : true;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_L, false)) {
 			ed->tool.type.current = TOOL_LINE;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
