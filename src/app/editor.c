@@ -47,6 +47,29 @@ void EditorDestroy(editor_t* ed) {
 	free(ed->file.path);
 }
 
+mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
+	mmRect_t dirty = { img->width, img->height, 0, 0 };
+
+	int t = 0;
+	if (x0 > x1) { t = x0; x0 = x1; x1 = t; }
+	if (y0 > y1) { t = y0; y0 = y1; y1 = t; }
+
+	for (int y = y0; y <= y1; y++) {
+		for (int x = x0; x <= x1; x++) {
+			if (x > -1 && y > -1 && x < img->width && y < img->height) {
+				img->pixels[(y * img->width) + x] = color;
+			}
+		}
+	}
+
+	dirty.min_x = x0 < 0 ? 0 : x0;
+	dirty.min_y = y0 < 0 ? 0 : y0;
+	dirty.max_x = x1 >= img->width ? img->width : x1 + 1;
+	dirty.max_y = y1 >= img->height ? img->height : y1 + 1;
+
+	return dirty;
+}
+
 mmRect_t plotLine(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
@@ -106,6 +129,7 @@ mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 			break;
 		}
 		case TOOL_LINE:
+		case TOOL_RECT:
 		case TOOL_NONE:
 		case TOOL_PAN: {
 			break;
@@ -120,11 +144,15 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
-	if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX >= ed->canvas.image.width || MouseRelY >= ed->canvas.image.height) return dirty;
+
+	int MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
+	int MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
 		case TOOL_ERASER: {
+			if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX >= ed->canvas.image.width || MouseRelY >= ed->canvas.image.height) return dirty;
+
 			pixel_t color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
 			ed->canvas.image.pixels[(MouseRelY * ed->canvas.image.width) + MouseRelX] = color;
 			dirty.min_x = MouseRelX;
@@ -152,8 +180,6 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 			break;
 		}
 		case TOOL_LINE: {
-			int MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
-			int MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (MouseDownRelX * ed->view.scale) + ed->view.x, (MouseDownRelY * ed->view.scale) + ed->view.y },
@@ -173,6 +199,69 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 				(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
 				*(uint32_t*)&ed->tool.brush.color, 0, 0
 			);
+			break;
+		}
+		case TOOL_RECT: {
+			int TopLeftX = MouseDownRelX, TopLeftY = MouseDownRelY;
+			int BotRightX = MouseRelX, BotRightY = MouseRelY;
+
+			int BotLeftX = MouseDownRelX, BotLeftY = MouseRelY;
+			int TopRightX = BotRightX, TopRightY = TopLeftY;
+
+			ImDrawList_AddRectFilled( // Top Left
+			    igGetForegroundDrawList_Nil(),
+				(ImVec2){ (TopLeftX * ed->view.scale) + ed->view.x, (TopLeftY * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((TopLeftX + 1) * ed->view.scale) + ed->view.x, ((TopLeftY + 1) * ed->view.scale) + ed->view.y },
+				*(uint32_t*)&ed->tool.brush.color, 0, 0
+			);
+			ImDrawList_AddLine( // Top Left TO Top Right
+				igGetForegroundDrawList_Nil(),
+				(ImVec2){ ((TopLeftX + 0.5) * ed->view.scale) + ed->view.x, ((TopLeftY + 0.5) * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((TopRightX + 0.5) * ed->view.scale) + ed->view.x, ((TopRightY + 0.5) * ed->view.scale) + ed->view.y },
+				*(uint32_t*)&ed->tool.brush.color,
+				ed->view.scale / 3
+			);
+			ImDrawList_AddLine( // Top Left TO Bottom Left
+				igGetForegroundDrawList_Nil(),
+				(ImVec2){ ((TopLeftX + 0.5) * ed->view.scale) + ed->view.x, ((TopLeftY + 0.5) * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((BotLeftX + 0.5) * ed->view.scale) + ed->view.x, ((BotLeftY + 0.5) * ed->view.scale) + ed->view.y },
+				*(uint32_t*)&ed->tool.brush.color,
+				ed->view.scale / 3
+			);
+			ImDrawList_AddRectFilled( // Top Right
+			    igGetForegroundDrawList_Nil(),
+				(ImVec2){ (TopRightX * ed->view.scale) + ed->view.x, (TopRightY * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((TopRightX + 1) * ed->view.scale) + ed->view.x, ((TopRightY + 1) * ed->view.scale) + ed->view.y },
+				*(uint32_t*)&ed->tool.brush.color, 0, 0
+			);
+
+			ImDrawList_AddRectFilled( // Bottom Left
+			    igGetForegroundDrawList_Nil(),
+				(ImVec2){ (BotLeftX * ed->view.scale) + ed->view.x, (BotLeftY * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((BotLeftX + 1) * ed->view.scale) + ed->view.x, ((BotLeftY + 1) * ed->view.scale) + ed->view.y },
+				*(uint32_t*)&ed->tool.brush.color, 0, 0
+			);
+			ImDrawList_AddLine( // Bottom Left TO Bottom Right
+				igGetForegroundDrawList_Nil(),
+				(ImVec2){ ((BotLeftX + 0.5) * ed->view.scale) + ed->view.x, ((BotLeftY + 0.5) * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((BotRightX + 0.5) * ed->view.scale) + ed->view.x, ((BotRightY + 0.5) * ed->view.scale) + ed->view.y },
+				*(uint32_t*)&ed->tool.brush.color,
+				ed->view.scale / 3
+			);
+			ImDrawList_AddLine( // Bottom Right TO Top Right
+				igGetForegroundDrawList_Nil(),
+				(ImVec2){ ((BotRightX + 0.5) * ed->view.scale) + ed->view.x, ((BotRightY + 0.5) * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((TopRightX + 0.5) * ed->view.scale) + ed->view.x, ((TopRightY + 0.5) * ed->view.scale) + ed->view.y },
+				*(uint32_t*)&ed->tool.brush.color,
+				ed->view.scale / 3
+			);
+			ImDrawList_AddRectFilled( // Bottom Right
+			    igGetForegroundDrawList_Nil(),
+				(ImVec2){ (BotRightX * ed->view.scale) + ed->view.x, (BotRightY * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((BotRightX + 1) * ed->view.scale) + ed->view.x, ((BotRightY + 1) * ed->view.scale) + ed->view.y },
+				*(uint32_t*)&ed->tool.brush.color, 0, 0
+			);
+			break;
 		}
 		case TOOL_NONE: {
 			break;
@@ -194,12 +283,15 @@ mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
 		case TOOL_NONE: {
 			break;
 		}
-		case TOOL_LINE: {
+		case TOOL_LINE:
+		case TOOL_RECT: {
 			int32_t MouseRelX = ((x - ed->view.x) / ed->view.scale);
 			int32_t MouseRelY = ((y - ed->view.y) / ed->view.scale);
 			int32_t MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
-			dirty = plotLine(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color);
+			dirty = ed->tool.type.current == TOOL_LINE ?
+				plotLine(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color) :
+				plotRect(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color);
 			break;
 		}
 	}
@@ -270,6 +362,8 @@ void EditorProcessInput(editor_t* ed) {
 			ed->tool.type.current = TOOL_ERASER;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_L, false)) {
 			ed->tool.type.current = TOOL_LINE;
+		} else if (igIsKeyPressed_Bool(ImGuiKey_R, false)) {
+			ed->tool.type.current = TOOL_RECT;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
 			ed->tool.type.previous = ed->tool.type.current;
 			ed->tool.type.current = TOOL_PAN;
