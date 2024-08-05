@@ -117,23 +117,29 @@ int AppMainLoop(void) {
 		igSetNextWindowPos((ImVec2){ SidebarPos.x + SidebarSize.x, mBarPos.y + mBarSize.y }, ImGuiCond_Always, (ImVec2){ 0, 0 });
 		igSetNextWindowSize((ImVec2){ io->DisplaySize.x, 0 }, ImGuiCond_Always);
 		if (igBegin("##StatusBar", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_AlwaysAutoResize)) {
-			igSetNextItemWidth(150);
-			igSliderInt("##BrushSize", (int*)&ed.tool.brush.size, 1, 64, "%d", 0);
-			igSameLine(0, -1);
-
-			igCheckbox("Rounded", &ed.tool.brush.rounded);
-			igSameLine(0, -1);
-
-			switch (ed.tool.type.current) {
-				case TOOL_BRUSH:  igText("Brush"); break;
-				case TOOL_ERASER: igText("Eraser"); break;
-				case TOOL_LINE:   igText("Line"); break;
-				case TOOL_PAN:    igText("Pan"); break;
-				case TOOL_NONE:   igText("None"); break;
+			ImVec2 tWidth;
+			igCalcTextSize(&tWidth, "BRUSH_XXX", NULL, false, -1);
+			igSetNextItemWidth(tWidth.x);
+			if (igBeginCombo("##ToolSelector", ToolToString(ed.tool.type.current), 0)) {
+				for (int i = 0; i < TOOL_NONE; i++) {
+					if (igSelectable_Bool(ToolToString(i), i == ed.tool.type.current, 0, (ImVec2){0,0})) {
+						ed.tool.type.current = i;
+					}
+				}
+				igEndCombo();
 			}
-			igSameLine(0, -1);
 
-			igText("- Zoom: %.2f - %d,%d", ed.view.scale, (int)((io->MousePos.x - ed.view.x)/ed.view.scale), (int)((io->MousePos.y - ed.view.y)/ed.view.scale));
+			float step = ed.view.scale > 1 ? 0.15 : 0.05;
+			igCalcTextSize(&tWidth, "ZOOM_XXXXXXX", NULL, false, -1);
+			igSetNextItemWidth(tWidth.x);
+			igSameLine(0, -1);
+			if (igInputFloat("##ZoomControl", &ed.view.scale, step, step, "x%.2f", 0)) {
+				ed.view.scale = ed.view.scale < 0.05 ? 0.05 : ed.view.scale;
+				EditorUpdateView(&ed);
+			}
+
+			igSameLine(0, -1);
+			igText("x: %d, y: %d", (int)((io->MousePos.x - ed.view.x)/ed.view.scale), (int)((io->MousePos.y - ed.view.y)/ed.view.scale));
 
 			igGetWindowPos(&statusBarPos);
 			igGetWindowSize(&statusBarSize);

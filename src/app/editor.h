@@ -20,6 +20,17 @@ typedef enum {
 	TOOL_NONE
 } tool_t;
 
+static inline const char* ToolToString(tool_t t) {
+	switch (t) {
+		case TOOL_BRUSH:  return "Brush"; break;
+		case TOOL_ERASER: return "Eraser"; break;
+		case TOOL_LINE:   return "Line"; break;
+		case TOOL_PAN:    return "Pan"; break;
+		case TOOL_NONE:   return "None"; break;
+	}
+	return "<unknown>";
+}
+
 typedef struct {
 	struct {
 		image_t image;
@@ -31,8 +42,6 @@ typedef struct {
 	} file;
 	struct {
 		struct {
-			bool rounded;
-			uint32_t size;
 			pixel_t color;
 		} brush;
 		struct {
