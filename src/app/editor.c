@@ -47,6 +47,13 @@ void EditorDestroy(editor_t* ed) {
 	free(ed->file.path);
 }
 
+void calcDirty(int x0, int y0, int x1, int y1, image_t* img, mmRect_t* dirty) {
+	dirty->min_x = x0 < 0 ? 0 : x0;
+	dirty->min_y = y0 < 0 ? 0 : y0;
+	dirty->max_x = x1 >= img->width ? img->width : x1;
+	dirty->max_y = y1 >= img->height ? img->height : y1;
+}
+
 mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
@@ -62,10 +69,63 @@ mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 		}
 	}
 
-	dirty.min_x = x0 < 0 ? 0 : x0;
-	dirty.min_y = y0 < 0 ? 0 : y0;
-	dirty.max_x = x1 >= img->width ? img->width : x1 + 1;
-	dirty.max_y = y1 >= img->height ? img->height : y1 + 1;
+	calcDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
+	return dirty;
+}
+
+mmRect_t plotEllipseRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
+	mmRect_t dirty = { img->width, img->height, 0, 0 };
+
+	int t = 0;
+	if (x0 > x1) { t = x0; x0 = x1; x1 = t; }
+	if (y0 > y1) { t = y0; y0 = y1; y1 = t; }
+
+	calcDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
+
+	int a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;
+	long dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
+	long err = dx + dy + b1 * a * a, e2;
+
+	if (x0 > x1) { x0 = x1; x1 += a; }
+	if (y0 > y1) y0 = y1;
+	y0 += (b + 1) / 2; y1 = y0 - b1;
+	a *= 8 * a; b1 = 8 * b * b;
+
+	do {
+		if (x1 > -1 && y0 > -1 && x1 < img->width && y0 < img->height) {
+			img->pixels[(y0 * img->width) + x1] = color;
+		}
+		if (x0 > -1 && y0 > -1 && x0 < img->width && y0 < img->height) {
+			img->pixels[(y0 * img->width) + x0] = color;
+		}
+		if (x0 > -1 && y1 > -1 && x0 < img->width && y1 < img->height) {
+			img->pixels[(y1 * img->width) + x0] = color;
+		}
+		if (x1 > -1 && y1 > -1 && x1 < img->width && y1 < img->height) {
+			img->pixels[(y1 * img->width) + x1] = color;
+		}
+
+		e2 = 2 * err;
+		if (e2 <= dy) { y0++; y1--; err += dy += a; }
+		if (e2 >= dx || 2 * err > dy) { x0++; x1--; err += dx += b1; }
+	} while (x0 <= x1);
+
+	while (y0-y1 < b) {
+		if (x0-1 > -1 && y0 > -1 && x0-1 < img->width && y0 < img->height) {
+			img->pixels[(y0 * img->width) + x0-1] = color;
+		}
+		if (x1+1 > -1 && y0 > -1 && x1+1 < img->width && y0 < img->height) {
+			img->pixels[(y0 * img->width) + x0+1] = color;
+		}
+		y0++;
+		if (x0-1 > -1 && y1 > -1 && x0-1 < img->width && y1 < img->height) {
+			img->pixels[(y1 * img->width) + x0-1] = color;
+		}
+		if (x1+1 > -1 && y1 > -1 && x1+1 < img->width && y1 < img->height) {
+			img->pixels[(y1 * img->width) + x1+1] = color;
+		}
+		y1--;
+	}
 
 	return dirty;
 }
@@ -130,6 +190,7 @@ mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 		}
 		case TOOL_LINE:
 		case TOOL_RECT:
+		case TOOL_ELLIPSE:
 		case TOOL_NONE:
 		case TOOL_PAN: {
 			break;
@@ -194,7 +255,8 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 			);
 			break;
 		}
-		case TOOL_RECT: {
+		case TOOL_RECT:
+		case TOOL_ELLIPSE: {
 			int TopLeftX = MouseDownRelX, TopLeftY = MouseDownRelY;
 			int BotRightX = MouseRelX, BotRightY = MouseRelY;
 
@@ -277,14 +339,17 @@ mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
 			break;
 		}
 		case TOOL_LINE:
-		case TOOL_RECT: {
+		case TOOL_RECT:
+		case TOOL_ELLIPSE: {
 			int32_t MouseRelX = ((x - ed->view.x) / ed->view.scale);
 			int32_t MouseRelY = ((y - ed->view.y) / ed->view.scale);
 			int32_t MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 			dirty = ed->tool.type.current == TOOL_LINE ?
-				plotLine(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color) :
-				plotRect(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color);
+					plotLine(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color) :
+						ed->tool.type.current == TOOL_RECT ?
+							plotRect(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color) :
+							plotEllipseRect(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color);
 			break;
 		}
 	}
@@ -357,6 +422,8 @@ void EditorProcessInput(editor_t* ed) {
 			ed->tool.type.current = TOOL_LINE;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_R, false)) {
 			ed->tool.type.current = TOOL_RECT;
+		} else if (igIsKeyPressed_Bool(ImGuiKey_C, false)) {
+			ed->tool.type.current = TOOL_ELLIPSE;
 		} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
 			ed->tool.type.previous = ed->tool.type.current;
 			ed->tool.type.current = TOOL_PAN;
