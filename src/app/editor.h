@@ -17,18 +17,20 @@ typedef enum {
 	TOOL_ERASER,
 	TOOL_LINE,
 	TOOL_RECT,
+	TOOL_ELLIPSE,
 	TOOL_PAN,
 	TOOL_NONE
 } tool_t;
 
 static inline const char* ToolToString(tool_t t) {
 	switch (t) {
-		case TOOL_BRUSH:  return "Brush"; break;
-		case TOOL_ERASER: return "Eraser"; break;
-		case TOOL_LINE:   return "Line"; break;
-		case TOOL_RECT:   return "Rect"; break;
-		case TOOL_PAN:    return "Pan"; break;
-		case TOOL_NONE:   return "None"; break;
+		case TOOL_BRUSH:   return "Brush"; break;
+		case TOOL_ERASER:  return "Eraser"; break;
+		case TOOL_LINE:    return "Line"; break;
+		case TOOL_RECT:    return "Rect"; break;
+		case TOOL_ELLIPSE: return "Ellipse"; break;
+		case TOOL_PAN:     return "Pan"; break;
+		case TOOL_NONE:    return "None"; break;
 	}
 	return "<unknown>";
 }
