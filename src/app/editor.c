@@ -151,14 +151,7 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
 		case TOOL_ERASER: {
-			if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX >= ed->canvas.image.width || MouseRelY >= ed->canvas.image.height) return dirty;
-
 			pixel_t color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
-			ed->canvas.image.pixels[(MouseRelY * ed->canvas.image.width) + MouseRelX] = color;
-			dirty.min_x = MouseRelX;
-			dirty.min_y = MouseRelY;
-			dirty.max_x = MouseRelX + 1;
-			dirty.max_y = MouseRelY + 1;
 
 			if (ed->mouse.last.x != INT_MIN && ed->mouse.last.y != INT_MIN) {
 				mmRect_t newDirty = plotLine(
