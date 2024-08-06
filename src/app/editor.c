@@ -57,10 +57,6 @@ void calcDirty(int x0, int y0, int x1, int y1, image_t* img, mmRect_t* dirty) {
 mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
-	int t = 0;
-	if (x0 > x1) { t = x0; x0 = x1; x1 = t; }
-	if (y0 > y1) { t = y0; y0 = y1; y1 = t; }
-
 	for (int y = y0; y <= y1; y++) {
 		for (int x = x0; x <= x1; x++) {
 			if (x > -1 && y > -1 && x < img->width && y < img->height) {
@@ -75,10 +71,6 @@ mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 
 mmRect_t plotEllipseRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
-
-	int t = 0;
-	if (x0 > x1) { t = x0; x0 = x1; x1 = t; }
-	if (y0 > y1) { t = y0; y0 = y1; y1 = t; }
 
 	calcDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
 
@@ -209,6 +201,10 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 	int MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 	int MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
+	int t = 0;
+	if (MouseRelX > MouseDownRelX) { t = MouseRelX; MouseRelX = MouseDownRelX; MouseDownRelX = t; }
+	if (MouseRelY > MouseDownRelY) { t = MouseRelY; MouseRelY = MouseDownRelY; MouseDownRelY = t; }
+
 	int TopLeftX = MouseDownRelX, TopLeftY = MouseDownRelY;
 	int BotRightX = MouseRelX, BotRightY = MouseRelY;
 
@@ -289,33 +285,11 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 			);
 
 			if (ed->tool.type.current == TOOL_RECT) {
-				ImDrawList_AddLine( // Top Left TO Top Right
-					igGetForegroundDrawList_Nil(),
+				ImDrawList_AddRect(
+				    igGetForegroundDrawList_Nil(),
 					(ImVec2){ ((TopLeftX + 0.5) * ed->view.scale) + ed->view.x, ((TopLeftY + 0.5) * ed->view.scale) + ed->view.y },
-					(ImVec2){ ((TopRightX + 0.5) * ed->view.scale) + ed->view.x, ((TopRightY + 0.5) * ed->view.scale) + ed->view.y },
-					*(uint32_t*)&ed->tool.brush.color,
-					ed->view.scale / 3
-				);
-				ImDrawList_AddLine( // Top Left TO Bottom Left
-					igGetForegroundDrawList_Nil(),
-					(ImVec2){ ((TopLeftX + 0.5) * ed->view.scale) + ed->view.x, ((TopLeftY + 0.5) * ed->view.scale) + ed->view.y },
-					(ImVec2){ ((BotLeftX + 0.5) * ed->view.scale) + ed->view.x, ((BotLeftY + 0.5) * ed->view.scale) + ed->view.y },
-					*(uint32_t*)&ed->tool.brush.color,
-					ed->view.scale / 3
-				);
-				ImDrawList_AddLine( // Bottom Left TO Bottom Right
-					igGetForegroundDrawList_Nil(),
-					(ImVec2){ ((BotLeftX + 0.5) * ed->view.scale) + ed->view.x, ((BotLeftY + 0.5) * ed->view.scale) + ed->view.y },
 					(ImVec2){ ((BotRightX + 0.5) * ed->view.scale) + ed->view.x, ((BotRightY + 0.5) * ed->view.scale) + ed->view.y },
-					*(uint32_t*)&ed->tool.brush.color,
-					ed->view.scale / 3
-				);
-				ImDrawList_AddLine( // Bottom Right TO Top Right
-					igGetForegroundDrawList_Nil(),
-					(ImVec2){ ((BotRightX + 0.5) * ed->view.scale) + ed->view.x, ((BotRightY + 0.5) * ed->view.scale) + ed->view.y },
-					(ImVec2){ ((TopRightX + 0.5) * ed->view.scale) + ed->view.x, ((TopRightY + 0.5) * ed->view.scale) + ed->view.y },
-					*(uint32_t*)&ed->tool.brush.color,
-					ed->view.scale / 3
+					*(uint32_t*)&ed->tool.brush.color, 0, 0, ed->view.scale / 4
 				);
 			} else {
 				ImDrawList_AddEllipse(
