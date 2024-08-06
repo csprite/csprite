@@ -6,7 +6,7 @@
 #include <limits.h>
 
 int EditorInit(editor_t* ed, uint32_t width, uint32_t height) {
-	memset(ed, 0, sizeof(*ed));
+	*ed = (editor_t){0};
 
 	if (ImageInit(&ed->canvas.image, width, height)) {
 		return 1;
