@@ -82,9 +82,9 @@ mmRect_t plotEllipseRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t c
 
 	calcDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
 
-	int a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;
-	long dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
-	long err = dx + dy + b1 * a * a, e2;
+	long long a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;
+	long long dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
+	long long err = dx + dy + b1 * a * a, e2;
 
 	if (x0 > x1) { x0 = x1; x1 += a; }
 	if (y0 > y1) y0 = y1;
@@ -133,9 +133,9 @@ mmRect_t plotEllipseRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t c
 mmRect_t plotLine(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
-	int dx  =  abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-	int dy  = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-	int err = dx + dy, e2;
+	long long dx  =  abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	long long dy  = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	long long err = dx + dy, e2;
 
 	for (;;) {
 		if (x0 > -1 && y0 > -1 && x0 < img->width && y0 < img->height) {
