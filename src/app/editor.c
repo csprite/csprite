@@ -408,28 +408,16 @@ void EditorProcessInput(editor_t* ed) {
 
 	if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
 		if (io->MouseWheel > 0) EditorZoomIn(ed);
-		if (io->MouseWheel < 0) EditorZoomOut(ed);
-
-		if (igIsKeyPressed_Bool(ImGuiKey_Equal, false)) {
-			if (io->KeyCtrl) { EditorZoomIn(ed); }
-		} else if (igIsKeyPressed_Bool(ImGuiKey_Minus, false)) {
-			if (io->KeyCtrl) { EditorZoomOut(ed); }
-		} else if (igIsKeyPressed_Bool(ImGuiKey_B, false)) {
-			ed->tool.type.current = TOOL_BRUSH;
-		} else if (igIsKeyPressed_Bool(ImGuiKey_E, false)) {
-			ed->tool.type.current = TOOL_ERASER;
-		} else if (igIsKeyPressed_Bool(ImGuiKey_L, false)) {
-			ed->tool.type.current = TOOL_LINE;
-		} else if (igIsKeyPressed_Bool(ImGuiKey_R, false)) {
-			ed->tool.type.current = TOOL_RECT;
-		} else if (igIsKeyPressed_Bool(ImGuiKey_C, false)) {
-			ed->tool.type.current = TOOL_ELLIPSE;
-		} else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) {
-			ed->tool.type.previous = ed->tool.type.current;
-			ed->tool.type.current = TOOL_PAN;
-		} else if (igIsKeyReleased_Nil(ImGuiKey_Space)) {
-			ed->tool.type.current = ed->tool.type.previous;
-		}
+		else if (io->MouseWheel < 0) EditorZoomOut(ed);
+		else if (igIsKeyChordPressed_Nil(ImGuiMod_Ctrl | ImGuiKey_Equal)) EditorZoomIn(ed);
+		else if (igIsKeyChordPressed_Nil(ImGuiMod_Ctrl | ImGuiKey_Minus)) EditorZoomOut(ed);
+		else if (igIsKeyChordPressed_Nil(ImGuiKey_B)) ed->tool.type.current = TOOL_BRUSH;
+		else if (igIsKeyChordPressed_Nil(ImGuiKey_E)) ed->tool.type.current = TOOL_ERASER;
+		else if (igIsKeyChordPressed_Nil(ImGuiKey_L)) ed->tool.type.current = TOOL_LINE;
+		else if (igIsKeyChordPressed_Nil(ImGuiKey_R)) ed->tool.type.current = TOOL_RECT;
+		else if (igIsKeyChordPressed_Nil(ImGuiKey_C)) ed->tool.type.current = TOOL_ELLIPSE;
+		else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) { ed->tool.type.previous = ed->tool.type.current;ed->tool.type.current = TOOL_PAN; }
+		else if (igIsKeyReleased_Nil(ImGuiKey_Space)) { ed->tool.type.current = ed->tool.type.previous; }
 	}
 
 	mmRect_t dirty = {0};
