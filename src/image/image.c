@@ -43,9 +43,7 @@ int ImageInitFrom(image_t* img, const char* filePath) {
 	return 0;
 }
 
-#include <string.h>
-
 void ImageDestroy(image_t* img) {
 	free(img->pixels);
-	memset(img, 0, sizeof(*img));
+	*img = (image_t){0};
 }
