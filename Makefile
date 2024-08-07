@@ -11,6 +11,8 @@ SOURCES  = $(addprefix src/,main.c assets/assets.c app/app.c app/window.c app/te
 OBJECTS  = $(patsubst %,$(BUILD)/%,$(SOURCES:.c=.c.o))
 DEPENDS  = $(OBJECTS:.o=.d)
 
+-include config.mk
+
 # Check if `bear` command is available, Bear is used to generate
 # `compile_commands.json` for your LSP to use, but can be disabled
 # in command line by `make all BEAR=''`
@@ -21,8 +23,6 @@ BEAR :=
 ifneq (, $(shell which bear))
 	BEAR:=bear --append --output $(BUILD)/compile_commands.json --
 endif
-
--include config.mk
 
 -include $(DEPENDS)
 
