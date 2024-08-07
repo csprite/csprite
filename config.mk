@@ -6,6 +6,9 @@ LOG_ENABLE_COLOR=true
 BUILD_TYPE = debug
 # SimpleFileDialog Backend: win32, zenity
 SFD_BACKEND =
+# Build & Bin
+BUILD    = build
+BIN      = $(BUILD)/csprite
 
 # Append Variables According To Config
 
@@ -13,6 +16,7 @@ ifeq ($(OS),Windows_NT)
 	CFLAGS += -DTARGET_WINDOWS
 	SFD_BACKEND = win32
 	LFLAGS += -lcomdlg32
+	BIN += .exe
 else
 	SFD_BACKEND = zenity
 	UNAME_S := $(shell uname -s)
