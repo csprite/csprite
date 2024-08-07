@@ -122,7 +122,7 @@ int AppMainLoop(void) {
 			igSetNextItemWidth(tWidth.x);
 			if (igBeginCombo("##ToolSelector", ToolToString(ed.tool.type.current), 0)) {
 				for (int i = 0; i < TOOL_NONE; i++) {
-					if (igSelectable_Bool(ToolToString(i), i == ed.tool.type.current, 0, (ImVec2){0,0})) {
+					if (igSelectable_Bool(ToolToString(i), (tool_t)i == ed.tool.type.current, 0, (ImVec2){0,0})) {
 						ed.tool.type.current = i;
 					}
 				}
@@ -294,7 +294,7 @@ void AppOpenURL(const char* url) {
 #if defined(TARGET_WINDOWS)
 	ShellExecute(0, 0, url, 0, 0, SW_SHOW);
 #elif defined(TARGET_APPLE) || defined(TARGET_LINUX)
-	unsigned int len = strlen(url) + 100;
+	long long len = strlen(url) + 100;
 	char* cmd = malloc(len);
 	int ret = snprintf(
 	    cmd, len,
