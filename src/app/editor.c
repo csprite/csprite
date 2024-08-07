@@ -54,9 +54,21 @@ void calcDirty(int x0, int y0, int x1, int y1, image_t* img, mmRect_t* dirty) {
 	dirty->max_y = y1 >= img->height ? img->height : y1;
 }
 
+/*
+ x0, y0 -> Top Left
+ x1, y1 -> Bottom Right
+ Ensure Top Left & Bottom Right are correct coordinates, else swap variables
+ */
+static inline void ensureRectCoords(int* x0, int* y0, int* x1, int* y1) {
+	int t = 0;
+	if (*x1 < *x0) { t = *x1; *x1 = *x0; *x0 = t; }
+	if (*y1 < *y0) { t = *y1; *y1 = *y0; *y0 = t; }
+}
+
 mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
+	ensureRectCoords(&x0, &y0, &x1, &y1);
 	for (int y = y0; y <= y1; y++) {
 		for (int x = x0; x <= x1; x++) {
 			if (x > -1 && y > -1 && x < img->width && y < img->height) {
@@ -72,6 +84,7 @@ mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 mmRect_t plotEllipseRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
+	ensureRectCoords(&x0, &y0, &x1, &y1);
 	calcDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
 
 	long long a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;
@@ -201,14 +214,12 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 	int MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 	int MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
-	int t = 0;
-	if (MouseRelX > MouseDownRelX) { t = MouseRelX; MouseRelX = MouseDownRelX; MouseDownRelX = t; }
-	if (MouseRelY > MouseDownRelY) { t = MouseRelY; MouseRelY = MouseDownRelY; MouseDownRelY = t; }
-
 	int TopLeftX = MouseDownRelX, TopLeftY = MouseDownRelY;
 	int BotRightX = MouseRelX, BotRightY = MouseRelY;
 
-	int BotLeftX = MouseDownRelX, BotLeftY = MouseRelY;
+	ensureRectCoords(&TopLeftX, &TopLeftY, &BotRightX, &BotRightY);
+
+	int BotLeftX = TopLeftX, BotLeftY = BotRightY;
 	int TopRightX = BotRightX, TopRightY = TopLeftY;
 
 	switch (ed->tool.type.current) {
@@ -331,6 +342,7 @@ mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
 			int32_t MouseRelY = ((y - ed->view.y) / ed->view.scale);
 			int32_t MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
+
 			dirty = ed->tool.type.current == TOOL_LINE ?
 					plotLine(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color) :
 						ed->tool.type.current == TOOL_RECT ?
