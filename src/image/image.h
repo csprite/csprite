@@ -6,7 +6,7 @@
 #include "pixel.h"
 
 typedef struct {
-	uint32_t width, height;
+	int64_t width, height;
 	pixel_t* pixels;
 } image_t;
 

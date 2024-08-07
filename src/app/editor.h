@@ -9,7 +9,7 @@
 #include "image/image.h"
 
 typedef struct {
-	uint32_t min_x, min_y, max_x, max_y;
+	int64_t min_x, min_y, max_x, max_y;
 } mmRect_t;
 
 typedef enum {

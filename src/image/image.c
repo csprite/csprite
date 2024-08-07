@@ -30,7 +30,7 @@ int ImageInitFrom(image_t* img, const char* filePath) {
 		return 1;
 	}
 
-	for (unsigned int i = 0; i < w * h; i++) {
+	for (long long i = 0; i < w * h; i++) {
 		pixel_t* out = &img->pixels[i];
 		out->r = data[(i * 4) + 0];
 		out->g = data[(i * 4) + 1];
