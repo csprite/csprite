@@ -6,8 +6,6 @@ FLAGS    = -MMD -MP -Wall -Wextra -pedantic
 INCLUDES = src/ vendor/glad/include/ vendor/log.c/include/ vendor/cimgui vendor/stb/include vendor/sfd/src
 CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1
 LDFLAGS  =
-BUILD    = build
-BIN      = $(BUILD)/csprite
 LIBS     = vendor/cimgui/build/cimgui.a vendor/glad/build/glad.a vendor/sfd/build/sfd.a
 SOURCES  = $(addprefix src/,main.c assets/assets.c app/app.c app/window.c app/texture.c app/editor.c image/image.c fs/fs.c) $(addprefix vendor/,log.c/src/log.c stb/impl.c)
 OBJECTS  = $(patsubst %,$(BUILD)/%,$(SOURCES:.c=.c.o))
