@@ -33,7 +33,7 @@ ifeq ($(BUILD_TYPE),debug)
 	LDFLAGS += -fsanitize=address,undefined
 else
 	ifeq ($(BUILD_TYPE),release)
-		FLAGS+=-O3
+		FLAGS += -O3
 	else
 $(error Unknown build type "$(BUILD_TYPE)", valid values: debug, release)
 	endif
