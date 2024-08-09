@@ -47,11 +47,20 @@ void EditorDestroy(editor_t* ed) {
 	free(ed->file.path);
 }
 
-void calcDirty(int x0, int y0, int x1, int y1, image_t* img, mmRect_t* dirty) {
+void boundCheckDirty(int x0, int y0, int x1, int y1, const image_t* img, mmRect_t* dirty) {
 	dirty->min_x = x0 < 0 ? 0 : x0;
 	dirty->min_y = y0 < 0 ? 0 : y0;
 	dirty->max_x = x1 >= img->width ? img->width : x1;
 	dirty->max_y = y1 >= img->height ? img->height : y1;
+}
+
+void calcDirty(const mmRect_t* dirty, mmRect_t* final, const image_t* img) {
+	if (dirty->min_x < final->min_x) final->min_x = dirty->min_x;
+	if (dirty->min_y < final->min_y) final->min_y = dirty->min_y;
+	if (dirty->max_x > final->max_x) final->max_x = dirty->max_x;
+	if (dirty->max_y > final->max_y) final->max_y = dirty->max_y;
+
+	boundCheckDirty(final->min_x, final->min_y, final->max_x, final->max_y, img, final);
 }
 
 /*
@@ -77,7 +86,7 @@ mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
 		}
 	}
 
-	calcDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
+	boundCheckDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
 	return dirty;
 }
 
@@ -85,7 +94,7 @@ mmRect_t plotEllipseRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t c
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
 	ensureRectCoords(&x0, &y0, &x1, &y1);
-	calcDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
+	boundCheckDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
 
 	long long a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;
 	long long dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
@@ -225,6 +234,8 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
 		case TOOL_ERASER: {
+			if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX > ed->canvas.image.width || MouseRelY > ed->canvas.image.height) break;
+
 			pixel_t color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
 
 			if (ed->mouse.last.x != INT_MIN && ed->mouse.last.y != INT_MIN) {

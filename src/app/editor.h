@@ -2,15 +2,11 @@
 #define CSPRITE_SRC_APP_EDITOR_H_INCLUDED_
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
 #include "pixel.h"
+#include "types.h"
 #include "app/texture.h"
 #include "image/image.h"
-
-typedef struct {
-	int64_t min_x, min_y, max_x, max_y;
-} mmRect_t;
 
 typedef enum {
 	TOOL_BRUSH,
