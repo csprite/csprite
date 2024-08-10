@@ -214,9 +214,7 @@ mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
-	mmRect_t dirty = { ed->canvas.image.width, ed->canvas.image.height, 0, 0 };
-
+void EditorOnMouseDrag(editor_t* ed, int32_t x, int32_t y) {
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
 
@@ -232,31 +230,6 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 	int TopRightX = BotRightX, TopRightY = TopLeftY;
 
 	switch (ed->tool.type.current) {
-		case TOOL_BRUSH:
-		case TOOL_ERASER: {
-			if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX > ed->canvas.image.width || MouseRelY > ed->canvas.image.height) break;
-
-			pixel_t color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
-
-			if (ed->mouse.last.x != INT_MIN && ed->mouse.last.y != INT_MIN) {
-				mmRect_t newDirty = plotLine(
-					(int)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int)((ed->mouse.last.y - ed->view.y)/ed->view.scale),
-					MouseRelX, MouseRelY, &ed->canvas.image, color
-				);
-
-				if (newDirty.min_x < dirty.min_x) dirty.min_x = newDirty.min_x;
-				if (newDirty.min_y < dirty.min_y) dirty.min_y = newDirty.min_y;
-				if (newDirty.max_x > dirty.max_x) dirty.max_x = newDirty.max_x;
-				if (newDirty.max_y > dirty.max_y) dirty.max_y = newDirty.max_y;
-			}
-
-			break;
-		}
-		case TOOL_PAN: {
-			ed->view.x += x - ed->mouse.last.x;
-			ed->view.y += y - ed->mouse.last.y;
-			break;
-		}
 		case TOOL_LINE: {
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
@@ -326,6 +299,50 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 			}
 			break;
 		}
+		case TOOL_BRUSH:
+		case TOOL_ERASER:
+		case TOOL_PAN:
+		case TOOL_NONE: {
+			break;
+		}
+	}
+}
+
+mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
+	mmRect_t dirty = { ed->canvas.image.width, ed->canvas.image.height, 0, 0 };
+
+	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
+	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
+
+	switch (ed->tool.type.current) {
+		case TOOL_BRUSH:
+		case TOOL_ERASER: {
+			if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX > ed->canvas.image.width || MouseRelY > ed->canvas.image.height) break;
+
+			pixel_t color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
+
+			if (ed->mouse.last.x != INT_MIN && ed->mouse.last.y != INT_MIN) {
+				mmRect_t newDirty = plotLine(
+					(int)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int)((ed->mouse.last.y - ed->view.y)/ed->view.scale),
+					MouseRelX, MouseRelY, &ed->canvas.image, color
+				);
+
+				if (newDirty.min_x < dirty.min_x) dirty.min_x = newDirty.min_x;
+				if (newDirty.min_y < dirty.min_y) dirty.min_y = newDirty.min_y;
+				if (newDirty.max_x > dirty.max_x) dirty.max_x = newDirty.max_x;
+				if (newDirty.max_y > dirty.max_y) dirty.max_y = newDirty.max_y;
+			}
+
+			break;
+		}
+		case TOOL_PAN: {
+			ed->view.x += x - ed->mouse.last.x;
+			ed->view.y += y - ed->mouse.last.y;
+			break;
+		}
+		case TOOL_LINE:
+		case TOOL_RECT:
+		case TOOL_ELLIPSE:
 		case TOOL_NONE: {
 			break;
 		}
@@ -433,9 +450,22 @@ void EditorProcessInput(editor_t* ed) {
 
 	if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
 		dirty = EditorOnMouseDown(ed, io->MousePos.x, io->MousePos.y);
+	} else {
+		int32_t MouseRelX = (int32_t)((io->MousePos.x - ed->view.x) / ed->view.scale);
+		int32_t MouseRelY = (int32_t)((io->MousePos.y - ed->view.y) / ed->view.scale);
+		ImDrawList_AddRect(
+		    igGetForegroundDrawList_Nil(),
+			(ImVec2){ (MouseRelX * ed->view.scale) + ed->view.x, (MouseRelY * ed->view.scale) + ed->view.y },
+			(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
+			*(uint32_t*)&ed->tool.brush.color, 0, 0, 1
+		);
 	}
-	if (igIsMouseDragging(ImGuiMouseButton_Left, -1.0)) {
+
+	if (igIsMouseDown_Nil(ImGuiMouseButton_Left) && (io->MouseDelta.x != 0 || io->MouseDelta.y != 0)) {
 		dirty = EditorOnMouseMove(ed, io->MousePos.x, io->MousePos.y);
+	}
+	if (igIsMouseDragging(ImGuiMouseButton_Left, -1)) {
+		EditorOnMouseDrag(ed, io->MousePos.x, io->MousePos.y);
 	}
 	if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
 		dirty = EditorOnMouseUp(ed, io->MousePos.x, io->MousePos.y);
