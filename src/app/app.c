@@ -160,16 +160,6 @@ int AppMainLoop(void) {
 			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
 			    (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, 0xFFFFFFFF
 			);
-			if (!igIsMouseClicked_Bool(ImGuiMouseButton_Left, false) && igIsWindowHovered(0)) {
-				int32_t MouseRelX = (int32_t)((io->MousePos.x - ed.view.x) / ed.view.scale);
-				int32_t MouseRelY = (int32_t)((io->MousePos.y - ed.view.y) / ed.view.scale);
-				ImDrawList_AddRect(
-				    igGetWindowDrawList(),
-					(ImVec2){ (MouseRelX * ed.view.scale) + ed.view.x, (MouseRelY * ed.view.scale) + ed.view.y },
-					(ImVec2){ ((MouseRelX + 1) * ed.view.scale) + ed.view.x, ((MouseRelY + 1) * ed.view.scale) + ed.view.y },
-					*(uint32_t*)&ed.tool.brush.color, 0, 0, 1
-				);
-			}
 			isMainWindowHovered = igIsWindowHovered(0);
 			igEnd();
 		}
