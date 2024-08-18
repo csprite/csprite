@@ -9,6 +9,6 @@ void ensureRectCoords(int* x0, int* y0, int* x1, int* y1);
 
 mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color);
 mmRect_t plotEllipseRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color);
-mmRect_t plotLine(int x0, int y0, int x1, int y1, image_t* img, pixel_t color);
+mmRect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
 
 #endif

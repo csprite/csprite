@@ -98,33 +98,33 @@ mmRect_t plotEllipseRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t c
 	return dirty;
 }
 
-mmRect_t plotLine(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
+mmRect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
-	long long dx  =  abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-	long long dy  = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-	long long err = dx + dy, e2;
+	int64_t dx  =  labs(end.x - start.x), sx = start.x < end.x ? 1 : -1;
+	int64_t dy  = -labs(end.y - start.y), sy = start.y < end.y ? 1 : -1;
+	int64_t err = dx + dy, e2;
 
 	for (;;) {
-		if (x0 > -1 && y0 > -1 && x0 < img->width && y0 < img->height) {
-			img->pixels[(y0 * img->width) + x0] = color;
-			if (dirty.min_x > x0) dirty.min_x = x0;
-			if (dirty.min_y > y0) dirty.min_y = y0;
-			if (dirty.max_x < x0) dirty.max_x = x0;
-			if (dirty.max_y < y0) dirty.max_y = y0;
+		if (start.x > -1 && start.y > -1 && start.x < img->width && start.y < img->height) {
+			img->pixels[(start.y * img->width) + start.x] = color;
+			if (dirty.min_x > start.x) dirty.min_x = start.x;
+			if (dirty.min_y > start.y) dirty.min_y = start.y;
+			if (dirty.max_x < start.x) dirty.max_x = start.x;
+			if (dirty.max_y < start.y) dirty.max_y = start.y;
 		}
-		if (x0 == x1 && y0 == y1) {
+		if (start.x == end.x && start.y == end.y) {
 			break;
 		}
 
 		e2 = 2 * err;
 		if (e2 >= dy) {
 			err += dy;
-			x0 += sx;
+			start.x += sx;
 		}
 		if (e2 <= dx) {
 			err += dx;
-			y0 += sy;
+			start.y += sy;
 		}
 	}
 
