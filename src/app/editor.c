@@ -245,7 +245,7 @@ mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
 					plotLine((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color) :
 						ed->tool.type.current == TOOL_RECT ?
 							plotRect((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color) :
-							plotEllipseRect(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color);
+							plotEllipseRect((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
 			break;
 		}
 	}
