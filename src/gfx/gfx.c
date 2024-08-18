@@ -28,19 +28,19 @@ void ensureRectCoords(int* x0, int* y0, int* x1, int* y1) {
 	if (*y1 < *y0) { t = *y1; *y1 = *y0; *y0 = t; }
 }
 
-mmRect_t plotRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
+mmRect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
-	ensureRectCoords(&x0, &y0, &x1, &y1);
-	for (int y = y0; y <= y1; y++) {
-		for (int x = x0; x <= x1; x++) {
+	ensureRectCoords(&start.x, &start.y, &end.x, &end.y);
+	for (int y = start.y; y <= end.y; y++) {
+		for (int x = start.x; x <= end.x; x++) {
 			if (x > -1 && y > -1 && x < img->width && y < img->height) {
 				img->pixels[(y * img->width) + x] = color;
 			}
 		}
 	}
 
-	boundCheckDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
+	boundCheckDirty(start.x, start.y, end.x + 1, end.y + 1, img, &dirty);
 	return dirty;
 }
 
