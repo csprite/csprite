@@ -1,11 +1,11 @@
 #include "gfx/gfx.h"
 #include <stdlib.h>
 
-void boundCheckDirty(int x0, int y0, int x1, int y1, const image_t* img, mmRect_t* dirty) {
-	dirty->min_x = x0 < 0 ? 0 : x0;
-	dirty->min_y = y0 < 0 ? 0 : y0;
-	dirty->max_x = x1 >= img->width ? img->width : x1;
-	dirty->max_y = y1 >= img->height ? img->height : y1;
+void boundCheckDirty(Vec2_t start, Vec2_t end, const image_t* img, mmRect_t* dirty) {
+	dirty->min_x = start.x < 0 ? 0 : start.x;
+	dirty->min_y = start.y < 0 ? 0 : start.y;
+	dirty->max_x = end.x >= img->width ? img->width : end.x;
+	dirty->max_y = end.y >= img->height ? img->height : end.y;
 }
 
 void calcDirty(const mmRect_t* dirty, mmRect_t* final, const image_t* img) {
@@ -14,24 +14,22 @@ void calcDirty(const mmRect_t* dirty, mmRect_t* final, const image_t* img) {
 	if (dirty->max_x > final->max_x) final->max_x = dirty->max_x;
 	if (dirty->max_y > final->max_y) final->max_y = dirty->max_y;
 
-	boundCheckDirty(final->min_x, final->min_y, final->max_x, final->max_y, img, final);
+	boundCheckDirty((Vec2_t){ final->min_x, final->min_y }, (Vec2_t){ final->max_x, final->max_y }, img, final);
 }
 
 /*
- x0, y0 -> Top Left
- x1, y1 -> Bottom Right
  Ensure Top Left & Bottom Right are correct coordinates, else swap variables
  */
-void ensureRectCoords(int* x0, int* y0, int* x1, int* y1) {
+void ensureRectCoords(Vec2_t* start, Vec2_t* end) {
 	int t = 0;
-	if (*x1 < *x0) { t = *x1; *x1 = *x0; *x0 = t; }
-	if (*y1 < *y0) { t = *y1; *y1 = *y0; *y0 = t; }
+	if (end->x < start->x) { t = end->x; end->x = start->x; start->x = t; }
+	if (end->y < start->y) { t = end->y; end->y = start->y; start->y = t; }
 }
 
 mmRect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
-	ensureRectCoords(&start.x, &start.y, &end.x, &end.y);
+	ensureRectCoords(&start, &end);
 	for (int y = start.y; y <= end.y; y++) {
 		for (int x = start.x; x <= end.x; x++) {
 			if (x > -1 && y > -1 && x < img->width && y < img->height) {
@@ -40,15 +38,15 @@ mmRect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 		}
 	}
 
-	boundCheckDirty(start.x, start.y, end.x + 1, end.y + 1, img, &dirty);
+	boundCheckDirty(start, (Vec2_t){ end.x + 1, end.y + 1 }, img, &dirty);
 	return dirty;
 }
 
 mmRect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
-	ensureRectCoords(&start.x, &start.y, &end.x, &end.y);
-	boundCheckDirty(start.x, start.y, end.x + 1, end.y + 1, img, &dirty);
+	ensureRectCoords(&start, &end);
+	boundCheckDirty(start, (Vec2_t){ end.x + 1, end.y + 1 }, img, &dirty);
 
 	int64_t a = abs(end.x - start.x), b = abs(end.y - start.y), b1 = b & 1;
 	int64_t dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
