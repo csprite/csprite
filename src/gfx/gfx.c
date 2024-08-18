@@ -44,55 +44,55 @@ mmRect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	return dirty;
 }
 
-mmRect_t plotEllipseRect(int x0, int y0, int x1, int y1, image_t* img, pixel_t color) {
+mmRect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	mmRect_t dirty = { img->width, img->height, 0, 0 };
 
-	ensureRectCoords(&x0, &y0, &x1, &y1);
-	boundCheckDirty(x0, y0, x1 + 1, y1 + 1, img, &dirty);
+	ensureRectCoords(&start.x, &start.y, &end.x, &end.y);
+	boundCheckDirty(start.x, start.y, end.x + 1, end.y + 1, img, &dirty);
 
-	long long a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;
-	long long dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
-	long long err = dx + dy + b1 * a * a, e2;
+	int64_t a = abs(end.x - start.x), b = abs(end.y - start.y), b1 = b & 1;
+	int64_t dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
+	int64_t err = dx + dy + b1 * a * a, e2;
 
-	if (x0 > x1) { x0 = x1; x1 += a; }
-	if (y0 > y1) y0 = y1;
-	y0 += (b + 1) / 2; y1 = y0 - b1;
+	if (start.x > end.x) { start.x = end.x; end.x += a; }
+	if (start.y > end.y) start.y = end.y;
+	start.y += (b + 1) / 2; end.y = start.y - b1;
 	a *= 8 * a; b1 = 8 * b * b;
 
 	do {
-		if (x1 > -1 && y0 > -1 && x1 < img->width && y0 < img->height) {
-			img->pixels[(y0 * img->width) + x1] = color;
+		if (end.x > -1 && start.y > -1 && end.x < img->width && start.y < img->height) {
+			img->pixels[(start.y * img->width) + end.x] = color;
 		}
-		if (x0 > -1 && y0 > -1 && x0 < img->width && y0 < img->height) {
-			img->pixels[(y0 * img->width) + x0] = color;
+		if (start.x > -1 && start.y > -1 && start.x < img->width && start.y < img->height) {
+			img->pixels[(start.y * img->width) + start.x] = color;
 		}
-		if (x0 > -1 && y1 > -1 && x0 < img->width && y1 < img->height) {
-			img->pixels[(y1 * img->width) + x0] = color;
+		if (start.x > -1 && end.y > -1 && start.x < img->width && end.y < img->height) {
+			img->pixels[(end.y * img->width) + start.x] = color;
 		}
-		if (x1 > -1 && y1 > -1 && x1 < img->width && y1 < img->height) {
-			img->pixels[(y1 * img->width) + x1] = color;
+		if (end.x > -1 && end.y > -1 && end.x < img->width && end.y < img->height) {
+			img->pixels[(end.y * img->width) + end.x] = color;
 		}
 
 		e2 = 2 * err;
-		if (e2 <= dy) { y0++; y1--; err += dy += a; }
-		if (e2 >= dx || 2 * err > dy) { x0++; x1--; err += dx += b1; }
-	} while (x0 <= x1);
+		if (e2 <= dy) { start.y++; end.y--; err += dy += a; }
+		if (e2 >= dx || 2 * err > dy) { start.x++; end.x--; err += dx += b1; }
+	} while (start.x <= end.x);
 
-	while (y0-y1 < b) {
-		if (x0-1 > -1 && y0 > -1 && x0-1 < img->width && y0 < img->height) {
-			img->pixels[(y0 * img->width) + x0-1] = color;
+	while (start.y-end.y < b) {
+		if (start.x-1 > -1 && start.y > -1 && start.x-1 < img->width && start.y < img->height) {
+			img->pixels[(start.y * img->width) + start.x-1] = color;
 		}
-		if (x1+1 > -1 && y0 > -1 && x1+1 < img->width && y0 < img->height) {
-			img->pixels[(y0 * img->width) + x0+1] = color;
+		if (end.x+1 > -1 && start.y > -1 && end.x+1 < img->width && start.y < img->height) {
+			img->pixels[(start.y * img->width) + start.x+1] = color;
 		}
-		y0++;
-		if (x0-1 > -1 && y1 > -1 && x0-1 < img->width && y1 < img->height) {
-			img->pixels[(y1 * img->width) + x0-1] = color;
+		start.y++;
+		if (start.x-1 > -1 && end.y > -1 && start.x-1 < img->width && end.y < img->height) {
+			img->pixels[(end.y * img->width) + start.x-1] = color;
 		}
-		if (x1+1 > -1 && y1 > -1 && x1+1 < img->width && y1 < img->height) {
-			img->pixels[(y1 * img->width) + x1+1] = color;
+		if (end.x+1 > -1 && end.y > -1 && end.x+1 < img->width && end.y < img->height) {
+			img->pixels[(end.y * img->width) + end.x+1] = color;
 		}
-		y1--;
+		end.y--;
 	}
 
 	return dirty;
