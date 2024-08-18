@@ -5,7 +5,7 @@
 #include "types.h"
 #include "image/image.h"
 
-void ensureRectCoords(int* x0, int* y0, int* x1, int* y1);
+void ensureRectCoords(Vec2_t* start, Vec2_t* end);
 
 mmRect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
 mmRect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
