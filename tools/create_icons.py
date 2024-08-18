@@ -2,7 +2,6 @@
 
 # Requires Python v3 Interpreter with pillow module installed
 
-import itertools
 from PIL import Image
 import os
 

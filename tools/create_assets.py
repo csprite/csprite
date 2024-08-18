@@ -8,11 +8,9 @@
 
 from PIL import Image
 from collections import namedtuple
-import numpy as np
 import os
 import sys
 import subprocess
-import glob
 
 CXX = "g++"
 CWD = os.getcwd()
@@ -21,7 +19,7 @@ PROJECT_ROOT = os.path.dirname(BASE_DIR)
 
 for arg in sys.argv:
 	if arg.startswith("--cxx="):
-		CXX = arg.replace("--cxx=", '');
+		CXX = arg.replace("--cxx=", '')
 
 if CWD != PROJECT_ROOT:
 	print("Error: Run the script from project root, i.e.", PROJECT_ROOT)
@@ -73,7 +71,7 @@ def encode_bin(data):
 			line = ""
 
 	ret += "}"
-	return ret;
+	return ret
 
 def encode_font(fontPath):
 	if not os.path.isfile("./tools/font2inl.out"):
@@ -95,7 +93,6 @@ def encode_font(fontPath):
 def encode_img(imgPath):
 	ret = "(unsigned char[]) {"
 	data = Image.open(imgPath).convert('RGBA').getdata()
-	pixelArr = []
 	for pixel in data:
 		for comp in pixel:
 			ret += "0x%0.2X" % comp
