@@ -192,8 +192,9 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 
 			if (ed->mouse.last.x != INT_MIN && ed->mouse.last.y != INT_MIN) {
 				mmRect_t newDirty = plotLine(
-					(int)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int)((ed->mouse.last.y - ed->view.y)/ed->view.scale),
-					MouseRelX, MouseRelY, &ed->canvas.image, color
+					(Vec2_t){ (int64_t)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int64_t)((ed->mouse.last.y - ed->view.y)/ed->view.scale) },
+					(Vec2_t){ MouseRelX, MouseRelY },
+					&ed->canvas.image, color
 				);
 
 				if (newDirty.min_x < dirty.min_x) dirty.min_x = newDirty.min_x;
@@ -241,7 +242,7 @@ mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
 			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
 			dirty = ed->tool.type.current == TOOL_LINE ?
-					plotLine(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color) :
+					plotLine((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color) :
 						ed->tool.type.current == TOOL_RECT ?
 							plotRect(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color) :
 							plotEllipseRect(MouseDownRelX, MouseDownRelY, MouseRelX, MouseRelY, &ed->canvas.image, ed->tool.brush.color);
