@@ -7,8 +7,8 @@ BUILD_TYPE = debug
 # SimpleFileDialog Backend: win32, zenity
 SFD_BACKEND =
 # Build & Bin
-BUILD    = build
-BIN      = $(BUILD)/csprite
+BUILD = build
+BIN = $(BUILD)/csprite
 
 # Append Variables According To Config
 
