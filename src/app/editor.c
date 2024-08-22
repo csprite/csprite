@@ -48,7 +48,7 @@ void EditorDestroy(editor_t* ed) {
 	free(ed->file.path);
 }
 
-mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
+Rect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
     ed->mouse.down.x = x;
     ed->mouse.down.y = y;
 	ed->mouse.last.x = x;
@@ -57,7 +57,8 @@ mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
 
-	mmRect_t dirty = { ed->canvas.image.width, ed->canvas.image.height, 0, 0 };
+	Rect_t dirty = {0};
+	dirty.start = (Vec2_t){ ed->canvas.image.width, ed->canvas.image.height };
 	if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX >= ed->canvas.image.width || MouseRelY >= ed->canvas.image.height) return dirty;
 
 	switch (ed->tool.type.current) {
@@ -65,10 +66,10 @@ mmRect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 		case TOOL_ERASER: {
 			pixel_t color = ed->tool.type.current == TOOL_BRUSH ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
 			ed->canvas.image.pixels[(MouseRelY * ed->canvas.image.width) + MouseRelX] = color;
-			dirty.min_x = MouseRelX;
-			dirty.min_y = MouseRelY;
-			dirty.max_x = MouseRelX + 1;
-			dirty.max_y = MouseRelY + 1;
+			dirty.start.x = MouseRelX;
+			dirty.start.y = MouseRelY;
+			dirty.end.x = MouseRelX + 1;
+			dirty.end.y = MouseRelY + 1;
 			break;
 		}
 		case TOOL_LINE:
@@ -177,8 +178,9 @@ void EditorOnMouseDrag(editor_t* ed, int32_t x, int32_t y) {
 	}
 }
 
-mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
-	mmRect_t dirty = { ed->canvas.image.width, ed->canvas.image.height, 0, 0 };
+Rect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
+	Rect_t dirty = {0};
+	dirty.start = (Vec2_t){ ed->canvas.image.width, ed->canvas.image.height };
 
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
@@ -191,16 +193,16 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 			pixel_t color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
 
 			if (ed->mouse.last.x != INT_MIN && ed->mouse.last.y != INT_MIN) {
-				mmRect_t newDirty = plotLine(
+				Rect_t newDirty = plotLine(
 					(Vec2_t){ (int64_t)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int64_t)((ed->mouse.last.y - ed->view.y)/ed->view.scale) },
 					(Vec2_t){ MouseRelX, MouseRelY },
 					&ed->canvas.image, color
 				);
 
-				if (newDirty.min_x < dirty.min_x) dirty.min_x = newDirty.min_x;
-				if (newDirty.min_y < dirty.min_y) dirty.min_y = newDirty.min_y;
-				if (newDirty.max_x > dirty.max_x) dirty.max_x = newDirty.max_x;
-				if (newDirty.max_y > dirty.max_y) dirty.max_y = newDirty.max_y;
+				if (newDirty.start.x < dirty.start.x) dirty.start.x = newDirty.start.x;
+				if (newDirty.start.y < dirty.start.y) dirty.start.y = newDirty.start.y;
+				if (newDirty.end.x > dirty.end.x) dirty.end.x = newDirty.end.x;
+				if (newDirty.end.y > dirty.end.y) dirty.end.y = newDirty.end.y;
 			}
 
 			break;
@@ -223,8 +225,9 @@ mmRect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-mmRect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
-	mmRect_t dirty = { ed->canvas.image.width, ed->canvas.image.height, 0, 0 };
+Rect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
+	Rect_t dirty = {0};
+	dirty.start = (Vec2_t){ ed->canvas.image.width, ed->canvas.image.height };
 
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
@@ -316,7 +319,7 @@ void EditorProcessInput(editor_t* ed) {
 		else if (igIsKeyReleased_Nil(ImGuiKey_Space)) { ed->tool.type.current = ed->tool.type.previous; }
 	}
 
-	mmRect_t dirty = {0};
+	Rect_t dirty = {0};
 
 	if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
 		dirty = EditorOnMouseDown(ed, io->MousePos.x, io->MousePos.y);
@@ -342,12 +345,12 @@ void EditorProcessInput(editor_t* ed) {
 	}
 
 	// Width & Height are set if change occurs
-	if (dirty.max_x > 0) {
+	if (dirty.end.x > 0) {
 		TextureUpdate(
-			ed->canvas.texture, dirty.min_x, dirty.min_y,
-			dirty.max_x - dirty.min_x, dirty.max_y - dirty.min_y,
+			ed->canvas.texture, dirty.start.x, dirty.start.y,
+			dirty.end.x - dirty.start.x, dirty.end.y - dirty.start.y,
 			ed->canvas.image.width, (unsigned char*)ed->canvas.image.pixels
 		);
-		dirty.max_x = 0;
+		dirty.end.x = 0;
 	}
 }

@@ -9,7 +9,7 @@ typedef struct {
 } Vec2_t;
 
 typedef struct {
-	int64_t min_x, min_y, max_x, max_y;
-} mmRect_t;
+	Vec2_t start, end;
+} Rect_t;
 
 #endif
