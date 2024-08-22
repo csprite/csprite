@@ -7,8 +7,8 @@
 
 void ensureRectCoords(Vec2_t* start, Vec2_t* end);
 
-mmRect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
-mmRect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
-mmRect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
+Rect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
+Rect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
+Rect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
 
 #endif

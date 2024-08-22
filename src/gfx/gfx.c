@@ -1,20 +1,20 @@
 #include "gfx/gfx.h"
 #include <stdlib.h>
 
-void boundCheckDirty(Vec2_t start, Vec2_t end, const image_t* img, mmRect_t* dirty) {
-	dirty->min_x = start.x < 0 ? 0 : start.x;
-	dirty->min_y = start.y < 0 ? 0 : start.y;
-	dirty->max_x = end.x >= img->width ? img->width : end.x;
-	dirty->max_y = end.y >= img->height ? img->height : end.y;
+void boundCheckDirty(Vec2_t start, Vec2_t end, const image_t* img, Rect_t* dirty) {
+	dirty->start.x = start.x < 0 ? 0 : start.x;
+	dirty->start.y = start.y < 0 ? 0 : start.y;
+	dirty->end.x = end.x >= img->width ? img->width : end.x;
+	dirty->end.y = end.y >= img->height ? img->height : end.y;
 }
 
-void calcDirty(const mmRect_t* dirty, mmRect_t* final, const image_t* img) {
-	if (dirty->min_x < final->min_x) final->min_x = dirty->min_x;
-	if (dirty->min_y < final->min_y) final->min_y = dirty->min_y;
-	if (dirty->max_x > final->max_x) final->max_x = dirty->max_x;
-	if (dirty->max_y > final->max_y) final->max_y = dirty->max_y;
+void calcDirty(const Rect_t* dirty, Rect_t* final, const image_t* img) {
+	if (dirty->start.x < final->start.x) final->start.x = dirty->start.x;
+	if (dirty->start.y < final->start.y) final->start.y = dirty->start.y;
+	if (dirty->end.x > final->end.x) final->end.x = dirty->end.x;
+	if (dirty->end.y > final->end.y) final->end.y = dirty->end.y;
 
-	boundCheckDirty((Vec2_t){ final->min_x, final->min_y }, (Vec2_t){ final->max_x, final->max_y }, img, final);
+	boundCheckDirty((Vec2_t){ final->start.x, final->start.y }, (Vec2_t){ final->end.x, final->end.y }, img, final);
 }
 
 /*
@@ -26,8 +26,9 @@ void ensureRectCoords(Vec2_t* start, Vec2_t* end) {
 	if (end->y < start->y) { t = end->y; end->y = start->y; start->y = t; }
 }
 
-mmRect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
-	mmRect_t dirty = { img->width, img->height, 0, 0 };
+Rect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
+	Rect_t dirty = {0};
+	dirty.start = (Vec2_t){ img->width, img->height };
 
 	ensureRectCoords(&start, &end);
 	for (int y = start.y; y <= end.y; y++) {
@@ -42,8 +43,9 @@ mmRect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	return dirty;
 }
 
-mmRect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
-	mmRect_t dirty = { img->width, img->height, 0, 0 };
+Rect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
+	Rect_t dirty = {0};
+	dirty.start = (Vec2_t){ img->width, img->height };
 
 	ensureRectCoords(&start, &end);
 	boundCheckDirty(start, (Vec2_t){ end.x + 1, end.y + 1 }, img, &dirty);
@@ -96,8 +98,9 @@ mmRect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) 
 	return dirty;
 }
 
-mmRect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
-	mmRect_t dirty = { img->width, img->height, 0, 0 };
+Rect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
+	Rect_t dirty = {0};
+	dirty.start = (Vec2_t){ img->width, img->height };
 
 	int64_t dx  =  labs(end.x - start.x), sx = start.x < end.x ? 1 : -1;
 	int64_t dy  = -labs(end.y - start.y), sy = start.y < end.y ? 1 : -1;
@@ -106,10 +109,10 @@ mmRect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	for (;;) {
 		if (start.x > -1 && start.y > -1 && start.x < img->width && start.y < img->height) {
 			img->pixels[(start.y * img->width) + start.x] = color;
-			if (dirty.min_x > start.x) dirty.min_x = start.x;
-			if (dirty.min_y > start.y) dirty.min_y = start.y;
-			if (dirty.max_x < start.x) dirty.max_x = start.x;
-			if (dirty.max_y < start.y) dirty.max_y = start.y;
+			if (dirty.start.x > start.x) dirty.start.x = start.x;
+			if (dirty.start.y > start.y) dirty.start.y = start.y;
+			if (dirty.end.x < start.x) dirty.end.x = start.x;
+			if (dirty.end.y < start.y) dirty.end.y = start.y;
 		}
 		if (start.x == end.x && start.y == end.y) {
 			break;
@@ -126,7 +129,7 @@ mmRect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 		}
 	}
 
-	dirty.max_x++;
-	dirty.max_y++;
+	dirty.end.x++;
+	dirty.end.y++;
 	return dirty;
 }
