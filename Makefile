@@ -2,7 +2,7 @@
 CC       = gcc
 AR       = ar
 CXX      = g++
-FLAGS    = -MMD -MP -Wall -Wextra -pedantic
+FLAGS    = -MMD -MP -Wall -Wextra -pedantic -ffast-math
 INCLUDES = src/ vendor/glad/include/ vendor/log.c/include/ vendor/cimgui vendor/stb/include vendor/sfd/src
 CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1
 LDFLAGS  =
