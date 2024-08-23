@@ -38,6 +38,6 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       uses: actions/upload-artifact@v3
       with:
-        name: linux-${{ matrix.arch }}
+        name: ${{ matrix.os }}
         if-no-files-found: error
         path: ./csprite
