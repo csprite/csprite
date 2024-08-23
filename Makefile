@@ -29,22 +29,22 @@ endif
 all: $(BIN)
 
 vendor/sfd/build/sfd.a:
-	@$(MAKE) --no-print-directory -C vendor/sfd/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3' BACKEND=$(SFD_BACKEND)
+	@$(MAKE) --no-print-directory -C vendor/sfd/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3 $(CLI_CFLAGS)' BACKEND=$(SFD_BACKEND)
 
 vendor/cimgui/build/cimgui.a:
-	@$(MAKE) --no-print-directory -C vendor/cimgui/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3 -DIMGUI_IMPL_API="extern \"C\""'
+	@$(MAKE) --no-print-directory -C vendor/cimgui/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3 -DIMGUI_IMPL_API="extern \"C\"" $(CLI_CFLAGS)'
 
 vendor/glad/build/glad.a:
-	@$(MAKE) --no-print-directory -C vendor/glad/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3'
+	@$(MAKE) --no-print-directory -C vendor/glad/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3 $(CLI_CFLAGS)'
 
 $(BUILD)/%.c.o: %.c
 	@echo "CC  -" $<
 	@mkdir -p "$$(dirname "$@")"
-	@$(BEAR) $(CC) $(FLAGS) $(CFLAGS) -c $< -o $@
+	@$(BEAR) $(CC) $(FLAGS) $(CFLAGS) $(CLI_CFLAGS) -c $< -o $@
 
 $(BIN): $(OBJECTS) $(LIBS)
 	@echo "LD  -" $@
-	@$(CXX) $(OBJECTS) $(LIBS) $(LDFLAGS) -o $@
+	@$(CXX) $(OBJECTS) $(LIBS) $(LDFLAGS) $(CLI_LFLAGS) -o $@
 
 $(eval PYTHON := $(if $(PYTHON),$(PYTHON),python3))
 
