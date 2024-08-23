@@ -2,28 +2,31 @@
 #define SRC_FILESYSTE_FILESYSTEM_H_INCLUDED_
 #pragma once
 
+typedef void* dir_t;
+
+/*
+ Description:
+  Opens a directory and returns a handle
+ */
+dir_t FsListDirStart(const char* path);
+
 /*
  Description:
   Loads `dir` contents one by one into `*name` with each
   subsequent function call, where `*isDir` is set to non-zero
   to indicate if the entry is a dir.
  Notes:
-  - Thread un-safe.
-  - In first call `dir` shall be set, in subsequent calls `dir` should be NULL.
   - Memory pointed by `*name` is only valid till the next function call.
-  - Returns non-zero value if an error occurs.
-  - Sets `*name` to NULL to indicate end of contents.
+  - Returns non-zero value on error (Handle is closed automatically).
+  - Sets `*name` to NULL to indicate end of contents (Handle is closed automatically).
  */
-int fs_list_dir(const char* dir, char** name, int* isDir);
+int FsListDir(dir_t dir, char** name, int* isDir);
 
 /*
  Description:
-  Call this to prematurely end `fs_list_dir` without
-  having to wait for NULL entry.
- Notes:
-  - Thread un-safe
+  Close directory handle returned by `FsListDirStart(...)`
  */
-void fs_list_dir_abrupt_end(void);
+void FsListDirEnd(dir_t dir);
 
 /*
  Description:

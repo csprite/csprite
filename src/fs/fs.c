@@ -6,31 +6,25 @@
 #include <errno.h>
 #include <dirent.h>
 
-static DIR* dir = NULL;
+dir_t FsListDirStart(const char* path) {
+	DIR* dir = opendir(path);
+	return dir;
+}
 
-int fs_list_dir(const char* dirPath, char** name, int* isDir) {
-	if (dir == NULL) {
-		dir = opendir(dirPath);
-		if (dir == NULL) {
-			return 1;
-		}
-	}
-
+int FsListDir(dir_t dir, char** name, int* isDir) {
 tryAgain:
 	errno = 0;
 	struct dirent* ent = readdir(dir);
 	if (ent == NULL) {
-		if (errno != 0) { // readdir returned NULL because error occurred
-			closedir(dir);
-			dir = NULL;
+		if (errno != 0) { // on error
+			FsListDirEnd(dir);
 			return 1;
-		} else { // readdir returned NULL because no more entries
+		} else {
 			*name = NULL;
-			closedir(dir);
-			dir = NULL;
+			FsListDirEnd(dir);
 		}
 	} else if (ent->d_name[0] == '.') {
-		goto tryAgain; // skip "." & ".." entries
+		goto tryAgain; // skip '.' && '..' entry
 	} else {
 		*name = ent->d_name;
 		*isDir = ent->d_type == DT_DIR;
@@ -39,10 +33,9 @@ tryAgain:
 	return 0;
 }
 
-void fs_list_dir_abrupt_end(void) {
+void FsListDirEnd(dir_t dir) {
 	if (dir) {
 		closedir(dir);
-		dir = NULL;
 	}
 }
 
