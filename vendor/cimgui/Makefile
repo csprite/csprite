@@ -11,12 +11,12 @@ OBJECTS  = $(patsubst %,$(BUILD)/%,$(SOURCES:.cpp=.cpp.o))
 all: $(BIN)
 
 $(BUILD)/%.cpp.o: %.cpp
-	@echo "CXX -" $<
+	@echo "CXX -" vendor/cimgui/$<
 	@mkdir -p "$$(dirname "$@")"
 	@$(CXX) $(FLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(BIN): $(OBJECTS)
-	@echo "AR  -" $@
+	@echo " AR -" vendor/cimgui/$@
 	@$(AR) rcs $(BIN) $(OBJECTS)
 
 .PHONY: clean
