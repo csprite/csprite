@@ -52,9 +52,7 @@ typedef struct {
 		float x, y, w, h, scale;
 	} view;
 	struct {
-		struct {
-			int32_t x, y;
-		} down, last;
+		Vec2_t down, last;
 	} mouse;
 } editor_t;
 

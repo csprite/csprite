@@ -28,7 +28,6 @@ void ensureRectCoords(Vec2_t* start, Vec2_t* end) {
 
 Rect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	Rect_t dirty = {0};
-	dirty.start = (Vec2_t){ img->width, img->height };
 
 	ensureRectCoords(&start, &end);
 	for (int y = start.y; y <= end.y; y++) {
@@ -45,7 +44,6 @@ Rect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 
 Rect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	Rect_t dirty = {0};
-	dirty.start = (Vec2_t){ img->width, img->height };
 
 	ensureRectCoords(&start, &end);
 	boundCheckDirty(start, (Vec2_t){ end.x + 1, end.y + 1 }, img, &dirty);
@@ -100,7 +98,6 @@ Rect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 
 Rect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color) {
 	Rect_t dirty = {0};
-	dirty.start = (Vec2_t){ img->width, img->height };
 
 	int64_t dx  =  labs(end.x - start.x), sx = start.x < end.x ? 1 : -1;
 	int64_t dy  = -labs(end.y - start.y), sy = start.y < end.y ? 1 : -1;

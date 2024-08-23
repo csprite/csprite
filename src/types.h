@@ -12,4 +12,12 @@ typedef struct {
 	Vec2_t start, end;
 } Rect_t;
 
+static inline void rect_invalidate(Rect_t* r) {
+	r->start.x = r->end.x = 0;
+}
+
+static inline int rect_is_valid(Rect_t* r) {
+	return r->start.x != r->end.x;
+}
+
 #endif
