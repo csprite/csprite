@@ -6,22 +6,6 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            arch: x64
-            cc: gcc
-            cxx: g++
-            pkgs: gcc libglfw3-dev
-
-          - os: ubuntu-22.04
-            arch: x32
-            cc: gcc
-            cxx: g++
-            pkgs: gcc-multilib g++-multilib libglfw3-dev:i386
-            flags: "-m32"
-
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
@@ -31,9 +15,8 @@ jobs:
     - name: Install Deps (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
-        sudo dpkg --add-architecture i386
         sudo apt-get update -y
-        sudo apt-get install ${{ matrix.pkgs }} make python3 python3-pip -y
+        sudo apt-get install gcc libglfw3-dev make python3 python3-pip -y
 
     - name: Install Python Deps
       run: |
@@ -42,10 +25,6 @@ jobs:
     - name: Generate Build Files & Build (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
-        export CC=${{ matrix.cc }}
-        export CXX=${{ matrix.cxx }}
-        export CLI_CFLAGS=${{ matrix.flags }}
-        export CLI_LFLAGS=${{ matrix.flags }}
         make gen-assets
         make all -j4 BUILD_TYPE=release
         cp -r ./build/csprite ./csprite
