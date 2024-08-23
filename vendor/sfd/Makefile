@@ -19,12 +19,12 @@ endif
 all: $(BIN)
 
 $(BUILD)/%.c.o: %.c
-	@echo " CC - vendor/sfd/$<"
+	@echo "Compile vendor/sfd/$<"
 	@mkdir -p "$$(dirname "$@")"
 	@$(CC) $(FLAGS) $(CFLAGS) -c $< -o $@
 
 $(BIN): $(OBJECTS)
-	@echo " AR - vendor/sfd/$@"
+	@echo "Archive vendor/sfd/$@"
 	@$(AR) rcs $(BIN) $(OBJECTS)
 
 .PHONY: clean
