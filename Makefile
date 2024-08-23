@@ -38,21 +38,20 @@ vendor/glad/build/glad.a:
 	@$(MAKE) --no-print-directory -C vendor/glad/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3'
 
 $(BUILD)/%.c.o: %.c
-	@echo " CC - $<"
+	@echo "Compile $<"
 	@mkdir -p "$$(dirname "$@")"
 	@$(BEAR) $(CC) $(FLAGS) $(CFLAGS) -c $< -o $@
 
 $(BIN): $(OBJECTS) $(LIBS)
-	@echo " LD - $@"
+	@echo "   Link $@"
 	@$(CXX) $(OBJECTS) $(LIBS) $(LDFLAGS) -o $@
 
 $(eval PYTHON := $(if $(PYTHON),$(PYTHON),python3))
 
 gen-assets:
+	@echo "Produce src/assets/assets.inl"
 	@$(PYTHON) tools/create_icons.py
-	@echo " PY - tools/create_icons.py"
 	@$(PYTHON) tools/create_assets.py --cxx=$(CXX)
-	@echo " PY - tools/create_assets.py"
 
 .PHONY: run clean
 

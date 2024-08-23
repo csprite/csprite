@@ -10,12 +10,12 @@ OBJECTS = $(patsubst %,$(BUILD)/%,$(SOURCES:.c=.c.o))
 all: $(BIN)
 
 $(BUILD)/%.c.o: %.c
-	@echo " CC -" vendor/glad/$<
+	@echo "Compile vendor/glad/$<"
 	@mkdir -p "$$(dirname "$@")"
 	@$(CC) $(FLAGS) $(CFLAGS) -c $< -o $@
 
 $(BIN): $(OBJECTS)
-	@echo " AR -" vendor/glad/$@
+	@echo "Archive vendor/glad/$@"
 	@$(AR) rcs $(BIN) $(OBJECTS)
 
 .PHONY: clean
