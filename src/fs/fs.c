@@ -70,3 +70,18 @@ int FsGetParentDir(const char* path) {
 
 	return -1;
 }
+
+int FsGetExtension(const char* filePath) {
+	int len = strlen(filePath);
+
+	for (int i = len - 1; i >= 0; i--) {
+		if (filePath[i] == '/' || filePath[i] == '\\') {
+			return -1;
+		}
+		if (filePath[i] == '.') {
+			return i;
+		}
+	}
+
+	return -1;
+}

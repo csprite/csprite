@@ -1,22 +1,25 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "app/app.h"
 #include "app/window.h"
 #include "cimgui.h"
 #include "cimgui_impl.h"
 #include "assets/assets.h"
+#include "fs/fs.h"
+#include "image/image.h"
 #include "log/log.h"
 
 #include "sfd.h"
 #include "app/editor.h"
 
-void _AppOpenFile(editor_t* ed, const char* filePath) {
-	if (filePath == NULL) {
-		filePath = sfd_open_dialog(&(sfd_Options){
-			.title        = "Open Image File",
-			.filter_name  = "Image File",
-			.filter       = "*.png|*.jpg",
-			.save         = 0
-		});
-	}
+void _AppOpenFile(editor_t* ed) {
+	const char* filePath = sfd_open_dialog(&(sfd_Options){
+		.title        = "Open Image File",
+		.filter_name  = "Image File",
+		.filter       = "*.png|*.jpg",
+		.save         = 0
+	});
 
 	if (filePath) {
 		editor_t new = {0};
@@ -29,9 +32,40 @@ void _AppOpenFile(editor_t* ed, const char* filePath) {
 	} else {
 		const char* LastError = sfd_get_error();
 		if (LastError != NULL) {
-			printf("Failed to launch dialog: %s", LastError);
+			log_error("Failed to launch dialog: %s", LastError);
 		}
 	}
+}
+
+void _AppSaveFile(editor_t* ed) {
+	if (ed->file.path == NULL) {
+		const char* filePath = sfd_open_dialog(&(sfd_Options){
+			.title       = "Save Image File",
+			.filter_name = "Image File",
+			.filter      = "*.png|*.jpg",
+			.save        = 1
+		});
+		if (filePath == NULL) {
+			const char* LastError = sfd_get_error();
+			if (LastError != NULL) {
+				log_error("Failed to launch dialog: %s", LastError);
+			}
+			return;
+		} else {
+			int baseName = FsGetBasename(filePath);
+			if (baseName < 0) {
+				log_error("Failed to find basename of '%s'", filePath);
+				return;
+			}
+
+			int len = strlen(filePath) + 1;
+			ed->file.path = (char*)malloc(len);
+			strncpy(ed->file.path, filePath, len);
+			ed->file.name = &ed->file.path[baseName];
+		}
+	}
+
+	ImageWriteTo(&ed->canvas.image, ed->file.path);
 }
 
 int AppMainLoop(void) {
@@ -60,7 +94,10 @@ int AppMainLoop(void) {
 					doOpenNewFileModal = true;
 				}
 				if (igMenuItem_Bool("Open", NULL, false, true)) {
-					_AppOpenFile(&ed, NULL);
+					_AppOpenFile(&ed);
+				}
+				if (igMenuItem_Bool("Save", NULL, false, true)) {
+					_AppSaveFile(&ed);
 				}
 				igEndMenu();
 			}
@@ -75,7 +112,7 @@ int AppMainLoop(void) {
 			igGetWindowSize(&winSize);
 			igCalcTextSize(&textSize, ed.file.name, NULL, false, -1);
 			igSetCursorPosX((winSize.x - textSize.x) * 0.5);
-			igText("%s", ed.file.name);
+			igText("%s", ed.file.name ? ed.file.name : "untitled");
 
 			igGetWindowPos(&mBarPos);
 			igGetWindowSize(&mBarSize);
