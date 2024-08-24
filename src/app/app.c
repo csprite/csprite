@@ -58,14 +58,18 @@ void _AppSaveFile(editor_t* ed) {
 				return;
 			}
 
+			if (ImageWriteTo(&ed->canvas.image, filePath)) {
+				return;
+			}
+
 			int len = strlen(filePath) + 1;
 			ed->file.path = (char*)malloc(len);
 			strncpy(ed->file.path, filePath, len);
 			ed->file.name = &ed->file.path[baseName];
 		}
+	} else {
+		ImageWriteTo(&ed->canvas.image, ed->file.path);
 	}
-
-	ImageWriteTo(&ed->canvas.image, ed->file.path);
 }
 
 int AppMainLoop(void) {
