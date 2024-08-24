@@ -61,6 +61,7 @@ int ImageWriteTo(image_t* img, const char* filePath) {
 		stbi_write_jpg(filePath, img->width, img->height, 4, img->pixels, 100);
 	} else {
 		log_error("Unsupported extension '%s'", extension);
+		return 1;
 	}
 
 	return 0;
