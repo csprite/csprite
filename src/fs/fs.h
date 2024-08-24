@@ -18,9 +18,15 @@ dir_t FsListDirStart(const char* path);
  Notes:
   - Memory pointed by `*name` is only valid till the next function call.
   - Returns non-zero value on error (Handle is closed automatically).
-  - Sets `*name` to NULL to indicate end of contents (Handle is closed automatically).
+  - Sets `*name` to NULL to indicate end of contents.
  */
 int FsListDir(dir_t dir, char** name, int* isDir);
+
+/*
+ Description:
+  Rewind directory stream to start
+ */
+void FsListDirRewind(dir_t dir);
 
 /*
  Description:
@@ -35,6 +41,16 @@ void FsListDirEnd(dir_t dir);
   - Returns index at which basename starts in the `path` variable
   - Returns negative value on error
  */
-int fs_get_basename(const char* path);
+int FsGetBasename(const char* path);
+
+/*
+ Description:
+  Get `c:/aa/bb/` part of `c:/aa/bb/cc` path
+ Notes:
+  - Returns non-negative index that points to
+    END of the path of parent dir
+  - Values are set to negative if not found
+ */
+int FsGetParentDir(const char* path);
 
 #endif
