@@ -1,6 +1,9 @@
+#include <string.h>
 #include "image/image.h"
 #include "stb_image.h"
+#include "stb_image_write.h"
 #include "log/log.h"
+#include "fs/fs.h"
 
 int ImageInit(image_t* img, uint32_t width, uint32_t height) {
 	img->pixels = calloc(width * height, sizeof(pixel_t));
@@ -39,6 +42,26 @@ int ImageInitFrom(image_t* img, const char* filePath) {
 	}
 
 	stbi_image_free(data);
+
+	return 0;
+}
+
+int ImageWriteTo(image_t* img, const char* filePath) {
+	int extensionIdx = FsGetExtension(filePath);
+	if (extensionIdx < 0) {
+		log_error("Failed to find extension of '%s'", filePath);
+		return 1;
+	}
+
+	const char* extension = filePath + extensionIdx;
+	if (strcmp(extension, ".png") == 0) {
+		stbi_write_png_compression_level = 9;
+		stbi_write_png(filePath, img->width, img->height, 4, img->pixels, img->width * sizeof(pixel_t));
+	} else if (strcmp(extension, ".jpg") == 0 || strcmp(extension, ".jpeg") == 0) {
+		stbi_write_jpg(filePath, img->width, img->height, 4, img->pixels, 100);
+	} else {
+		log_error("Unsupported extension '%s'", extension);
+	}
 
 	return 0;
 }

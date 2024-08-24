@@ -20,9 +20,8 @@ int EditorInit(editor_t* ed, uint32_t width, uint32_t height) {
 	ed->tool.brush.color = (pixel_t){ 255, 255, 255, 255 };
 	ed->tool.type.current = TOOL_BRUSH;
 	ed->view.scale = 1.5f;
-	ed->file.path = malloc(sizeof("untitled.png"));
-	ed->file.name = ed->file.path;
-	strncpy(ed->file.path, "untitled.png", sizeof("untitled.png"));
+	ed->file.path = NULL;
+	ed->file.name = NULL;
 	EditorUpdateView(ed);
 
 	return 0;
@@ -39,13 +38,20 @@ int EditorInitFrom(editor_t* ed, const char* filePath) {
 	ed->canvas.image = img;
 	TextureUpdate(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
 
+	int len = strlen(filePath) + 1;
+	ed->file.path = malloc(len);
+	strncpy(ed->file.path, filePath, len);
+
 	return 0;
 }
 
 void EditorDestroy(editor_t* ed) {
 	ImageDestroy(&ed->canvas.image);
 	TextureDestroy(ed->canvas.texture);
-	free(ed->file.path);
+
+	if (ed->file.path) {
+		free(ed->file.path);
+	}
 }
 
 Rect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {

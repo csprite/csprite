@@ -53,4 +53,13 @@ int FsGetBasename(const char* path);
  */
 int FsGetParentDir(const char* path);
 
+/*
+ Description:
+  Get `.txt` part of `c:/aa/bb/cc.txt` path
+ Notes:
+  - Returns index at which basename starts in the `path` variable
+  - Returns negative value if not found
+ */
+int FsGetExtension(const char* filePath);
+
 #endif
