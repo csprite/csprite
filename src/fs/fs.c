@@ -21,7 +21,6 @@ tryAgain:
 			return 1;
 		} else {
 			*name = NULL;
-			FsListDirEnd(dir);
 		}
 	} else if (ent->d_name[0] == '.') {
 		goto tryAgain; // skip '.' && '..' entry
@@ -33,6 +32,10 @@ tryAgain:
 	return 0;
 }
 
+void FsListDirRewind(dir_t dir) {
+	rewinddir(dir);
+}
+
 void FsListDirEnd(dir_t dir) {
 	if (dir) {
 		closedir(dir);
@@ -41,7 +44,7 @@ void FsListDirEnd(dir_t dir) {
 
 #include <string.h>
 
-int fs_get_basename(const char* path) {
+int FsGetBasename(const char* path) {
 	int len = strlen(path);
 	int index = 0;
 	for (int i = 0; i < len; i++) {
@@ -54,4 +57,16 @@ int fs_get_basename(const char* path) {
 		}
 	}
 	return index;
+}
+
+int FsGetParentDir(const char* path) {
+	int len = strlen(path);
+	// using - 2 since it will filter out any trailing path separator
+	for (int i = len - 2; i >= 0; --i) {
+		if (path[i] == '/' || path[i] == '\\') {
+			return i;
+		}
+	}
+
+	return -1;
 }
