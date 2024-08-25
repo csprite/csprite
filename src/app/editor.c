@@ -298,6 +298,11 @@ void EditorZoomIn(editor_t* ed) {
 	EditorUpdateView(ed);
 }
 
+void EditorCenterView(editor_t* ed, Vec2_t boundingRect) {
+	ed->view.x = ((float)boundingRect.x / 2) - (ed->view.w / 2);
+	ed->view.y = ((float)boundingRect.y / 2) - (ed->view.h / 2);
+}
+
 void EditorProcessInput(editor_t* ed) {
 	ImGuiIO* io = igGetIO();
 

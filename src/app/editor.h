@@ -69,6 +69,7 @@ Rect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y);   // When Mouse Is R
 
 void EditorZoomOut(editor_t* ed);
 void EditorZoomIn(editor_t* ed);
+void EditorCenterView(editor_t* ed, Vec2_t boundingRect);
 
 void EditorUpdateView(editor_t* ed); // When ed.view.scale changes
 int EditorSetFilePath(editor_t* ed, const char* filePath);
