@@ -185,7 +185,6 @@ int AppMainLoop(void) {
 			igEnd();
 		}
 
-		bool isMainWindowHovered = false;
 		igSetNextWindowPos((ImVec2){ SidebarPos.x + SidebarSize.x, statusBarPos.y + statusBarSize.y }, ImGuiCond_Always, (ImVec2){ 0, 0 });
 		igSetNextWindowSize((ImVec2){ io->DisplaySize.x, io->DisplaySize.y - (statusBarPos.y + statusBarSize.y) + 1 }, ImGuiCond_Always);
 		if (igBegin("Main", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
@@ -199,7 +198,12 @@ int AppMainLoop(void) {
 			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
 			    (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, 0xFFFFFFFF
 			);
-			isMainWindowHovered = igIsWindowHovered(0);
+
+			if (igIsWindowHovered(0)) {
+				igSetMouseCursor(ImGuiMouseCursor_None);
+				EditorProcessInput(&ed);
+			}
+
 			igEnd();
 		}
 
@@ -234,11 +238,6 @@ int AppMainLoop(void) {
 			}
 
 			igEndPopup();
-		}
-
-		if (isMainWindowHovered) {
-			igSetMouseCursor(ImGuiMouseCursor_None);
-			EditorProcessInput(&ed);
 		}
 
 		WindowEndFrame();
