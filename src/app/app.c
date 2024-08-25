@@ -26,8 +26,7 @@ void _AppOpenFile(editor_t* ed) {
 		if (!EditorInitFrom(&new, filePath)) {
 			EditorDestroy(ed);
 			*ed = new;
-			ed->view.x = (igGetIO()->DisplaySize.x / 2) - (ed->view.w / 2);
-			ed->view.y = (igGetIO()->DisplaySize.y / 2) - (ed->view.h / 2);
+			EditorCenterView(ed, (Vec2_t){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
 		}
 	} else {
 		const char* LastError = sfd_get_error();
@@ -81,9 +80,8 @@ int AppMainLoop(void) {
 	editor_t ed = {0};
 	EditorInit(&ed, 120, 90);
 	ed.view.scale = 5;
-	ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
-	ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
 	EditorUpdateView(&ed);
+	EditorCenterView(&ed, (Vec2_t){ io->DisplaySize.x, io->DisplaySize.y });
 
 	bool doOpenNewFileModal = false;
 
