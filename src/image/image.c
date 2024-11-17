@@ -5,7 +5,7 @@
 #include "log/log.h"
 #include "fs/fs.h"
 
-int ImageInit(image_t* img, uint32_t width, uint32_t height) {
+int image_init(image_t* img, uint32_t width, uint32_t height) {
 	img->pixels = calloc(width * height, sizeof(pixel_t));
 	if (img->pixels == NULL) {
 		log_error("Allocation failed");
@@ -17,7 +17,7 @@ int ImageInit(image_t* img, uint32_t width, uint32_t height) {
 	return 0;
 }
 
-int ImageInitFrom(image_t* img, const char* filePath) {
+int image_initFrom(image_t* img, const char* filePath) {
 	int w = 0, h = 0, c = 0;
 	stbi_uc* data = stbi_load(filePath, &w, &h, &c, 4);
 	if (data == NULL) {
@@ -29,7 +29,7 @@ int ImageInitFrom(image_t* img, const char* filePath) {
 		stbi_image_free(data);
 		return 1;
 	}
-	if (ImageInit(img, w, h)) {
+	if (image_init(img, w, h)) {
 		return 1;
 	}
 
@@ -46,8 +46,8 @@ int ImageInitFrom(image_t* img, const char* filePath) {
 	return 0;
 }
 
-int ImageWriteTo(image_t* img, const char* filePath) {
-	int extensionIdx = FsGetExtension(filePath);
+int image_write(image_t* img, const char* filePath) {
+	int extensionIdx = fs_get_extension(filePath);
 	if (extensionIdx < 0) {
 		log_error("Failed to find extension of '%s'", filePath);
 		return 1;
@@ -67,7 +67,7 @@ int ImageWriteTo(image_t* img, const char* filePath) {
 	return 0;
 }
 
-void ImageDestroy(image_t* img) {
+void image_deinit(image_t* img) {
 	free(img->pixels);
 	*img = (image_t){0};
 }

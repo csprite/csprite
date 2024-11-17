@@ -56,22 +56,22 @@ typedef struct {
 	} mouse;
 } editor_t;
 
-int EditorInit(editor_t* ed, uint32_t width, uint32_t height);
-int EditorInitFrom(editor_t* ed, const char* filePath);
-void EditorDestroy(editor_t* ed);
+int editor_init(editor_t* ed, uint32_t width, uint32_t height);
+int editor_initFrom(editor_t* ed, const char* filePath);
+void editor_destroy(editor_t* ed);
 
-void EditorProcessInput(editor_t* ed);
+void editor_process_input(editor_t* ed);
 
-Rect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y); // When Left Mouse Goes Down
-Rect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y); // When Left Mouse Moves
-void   EditorOnMouseDrag(editor_t* ed, int32_t x, int32_t y); // From When Left Mouse Moves Until Mouse Is Released
-Rect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y);   // When Mouse Is Released
+Rect_t editor_on_mouse_down(editor_t* ed, int32_t x, int32_t y); // When Left Mouse Goes Down
+Rect_t editor_on_mouse_move(editor_t* ed, int32_t x, int32_t y); // When Left Mouse Moves
+void   editor_on_mouse_drag(editor_t* ed, int32_t x, int32_t y); // From When Left Mouse Moves Until Mouse Is Released
+Rect_t editor_on_mouse_up(editor_t* ed, int32_t x, int32_t y);   // When Mouse Is Released
 
-void EditorZoomOut(editor_t* ed);
-void EditorZoomIn(editor_t* ed);
-void EditorCenterView(editor_t* ed, Vec2_t boundingRect);
+void editor_zoom_out(editor_t* ed);
+void editor_zoom_in(editor_t* ed);
+void editor_center_view(editor_t* ed, Vec2_t boundingRect);
 
-void EditorUpdateView(editor_t* ed); // When ed.view.scale changes
-int EditorSetFilePath(editor_t* ed, const char* filePath);
+void editor_update_view(editor_t* ed); // When ed.view.scale changes
+int editor_set_filepath(editor_t* ed, const char* filePath);
 
 #endif

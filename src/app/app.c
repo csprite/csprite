@@ -13,7 +13,7 @@
 #include "sfd.h"
 #include "app/editor.h"
 
-void _AppOpenFile(editor_t* ed) {
+void _app_open_file(editor_t* ed) {
 	const char* filePath = sfd_open_dialog(&(sfd_Options){
 		.title        = "Open Image File",
 		.filter_name  = "Image File",
@@ -23,10 +23,10 @@ void _AppOpenFile(editor_t* ed) {
 
 	if (filePath) {
 		editor_t new = {0};
-		if (!EditorInitFrom(&new, filePath)) {
-			EditorDestroy(ed);
+		if (!editor_initFrom(&new, filePath)) {
+			editor_destroy(ed);
 			*ed = new;
-			EditorCenterView(ed, (Vec2_t){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
+			editor_center_view(ed, (Vec2_t){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
 		}
 	} else {
 		const char* LastError = sfd_get_error();
@@ -36,7 +36,7 @@ void _AppOpenFile(editor_t* ed) {
 	}
 }
 
-void _AppSaveFile(editor_t* ed) {
+void _app_save_file(editor_t* ed) {
 	if (ed->file.path == NULL) {
 		const char* filePath = sfd_open_dialog(&(sfd_Options){
 			.title       = "Save Image File",
@@ -51,13 +51,13 @@ void _AppSaveFile(editor_t* ed) {
 			}
 			return;
 		} else {
-			int baseName = FsGetBasename(filePath);
+			int baseName = fs_get_basename(filePath);
 			if (baseName < 0) {
 				log_error("Failed to find basename of '%s'", filePath);
 				return;
 			}
 
-			if (ImageWriteTo(&ed->canvas.image, filePath)) {
+			if (image_write(&ed->canvas.image, filePath)) {
 				return;
 			}
 
@@ -67,26 +67,26 @@ void _AppSaveFile(editor_t* ed) {
 			ed->file.name = &ed->file.path[baseName];
 		}
 	} else {
-		ImageWriteTo(&ed->canvas.image, ed->file.path);
+		image_write(&ed->canvas.image, ed->file.path);
 	}
 }
 
-int AppMainLoop(void) {
-	WindowNewFrame();
-	WindowEndFrame();
+int app_main_loop(void) {
+	window_new_frame();
+	window_end_frame();
 
 	ImGuiIO* io = igGetIO();
 
 	editor_t ed = {0};
-	EditorInit(&ed, 120, 90);
+	editor_init(&ed, 120, 90);
 	ed.view.scale = 5;
-	EditorUpdateView(&ed);
-	EditorCenterView(&ed, (Vec2_t){ io->DisplaySize.x, io->DisplaySize.y });
+	editor_update_view(&ed);
+	editor_center_view(&ed, (Vec2_t){ io->DisplaySize.x, io->DisplaySize.y });
 
 	bool doOpenNewFileModal = false;
 
-	while (!WindowShouldClose()) {
-		WindowNewFrame();
+	while (!window_should_close()) {
+		window_new_frame();
 
 		ImVec2 mBarPos;
 		ImVec2 mBarSize;
@@ -96,16 +96,16 @@ int AppMainLoop(void) {
 					doOpenNewFileModal = true;
 				}
 				if (igMenuItem_Bool("Open", NULL, false, true)) {
-					_AppOpenFile(&ed);
+					_app_open_file(&ed);
 				}
 				if (igMenuItem_Bool("Save", NULL, false, true)) {
-					_AppSaveFile(&ed);
+					_app_save_file(&ed);
 				}
 				igEndMenu();
 			}
 			if (igBeginMenu("Help", true)) {
 				if (igMenuItem_Bool("About", NULL, false, true)) {
-					AppOpenURL("https://csprite.github.io");
+					app_open_url("https://csprite.github.io");
 				}
 				igEndMenu();
 			}
@@ -174,7 +174,7 @@ int AppMainLoop(void) {
 			igSameLine(0, -1);
 			if (igInputFloat("##ZoomControl", &ed.view.scale, step, step, "x%.2f", 0)) {
 				ed.view.scale = ed.view.scale < 0.05 ? 0.05 : ed.view.scale;
-				EditorUpdateView(&ed);
+				editor_update_view(&ed);
 			}
 
 			igSameLine(0, -1);
@@ -201,7 +201,7 @@ int AppMainLoop(void) {
 
 			if (igIsWindowHovered(0)) {
 				igSetMouseCursor(ImGuiMouseCursor_None);
-				EditorProcessInput(&ed);
+				editor_process_input(&ed);
 			}
 
 			igEnd();
@@ -218,12 +218,12 @@ int AppMainLoop(void) {
 
 			if (igButton("Create", (ImVec2){0,0})) {
 				editor_t new = {0};
-				if (!EditorInit(&new, width, height)) {
-					EditorDestroy(&ed);
+				if (!editor_init(&new, width, height)) {
+					editor_destroy(&ed);
 					ed = new;
 					ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
 					ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
-					EditorUpdateView(&ed);
+					editor_update_view(&ed);
 				}
 
 				igCloseCurrentPopup();
@@ -240,16 +240,16 @@ int AppMainLoop(void) {
 			igEndPopup();
 		}
 
-		WindowEndFrame();
+		window_end_frame();
 	}
 
-	EditorDestroy(&ed);
+	editor_destroy(&ed);
 	return 0;
 }
 
-int AppInit(void) {
+int app_init(void) {
 	// Initialize Window & ImGui
-	if (WindowCreate("csprite", 320, 240, 1)) {
+	if (window_init("csprite", 320, 240, 1)) {
 		return 1;
 	}
 
@@ -295,18 +295,18 @@ int AppInit(void) {
 	style->Colors[ImGuiCol_HeaderHovered] = ImColor(66, 66, 66);
 	style->Colors[ImGuiCol_HeaderActive] = ImColor(77, 77, 77);
 
-	WindowSetBG(
+	window_set_bg(
 		style->Colors[ImGuiCol_WindowBg].x * 255.0f,
 		style->Colors[ImGuiCol_WindowBg].y * 255.0f,
 		style->Colors[ImGuiCol_WindowBg].z * 255.0f
 	);
-	WindowSetMaxFPS(60);
+	window_set_max_fps(60);
 
 	return 0;
 }
 
-void AppDestroy(void) {
-	WindowDestroy();
+void app_destroy(void) {
+	window_deinit();
 }
 
 #if defined(TARGET_WINDOWS)
@@ -318,7 +318,7 @@ void AppDestroy(void) {
 #include <stdlib.h>
 #include <string.h>
 
-void AppOpenURL(const char* url) {
+void app_open_url(const char* url) {
 #if defined(TARGET_WINDOWS)
 	ShellExecute(0, 0, url, 0, 0, SW_SHOW);
 #elif defined(TARGET_APPLE) || defined(TARGET_LINUX)

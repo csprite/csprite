@@ -6,18 +6,18 @@
 #include <errno.h>
 #include <dirent.h>
 
-dir_t FsListDirStart(const char* path) {
+dir_t fs_list_dir_start(const char* path) {
 	DIR* dir = opendir(path);
 	return dir;
 }
 
-int FsListDir(dir_t dir, char** name, int* isDir) {
+int fs_list_dir(dir_t dir, char** name, int* isDir) {
 tryAgain:
 	errno = 0;
 	struct dirent* ent = readdir(dir);
 	if (ent == NULL) {
 		if (errno != 0) { // on error
-			FsListDirEnd(dir);
+			fs_list_dirEnd(dir);
 			return 1;
 		} else {
 			*name = NULL;
@@ -32,11 +32,11 @@ tryAgain:
 	return 0;
 }
 
-void FsListDirRewind(dir_t dir) {
+void fs_list_dirRewind(dir_t dir) {
 	rewinddir(dir);
 }
 
-void FsListDirEnd(dir_t dir) {
+void fs_list_dirEnd(dir_t dir) {
 	if (dir) {
 		closedir(dir);
 	}
@@ -44,7 +44,7 @@ void FsListDirEnd(dir_t dir) {
 
 #include <string.h>
 
-int FsGetBasename(const char* path) {
+int fs_get_basename(const char* path) {
 	int len = strlen(path);
 	int index = 0;
 	for (int i = 0; i < len; i++) {
@@ -59,7 +59,7 @@ int FsGetBasename(const char* path) {
 	return index;
 }
 
-int FsGetParentDir(const char* path) {
+int fs_get_parent_dir(const char* path) {
 	int len = strlen(path);
 	// using - 2 since it will filter out any trailing path separator
 	for (int i = len - 2; i >= 0; --i) {
@@ -71,7 +71,7 @@ int FsGetParentDir(const char* path) {
 	return -1;
 }
 
-int FsGetExtension(const char* filePath) {
+int fs_get_extension(const char* filePath) {
 	int len = strlen(filePath);
 
 	for (int i = len - 1; i >= 0; i--) {
