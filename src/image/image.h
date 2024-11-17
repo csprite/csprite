@@ -10,9 +10,9 @@ typedef struct {
 	pixel_t* pixels;
 } image_t;
 
-int ImageInit(image_t* img, uint32_t width, uint32_t height);
-int ImageInitFrom(image_t* img, const char* filePath);
-int ImageWriteTo(image_t* img, const char* filePath);
-void ImageDestroy(image_t* img);
+int image_init(image_t* img, uint32_t width, uint32_t height);
+int image_initFrom(image_t* img, const char* filePath);
+int image_write(image_t* img, const char* filePath);
+void image_deinit(image_t* img);
 
 #endif

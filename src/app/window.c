@@ -13,7 +13,7 @@ void _glfwErrCB(int error, const char *desc) {
 	log_error("GLFW Error: %d - %s", error, desc);
 }
 
-int WindowCreate(const char *title, int width, int height, int resizable) {
+int window_init(const char *title, int width, int height, int resizable) {
 	glfwInit();
 	glfwSetErrorCallback(_glfwErrCB);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -54,7 +54,7 @@ int WindowCreate(const char *title, int width, int height, int resizable) {
 	return 0;
 }
 
-void WindowDestroy(void) {
+void window_deinit(void) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	igDestroyContext(NULL);
@@ -63,7 +63,7 @@ void WindowDestroy(void) {
 	window = NULL;
 }
 
-void WindowSetIcon(int width, int height, unsigned char *pixels) {
+void window_set_icon(int width, int height, unsigned char *pixels) {
 	GLFWimage iconImage;
 	iconImage.width = width;
 	iconImage.height = height;
@@ -71,23 +71,23 @@ void WindowSetIcon(int width, int height, unsigned char *pixels) {
 	glfwSetWindowIcon(window, 1, &iconImage);
 }
 
-void WindowSetTitle(const char *title) {
+void window_set_title(const char *title) {
 	glfwSetWindowTitle(window, title);
 }
 
-void WindowSetBG(unsigned char r, unsigned char g, unsigned char b) {
+void window_set_bg(unsigned char r, unsigned char g, unsigned char b) {
 	window_bg[0] = r / 255.0f;
 	window_bg[1] = g / 255.0f;
 	window_bg[2] = b / 255.0f;
 }
 
-int WindowShouldClose() {
+int window_should_close() {
 	return glfwWindowShouldClose(window);
 }
 
 static double lastTime = 0, frameDelay = 0;
 
-void WindowSetMaxFPS(int fps) {
+void window_set_max_fps(int fps) {
 	if (fps <= 0) {
 		frameDelay = 0;
 	} else {
@@ -95,7 +95,7 @@ void WindowSetMaxFPS(int fps) {
 	}
 }
 
-void WindowNewFrame() {
+void window_new_frame() {
 	lastTime = glfwGetTime();
 	glfwPollEvents();
 	ImGui_ImplOpenGL3_NewFrame();
@@ -103,7 +103,7 @@ void WindowNewFrame() {
 	igNewFrame();
 }
 
-void WindowEndFrame() {
+void window_end_frame() {
 	igRender();
 
 	glClearColor(window_bg[0], window_bg[1], window_bg[2], 1.0);
@@ -115,15 +115,15 @@ void WindowEndFrame() {
 	while (glfwGetTime() < lastTime + frameDelay);
 }
 
-void WindowMinimize(void) {
+void window_minimize(void) {
 	glfwIconifyWindow(window);
 }
 
-void WindowRestore(void) {
+void window_restore(void) {
 	glfwRestoreWindow(window);
 }
 
-void WindowMaximize(void) {
+void window_maximize(void) {
 	glfwMaximizeWindow(window);
 }
 

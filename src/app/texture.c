@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <stdlib.h>
 
-texture_t TextureInit(int width, int height) {
+texture_t texture_init(int width, int height) {
 	texture_t id = 0;
 	glGenTextures(1, &id);
 
@@ -21,7 +21,7 @@ texture_t TextureInit(int width, int height) {
 	unsigned char* pixels = calloc(width * height, 4);
 	if (pixels == NULL) {
 		log_error("Failed to allocate memory");
-		TextureDestroy(id);
+		texture_destroy(id);
 		return 0;
 	}
 
@@ -31,7 +31,7 @@ texture_t TextureInit(int width, int height) {
 	return id;
 }
 
-void TextureUpdate(texture_t id, int subreg_x, int subreg_y, int subreg_w, int subreg_h, int tWidth, unsigned char* data) {
+void texture_update(texture_t id, int subreg_x, int subreg_y, int subreg_w, int subreg_h, int tWidth, unsigned char* data) {
 	glBindTexture(GL_TEXTURE_2D, id);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, tWidth);
 	glTexSubImage2D(
@@ -44,6 +44,6 @@ void TextureUpdate(texture_t id, int subreg_x, int subreg_y, int subreg_w, int s
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TextureDestroy(texture_t id) {
+void texture_destroy(texture_t id) {
 	glDeleteTextures(1, &id);
 }

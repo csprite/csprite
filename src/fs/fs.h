@@ -8,7 +8,7 @@ typedef void* dir_t;
  Description:
   Opens a directory and returns a handle
  */
-dir_t FsListDirStart(const char* path);
+dir_t fs_list_dir_start(const char* path);
 
 /*
  Description:
@@ -20,19 +20,19 @@ dir_t FsListDirStart(const char* path);
   - Returns non-zero value on error (Handle is closed automatically).
   - Sets `*name` to NULL to indicate end of contents.
  */
-int FsListDir(dir_t dir, char** name, int* isDir);
+int fs_list_dir(dir_t dir, char** name, int* isDir);
 
 /*
  Description:
   Rewind directory stream to start
  */
-void FsListDirRewind(dir_t dir);
+void fs_list_dirRewind(dir_t dir);
 
 /*
  Description:
-  Close directory handle returned by `FsListDirStart(...)`
+  Close directory handle returned by `fs_list_dir_start(...)`
  */
-void FsListDirEnd(dir_t dir);
+void fs_list_dirEnd(dir_t dir);
 
 /*
  Description:
@@ -41,7 +41,7 @@ void FsListDirEnd(dir_t dir);
   - Returns index at which basename starts in the `path` variable
   - Returns negative value on error
  */
-int FsGetBasename(const char* path);
+int fs_get_basename(const char* path);
 
 /*
  Description:
@@ -51,7 +51,7 @@ int FsGetBasename(const char* path);
     END of the path of parent dir
   - Values are set to negative if not found
  */
-int FsGetParentDir(const char* path);
+int fs_get_parent_dir(const char* path);
 
 /*
  Description:
@@ -60,6 +60,6 @@ int FsGetParentDir(const char* path);
   - Returns index at which basename starts in the `path` variable
   - Returns negative value if not found
  */
-int FsGetExtension(const char* filePath);
+int fs_get_extension(const char* filePath);
 
 #endif

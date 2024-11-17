@@ -2,14 +2,14 @@
 #include "fs/fs.h"
 
 int main(void) {
-	if (AppInit()) {
+	if (app_init()) {
 		return 1;
 	}
-	if (AppMainLoop()) {
+	if (app_main_loop()) {
 		return 1;
 	}
 
-	AppDestroy();
+	app_destroy();
 
 	return 0;
 }

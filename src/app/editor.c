@@ -6,14 +6,14 @@
 #include <string.h>
 #include <limits.h>
 
-int EditorInit(editor_t* ed, uint32_t width, uint32_t height) {
+int editor_init(editor_t* ed, uint32_t width, uint32_t height) {
 	*ed = (editor_t){0};
 
-	if (ImageInit(&ed->canvas.image, width, height)) {
+	if (image_init(&ed->canvas.image, width, height)) {
 		return 1;
 	}
 
-	if ((ed->canvas.texture = TextureInit(width, height)) == 0) {
+	if ((ed->canvas.texture = texture_init(width, height)) == 0) {
 		return 1;
 	}
 
@@ -22,21 +22,21 @@ int EditorInit(editor_t* ed, uint32_t width, uint32_t height) {
 	ed->view.scale = 1.5f;
 	ed->file.path = NULL;
 	ed->file.name = NULL;
-	EditorUpdateView(ed);
+	editor_update_view(ed);
 
 	return 0;
 }
 
-int EditorInitFrom(editor_t* ed, const char* filePath) {
+int editor_initFrom(editor_t* ed, const char* filePath) {
 	image_t img;
-	if (ImageInitFrom(&img, filePath)) {
+	if (image_initFrom(&img, filePath)) {
 		return 1;
 	}
 
-	EditorInit(ed, img.width, img.height);
-	ImageDestroy(&ed->canvas.image);
+	editor_init(ed, img.width, img.height);
+	image_deinit(&ed->canvas.image);
 	ed->canvas.image = img;
-	TextureUpdate(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
+	texture_update(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
 
 	int len = strlen(filePath) + 1;
 	ed->file.path = malloc(len);
@@ -45,16 +45,16 @@ int EditorInitFrom(editor_t* ed, const char* filePath) {
 	return 0;
 }
 
-void EditorDestroy(editor_t* ed) {
-	ImageDestroy(&ed->canvas.image);
-	TextureDestroy(ed->canvas.texture);
+void editor_destroy(editor_t* ed) {
+	image_deinit(&ed->canvas.image);
+	texture_destroy(ed->canvas.texture);
 
 	if (ed->file.path) {
 		free(ed->file.path);
 	}
 }
 
-Rect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
+Rect_t editor_on_mouse_down(editor_t* ed, int32_t x, int32_t y) {
     ed->mouse.down.x = x;
     ed->mouse.down.y = y;
 	ed->mouse.last.x = x;
@@ -89,7 +89,7 @@ Rect_t EditorOnMouseDown(editor_t* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-void EditorOnMouseDrag(editor_t* ed, int32_t x, int32_t y) {
+void editor_on_mouse_drag(editor_t* ed, int32_t x, int32_t y) {
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
 
@@ -183,7 +183,7 @@ void EditorOnMouseDrag(editor_t* ed, int32_t x, int32_t y) {
 	}
 }
 
-Rect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
+Rect_t editor_on_mouse_move(editor_t* ed, int32_t x, int32_t y) {
 	Rect_t dirty = {0};
 
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
@@ -225,7 +225,7 @@ Rect_t EditorOnMouseMove(editor_t* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-Rect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
+Rect_t editor_on_mouse_up(editor_t* ed, int32_t x, int32_t y) {
 	Rect_t dirty = {0};
 
 	switch (ed->tool.type.current) {
@@ -257,7 +257,7 @@ Rect_t EditorOnMouseUp(editor_t* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-void EditorUpdateView(editor_t* ed) {
+void editor_update_view(editor_t* ed) {
 	ed->view.scale = ed->view.scale < 0.01 ? 0.01 : ed->view.scale;
 
 	// Ensures That The viewRect is Centered From The Center
@@ -275,9 +275,9 @@ void EditorUpdateView(editor_t* ed) {
 	ed->view.h = ed->canvas.image.height * ed->view.scale;
 }
 
-int EditorSetFilePath(editor_t* ed, const char* filePath);
+int editor_set_filepath(editor_t* ed, const char* filePath);
 
-void EditorZoomOut(editor_t* ed) {
+void editor_zoom_out(editor_t* ed) {
 	if (ed->view.scale > 1) {
 		ed->view.scale -= 0.15;
 	} else {
@@ -285,32 +285,32 @@ void EditorZoomOut(editor_t* ed) {
 	}
 
 	ed->view.scale = ed->view.scale <= 0.05 ? 0.05 : ed->view.scale;
-	EditorUpdateView(ed);
+	editor_update_view(ed);
 }
 
-void EditorZoomIn(editor_t* ed) {
+void editor_zoom_in(editor_t* ed) {
 	if (ed->view.scale > 1) {
 		ed->view.scale += 0.15;
 	} else {
 		ed->view.scale += 0.05;
 	}
 
-	EditorUpdateView(ed);
+	editor_update_view(ed);
 }
 
-void EditorCenterView(editor_t* ed, Vec2_t boundingRect) {
+void editor_center_view(editor_t* ed, Vec2_t boundingRect) {
 	ed->view.x = ((float)boundingRect.x / 2) - (ed->view.w / 2);
 	ed->view.y = ((float)boundingRect.y / 2) - (ed->view.h / 2);
 }
 
-void EditorProcessInput(editor_t* ed) {
+void editor_process_input(editor_t* ed) {
 	ImGuiIO* io = igGetIO();
 
 	if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
-		if (io->MouseWheel > 0) EditorZoomIn(ed);
-		else if (io->MouseWheel < 0) EditorZoomOut(ed);
-		else if (igIsKeyChordPressed_Nil(ImGuiMod_Ctrl | ImGuiKey_Equal)) EditorZoomIn(ed);
-		else if (igIsKeyChordPressed_Nil(ImGuiMod_Ctrl | ImGuiKey_Minus)) EditorZoomOut(ed);
+		if (io->MouseWheel > 0) editor_zoom_in(ed);
+		else if (io->MouseWheel < 0) editor_zoom_out(ed);
+		else if (igIsKeyChordPressed_Nil(ImGuiMod_Ctrl | ImGuiKey_Equal)) editor_zoom_in(ed);
+		else if (igIsKeyChordPressed_Nil(ImGuiMod_Ctrl | ImGuiKey_Minus)) editor_zoom_out(ed);
 		else if (igIsKeyChordPressed_Nil(ImGuiKey_B)) ed->tool.type.current = TOOL_BRUSH;
 		else if (igIsKeyChordPressed_Nil(ImGuiKey_E)) ed->tool.type.current = TOOL_ERASER;
 		else if (igIsKeyChordPressed_Nil(ImGuiKey_L)) ed->tool.type.current = TOOL_LINE;
@@ -323,7 +323,7 @@ void EditorProcessInput(editor_t* ed) {
 	Rect_t dirty = {0};
 
 	if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
-		dirty = EditorOnMouseDown(ed, io->MousePos.x, io->MousePos.y);
+		dirty = editor_on_mouse_down(ed, io->MousePos.x, io->MousePos.y);
 	} else {
 		int32_t MouseRelX = (int32_t)((io->MousePos.x - ed->view.x) / ed->view.scale);
 		int32_t MouseRelY = (int32_t)((io->MousePos.y - ed->view.y) / ed->view.scale);
@@ -336,17 +336,17 @@ void EditorProcessInput(editor_t* ed) {
 	}
 
 	if (igIsMouseDown_Nil(ImGuiMouseButton_Left) && (io->MouseDelta.x != 0 || io->MouseDelta.y != 0)) {
-		dirty = EditorOnMouseMove(ed, io->MousePos.x, io->MousePos.y);
+		dirty = editor_on_mouse_move(ed, io->MousePos.x, io->MousePos.y);
 	}
 	if (igIsMouseDragging(ImGuiMouseButton_Left, -1)) {
-		EditorOnMouseDrag(ed, io->MousePos.x, io->MousePos.y);
+		editor_on_mouse_drag(ed, io->MousePos.x, io->MousePos.y);
 	}
 	if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
-		dirty = EditorOnMouseUp(ed, io->MousePos.x, io->MousePos.y);
+		dirty = editor_on_mouse_up(ed, io->MousePos.x, io->MousePos.y);
 	}
 
 	if (rect_is_valid(&dirty)) {
-		TextureUpdate(
+		texture_update(
 			ed->canvas.texture, dirty.start.x, dirty.start.y,
 			dirty.end.x - dirty.start.x, dirty.end.y - dirty.start.y,
 			ed->canvas.image.width, (unsigned char*)ed->canvas.image.pixels
