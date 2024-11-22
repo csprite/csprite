@@ -9,14 +9,8 @@
 int editor_init(editor_t* ed, uint32_t width, uint32_t height) {
 	*ed = (editor_t){0};
 
-	if (image_init(&ed->canvas.image, width, height)) {
-		return 1;
-	}
-
-	if ((ed->canvas.texture = texture_init(width, height)) == 0) {
-		return 1;
-	}
-
+	image_init(&ed->canvas.image, width, height);
+	ed->canvas.texture = texture_init(width, height);
 	ed->tool.brush.color = (pixel_t){ 255, 255, 255, 255 };
 	ed->tool.type.current = TOOL_BRUSH;
 	ed->view.scale = 1.5f;

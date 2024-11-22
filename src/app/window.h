@@ -2,7 +2,7 @@
 #define CSPRITE_APP_WINDOW_WINDOW_H_INCLUDED_
 #pragma once
 
-int  window_init(const char *title, int width, int height, int resizable);
+void window_init(const char *title, int width, int height, int resizable);
 void window_deinit(void);
 
 void window_set_icon(int width, int height, unsigned char *pixels);

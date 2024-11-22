@@ -13,7 +13,7 @@ void _glfwErrCB(int error, const char *desc) {
 	log_error("GLFW Error: %d - %s", error, desc);
 }
 
-int window_init(const char *title, int width, int height, int resizable) {
+void window_init(const char *title, int width, int height, int resizable) {
 	glfwInit();
 	glfwSetErrorCallback(_glfwErrCB);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -26,17 +26,13 @@ int window_init(const char *title, int width, int height, int resizable) {
 
 	window = glfwCreateWindow(width, height, title, NULL, NULL);
 
-	if (!window) {
-		log_error("Failed to create GLFW window");
-		window = NULL;
-		return 1;
+	if (window == NULL) {
+		log_fatal("Failed to create GLFW window");
 	}
 
 	glfwMakeContextCurrent(window);
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-		log_error("Failed to initialize GLAD");
-		window = NULL;
-		return 1;
+	if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0) {
+		log_fatal("Failed to initialize GLAD");
 	}
 
 	glfwSwapInterval(0);
@@ -50,8 +46,6 @@ int window_init(const char *title, int width, int height, int resizable) {
 	io->IniFilename = NULL;
 
 	glfwShowWindow(window);
-
-	return 0;
 }
 
 void window_deinit(void) {
