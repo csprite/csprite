@@ -71,7 +71,7 @@ void _app_save_file(editor_t* ed) {
 	}
 }
 
-int app_main_loop(void) {
+void app_main_loop(void) {
 	window_new_frame();
 	window_end_frame();
 
@@ -244,14 +244,11 @@ int app_main_loop(void) {
 	}
 
 	editor_destroy(&ed);
-	return 0;
 }
 
-int app_init(void) {
+void app_init(void) {
 	// Initialize Window & ImGui
-	if (window_init("csprite", 320, 240, 1)) {
-		return 1;
-	}
+	window_init("csprite", 320, 240, 1);
 
 	// Initialize Font
 	int fontDataSize = 0;
@@ -267,8 +264,7 @@ int app_init(void) {
 	);
 	ImFontAtlas_Build(io->Fonts);
 	if (!ImFontAtlas_IsBuilt(io->Fonts)) {
-		log_error("io.Fonts->Build() - failed to build the font atlas");
-		return 1;
+		log_fatal("io.Fonts->Build() - failed to build the font atlas");
 	}
 	ImFontGlyphRangesBuilder_destroy(FontBuilder);
 	ImVector_ImWchar_UnInit(&FontRanges);
@@ -301,8 +297,6 @@ int app_init(void) {
 		style->Colors[ImGuiCol_WindowBg].z * 255.0f
 	);
 	window_set_max_fps(60);
-
-	return 0;
 }
 
 void app_destroy(void) {

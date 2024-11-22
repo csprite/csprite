@@ -5,16 +5,14 @@
 #include "log/log.h"
 #include "fs/fs.h"
 
-int image_init(image_t* img, uint32_t width, uint32_t height) {
+void image_init(image_t* img, uint32_t width, uint32_t height) {
 	img->pixels = calloc(width * height, sizeof(pixel_t));
 	if (img->pixels == NULL) {
-		log_error("Allocation failed");
-		return 1;
+		log_fatal("Allocation failed");
 	}
 
 	img->width = width;
 	img->height = height;
-	return 0;
 }
 
 int image_initFrom(image_t* img, const char* filePath) {
@@ -29,10 +27,8 @@ int image_initFrom(image_t* img, const char* filePath) {
 		stbi_image_free(data);
 		return 1;
 	}
-	if (image_init(img, w, h)) {
-		return 1;
-	}
 
+	image_init(img, w, h);
 	for (long long i = 0; i < w * h; i++) {
 		pixel_t* out = &img->pixels[i];
 		out->r = data[(i * 4) + 0];

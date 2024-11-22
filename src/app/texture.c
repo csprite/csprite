@@ -8,8 +8,7 @@ texture_t texture_init(int width, int height) {
 	glGenTextures(1, &id);
 
 	if (id == 0) {
-		log_error("Failed to create texture on GPU");
-		return 0;
+		log_fatal("Failed to create texture on GPU");
 	}
 
 	glBindTexture(GL_TEXTURE_2D, id);
@@ -20,9 +19,8 @@ texture_t texture_init(int width, int height) {
 
 	unsigned char* pixels = calloc(width * height, 4);
 	if (pixels == NULL) {
-		log_error("Failed to allocate memory");
 		texture_destroy(id);
-		return 0;
+		log_fatal("Failed to allocate memory");
 	}
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
