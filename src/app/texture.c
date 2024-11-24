@@ -19,7 +19,6 @@ texture_t texture_init(int width, int height) {
 
 	unsigned char* pixels = calloc(width * height, 4);
 	if (pixels == NULL) {
-		texture_destroy(id);
 		log_fatal("Failed to allocate memory");
 	}
 
