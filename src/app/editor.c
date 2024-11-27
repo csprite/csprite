@@ -121,7 +121,15 @@ void editor_on_mouse_drag(editor_t* ed, int32_t x, int32_t y) {
 			);
 			break;
 		}
-		case TOOL_RECT:
+		case TOOL_RECT: {
+			ImDrawList_AddRectFilled(
+			    igGetForegroundDrawList_Nil(),
+				(ImVec2){ (TopLeft.x * ed->view.scale) + ed->view.x, (TopLeft.y * ed->view.scale) + ed->view.y },
+				(ImVec2){ ((BotRight.x + 1) * ed->view.scale) + ed->view.x, ((BotRight.y + 1) * ed->view.scale) + ed->view.y },
+				*(uint32_t*)&ed->tool.brush.color, 0, 0
+			);
+			break;
+		}
 		case TOOL_ELLIPSE: {
 			ImDrawList_AddRectFilled( // Top Left
 			    igGetForegroundDrawList_Nil(),
@@ -147,25 +155,15 @@ void editor_on_mouse_drag(editor_t* ed, int32_t x, int32_t y) {
 				(ImVec2){ ((BotRight.x + 1) * ed->view.scale) + ed->view.x, ((BotRight.y + 1) * ed->view.scale) + ed->view.y },
 				*(uint32_t*)&ed->tool.brush.color, 0, 0
 			);
-
-			if (ed->tool.type.current == TOOL_RECT) {
-				ImDrawList_AddRect(
-				    igGetForegroundDrawList_Nil(),
-					(ImVec2){ ((TopLeft.x + 0.5) * ed->view.scale) + ed->view.x, ((TopLeft.y + 0.5) * ed->view.scale) + ed->view.y },
-					(ImVec2){ ((BotRight.x + 0.5) * ed->view.scale) + ed->view.x, ((BotRight.y + 0.5) * ed->view.scale) + ed->view.y },
-					*(uint32_t*)&ed->tool.brush.color, 0, 0, ed->view.scale / 4
-				);
-			} else {
-				ImDrawList_AddEllipse(
-					igGetForegroundDrawList_Nil(),
-					(ImVec2){
-						( ( TopLeft.x + 0.5 + ( (float)(TopRight.x - TopLeft.x) / 2) ) * ed->view.scale ) + ed->view.x,
-						( ( TopLeft.y + 0.5 + ( (float)(BotLeft.y - TopLeft.y) / 2) ) * ed->view.scale ) + ed->view.y,
-					},
-					(ImVec2){ ((TopRight.x - TopLeft.x) * ed->view.scale)/2, ((TopLeft.y - BotLeft.y) * ed->view.scale)/2 },
-					*(uint32_t*)&ed->tool.brush.color, 0, 0, 1
-				);
-			}
+			ImDrawList_AddEllipse(
+				igGetForegroundDrawList_Nil(),
+				(ImVec2){
+					( ( TopLeft.x + 0.5 + ( (float)(TopRight.x - TopLeft.x) / 2) ) * ed->view.scale ) + ed->view.x,
+					( ( TopLeft.y + 0.5 + ( (float)(BotLeft.y - TopLeft.y) / 2) ) * ed->view.scale ) + ed->view.y,
+				},
+				(ImVec2){ ((TopRight.x - TopLeft.x) * ed->view.scale)/2, ((TopLeft.y - BotLeft.y) * ed->view.scale)/2 },
+				*(uint32_t*)&ed->tool.brush.color, 0, 0, 1
+			);
 			break;
 		}
 		case TOOL_BRUSH:
