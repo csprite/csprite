@@ -235,11 +235,13 @@ Rect_t editor_on_mouse_up(editor_t* ed, int32_t x, int32_t y) {
 			int32_t MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
-			dirty = ed->tool.type.current == TOOL_LINE ?
-					plotLine((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color) :
-						ed->tool.type.current == TOOL_RECT ?
-							plotRect((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color) :
-							plotEllipseRect((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+			if (ed->tool.type.current == TOOL_LINE) {
+				dirty = plotLine((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+			} else if (ed->tool.type.current == TOOL_RECT) {
+				dirty = plotRect((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+			} else {
+				dirty = plotEllipseRect((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+			}
 			break;
 		}
 	}
