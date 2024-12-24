@@ -24,7 +24,7 @@ void _app_open_file(editor_t* ed) {
 	if (filePath) {
 		editor_t new = {0};
 		if (!editor_initFrom(&new, filePath)) {
-			editor_destroy(ed);
+			editor_deinit(ed);
 			*ed = new;
 			editor_center_view(ed, (Vec2_t){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
 		}
@@ -219,7 +219,7 @@ void app_main_loop(void) {
 			if (igButton("Create", (ImVec2){0,0})) {
 				editor_t new = {0};
 				if (!editor_init(&new, width, height)) {
-					editor_destroy(&ed);
+					editor_deinit(&ed);
 					ed = new;
 					ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
 					ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
@@ -243,7 +243,7 @@ void app_main_loop(void) {
 		window_end_frame();
 	}
 
-	editor_destroy(&ed);
+	editor_deinit(&ed);
 }
 
 void app_init(void) {
@@ -299,7 +299,7 @@ void app_init(void) {
 	window_set_max_fps(60);
 }
 
-void app_destroy(void) {
+void app_deinit(void) {
 	window_deinit();
 }
 

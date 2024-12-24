@@ -39,9 +39,9 @@ int editor_initFrom(editor_t* ed, const char* filePath) {
 	return 0;
 }
 
-void editor_destroy(editor_t* ed) {
+void editor_deinit(editor_t* ed) {
 	image_deinit(&ed->canvas.image);
-	texture_destroy(ed->canvas.texture);
+	texture_deinit(ed->canvas.texture);
 
 	if (ed->file.path) {
 		free(ed->file.path);

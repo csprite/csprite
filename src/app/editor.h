@@ -58,7 +58,7 @@ typedef struct {
 
 int editor_init(editor_t* ed, uint32_t width, uint32_t height);
 int editor_initFrom(editor_t* ed, const char* filePath);
-void editor_destroy(editor_t* ed);
+void editor_deinit(editor_t* ed);
 
 void editor_process_input(editor_t* ed);
 
