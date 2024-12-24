@@ -4,7 +4,7 @@
 
 void app_init(void);
 void app_main_loop(void);
-void app_destroy(void);
+void app_deinit(void);
 
 void app_open_url(const char* url);
 

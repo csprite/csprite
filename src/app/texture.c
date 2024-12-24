@@ -41,6 +41,6 @@ void texture_update(texture_t id, int subreg_x, int subreg_y, int subreg_w, int 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void texture_destroy(texture_t id) {
+void texture_deinit(texture_t id) {
 	glDeleteTextures(1, &id);
 }
