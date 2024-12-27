@@ -6,12 +6,12 @@
 #include <string.h>
 #include <limits.h>
 
-int editor_init(editor_t* ed, uint32_t width, uint32_t height) {
-	*ed = (editor_t){0};
+int editor_init(Editor* ed, uint32_t width, uint32_t height) {
+	*ed = (Editor){0};
 
 	image_init(&ed->canvas.image, width, height);
 	ed->canvas.texture = texture_init(width, height);
-	ed->tool.brush.color = (pixel_t){ 255, 255, 255, 255 };
+	ed->tool.brush.color = (Pixel){ 255, 255, 255, 255 };
 	ed->tool.type.current = TOOL_BRUSH;
 	ed->view.scale = 1.5f;
 	ed->file.path = NULL;
@@ -21,8 +21,8 @@ int editor_init(editor_t* ed, uint32_t width, uint32_t height) {
 	return 0;
 }
 
-int editor_initFrom(editor_t* ed, const char* filePath) {
-	image_t img;
+int editor_initFrom(Editor* ed, const char* filePath) {
+	Image img;
 	if (image_initFrom(&img, filePath)) {
 		return 1;
 	}
@@ -39,7 +39,7 @@ int editor_initFrom(editor_t* ed, const char* filePath) {
 	return 0;
 }
 
-void editor_deinit(editor_t* ed) {
+void editor_deinit(Editor* ed) {
 	image_deinit(&ed->canvas.image);
 	texture_deinit(ed->canvas.texture);
 
@@ -48,7 +48,7 @@ void editor_deinit(editor_t* ed) {
 	}
 }
 
-Rect_t editor_on_mouse_down(editor_t* ed, int32_t x, int32_t y) {
+Rect editor_on_mouse_down(Editor* ed, int32_t x, int32_t y) {
     ed->mouse.down.x = x;
     ed->mouse.down.y = y;
 	ed->mouse.last.x = x;
@@ -57,13 +57,13 @@ Rect_t editor_on_mouse_down(editor_t* ed, int32_t x, int32_t y) {
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
 
-	Rect_t dirty = {0};
+	Rect dirty = {0};
 	if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX >= ed->canvas.image.width || MouseRelY >= ed->canvas.image.height) return dirty;
 
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
 		case TOOL_ERASER: {
-			pixel_t color = ed->tool.type.current == TOOL_BRUSH ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
+			Pixel color = ed->tool.type.current == TOOL_BRUSH ? ed->tool.brush.color : (Pixel){0, 0, 0, 0};
 			ed->canvas.image.pixels[(MouseRelY * ed->canvas.image.width) + MouseRelX] = color;
 			dirty.start.x = MouseRelX;
 			dirty.start.y = MouseRelY;
@@ -83,20 +83,20 @@ Rect_t editor_on_mouse_down(editor_t* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-void editor_on_mouse_drag(editor_t* ed, int32_t x, int32_t y) {
+void editor_on_mouse_drag(Editor* ed, int32_t x, int32_t y) {
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
 
 	int MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 	int MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
-	Vec2_t TopLeft = { MouseDownRelX, MouseDownRelY };
-	Vec2_t BotRight = { MouseRelX, MouseRelY };
+	Vec2 TopLeft = { MouseDownRelX, MouseDownRelY };
+	Vec2 BotRight = { MouseRelX, MouseRelY };
 
 	ensureRectCoords(&TopLeft, &BotRight);
 
-	Vec2_t BotLeft = { TopLeft.x, BotRight.y };
-	Vec2_t TopRight = { BotRight.x, TopLeft.y };
+	Vec2 BotLeft = { TopLeft.x, BotRight.y };
+	Vec2 TopRight = { BotRight.x, TopLeft.y };
 
 	switch (ed->tool.type.current) {
 		case TOOL_LINE: {
@@ -175,8 +175,8 @@ void editor_on_mouse_drag(editor_t* ed, int32_t x, int32_t y) {
 	}
 }
 
-Rect_t editor_on_mouse_move(editor_t* ed, int32_t x, int32_t y) {
-	Rect_t dirty = {0};
+Rect editor_on_mouse_move(Editor* ed, int32_t x, int32_t y) {
+	Rect dirty = {0};
 
 	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
 	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
@@ -186,10 +186,10 @@ Rect_t editor_on_mouse_move(editor_t* ed, int32_t x, int32_t y) {
 		case TOOL_ERASER: {
 			if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX > ed->canvas.image.width || MouseRelY > ed->canvas.image.height) break;
 
-			pixel_t color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (pixel_t){0, 0, 0, 0};
-			Rect_t newDirty = plotLine(
-				(Vec2_t){ (int64_t)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int64_t)((ed->mouse.last.y - ed->view.y)/ed->view.scale) },
-				(Vec2_t){ MouseRelX, MouseRelY },
+			Pixel color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (Pixel){0, 0, 0, 0};
+			Rect newDirty = plotLine(
+				(Vec2){ (int64_t)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int64_t)((ed->mouse.last.y - ed->view.y)/ed->view.scale) },
+				(Vec2){ MouseRelX, MouseRelY },
 				&ed->canvas.image, color
 			);
 
@@ -217,8 +217,8 @@ Rect_t editor_on_mouse_move(editor_t* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-Rect_t editor_on_mouse_up(editor_t* ed, int32_t x, int32_t y) {
-	Rect_t dirty = {0};
+Rect editor_on_mouse_up(Editor* ed, int32_t x, int32_t y) {
+	Rect dirty = {0};
 
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
@@ -236,11 +236,11 @@ Rect_t editor_on_mouse_up(editor_t* ed, int32_t x, int32_t y) {
 			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
 			if (ed->tool.type.current == TOOL_LINE) {
-				dirty = plotLine((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+				dirty = plotLine((Vec2){ MouseDownRelX, MouseDownRelY }, (Vec2){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
 			} else if (ed->tool.type.current == TOOL_RECT) {
-				dirty = plotRect((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+				dirty = plotRect((Vec2){ MouseDownRelX, MouseDownRelY }, (Vec2){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
 			} else {
-				dirty = plotEllipseRect((Vec2_t){ MouseDownRelX, MouseDownRelY }, (Vec2_t){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+				dirty = plotEllipseRect((Vec2){ MouseDownRelX, MouseDownRelY }, (Vec2){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
 			}
 			break;
 		}
@@ -251,7 +251,7 @@ Rect_t editor_on_mouse_up(editor_t* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-void editor_update_view(editor_t* ed) {
+void editor_update_view(Editor* ed) {
 	ed->view.scale = ed->view.scale < 0.01 ? 0.01 : ed->view.scale;
 
 	// Ensures That The viewRect is Centered From The Center
@@ -269,9 +269,9 @@ void editor_update_view(editor_t* ed) {
 	ed->view.h = ed->canvas.image.height * ed->view.scale;
 }
 
-int editor_set_filepath(editor_t* ed, const char* filePath);
+int editor_set_filepath(Editor* ed, const char* filePath);
 
-void editor_zoom_out(editor_t* ed) {
+void editor_zoom_out(Editor* ed) {
 	if (ed->view.scale > 1) {
 		ed->view.scale -= 0.15;
 	} else {
@@ -282,7 +282,7 @@ void editor_zoom_out(editor_t* ed) {
 	editor_update_view(ed);
 }
 
-void editor_zoom_in(editor_t* ed) {
+void editor_zoom_in(Editor* ed) {
 	if (ed->view.scale > 1) {
 		ed->view.scale += 0.15;
 	} else {
@@ -292,12 +292,12 @@ void editor_zoom_in(editor_t* ed) {
 	editor_update_view(ed);
 }
 
-void editor_center_view(editor_t* ed, Vec2_t boundingRect) {
+void editor_center_view(Editor* ed, Vec2 boundingRect) {
 	ed->view.x = ((float)boundingRect.x / 2) - (ed->view.w / 2);
 	ed->view.y = ((float)boundingRect.y / 2) - (ed->view.h / 2);
 }
 
-void editor_process_input(editor_t* ed) {
+void editor_process_input(Editor* ed) {
 	ImGuiIO* io = igGetIO();
 
 	if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
@@ -314,7 +314,7 @@ void editor_process_input(editor_t* ed) {
 		else if (igIsKeyReleased_Nil(ImGuiKey_Space)) { ed->tool.type.current = ed->tool.type.previous; }
 	}
 
-	Rect_t dirty = {0};
+	Rect dirty = {0};
 
 	if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
 		dirty = editor_on_mouse_down(ed, io->MousePos.x, io->MousePos.y);

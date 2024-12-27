@@ -5,10 +5,10 @@
 #include "types.h"
 #include "image/image.h"
 
-void ensureRectCoords(Vec2_t* start, Vec2_t* end);
+void ensureRectCoords(Vec2* start, Vec2* end);
 
-Rect_t plotRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
-Rect_t plotEllipseRect(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
-Rect_t plotLine(Vec2_t start, Vec2_t end, image_t* img, pixel_t color);
+Rect plotRect(Vec2 start, Vec2 end, Image* img, Pixel color);
+Rect plotEllipseRect(Vec2 start, Vec2 end, Image* img, Pixel color);
+Rect plotLine(Vec2 start, Vec2 end, Image* img, Pixel color);
 
 #endif

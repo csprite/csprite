@@ -7,12 +7,12 @@
 
 typedef struct {
 	int64_t width, height;
-	pixel_t* pixels;
-} image_t;
+	Pixel* pixels;
+} Image;
 
-void image_init(image_t* img, uint32_t width, uint32_t height);
-int image_initFrom(image_t* img, const char* filePath);
-int image_write(image_t* img, const char* filePath);
-void image_deinit(image_t* img);
+void image_init(Image* img, uint32_t width, uint32_t height);
+int image_initFrom(Image* img, const char* filePath);
+int image_write(Image* img, const char* filePath);
+void image_deinit(Image* img);
 
 #endif
