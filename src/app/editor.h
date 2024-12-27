@@ -16,9 +16,9 @@ typedef enum {
 	TOOL_ELLIPSE,
 	TOOL_PAN,
 	TOOL_NONE
-} tool_t;
+} Tool;
 
-static inline const char* ToolToString(tool_t t) {
+static inline const char* ToolToString(Tool t) {
 	switch (t) {
 		case TOOL_BRUSH:   return "Brush"; break;
 		case TOOL_ERASER:  return "Eraser"; break;
@@ -33,8 +33,8 @@ static inline const char* ToolToString(tool_t t) {
 
 typedef struct {
 	struct {
-		image_t image;
-		texture_t texture;
+		Image image;
+		Texture texture;
 	} canvas;
 	struct {
 		char* path;
@@ -42,36 +42,36 @@ typedef struct {
 	} file;
 	struct {
 		struct {
-			pixel_t color;
+			Pixel color;
 		} brush;
 		struct {
-			tool_t previous, current;
+			Tool previous, current;
 		} type;
 	} tool;
 	struct {
 		float x, y, w, h, scale;
 	} view;
 	struct {
-		Vec2_t down, last;
+		Vec2 down, last;
 	} mouse;
-} editor_t;
+} Editor;
 
-int editor_init(editor_t* ed, uint32_t width, uint32_t height);
-int editor_initFrom(editor_t* ed, const char* filePath);
-void editor_deinit(editor_t* ed);
+int editor_init(Editor* ed, uint32_t width, uint32_t height);
+int editor_initFrom(Editor* ed, const char* filePath);
+void editor_deinit(Editor* ed);
 
-void editor_process_input(editor_t* ed);
+void editor_process_input(Editor* ed);
 
-Rect_t editor_on_mouse_down(editor_t* ed, int32_t x, int32_t y); // When Left Mouse Goes Down
-Rect_t editor_on_mouse_move(editor_t* ed, int32_t x, int32_t y); // When Left Mouse Moves
-void   editor_on_mouse_drag(editor_t* ed, int32_t x, int32_t y); // From When Left Mouse Moves Until Mouse Is Released
-Rect_t editor_on_mouse_up(editor_t* ed, int32_t x, int32_t y);   // When Mouse Is Released
+Rect editor_on_mouse_down(Editor* ed, int32_t x, int32_t y); // When Left Mouse Goes Down
+Rect editor_on_mouse_move(Editor* ed, int32_t x, int32_t y); // When Left Mouse Moves
+void   editor_on_mouse_drag(Editor* ed, int32_t x, int32_t y); // From When Left Mouse Moves Until Mouse Is Released
+Rect editor_on_mouse_up(Editor* ed, int32_t x, int32_t y);   // When Mouse Is Released
 
-void editor_zoom_out(editor_t* ed);
-void editor_zoom_in(editor_t* ed);
-void editor_center_view(editor_t* ed, Vec2_t boundingRect);
+void editor_zoom_out(Editor* ed);
+void editor_zoom_in(Editor* ed);
+void editor_center_view(Editor* ed, Vec2 boundingRect);
 
-void editor_update_view(editor_t* ed); // When ed.view.scale changes
-int editor_set_filepath(editor_t* ed, const char* filePath);
+void editor_update_view(Editor* ed); // When ed.view.scale changes
+int editor_set_filepath(Editor* ed, const char* filePath);
 
 #endif

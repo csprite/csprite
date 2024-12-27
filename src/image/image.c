@@ -5,8 +5,8 @@
 #include "log/log.h"
 #include "fs/fs.h"
 
-void image_init(image_t* img, uint32_t width, uint32_t height) {
-	img->pixels = calloc(width * height, sizeof(pixel_t));
+void image_init(Image* img, uint32_t width, uint32_t height) {
+	img->pixels = calloc(width * height, sizeof(Pixel));
 	if (img->pixels == NULL) {
 		log_fatal("Allocation failed");
 	}
@@ -15,7 +15,7 @@ void image_init(image_t* img, uint32_t width, uint32_t height) {
 	img->height = height;
 }
 
-int image_initFrom(image_t* img, const char* filePath) {
+int image_initFrom(Image* img, const char* filePath) {
 	int w = 0, h = 0, c = 0;
 	stbi_uc* data = stbi_load(filePath, &w, &h, &c, 4);
 	if (data == NULL) {
@@ -30,7 +30,7 @@ int image_initFrom(image_t* img, const char* filePath) {
 
 	image_init(img, w, h);
 	for (long long i = 0; i < w * h; i++) {
-		pixel_t* out = &img->pixels[i];
+		Pixel* out = &img->pixels[i];
 		out->r = data[(i * 4) + 0];
 		out->g = data[(i * 4) + 1];
 		out->b = data[(i * 4) + 2];
@@ -42,7 +42,7 @@ int image_initFrom(image_t* img, const char* filePath) {
 	return 0;
 }
 
-int image_write(image_t* img, const char* filePath) {
+int image_write(Image* img, const char* filePath) {
 	int extensionIdx = fs_get_extension(filePath);
 	if (extensionIdx < 0) {
 		log_error("Failed to find extension of '%s'", filePath);
@@ -52,7 +52,7 @@ int image_write(image_t* img, const char* filePath) {
 	const char* extension = filePath + extensionIdx;
 	if (strcmp(extension, ".png") == 0) {
 		stbi_write_png_compression_level = 9;
-		stbi_write_png(filePath, img->width, img->height, 4, img->pixels, img->width * sizeof(pixel_t));
+		stbi_write_png(filePath, img->width, img->height, 4, img->pixels, img->width * sizeof(Pixel));
 	} else if (strcmp(extension, ".jpg") == 0 || strcmp(extension, ".jpeg") == 0) {
 		stbi_write_jpg(filePath, img->width, img->height, 4, img->pixels, 100);
 	} else {
@@ -63,7 +63,7 @@ int image_write(image_t* img, const char* filePath) {
 	return 0;
 }
 
-void image_deinit(image_t* img) {
+void image_deinit(Image* img) {
 	free(img->pixels);
-	*img = (image_t){0};
+	*img = (Image){0};
 }

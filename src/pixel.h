@@ -6,7 +6,7 @@
 
 typedef struct {
 	uint8_t r, g, b, a;
-} pixel_t;
+} Pixel;
 
 #define PIXEL_EQUAL(p1, p2) (p1.r == p2.r && p1.g == p2.g && p1.b == p2.b && p1.a == p2.a)
 

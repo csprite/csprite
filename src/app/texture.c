@@ -3,8 +3,8 @@
 #include <glad/glad.h>
 #include <stdlib.h>
 
-texture_t texture_init(int width, int height) {
-	texture_t id = 0;
+Texture texture_init(int width, int height) {
+	Texture id = 0;
 	glGenTextures(1, &id);
 
 	if (id == 0) {
@@ -28,7 +28,7 @@ texture_t texture_init(int width, int height) {
 	return id;
 }
 
-void texture_update(texture_t id, int subreg_x, int subreg_y, int subreg_w, int subreg_h, int tWidth, unsigned char* data) {
+void texture_update(Texture id, int subreg_x, int subreg_y, int subreg_w, int subreg_h, int tWidth, unsigned char* data) {
 	glBindTexture(GL_TEXTURE_2D, id);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, tWidth);
 	glTexSubImage2D(
@@ -41,6 +41,6 @@ void texture_update(texture_t id, int subreg_x, int subreg_y, int subreg_w, int 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void texture_deinit(texture_t id) {
+void texture_deinit(Texture id) {
 	glDeleteTextures(1, &id);
 }

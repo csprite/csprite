@@ -13,7 +13,7 @@
 #include "sfd.h"
 #include "app/editor.h"
 
-void _app_open_file(editor_t* ed) {
+void _app_open_file(Editor* ed) {
 	const char* filePath = sfd_open_dialog(&(sfd_Options){
 		.title        = "Open Image File",
 		.filter_name  = "Image File",
@@ -22,11 +22,11 @@ void _app_open_file(editor_t* ed) {
 	});
 
 	if (filePath) {
-		editor_t new = {0};
+		Editor new = {0};
 		if (!editor_initFrom(&new, filePath)) {
 			editor_deinit(ed);
 			*ed = new;
-			editor_center_view(ed, (Vec2_t){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
+			editor_center_view(ed, (Vec2){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
 		}
 	} else {
 		const char* LastError = sfd_get_error();
@@ -36,7 +36,7 @@ void _app_open_file(editor_t* ed) {
 	}
 }
 
-void _app_save_file(editor_t* ed) {
+void _app_save_file(Editor* ed) {
 	if (ed->file.path == NULL) {
 		const char* filePath = sfd_open_dialog(&(sfd_Options){
 			.title       = "Save Image File",
@@ -77,11 +77,11 @@ void app_main_loop(void) {
 
 	ImGuiIO* io = igGetIO();
 
-	editor_t ed = {0};
+	Editor ed = {0};
 	editor_init(&ed, 120, 90);
 	ed.view.scale = 5;
 	editor_update_view(&ed);
-	editor_center_view(&ed, (Vec2_t){ io->DisplaySize.x, io->DisplaySize.y });
+	editor_center_view(&ed, (Vec2){ io->DisplaySize.x, io->DisplaySize.y });
 
 	bool doOpenNewFileModal = false;
 
@@ -161,7 +161,7 @@ void app_main_loop(void) {
 			igSetNextItemWidth(tWidth.x);
 			if (igBeginCombo("##ToolSelector", ToolToString(ed.tool.type.current), 0)) {
 				for (int i = 0; i < TOOL_NONE; i++) {
-					if (igSelectable_Bool(ToolToString(i), (tool_t)i == ed.tool.type.current, 0, (ImVec2){0,0})) {
+					if (igSelectable_Bool(ToolToString(i), (Tool)i == ed.tool.type.current, 0, (ImVec2){0,0})) {
 						ed.tool.type.current = i;
 					}
 				}
@@ -217,7 +217,7 @@ void app_main_loop(void) {
 			if (igInputInt("Height", &height, 1, 5, 0)) height = height < 2 ? 2 : height;
 
 			if (igButton("Create", (ImVec2){0,0})) {
-				editor_t new = {0};
+				Editor new = {0};
 				if (!editor_init(&new, width, height)) {
 					editor_deinit(&ed);
 					ed = new;
