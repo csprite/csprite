@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "os/os.h"
 #include "app/app.h"
 #include "app/window.h"
 #include "cimgui.h"
@@ -105,7 +106,7 @@ void app_main_loop(void) {
 			}
 			if (igBeginMenu("Help", true)) {
 				if (igMenuItem_Bool("About", NULL, false, true)) {
-					app_open_url("https://csprite.github.io");
+					os_open_url("https://csprite.github.io");
 				}
 				igEndMenu();
 			}
@@ -301,37 +302,4 @@ void app_init(void) {
 
 void app_deinit(void) {
 	window_deinit();
-}
-
-#if defined(TARGET_WINDOWS)
-	#include <windows.h>
-	#include <shellapi.h>
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-void app_open_url(const char* url) {
-#if defined(TARGET_WINDOWS)
-	ShellExecute(0, 0, url, 0, 0, SW_SHOW);
-#elif defined(TARGET_APPLE) || defined(TARGET_LINUX)
-	long long len = strlen(url) + 100;
-	char* cmd = malloc(len);
-	int ret = snprintf(
-	    cmd, len,
-		#ifdef TARGET_APPLE
-			"open \"%s\"",
-		#else
-		    "setsid xdg-open \"%s\"",
-		#endif
-	    url
-	);
-	if (ret > 0 && ret < len) {
-		system(cmd);
-	}
-	free(cmd);
-#else
-	#error "AppOpenUrl(...) Not Implemented For Target"
-#endif
 }
