@@ -1,4 +1,5 @@
 #include "app/editor.h"
+#include "base/memory.h"
 #include "gfx/gfx.h"
 #include "cimgui.h"
 
@@ -33,7 +34,7 @@ int editor_initFrom(Editor* ed, const char* filePath) {
 	texture_update(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
 
 	int len = strlen(filePath) + 1;
-	ed->file.path = malloc(len);
+	ed->file.path = Memory_Alloc(len);
 	strncpy(ed->file.path, filePath, len);
 
 	return 0;
@@ -44,7 +45,7 @@ void editor_deinit(Editor* ed) {
 	texture_deinit(ed->canvas.texture);
 
 	if (ed->file.path) {
-		free(ed->file.path);
+		Memory_Dealloc(ed->file.path);
 	}
 }
 

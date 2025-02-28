@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "os/os.h"
+#include "base/memory.h"
+#include "platform/platform.h"
 #include "app/app.h"
 #include "app/window.h"
 #include "cimgui.h"
@@ -63,7 +64,7 @@ void _app_save_file(Editor* ed) {
 			}
 
 			int len = strlen(filePath) + 1;
-			ed->file.path = (char*)malloc(len);
+			ed->file.path = (char*)Memory_AllocOrDie(len);
 			strncpy(ed->file.path, filePath, len);
 			ed->file.name = &ed->file.path[baseName];
 		}
@@ -106,7 +107,7 @@ void app_main_loop(void) {
 			}
 			if (igBeginMenu("Help", true)) {
 				if (igMenuItem_Bool("About", NULL, false, true)) {
-					os_open_url("https://csprite.github.io");
+					Platform_OpenURL("https://csprite.github.io");
 				}
 				igEndMenu();
 			}
