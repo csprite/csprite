@@ -1,4 +1,5 @@
 #include "app/texture.h"
+#include "base/memory.h"
 #include "log/log.h"
 #include <glad/glad.h>
 #include <stdlib.h>
@@ -17,14 +18,12 @@ Texture texture_init(int width, int height) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	unsigned char* pixels = calloc(width * height, 4);
-	if (pixels == NULL) {
-		log_fatal("Failed to allocate memory");
-	}
+	unsigned char* pixels = Memory_AllocOrDie(width * height * 4);
+	Memory_ZeroAll(pixels, width * height * 4);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	free(pixels);
+	Memory_Dealloc(pixels);
 	return id;
 }
 

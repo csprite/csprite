@@ -1,4 +1,5 @@
-#include "os/os.h"
+#include "platform/platform.h"
+#include "base/memory.h"
 
 #if defined(TARGET_WINDOWS)
 	#include <windows.h>
@@ -9,12 +10,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-void os_open_url(const char* url) {
+void Platform_OpenURL(const char* URL) {
 #if defined(TARGET_WINDOWS)
 	ShellExecute(0, 0, url, 0, 0, SW_SHOW);
 #elif defined(TARGET_APPLE) || defined(TARGET_LINUX)
-	long long len = strlen(url) + 100;
-	char* cmd = malloc(len);
+	long long len = strlen(URL) + 100;
+	char* cmd = Memory_Alloc(len);
 	int ret = snprintf(
 	    cmd, len,
 		#ifdef TARGET_APPLE
@@ -22,13 +23,25 @@ void os_open_url(const char* url) {
 		#else
 		    "setsid xdg-open \"%s\"",
 		#endif
-	    url
+	    URL
 	);
 	if (ret > 0 && ret < len) {
 		system(cmd);
 	}
-	free(cmd);
+	Memory_Dealloc(cmd);
 #else
-	#error "AppOpenUrl(...) Not Implemented For Target"
+	#error No Implementation Found!
 #endif
+}
+
+void Platform_Abort(U32 ExitCode) {
+#if defined(TARGET_WINDOWS)
+	ExitProcess(ExitCode);
+#else
+	exit(ExitCode);
+#endif
+}
+
+void Platform_AbortMessage(U32 ExitCode, const char* Message) {
+	Platform_Abort(ExitCode);
 }

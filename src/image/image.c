@@ -1,4 +1,5 @@
 #include <string.h>
+#include "base/memory.h"
 #include "image/image.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -6,13 +7,10 @@
 #include "fs/fs.h"
 
 void image_init(Image* img, uint32_t width, uint32_t height) {
-	img->pixels = calloc(width * height, sizeof(Pixel));
-	if (img->pixels == NULL) {
-		log_fatal("Allocation failed");
-	}
-
 	img->width = width;
 	img->height = height;
+	img->pixels = Memory_AllocOrDie(width * height * sizeof(Pixel));
+	Memory_ZeroAll(img->pixels, width * height * sizeof(Pixel));
 }
 
 int image_initFrom(Image* img, const char* filePath) {
@@ -64,6 +62,6 @@ int image_write(Image* img, const char* filePath) {
 }
 
 void image_deinit(Image* img) {
-	free(img->pixels);
-	*img = (Image){0};
+	Memory_Dealloc(img->pixels);
+	Memory_ZeroAll(img, sizeof(*img));
 }
