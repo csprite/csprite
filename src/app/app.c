@@ -5,8 +5,7 @@
 #include "platform/platform.h"
 #include "app/app.h"
 #include "app/window.h"
-#include "cimgui.h"
-#include "cimgui_impl.h"
+#include "imgui.h"
 #include "assets/assets.h"
 #include "fs/fs.h"
 #include "image/image.h"
@@ -25,10 +24,10 @@ void _app_open_file(Editor* ed) {
 
 	if (filePath) {
 		Editor new = {0};
-		if (!editor_initFrom(&new, filePath)) {
-			editor_deinit(ed);
+		if (!Editor_InitFrom(&new, filePath)) {
+			Editor_Deinit(ed);
 			*ed = new;
-			editor_center_view(ed, (Size){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
+			Editor_CenterView(ed, (Size){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
 		}
 	} else {
 		const char* LastError = sfd_get_error();
@@ -80,10 +79,10 @@ void app_main_loop(void) {
 	ImGuiIO* io = igGetIO();
 
 	Editor ed = {0};
-	editor_init(&ed, 120, 90);
+	Editor_Init(&ed, 120, 90);
 	ed.view.scale = 5;
-	editor_update_view(&ed);
-	editor_center_view(&ed, (Size){ io->DisplaySize.x, io->DisplaySize.y });
+	Editor_UpdateView(&ed);
+	Editor_CenterView(&ed, (Size){ io->DisplaySize.x, io->DisplaySize.y });
 
 	bool doOpenNewFileModal = false;
 
@@ -176,7 +175,7 @@ void app_main_loop(void) {
 			igSameLine(0, -1);
 			if (igInputFloat("##ZoomControl", &ed.view.scale, step, step, "x%.2f", 0)) {
 				ed.view.scale = ed.view.scale < 0.05 ? 0.05 : ed.view.scale;
-				editor_update_view(&ed);
+				Editor_UpdateView(&ed);
 			}
 
 			igSameLine(0, -1);
@@ -203,7 +202,7 @@ void app_main_loop(void) {
 
 			if (igIsWindowHovered(0)) {
 				igSetMouseCursor(ImGuiMouseCursor_None);
-				editor_process_input(&ed);
+				Editor_ProcessInput(&ed);
 			}
 
 			igEnd();
@@ -220,12 +219,12 @@ void app_main_loop(void) {
 
 			if (igButton("Create", (ImVec2){0,0})) {
 				Editor new = {0};
-				if (!editor_init(&new, width, height)) {
-					editor_deinit(&ed);
+				if (!Editor_Init(&new, width, height)) {
+					Editor_Deinit(&ed);
 					ed = new;
 					ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
 					ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
-					editor_update_view(&ed);
+					Editor_UpdateView(&ed);
 				}
 
 				igCloseCurrentPopup();
@@ -245,7 +244,7 @@ void app_main_loop(void) {
 		window_end_frame();
 	}
 
-	editor_deinit(&ed);
+	Editor_Deinit(&ed);
 }
 
 void app_init(void) {
