@@ -10,7 +10,7 @@
 S32 Editor_Init(Editor* ed, uint32_t width, uint32_t height) {
 	*ed = (Editor){0};
 
-	image_init(&ed->canvas.image, width, height);
+	Image_Init(&ed->canvas.image, width, height);
 	ed->canvas.texture = texture_init(width, height);
 	ed->tool.brush.color = (Pixel){ 255, 255, 255, 255 };
 	ed->tool.type.current = TOOL_BRUSH;
@@ -24,12 +24,12 @@ S32 Editor_Init(Editor* ed, uint32_t width, uint32_t height) {
 
 S32 Editor_InitFrom(Editor* ed, const char* filePath) {
 	Image img;
-	if (image_initFrom(&img, filePath)) {
+	if (Image_InitFrom(&img, filePath)) {
 		return 1;
 	}
 
 	Editor_Init(ed, img.width, img.height);
-	image_deinit(&ed->canvas.image);
+	Image_Deinit(&ed->canvas.image);
 	ed->canvas.image = img;
 	texture_update(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
 
@@ -41,7 +41,7 @@ S32 Editor_InitFrom(Editor* ed, const char* filePath) {
 }
 
 void Editor_Deinit(Editor* ed) {
-	image_deinit(&ed->canvas.image);
+	Image_Deinit(&ed->canvas.image);
 	texture_deinit(ed->canvas.texture);
 
 	if (ed->file.path) {
