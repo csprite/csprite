@@ -55,8 +55,8 @@ typedef struct {
 	} mouse;
 } Editor;
 
-int Editor_Init(Editor* ed, uint32_t width, uint32_t height);
-int Editor_InitFrom(Editor* ed, const char* filePath);
+S32 Editor_Init(Editor* ed, uint32_t width, uint32_t height);
+S32 Editor_InitFrom(Editor* ed, const char* filePath);
 void Editor_Deinit(Editor* ed);
 
 void Editor_ProcessInput(Editor* ed);
@@ -71,6 +71,6 @@ void Editor_ZoomIn(Editor* ed);
 void Editor_CenterView(Editor* ed, Size boundingRect);
 
 void Editor_UpdateView(Editor* ed); // When ed.view.scale changes
-int Editor_SetFilepath(Editor* ed, const char* filePath);
+S32 Editor_SetFilepath(Editor* ed, const char* filePath);
 
 #endif
