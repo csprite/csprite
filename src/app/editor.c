@@ -7,7 +7,7 @@
 #include <string.h>
 #include <limits.h>
 
-int Editor_Init(Editor* ed, uint32_t width, uint32_t height) {
+S32 Editor_Init(Editor* ed, uint32_t width, uint32_t height) {
 	*ed = (Editor){0};
 
 	image_init(&ed->canvas.image, width, height);
@@ -22,7 +22,7 @@ int Editor_Init(Editor* ed, uint32_t width, uint32_t height) {
 	return 0;
 }
 
-int Editor_InitFrom(Editor* ed, const char* filePath) {
+S32 Editor_InitFrom(Editor* ed, const char* filePath) {
 	Image img;
 	if (image_initFrom(&img, filePath)) {
 		return 1;
@@ -270,7 +270,7 @@ void Editor_UpdateView(Editor* ed) {
 	ed->view.h = ed->canvas.image.height * ed->view.scale;
 }
 
-int Editor_SetFilepath(Editor* ed, const char* filePath);
+S32 Editor_SetFilepath(Editor* ed, const char* filePath);
 
 void Editor_ZoomOut(Editor* ed) {
 	if (ed->view.scale > 1) {
