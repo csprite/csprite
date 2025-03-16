@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <stdlib.h>
 
-Texture texture_init(int width, int height) {
+Texture Texture_Init(S32 width, S32 height) {
 	Texture id = 0;
 	glGenTextures(1, &id);
 
@@ -18,7 +18,7 @@ Texture texture_init(int width, int height) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	unsigned char* pixels = Memory_AllocOrDie(width * height * 4);
+	U8* pixels = Memory_AllocOrDie(width * height * 4);
 	Memory_ZeroAll(pixels, width * height * 4);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
@@ -27,7 +27,7 @@ Texture texture_init(int width, int height) {
 	return id;
 }
 
-void texture_update(Texture id, int subreg_x, int subreg_y, int subreg_w, int subreg_h, int tWidth, unsigned char* data) {
+void Texture_Update(Texture id, S32 subreg_x, S32 subreg_y, S32 subreg_w, S32 subreg_h, S32 tWidth, U8* data) {
 	glBindTexture(GL_TEXTURE_2D, id);
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, tWidth);
 	glTexSubImage2D(
@@ -40,6 +40,6 @@ void texture_update(Texture id, int subreg_x, int subreg_y, int subreg_w, int su
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void texture_deinit(Texture id) {
+void Texture_Deinit(Texture id) {
 	glDeleteTextures(1, &id);
 }

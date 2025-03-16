@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "base/types.h"
 #include "base/memory.h"
 #include "platform/platform.h"
 #include "app/app.h"
@@ -62,7 +63,7 @@ void _app_save_file(Editor* ed) {
 				return;
 			}
 
-			int len = strlen(filePath) + 1;
+			U32 len = strlen(filePath) + 1;
 			ed->file.path = (char*)Memory_AllocOrDie(len);
 			strncpy(ed->file.path, filePath, len);
 			ed->file.name = &ed->file.path[baseName];
@@ -161,7 +162,7 @@ void app_main_loop(void) {
 			igCalcTextSize(&tWidth, "BRUSH_XXX", NULL, false, -1);
 			igSetNextItemWidth(tWidth.x);
 			if (igBeginCombo("##ToolSelector", ToolToString(ed.tool.type.current), 0)) {
-				for (int i = 0; i < TOOL_NONE; i++) {
+				for (S32 i = 0; i < TOOL_NONE; i++) {
 					if (igSelectable_Bool(ToolToString(i), (Tool)i == ed.tool.type.current, 0, (ImVec2){0,0})) {
 						ed.tool.type.current = i;
 					}
@@ -179,7 +180,7 @@ void app_main_loop(void) {
 			}
 
 			igSameLine(0, -1);
-			igText("x: %d, y: %d", (int)((io->MousePos.x - ed.view.x)/ed.view.scale), (int)((io->MousePos.y - ed.view.y)/ed.view.scale));
+			igText("x: %d, y: %d", (S32)((io->MousePos.x - ed.view.x)/ed.view.scale), (S32)((io->MousePos.y - ed.view.y)/ed.view.scale));
 
 			igGetWindowPos(&statusBarPos);
 			igGetWindowSize(&statusBarSize);
@@ -213,7 +214,7 @@ void app_main_loop(void) {
 			igOpenPopup_Str("##NewFileModal", 0);
 		}
 		if (igBeginPopupModal("##NewFileModal", NULL, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
-			static int width = 20, height = 20;
+			static S32 width = 20, height = 20;
 			if (igInputInt("Width", &width, 1, 5, 0)) width = width < 2 ? 2 : width;
 			if (igInputInt("Height", &height, 1, 5, 0)) height = height < 2 ? 2 : height;
 
@@ -255,7 +256,7 @@ void app_init(void) {
 	const float UI_Scale = 1.0f;
 
 	// Initialize Font
-	int fontDataSize = 0;
+	S32 fontDataSize = 0;
 	ImVector_ImWchar FontRanges;
 	const ImGuiIO* io = igGetIO();
 	ImVector_ImWchar_Init(&FontRanges);

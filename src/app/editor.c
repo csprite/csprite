@@ -7,11 +7,11 @@
 #include <string.h>
 #include <limits.h>
 
-S32 Editor_Init(Editor* ed, uint32_t width, uint32_t height) {
+S32 Editor_Init(Editor* ed, U32 width, U32 height) {
 	*ed = (Editor){0};
 
 	Image_Init(&ed->canvas.image, width, height);
-	ed->canvas.texture = texture_init(width, height);
+	ed->canvas.texture = Texture_Init(width, height);
 	ed->tool.brush.color = (Pixel){ 255, 255, 255, 255 };
 	ed->tool.type.current = TOOL_BRUSH;
 	ed->view.scale = 1.5f;
@@ -31,9 +31,9 @@ S32 Editor_InitFrom(Editor* ed, const char* filePath) {
 	Editor_Init(ed, img.width, img.height);
 	Image_Deinit(&ed->canvas.image);
 	ed->canvas.image = img;
-	texture_update(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
+	Texture_Update(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
 
-	int len = strlen(filePath) + 1;
+	S32 len = strlen(filePath) + 1;
 	ed->file.path = Memory_Alloc(len);
 	strncpy(ed->file.path, filePath, len);
 
@@ -42,21 +42,21 @@ S32 Editor_InitFrom(Editor* ed, const char* filePath) {
 
 void Editor_Deinit(Editor* ed) {
 	Image_Deinit(&ed->canvas.image);
-	texture_deinit(ed->canvas.texture);
+	Texture_Deinit(ed->canvas.texture);
 
 	if (ed->file.path) {
 		Memory_Dealloc(ed->file.path);
 	}
 }
 
-Rect Editor_OnMouseDown(Editor* ed, int32_t x, int32_t y) {
+Rect Editor_OnMouseDown(Editor* ed, S32 x, S32 y) {
     ed->mouse.down.x = x;
     ed->mouse.down.y = y;
 	ed->mouse.last.x = x;
 	ed->mouse.last.y = y;
 
-	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
-	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
+	S32 MouseRelX = (S32)((x - ed->view.x) / ed->view.scale);
+	S32 MouseRelY = (S32)((y - ed->view.y) / ed->view.scale);
 
 	Rect dirty = {0};
 	if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX >= ed->canvas.image.width || MouseRelY >= ed->canvas.image.height) return dirty;
@@ -84,12 +84,12 @@ Rect Editor_OnMouseDown(Editor* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-void Editor_OnMouseDrag(Editor* ed, int32_t x, int32_t y) {
-	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
-	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
+void Editor_OnMouseDrag(Editor* ed, S32 x, S32 y) {
+	S32 MouseRelX = (S32)((x - ed->view.x) / ed->view.scale);
+	S32 MouseRelY = (S32)((y - ed->view.y) / ed->view.scale);
 
-	int MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
-	int MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
+	S32 MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
+	S32 MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
 	Point TopLeft = { MouseDownRelX, MouseDownRelY };
 	Point BotRight = { MouseRelX, MouseRelY };
@@ -105,20 +105,20 @@ void Editor_OnMouseDrag(Editor* ed, int32_t x, int32_t y) {
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (MouseDownRelX * ed->view.scale) + ed->view.x, (MouseDownRelY * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((MouseDownRelX + 1) * ed->view.scale) + ed->view.x, ((MouseDownRelY + 1) * ed->view.scale) + ed->view.y },
-				*(uint32_t*)&ed->tool.brush.color, 0, 0
+				*(U32*)&ed->tool.brush.color, 0, 0
 			);
 			ImDrawList_AddLine(
 				igGetForegroundDrawList_Nil(),
 				(ImVec2){ ((MouseDownRelX + 0.5) * ed->view.scale) + ed->view.x, ((MouseDownRelY + 0.5) * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((MouseRelX + 0.5) * ed->view.scale) + ed->view.x, ((MouseRelY + 0.5) * ed->view.scale) + ed->view.y },
-				*(uint32_t*)&ed->tool.brush.color,
+				*(U32*)&ed->tool.brush.color,
 				ed->view.scale / 3
 			);
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (MouseRelX * ed->view.scale) + ed->view.x, (MouseRelY * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
-				*(uint32_t*)&ed->tool.brush.color, 0, 0
+				*(U32*)&ed->tool.brush.color, 0, 0
 			);
 			break;
 		}
@@ -127,7 +127,7 @@ void Editor_OnMouseDrag(Editor* ed, int32_t x, int32_t y) {
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (TopLeft.x * ed->view.scale) + ed->view.x, (TopLeft.y * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((BotRight.x + 1) * ed->view.scale) + ed->view.x, ((BotRight.y + 1) * ed->view.scale) + ed->view.y },
-				*(uint32_t*)&ed->tool.brush.color, 0, 0
+				*(U32*)&ed->tool.brush.color, 0, 0
 			);
 			break;
 		}
@@ -136,34 +136,34 @@ void Editor_OnMouseDrag(Editor* ed, int32_t x, int32_t y) {
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (TopLeft.x * ed->view.scale) + ed->view.x, (TopLeft.y * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((TopLeft.x + 1) * ed->view.scale) + ed->view.x, ((TopLeft.y + 1) * ed->view.scale) + ed->view.y },
-				*(uint32_t*)&ed->tool.brush.color, 0, 0
+				*(U32*)&ed->tool.brush.color, 0, 0
 			);
 			ImDrawList_AddRectFilled( // Top Right
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (TopRight.x * ed->view.scale) + ed->view.x, (TopRight.y * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((TopRight.x + 1) * ed->view.scale) + ed->view.x, ((TopRight.y + 1) * ed->view.scale) + ed->view.y },
-				*(uint32_t*)&ed->tool.brush.color, 0, 0
+				*(U32*)&ed->tool.brush.color, 0, 0
 			);
 			ImDrawList_AddRectFilled( // Bottom Left
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (BotLeft.x * ed->view.scale) + ed->view.x, (BotLeft.y * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((BotLeft.x + 1) * ed->view.scale) + ed->view.x, ((BotLeft.y + 1) * ed->view.scale) + ed->view.y },
-				*(uint32_t*)&ed->tool.brush.color, 0, 0
+				*(U32*)&ed->tool.brush.color, 0, 0
 			);
 			ImDrawList_AddRectFilled( // Bottom Right
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (BotRight.x * ed->view.scale) + ed->view.x, (BotRight.y * ed->view.scale) + ed->view.y },
 				(ImVec2){ ((BotRight.x + 1) * ed->view.scale) + ed->view.x, ((BotRight.y + 1) * ed->view.scale) + ed->view.y },
-				*(uint32_t*)&ed->tool.brush.color, 0, 0
+				*(U32*)&ed->tool.brush.color, 0, 0
 			);
 			ImDrawList_AddEllipse(
 				igGetForegroundDrawList_Nil(),
 				(ImVec2){
-					( ( TopLeft.x + 0.5 + ( (float)(TopRight.x - TopLeft.x) / 2) ) * ed->view.scale ) + ed->view.x,
-					( ( TopLeft.y + 0.5 + ( (float)(BotLeft.y - TopLeft.y) / 2) ) * ed->view.scale ) + ed->view.y,
+					( ( TopLeft.x + 0.5 + ( (F32)(TopRight.x - TopLeft.x) / 2) ) * ed->view.scale ) + ed->view.x,
+					( ( TopLeft.y + 0.5 + ( (F32)(BotLeft.y - TopLeft.y) / 2) ) * ed->view.scale ) + ed->view.y,
 				},
 				(ImVec2){ ((TopRight.x - TopLeft.x) * ed->view.scale)/2, ((TopLeft.y - BotLeft.y) * ed->view.scale)/2 },
-				*(uint32_t*)&ed->tool.brush.color, 0, 0, 1
+				*(U32*)&ed->tool.brush.color, 0, 0, 1
 			);
 			break;
 		}
@@ -176,11 +176,11 @@ void Editor_OnMouseDrag(Editor* ed, int32_t x, int32_t y) {
 	}
 }
 
-Rect Editor_OnMouseMove(Editor* ed, int32_t x, int32_t y) {
+Rect Editor_OnMouseMove(Editor* ed, S32 x, S32 y) {
 	Rect dirty = {0};
 
-	int32_t MouseRelX = (int32_t)((x - ed->view.x) / ed->view.scale);
-	int32_t MouseRelY = (int32_t)((y - ed->view.y) / ed->view.scale);
+	S32 MouseRelX = (S32)((x - ed->view.x) / ed->view.scale);
+	S32 MouseRelY = (S32)((y - ed->view.y) / ed->view.scale);
 
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
@@ -189,7 +189,7 @@ Rect Editor_OnMouseMove(Editor* ed, int32_t x, int32_t y) {
 
 			Pixel color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (Pixel){0, 0, 0, 0};
 			Rect newDirty = plotLine(
-				(Point){ (int64_t)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int64_t)((ed->mouse.last.y - ed->view.y)/ed->view.scale) },
+				(Point){ (S32)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (S32)((ed->mouse.last.y - ed->view.y)/ed->view.scale) },
 				(Point){ MouseRelX, MouseRelY },
 				&ed->canvas.image, color
 			);
@@ -218,7 +218,7 @@ Rect Editor_OnMouseMove(Editor* ed, int32_t x, int32_t y) {
 	return dirty;
 }
 
-Rect Editor_OnMouseUp(Editor* ed, int32_t x, int32_t y) {
+Rect Editor_OnMouseUp(Editor* ed, S32 x, S32 y) {
 	Rect dirty = {0};
 
 	switch (ed->tool.type.current) {
@@ -231,10 +231,10 @@ Rect Editor_OnMouseUp(Editor* ed, int32_t x, int32_t y) {
 		case TOOL_LINE:
 		case TOOL_RECT:
 		case TOOL_ELLIPSE: {
-			int32_t MouseRelX = ((x - ed->view.x) / ed->view.scale);
-			int32_t MouseRelY = ((y - ed->view.y) / ed->view.scale);
-			int32_t MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
-			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
+			S32 MouseRelX = ((x - ed->view.x) / ed->view.scale);
+			S32 MouseRelY = ((y - ed->view.y) / ed->view.scale);
+			S32 MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
+			S32 MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
 			if (ed->tool.type.current == TOOL_LINE) {
 				dirty = plotLine((Point){ MouseDownRelX, MouseDownRelY }, (Point){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
@@ -256,11 +256,11 @@ void Editor_UpdateView(Editor* ed) {
 	ed->view.scale = ed->view.scale < 0.01 ? 0.01 : ed->view.scale;
 
 	// Ensures That The viewRect is Centered From The Center
-	float currX = (ed->view.w / 2) + ed->view.x;
-	float currY = (ed->view.h / 2) + ed->view.y;
+	F32 currX = (ed->view.w / 2) + ed->view.x;
+	F32 currY = (ed->view.h / 2) + ed->view.y;
 
-	float newX = (ed->canvas.image.width * ed->view.scale / 2) + ed->view.x;
-	float newY = (ed->canvas.image.height * ed->view.scale / 2) + ed->view.y;
+	F32 newX = (ed->canvas.image.width * ed->view.scale / 2) + ed->view.x;
+	F32 newY = (ed->canvas.image.height * ed->view.scale / 2) + ed->view.y;
 
 	ed->view.x -= newX - currX;
 	ed->view.y -= newY - currY;
@@ -294,8 +294,8 @@ void Editor_ZoomIn(Editor* ed) {
 }
 
 void Editor_CenterView(Editor* ed, Size boundingRect) {
-	ed->view.x = ((float)boundingRect.w / 2) - (ed->view.w / 2);
-	ed->view.y = ((float)boundingRect.h / 2) - (ed->view.h / 2);
+	ed->view.x = ((F32)boundingRect.w / 2) - (ed->view.w / 2);
+	ed->view.y = ((F32)boundingRect.h / 2) - (ed->view.h / 2);
 }
 
 void Editor_ProcessInput(Editor* ed) {
@@ -320,13 +320,13 @@ void Editor_ProcessInput(Editor* ed) {
 	if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
 		dirty = Editor_OnMouseDown(ed, io->MousePos.x, io->MousePos.y);
 	} else {
-		int32_t MouseRelX = (int32_t)((io->MousePos.x - ed->view.x) / ed->view.scale);
-		int32_t MouseRelY = (int32_t)((io->MousePos.y - ed->view.y) / ed->view.scale);
+		S32 MouseRelX = (S32)((io->MousePos.x - ed->view.x) / ed->view.scale);
+		S32 MouseRelY = (S32)((io->MousePos.y - ed->view.y) / ed->view.scale);
 		ImDrawList_AddRect(
 		    igGetForegroundDrawList_Nil(),
 			(ImVec2){ (MouseRelX * ed->view.scale) + ed->view.x, (MouseRelY * ed->view.scale) + ed->view.y },
 			(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
-			*(uint32_t*)&ed->tool.brush.color, 0, 0, 1
+			*(U32*)&ed->tool.brush.color, 0, 0, 1
 		);
 	}
 
@@ -341,10 +341,10 @@ void Editor_ProcessInput(Editor* ed) {
 	}
 
 	if (Rect_IsValid(dirty)) {
-		texture_update(
+		Texture_Update(
 			ed->canvas.texture, dirty.start.x, dirty.start.y,
 			dirty.end.x - dirty.start.x, dirty.end.y - dirty.start.y,
-			ed->canvas.image.width, (unsigned char*)ed->canvas.image.pixels
+			ed->canvas.image.width, (U8*)ed->canvas.image.pixels
 		);
 		Rect_Invalidate(dirty);
 	}
