@@ -91,13 +91,13 @@ void editor_on_mouse_drag(Editor* ed, int32_t x, int32_t y) {
 	int MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 	int MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
-	Vec2 TopLeft = { MouseDownRelX, MouseDownRelY };
-	Vec2 BotRight = { MouseRelX, MouseRelY };
+	Point TopLeft = { MouseDownRelX, MouseDownRelY };
+	Point BotRight = { MouseRelX, MouseRelY };
 
 	ensureRectCoords(&TopLeft, &BotRight);
 
-	Vec2 BotLeft = { TopLeft.x, BotRight.y };
-	Vec2 TopRight = { BotRight.x, TopLeft.y };
+	Point BotLeft = { TopLeft.x, BotRight.y };
+	Point TopRight = { BotRight.x, TopLeft.y };
 
 	switch (ed->tool.type.current) {
 		case TOOL_LINE: {
@@ -189,8 +189,8 @@ Rect editor_on_mouse_move(Editor* ed, int32_t x, int32_t y) {
 
 			Pixel color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (Pixel){0, 0, 0, 0};
 			Rect newDirty = plotLine(
-				(Vec2){ (int64_t)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int64_t)((ed->mouse.last.y - ed->view.y)/ed->view.scale) },
-				(Vec2){ MouseRelX, MouseRelY },
+				(Point){ (int64_t)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (int64_t)((ed->mouse.last.y - ed->view.y)/ed->view.scale) },
+				(Point){ MouseRelX, MouseRelY },
 				&ed->canvas.image, color
 			);
 
@@ -237,11 +237,11 @@ Rect editor_on_mouse_up(Editor* ed, int32_t x, int32_t y) {
 			int32_t MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
 			if (ed->tool.type.current == TOOL_LINE) {
-				dirty = plotLine((Vec2){ MouseDownRelX, MouseDownRelY }, (Vec2){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+				dirty = plotLine((Point){ MouseDownRelX, MouseDownRelY }, (Point){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
 			} else if (ed->tool.type.current == TOOL_RECT) {
-				dirty = plotRect((Vec2){ MouseDownRelX, MouseDownRelY }, (Vec2){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+				dirty = plotRect((Point){ MouseDownRelX, MouseDownRelY }, (Point){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
 			} else {
-				dirty = plotEllipseRect((Vec2){ MouseDownRelX, MouseDownRelY }, (Vec2){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
+				dirty = plotEllipseRect((Point){ MouseDownRelX, MouseDownRelY }, (Point){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
 			}
 			break;
 		}
@@ -293,9 +293,9 @@ void editor_zoom_in(Editor* ed) {
 	editor_update_view(ed);
 }
 
-void editor_center_view(Editor* ed, Vec2 boundingRect) {
-	ed->view.x = ((float)boundingRect.x / 2) - (ed->view.w / 2);
-	ed->view.y = ((float)boundingRect.y / 2) - (ed->view.h / 2);
+void editor_center_view(Editor* ed, Size boundingRect) {
+	ed->view.x = ((float)boundingRect.w / 2) - (ed->view.w / 2);
+	ed->view.y = ((float)boundingRect.h / 2) - (ed->view.h / 2);
 }
 
 void editor_process_input(Editor* ed) {
@@ -340,12 +340,12 @@ void editor_process_input(Editor* ed) {
 		dirty = editor_on_mouse_up(ed, io->MousePos.x, io->MousePos.y);
 	}
 
-	if (rect_is_valid(&dirty)) {
+	if (Rect_IsValid(dirty)) {
 		texture_update(
 			ed->canvas.texture, dirty.start.x, dirty.start.y,
 			dirty.end.x - dirty.start.x, dirty.end.y - dirty.start.y,
 			ed->canvas.image.width, (unsigned char*)ed->canvas.image.pixels
 		);
-		rect_invalidate(&dirty);
+		Rect_Invalidate(dirty);
 	}
 }

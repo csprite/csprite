@@ -1,7 +1,7 @@
 #include "gfx/gfx.h"
 #include <stdlib.h>
 
-void boundCheckDirty(Vec2 start, Vec2 end, const Image* img, Rect* dirty) {
+void boundCheckDirty(Point start, Point end, const Image* img, Rect* dirty) {
 	dirty->start.x = start.x < 0 ? 0 : start.x;
 	dirty->start.y = start.y < 0 ? 0 : start.y;
 	dirty->end.x = end.x >= img->width ? img->width : end.x;
@@ -14,19 +14,19 @@ void calcDirty(const Rect* dirty, Rect* final, const Image* img) {
 	if (dirty->end.x > final->end.x) final->end.x = dirty->end.x;
 	if (dirty->end.y > final->end.y) final->end.y = dirty->end.y;
 
-	boundCheckDirty((Vec2){ final->start.x, final->start.y }, (Vec2){ final->end.x, final->end.y }, img, final);
+	boundCheckDirty((Point){ final->start.x, final->start.y }, (Point){ final->end.x, final->end.y }, img, final);
 }
 
 /*
  Ensure Top Left & Bottom Right are correct coordinates, else swap variables
  */
-void ensureRectCoords(Vec2* start, Vec2* end) {
+void ensureRectCoords(Point* start, Point* end) {
 	int t = 0;
 	if (end->x < start->x) { t = end->x; end->x = start->x; start->x = t; }
 	if (end->y < start->y) { t = end->y; end->y = start->y; start->y = t; }
 }
 
-Rect plotRect(Vec2 start, Vec2 end, Image* img, Pixel color) {
+Rect plotRect(Point start, Point end, Image* img, Pixel color) {
 	Rect dirty = {0};
 
 	ensureRectCoords(&start, &end);
@@ -38,15 +38,15 @@ Rect plotRect(Vec2 start, Vec2 end, Image* img, Pixel color) {
 		}
 	}
 
-	boundCheckDirty(start, (Vec2){ end.x + 1, end.y + 1 }, img, &dirty);
+	boundCheckDirty(start, (Point){ end.x + 1, end.y + 1 }, img, &dirty);
 	return dirty;
 }
 
-Rect plotEllipseRect(Vec2 start, Vec2 end, Image* img, Pixel color) {
+Rect plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
 	Rect dirty = {0};
 
 	ensureRectCoords(&start, &end);
-	boundCheckDirty(start, (Vec2){ end.x + 1, end.y + 1 }, img, &dirty);
+	boundCheckDirty(start, (Point){ end.x + 1, end.y + 1 }, img, &dirty);
 
 	int64_t a = abs(end.x - start.x), b = abs(end.y - start.y), b1 = b & 1;
 	int64_t dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
@@ -96,7 +96,7 @@ Rect plotEllipseRect(Vec2 start, Vec2 end, Image* img, Pixel color) {
 	return dirty;
 }
 
-Rect plotLine(Vec2 start, Vec2 end, Image* img, Pixel color) {
+Rect plotLine(Point start, Point end, Image* img, Pixel color) {
 	Rect dirty = {0};
 
 	int64_t dx  =  labs(end.x - start.x), sx = start.x < end.x ? 1 : -1;
