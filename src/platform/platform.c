@@ -27,7 +27,7 @@ void Platform_OpenURL(const char* URL) {
 	    URL
 	);
 	if (ret > 0 && ret < len) {
-		system(cmd);
+		(void)system(cmd);
 	}
 	Memory_Dealloc(cmd);
 #else
