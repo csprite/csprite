@@ -3,8 +3,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "pixel.h"
-#include "types.h"
+#include "base/types.h"
 #include "app/texture.h"
 #include "image/image.h"
 
@@ -52,7 +51,7 @@ typedef struct {
 		float x, y, w, h, scale;
 	} view;
 	struct {
-		Vec2 down, last;
+		Point down, last;
 	} mouse;
 } Editor;
 
@@ -69,7 +68,7 @@ Rect editor_on_mouse_up(Editor* ed, int32_t x, int32_t y);   // When Mouse Is Re
 
 void editor_zoom_out(Editor* ed);
 void editor_zoom_in(Editor* ed);
-void editor_center_view(Editor* ed, Vec2 boundingRect);
+void editor_center_view(Editor* ed, Size boundingRect);
 
 void editor_update_view(Editor* ed); // When ed.view.scale changes
 int editor_set_filepath(Editor* ed, const char* filePath);

@@ -2,8 +2,7 @@
 #define CSPRITE_SRC_IMAGE_IMAGE_H_INCLUDED_
 #pragma once
 
-#include <stdint.h>
-#include "pixel.h"
+#include "base/types.h"
 
 typedef struct {
 	int64_t width, height;

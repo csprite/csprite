@@ -17,4 +17,23 @@ typedef int64_t S64;
 typedef float F32;
 typedef double F64;
 
+typedef struct {
+	S32 x, y;
+} Point;
+
+typedef struct {
+	S32 w, h;
+} Size;
+
+typedef struct {
+	Point start, end;
+} Rect;
+
+#define Rect_Invalidate(r) ((r).start.x = (r).end.x = 0)
+#define Rect_IsValid(r) ((r).start.x != (r).end.x)
+
+typedef struct {
+	U8 r, g, b, a;
+} Pixel;
+
 #endif // SRC_BASE_TYPES_H_INCLUDED_

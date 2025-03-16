@@ -2,13 +2,13 @@
 #define CSPRITE_SRC_GFX_GFX_H_INCLUDED_
 #pragma once
 
-#include "types.h"
+#include "base/types.h"
 #include "image/image.h"
 
-void ensureRectCoords(Vec2* start, Vec2* end);
+void ensureRectCoords(Point* start, Point* end);
 
-Rect plotRect(Vec2 start, Vec2 end, Image* img, Pixel color);
-Rect plotEllipseRect(Vec2 start, Vec2 end, Image* img, Pixel color);
-Rect plotLine(Vec2 start, Vec2 end, Image* img, Pixel color);
+Rect plotRect(Point start, Point end, Image* img, Pixel color);
+Rect plotEllipseRect(Point start, Point end, Image* img, Pixel color);
+Rect plotLine(Point start, Point end, Image* img, Pixel color);
 
 #endif
