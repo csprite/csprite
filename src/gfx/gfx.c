@@ -21,7 +21,7 @@ void calcDirty(const Rect* dirty, Rect* final, const Image* img) {
  Ensure Top Left & Bottom Right are correct coordinates, else swap variables
  */
 void ensureRectCoords(Point* start, Point* end) {
-	int t = 0;
+	S32 t = 0;
 	if (end->x < start->x) { t = end->x; end->x = start->x; start->x = t; }
 	if (end->y < start->y) { t = end->y; end->y = start->y; start->y = t; }
 }
@@ -30,8 +30,8 @@ Rect plotRect(Point start, Point end, Image* img, Pixel color) {
 	Rect dirty = {0};
 
 	ensureRectCoords(&start, &end);
-	for (int y = start.y; y <= end.y; y++) {
-		for (int x = start.x; x <= end.x; x++) {
+	for (S32 y = start.y; y <= end.y; y++) {
+		for (S32 x = start.x; x <= end.x; x++) {
 			if (x > -1 && y > -1 && x < img->width && y < img->height) {
 				img->pixels[(y * img->width) + x] = color;
 			}
@@ -48,9 +48,9 @@ Rect plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
 	ensureRectCoords(&start, &end);
 	boundCheckDirty(start, (Point){ end.x + 1, end.y + 1 }, img, &dirty);
 
-	int64_t a = abs(end.x - start.x), b = abs(end.y - start.y), b1 = b & 1;
-	int64_t dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
-	int64_t err = dx + dy + b1 * a * a, e2;
+	S64 a = abs(end.x - start.x), b = abs(end.y - start.y), b1 = b & 1;
+	S64 dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
+	S64 err = dx + dy + b1 * a * a, e2;
 
 	if (start.x > end.x) { start.x = end.x; end.x += a; }
 	if (start.y > end.y) start.y = end.y;
@@ -99,9 +99,9 @@ Rect plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
 Rect plotLine(Point start, Point end, Image* img, Pixel color) {
 	Rect dirty = {0};
 
-	int64_t dx  =  labs(end.x - start.x), sx = start.x < end.x ? 1 : -1;
-	int64_t dy  = -labs(end.y - start.y), sy = start.y < end.y ? 1 : -1;
-	int64_t err = dx + dy, e2;
+	S64 dx  =  labs(end.x - start.x), sx = start.x < end.x ? 1 : -1;
+	S64 dy  = -labs(end.y - start.y), sy = start.y < end.y ? 1 : -1;
+	S64 err = dx + dy, e2;
 
 	for (;;) {
 		if (start.x > -1 && start.y > -1 && start.x < img->width && start.y < img->height) {

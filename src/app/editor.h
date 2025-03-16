@@ -55,16 +55,16 @@ typedef struct {
 	} mouse;
 } Editor;
 
-S32 Editor_Init(Editor* ed, uint32_t width, uint32_t height);
+S32 Editor_Init(Editor* ed, U32 width, U32 height);
 S32 Editor_InitFrom(Editor* ed, const char* filePath);
 void Editor_Deinit(Editor* ed);
 
 void Editor_ProcessInput(Editor* ed);
 
-Rect Editor_OnMouseDown(Editor* ed, int32_t x, int32_t y); // When Left Mouse Goes Down
-Rect Editor_OnMouseMove(Editor* ed, int32_t x, int32_t y); // When Left Mouse Moves
-void Editor_OnMouseDrag(Editor* ed, int32_t x, int32_t y); // From When Left Mouse Moves Until Mouse Is Released
-Rect Editor_OnMouseUp(Editor* ed, int32_t x, int32_t y);   // When Mouse Is Released
+Rect Editor_OnMouseDown(Editor* ed, S32 x, S32 y); // When Left Mouse Goes Down
+Rect Editor_OnMouseMove(Editor* ed, S32 x, S32 y); // When Left Mouse Moves
+void Editor_OnMouseDrag(Editor* ed, S32 x, S32 y); // From When Left Mouse Moves Until Mouse Is Released
+Rect Editor_OnMouseUp(Editor* ed, S32 x, S32 y);   // When Mouse Is Released
 
 void Editor_ZoomOut(Editor* ed);
 void Editor_ZoomIn(Editor* ed);

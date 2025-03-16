@@ -1,4 +1,5 @@
 #include "platform/platform.h"
+#include "base/types.h"
 #include "base/memory.h"
 
 #if defined(TARGET_WINDOWS)
@@ -14,9 +15,9 @@ void Platform_OpenURL(const char* URL) {
 #if defined(TARGET_WINDOWS)
 	ShellExecute(0, 0, url, 0, 0, SW_SHOW);
 #elif defined(TARGET_APPLE) || defined(TARGET_LINUX)
-	long long len = strlen(URL) + 100;
+	S64 len = strlen(URL) + 100;
 	char* cmd = Memory_Alloc(len);
-	int ret = snprintf(
+	S32 ret = snprintf(
 	    cmd, len,
 		#ifdef TARGET_APPLE
 			"open \"%s\"",
