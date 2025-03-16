@@ -3,7 +3,7 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-#include "cimgui.h"
+#include "imgui.h"
 #include "cimgui_impl.h"
 
 static GLFWwindow *window = NULL;
