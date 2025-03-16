@@ -58,7 +58,7 @@ void _app_save_file(Editor* ed) {
 				return;
 			}
 
-			if (image_write(&ed->canvas.image, filePath)) {
+			if (Image_Write(&ed->canvas.image, filePath)) {
 				return;
 			}
 
@@ -68,7 +68,7 @@ void _app_save_file(Editor* ed) {
 			ed->file.name = &ed->file.path[baseName];
 		}
 	} else {
-		image_write(&ed->canvas.image, ed->file.path);
+		Image_Write(&ed->canvas.image, ed->file.path);
 	}
 }
 

@@ -6,15 +6,15 @@
 #include "log/log.h"
 #include "fs/fs.h"
 
-void image_init(Image* img, uint32_t width, uint32_t height) {
+void Image_Init(Image* img, U32 width, U32 height) {
 	img->width = width;
 	img->height = height;
 	img->pixels = Memory_AllocOrDie(width * height * sizeof(Pixel));
 	Memory_ZeroAll(img->pixels, width * height * sizeof(Pixel));
 }
 
-int image_initFrom(Image* img, const char* filePath) {
-	int w = 0, h = 0, c = 0;
+S32 Image_InitFrom(Image* img, const char* filePath) {
+	S32 w = 0, h = 0, c = 0;
 	stbi_uc* data = stbi_load(filePath, &w, &h, &c, 4);
 	if (data == NULL) {
 		log_error("stbi_load(...) returned NULL");
@@ -26,7 +26,7 @@ int image_initFrom(Image* img, const char* filePath) {
 		return 1;
 	}
 
-	image_init(img, w, h);
+	Image_Init(img, w, h);
 	for (long long i = 0; i < w * h; i++) {
 		Pixel* out = &img->pixels[i];
 		out->r = data[(i * 4) + 0];
@@ -40,8 +40,8 @@ int image_initFrom(Image* img, const char* filePath) {
 	return 0;
 }
 
-int image_write(Image* img, const char* filePath) {
-	int extensionIdx = fs_get_extension(filePath);
+S32 Image_Write(Image* img, const char* filePath) {
+	S32 extensionIdx = fs_get_extension(filePath);
 	if (extensionIdx < 0) {
 		log_error("Failed to find extension of '%s'", filePath);
 		return 1;
@@ -61,7 +61,7 @@ int image_write(Image* img, const char* filePath) {
 	return 0;
 }
 
-void image_deinit(Image* img) {
+void Image_Deinit(Image* img) {
 	Memory_Dealloc(img->pixels);
 	Memory_ZeroAll(img, sizeof(*img));
 }
