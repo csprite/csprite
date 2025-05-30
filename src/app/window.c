@@ -4,7 +4,7 @@
 #include "GLFW/glfw3.h"
 
 #include "imgui.h"
-#include "cimgui_impl.h"
+#include "cimgui/cimgui_impl.h"
 
 static GLFWwindow *window = NULL;
 static float window_bg[3] = { 0, 0, 0 };

@@ -26,6 +26,8 @@ will be smaller as well & Only required things will be loaded.
   Moreover a new "View" menu item should exist, To allow toggling
   various windows.
 - Give Plugins The Ability To Draw Text & Basic Shapes Instead Of Passing Them GUI?
+  - A plugin that allows stop motion animation to be created using
+    external connected camera.
 - Convolutional Filters?
 - Procedural Art? Like Math Based Art?
 - Android Port (Meant for mainly tablets/big screen devices) Using
@@ -37,4 +39,5 @@ Here are resources that have helped me while developing
 this software.
 
 - [It's probably time to stop recommending Clean Code](https://qntm.org/clean)
+- [Enter The Arena: Simplifying Memory Management (2023)](https://youtu.be/TZ5a3gCCZYo)
 - [Compositing and Blending Level 1](https://www.w3.org/TR/compositing-1/)

@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include "base/types.h"
+#include "base/math.h"
 #include "app/texture.h"
 #include "image/image.h"
 
@@ -61,14 +62,14 @@ void Editor_Deinit(Editor* ed);
 
 void Editor_ProcessInput(Editor* ed);
 
-Rect Editor_OnMouseDown(Editor* ed, S32 x, S32 y); // When Left Mouse Goes Down
-Rect Editor_OnMouseMove(Editor* ed, S32 x, S32 y); // When Left Mouse Moves
+Rng2D Editor_OnMouseDown(Editor* ed, S32 x, S32 y); // When Left Mouse Goes Down
+Rng2D Editor_OnMouseMove(Editor* ed, S32 x, S32 y); // When Left Mouse Moves
 void Editor_OnMouseDrag(Editor* ed, S32 x, S32 y); // From When Left Mouse Moves Until Mouse Is Released
-Rect Editor_OnMouseUp(Editor* ed, S32 x, S32 y);   // When Mouse Is Released
+Rng2D Editor_OnMouseUp(Editor* ed, S32 x, S32 y);   // When Mouse Is Released
 
 void Editor_ZoomOut(Editor* ed);
 void Editor_ZoomIn(Editor* ed);
-void Editor_CenterView(Editor* ed, Size boundingRect);
+void Editor_CenterView(Editor* ed, Rect boundingRect);
 
 void Editor_UpdateView(Editor* ed); // When ed.view.scale changes
 S32 Editor_SetFilepath(Editor* ed, const char* filePath);

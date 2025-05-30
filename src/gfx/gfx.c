@@ -1,20 +1,20 @@
 #include "gfx/gfx.h"
 #include <stdlib.h>
 
-void boundCheckDirty(Point start, Point end, const Image* img, Rect* dirty) {
-	dirty->start.x = start.x < 0 ? 0 : start.x;
-	dirty->start.y = start.y < 0 ? 0 : start.y;
-	dirty->end.x = end.x >= img->width ? img->width : end.x;
-	dirty->end.y = end.y >= img->height ? img->height : end.y;
+void boundCheckDirty(Point start, Point end, const Image* img, Rng2D* dirty) {
+	dirty->min.x = start.x < 0 ? 0 : start.x;
+	dirty->min.y = start.y < 0 ? 0 : start.y;
+	dirty->max.x = end.x >= img->width ? img->width : end.x;
+	dirty->max.y = end.y >= img->height ? img->height : end.y;
 }
 
-void calcDirty(const Rect* dirty, Rect* final, const Image* img) {
-	if (dirty->start.x < final->start.x) final->start.x = dirty->start.x;
-	if (dirty->start.y < final->start.y) final->start.y = dirty->start.y;
-	if (dirty->end.x > final->end.x) final->end.x = dirty->end.x;
-	if (dirty->end.y > final->end.y) final->end.y = dirty->end.y;
+void calcDirty(const Rng2D* dirty, Rng2D* final, const Image* img) {
+	if (dirty->min.x < final->min.x) final->min.x = dirty->min.x;
+	if (dirty->min.y < final->min.y) final->min.y = dirty->min.y;
+	if (dirty->max.x > final->max.x) final->max.x = dirty->max.x;
+	if (dirty->max.y > final->max.y) final->max.y = dirty->max.y;
 
-	boundCheckDirty((Point){ final->start.x, final->start.y }, (Point){ final->end.x, final->end.y }, img, final);
+	boundCheckDirty((Point){ final->min.x, final->min.y }, (Point){ final->max.x, final->max.y }, img, final);
 }
 
 /*
@@ -26,8 +26,8 @@ void ensureRectCoords(Point* start, Point* end) {
 	if (end->y < start->y) { t = end->y; end->y = start->y; start->y = t; }
 }
 
-Rect plotRect(Point start, Point end, Image* img, Pixel color) {
-	Rect dirty = {0};
+Rng2D plotRect(Point start, Point end, Image* img, Pixel color) {
+	Rng2D dirty = {0};
 
 	ensureRectCoords(&start, &end);
 	for (S32 y = start.y; y <= end.y; y++) {
@@ -42,8 +42,8 @@ Rect plotRect(Point start, Point end, Image* img, Pixel color) {
 	return dirty;
 }
 
-Rect plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
-	Rect dirty = {0};
+Rng2D plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
+	Rng2D dirty = {0};
 
 	ensureRectCoords(&start, &end);
 	boundCheckDirty(start, (Point){ end.x + 1, end.y + 1 }, img, &dirty);
@@ -96,8 +96,8 @@ Rect plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
 	return dirty;
 }
 
-Rect plotLine(Point start, Point end, Image* img, Pixel color) {
-	Rect dirty = {0};
+Rng2D plotLine(Point start, Point end, Image* img, Pixel color) {
+	Rng2D dirty = {0};
 
 	S64 dx  =  labs(end.x - start.x), sx = start.x < end.x ? 1 : -1;
 	S64 dy  = -labs(end.y - start.y), sy = start.y < end.y ? 1 : -1;
@@ -106,10 +106,10 @@ Rect plotLine(Point start, Point end, Image* img, Pixel color) {
 	for (;;) {
 		if (start.x > -1 && start.y > -1 && start.x < img->width && start.y < img->height) {
 			img->pixels[(start.y * img->width) + start.x] = color;
-			if (dirty.start.x > start.x) dirty.start.x = start.x;
-			if (dirty.start.y > start.y) dirty.start.y = start.y;
-			if (dirty.end.x < start.x) dirty.end.x = start.x;
-			if (dirty.end.y < start.y) dirty.end.y = start.y;
+			if (dirty.min.x > start.x) dirty.min.x = start.x;
+			if (dirty.min.y > start.y) dirty.min.y = start.y;
+			if (dirty.max.x < start.x) dirty.max.x = start.x;
+			if (dirty.max.y < start.y) dirty.max.y = start.y;
 		}
 		if (start.x == end.x && start.y == end.y) {
 			break;
@@ -126,7 +126,7 @@ Rect plotLine(Point start, Point end, Image* img, Pixel color) {
 		}
 	}
 
-	dirty.end.x++;
-	dirty.end.y++;
+	dirty.max.x++;
+	dirty.max.y++;
 	return dirty;
 }

@@ -32,7 +32,6 @@ jobs:
       run: |
         make gen-assets
         make all -j4 BUILD_TYPE=release
-        cp -r ./build/csprite ./csprite
 
     - name: Upload Artifacts (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
@@ -40,4 +39,4 @@ jobs:
       with:
         name: ${{ matrix.os }}
         if-no-files-found: error
-        path: ./csprite
+        path: ./build/csprite
