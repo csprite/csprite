@@ -30,6 +30,9 @@ ifeq ($(BUILD_TYPE),debug)
 	LDFLAGS += -fsanitize=address,undefined
 else
 	ifeq ($(BUILD_TYPE),release)
+		# TODO(pegvin) - Look into https://stackoverflow.com/q/6687630/14516016
+		# in detail & figure out a way to strip all the unused functions, Since
+		# we won't be used most of the ImGui's functions anyways.
 		FLAGS += -O3 -fdata-sections -ffunction-sections
 		LDFLAGS += -Wl,--gc-sections
 	else
