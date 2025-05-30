@@ -6,9 +6,6 @@ LOG_ENABLE_COLOR=true
 BUILD_TYPE = debug
 # SimpleFileDialog Backend: win32, zenity
 SFD_BACKEND =
-# Build & Bin
-BUILD = build
-BIN = $(BUILD)/csprite
 
 # Append Variables According To Config
 
@@ -33,7 +30,8 @@ ifeq ($(BUILD_TYPE),debug)
 	LDFLAGS += -fsanitize=address,undefined
 else
 	ifeq ($(BUILD_TYPE),release)
-		FLAGS += -O3
+		FLAGS += -O3 -fdata-sections -ffunction-sections
+		LDFLAGS += -Wl,--gc-sections
 	else
 $(error Unknown build type "$(BUILD_TYPE)", valid values: debug, release)
 	endif

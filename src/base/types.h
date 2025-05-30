@@ -14,23 +14,15 @@ typedef int16_t S16;
 typedef int32_t S32;
 typedef int64_t S64;
 
+typedef S8 B8;
+typedef S16 B16;
+typedef S32 B32;
+
 typedef float F32;
 typedef double F64;
 
-typedef struct {
-	S32 x, y;
-} Point;
-
-typedef struct {
-	S32 w, h;
-} Size;
-
-typedef struct {
-	Point start, end;
-} Rect;
-
-#define Rect_Invalidate(r) ((r).start.x = (r).end.x = 0)
-#define Rect_IsValid(r) ((r).start.x != (r).end.x)
+#define Min(A,B) (((A)<(B))?(A):(B))
+#define Max(A,B) (((A)>(B))?(A):(B))
 
 typedef struct {
 	U8 r, g, b, a;

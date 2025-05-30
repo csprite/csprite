@@ -12,7 +12,7 @@
 	#pragma clang diagnostic ignored "-Wpedantic"
 #endif
 
-#include "cimgui.h"
+#include "cimgui/cimgui.h"
 
 #if defined(__GNUC__)
 	#pragma GCC diagnostic pop

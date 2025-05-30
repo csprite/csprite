@@ -28,7 +28,7 @@ void _app_open_file(Editor* ed) {
 		if (!Editor_InitFrom(&new, filePath)) {
 			Editor_Deinit(ed);
 			*ed = new;
-			Editor_CenterView(ed, (Size){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
+			Editor_CenterView(ed, (Rect){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
 		}
 	} else {
 		const char* LastError = sfd_get_error();
@@ -83,7 +83,7 @@ void app_main_loop(void) {
 	Editor_Init(&ed, 120, 90);
 	ed.view.scale = 5;
 	Editor_UpdateView(&ed);
-	Editor_CenterView(&ed, (Size){ io->DisplaySize.x, io->DisplaySize.y });
+	Editor_CenterView(&ed, (Rect){ io->DisplaySize.x, io->DisplaySize.y });
 
 	bool doOpenNewFileModal = false;
 
@@ -116,7 +116,7 @@ void app_main_loop(void) {
 			igGetWindowSize(&winSize);
 			igCalcTextSize(&textSize, ed.file.name, NULL, false, -1);
 			igSetCursorPosX((winSize.x - textSize.x) * 0.5);
-			igText("%s", ed.file.name ? ed.file.name : "untitled");
+			igTextUnformatted(ed.file.name ? ed.file.name : "untitled", NULL);
 
 			igGetWindowPos(&mBarPos);
 			igGetWindowSize(&mBarSize);
