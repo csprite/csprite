@@ -4,7 +4,7 @@ AR       = ar
 CXX      = g++
 BUILD    = build
 BIN      = $(BUILD)/csprite
-FLAGS    = -MMD -MP -Wall -Wextra -pedantic -ffast-math -DCIMGUI_NO_EXPORT=1 -DIMGUI_IMPL_API="extern \"C\""
+FLAGS    = -march=native -MMD -MP -Wall -Wextra -pedantic -ffast-math -DCIMGUI_NO_EXPORT=1 -DIMGUI_IMPL_API="extern \"C\""
 INCLUDES = src/ vendor/glad/include/ vendor/log.c/include/ vendor/cimgui vendor/stb/include vendor/sfd/src
 CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1
 CXXFLAGS = $(addprefix -I,$(INCLUDES))
