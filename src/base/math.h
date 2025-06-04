@@ -16,6 +16,14 @@ typedef struct {
 	Point max; // Bottom-Right
 } Rng2D;
 
+typedef struct {
+	U32 min, max;
+} Rng1DU32;
+
+typedef struct {
+	U64 min, max;
+} Rng1DU64;
+
 #define Rng2D_Invalidate(r) ((r).min.x = (r).max.x = 0)
 #define Rng2D_IsValid(r) ((r).min.x != (r).max.x)
 

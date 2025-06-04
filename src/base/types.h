@@ -21,11 +21,12 @@ typedef S32 B32;
 typedef float F32;
 typedef double F64;
 
-#define Min(A,B) (((A)<(B))?(A):(B))
-#define Max(A,B) (((A)>(B))?(A):(B))
-
 typedef struct {
 	U8 r, g, b, a;
 } Pixel;
+
+#define Min(A,B) (((A)<(B))?(A):(B))
+#define Max(A,B) (((A)>(B))?(A):(B))
+#define ArrayCount(a) (sizeof((a)) / sizeof((a)[0]))
 
 #endif // SRC_BASE_TYPES_H_INCLUDED_

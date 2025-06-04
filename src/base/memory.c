@@ -1,5 +1,5 @@
 #include "base/memory.h"
-#include "platform/platform.h"
+#include "os/os.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +11,7 @@ void* Memory_Alloc(size_t sz) {
 void* Memory_AllocOrDie(size_t sz) {
 	void* ptr = Memory_Alloc(sz);
 	if (!ptr) {
-		Platform_AbortMessage(1, "Cannot Allocate More Memory");
+		os_abort_with_message(1, str8_lit("Failed to allocate memory!"));
 	}
 	return ptr;
 }

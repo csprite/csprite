@@ -25,6 +25,12 @@ will be smaller as well & Only required things will be loaded.
   These panels will allow windows to be docked in them.
   Moreover a new "View" menu item should exist, To allow toggling
   various windows.
+- Give user color pickers for Normal, Specular, Roughness & Height Map
+  so that they can manually paint those features & Allow preview in the
+  editor?
+  - https://youtu.be/gUkY8ZoRfuQ
+- Allow user to generate a normal map?
+  - https://youtu.be/-rJdOc9WZS4
 - Give Plugins The Ability To Draw Text & Basic Shapes Instead Of Passing Them GUI?
   - A plugin that allows stop motion animation to be created using
     external connected camera.

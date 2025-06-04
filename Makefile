@@ -4,13 +4,13 @@ AR       = ar
 CXX      = g++
 BUILD    = build
 BIN      = $(BUILD)/csprite
-FLAGS    = -march=native -MMD -MP -Wall -Wextra -pedantic -ffast-math -DCIMGUI_NO_EXPORT=1 -DIMGUI_IMPL_API="extern \"C\""
+FLAGS    = -march=native -MMD -MP -Wall -Wextra -pedantic -ffast-math -D_DEFAULT_SOURCE=1 -DCIMGUI_NO_EXPORT=1 -DIMGUI_IMPL_API="extern \"C\""
 INCLUDES = src/ vendor/glad/include/ vendor/log.c/include/ vendor/cimgui vendor/stb/include vendor/sfd/src
 CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1
 CXXFLAGS = $(addprefix -I,$(INCLUDES))
-LDFLAGS  =
+LDFLAGS  = -lX11
 LIBS     = vendor/glad/build/glad.a vendor/sfd/build/sfd.a
-SOURCES  = $(addprefix src/,main.c cimgui/cimgui.cpp cimgui/impl.cpp assets/assets.c base/string.c base/memory.c platform/platform.c app/app.c app/window.c app/texture.c app/editor.c image/image.c fs/fs.c gfx/gfx.c) $(addprefix vendor/,log.c/src/log.c stb/impl.c)
+SOURCES  = $(addprefix src/,main.c os/os.c os/gfx.c cimgui/cimgui.cpp cimgui/impl.cpp assets/assets.c base/string.c base/memory.c app/app.c app/window.c app/texture.c app/editor.c image/image.c fs/fs.c gfx/gfx.c) $(addprefix vendor/,log.c/src/log.c stb/impl.c)
 OBJECTS  = $(patsubst %.c,%.c.o,$(patsubst %.cpp,%.cpp.o,$(SOURCES)))
 OBJECTS := $(patsubst %,$(BUILD)/%,$(OBJECTS))
 DEPENDS  = $(OBJECTS:.o=.d)
