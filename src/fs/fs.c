@@ -1,6 +1,5 @@
 #include "fs/fs.h"
 
-#define _DEFAULT_SOURCE
 #include <stddef.h>
 #include <sys/stat.h>
 #include <errno.h>

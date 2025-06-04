@@ -3,7 +3,6 @@
 
 #include "base/types.h"
 #include "base/memory.h"
-#include "platform/platform.h"
 #include "app/app.h"
 #include "app/window.h"
 #include "imgui.h"
@@ -11,9 +10,9 @@
 #include "fs/fs.h"
 #include "image/image.h"
 #include "log/log.h"
-
-#include "sfd.h"
+#include "os/gfx.h"
 #include "app/editor.h"
+#include "sfd.h"
 
 void _app_open_file(Editor* ed) {
 	const char* filePath = sfd_open_dialog(&(sfd_Options){
@@ -107,7 +106,7 @@ void app_main_loop(void) {
 			}
 			if (igBeginMenu("Help", true)) {
 				if (igMenuItem_Bool("About", NULL, false, true)) {
-					Platform_OpenURL("https://csprite.github.io");
+					os_open_in_browser(str8_lit("https://csprite.github.io"));
 				}
 				igEndMenu();
 			}

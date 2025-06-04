@@ -1,5 +1,4 @@
 #include "app/app.h"
-#include "fs/fs.h"
 
 int main(void) {
 	app_init();
