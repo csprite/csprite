@@ -5,12 +5,12 @@
 typedef unsigned char uint8_t;
 
 typedef struct {
-	const char*     path;
-	int             size;
+	long        size;
+	const char* path;
 #ifdef TARGET_WINDOWS
 	__declspec(align(4)) const void*     data;
 #else
-	const void*     data __attribute__((aligned(4)));
+	const void* data __attribute__((aligned(4)));
 #endif
 } asset_t;
 
