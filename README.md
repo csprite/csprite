@@ -20,6 +20,9 @@ will be simpler but the overall foot print of the program
 will be smaller as well & Only required things will be loaded.
 
 ## Todo
+- Unit Testing? More like Block Testing. Instead of testing
+  each function, Let's test subsystems or a block.
+  - https://youtu.be/21JlBOxgGwY
 - UTF-8 Support?
 - Docking? The main idea is to have 3 panels, Left, Right & Bottom.
   These panels will allow windows to be docked in them.
