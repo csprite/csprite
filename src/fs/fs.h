@@ -34,32 +34,4 @@ void fs_list_dirRewind(dir_t dir);
  */
 void fs_list_dirEnd(dir_t dir);
 
-/*
- Description:
-  Get `cc` part of `c:/aa/bb/cc` path
- Notes:
-  - Returns index at which basename starts in the `path` variable
-  - Returns negative value on error
- */
-int fs_get_basename(const char* path);
-
-/*
- Description:
-  Get `c:/aa/bb/` part of `c:/aa/bb/cc` path
- Notes:
-  - Returns non-negative index that points to
-    END of the path of parent dir
-  - Values are set to negative if not found
- */
-int fs_get_parent_dir(const char* path);
-
-/*
- Description:
-  Get `.txt` part of `c:/aa/bb/cc.txt` path
- Notes:
-  - Returns index at which basename starts in the `path` variable
-  - Returns negative value if not found
- */
-int fs_get_extension(const char* filePath);
-
 #endif
