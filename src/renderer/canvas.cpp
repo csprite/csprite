@@ -34,11 +34,11 @@ CanvasLayer_Manager::CanvasLayer_Manager(SDL_Renderer* ren, int32_t w, int32_t h
 		log_error("Cannot create renderTex, SDL_CreateTexture() returned NULL: %s", SDL_GetError());
 	}
 
-	u16 checkerBoardW = w / 2, checkerBoardH = h / 2;
+	u32 checkerBoardW = w / 2, checkerBoardH = h / 2;
 	Pixel* pixels = new Pixel[checkerBoardW * checkerBoardH];
 	for (int32_t y = 0; y < checkerBoardH; y++) {
-		for (int32_t x = 0; x < checkerBoardH; x++) {
-			Pixel& pixel = pixels[(y * checkerBoardH) + x];
+		for (int32_t x = 0; x < checkerBoardW; x++) {
+			Pixel& pixel = pixels[(y * checkerBoardW) + x];
 			pixel = ((x + y) % 2) ? pCol2 : pCol1;
 			pixel.a = 255;
 		}
