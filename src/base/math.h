@@ -34,6 +34,6 @@ typedef struct {
 
 B32 point_match(Point a, Point b);
 B32 rect_match(Rect a, Rect b);
-Rng2D rng2d_intersect(Rng2D a, Rng2D b);
+Rng2D rng2_intersect(Rng2D a, Rng2D b);
 
 #endif // SRC_BASE_MATH_H
