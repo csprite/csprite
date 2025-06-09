@@ -1,6 +1,8 @@
 #include <stdlib.h>
+#include "base/math.h"
 #include "os/os.h"
 #include "os/gfx.h"
+#include "base/types.h"
 
 OS_Handle os_handle_zero(void) {
 	OS_Handle h = {0};
@@ -59,4 +61,42 @@ void os_sleep_milliseconds(U32 msec) {
 	U64 diff = 0;
 	// `diff` MIGHT be equal to `start` if os_now_milliseconds fails.
 	while ((diff = start - os_now_milliseconds()) < msec && diff != start);
+}
+
+Rng1DU64 os_path_basename(String8 path) {
+	Rng1DU64 basename = {
+		.min = 0,
+		.max = path.size - 1
+	};
+
+	for (S64 i = path.size - 1; i >= 0; i--) {
+		if (path.str[i] == '/' || path.str[i] == '\\') {
+			basename.max = i - 1;
+		} else {
+			break;
+		}
+	}
+
+	for EachIndex(i, basename.max) {
+		if (path.str[i] == '/' || path.str[i] == '\\') {
+			basename.min = i + 1;
+		}
+	}
+
+	return basename;
+}
+
+Rng1DU64 os_path_extension(String8 path) {
+	Rng1DU64 ext = {0};
+
+	for (S64 i = path.size - 1; i >= 0; i--) {
+		if (path.str[i] == '/' || path.str[i] == '\\') {
+			break;
+		} else if (path.str[i] == '.') {
+			ext.min = i;
+			ext.max = path.size - 1;
+		}
+	}
+
+	return ext;
 }

@@ -48,7 +48,7 @@ Rng2D plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
 	ensureRectCoords(&start, &end);
 	boundCheckDirty(start, (Point){ end.x + 1, end.y + 1 }, img, &dirty);
 
-	S64 a = abs(end.x - start.x), b = abs(end.y - start.y), b1 = b & 1;
+	S64 a = abs_s64(end.x - start.x), b = abs_s64(end.y - start.y), b1 = b & 1;
 	S64 dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a;
 	S64 err = dx + dy + b1 * a * a, e2;
 
@@ -99,8 +99,8 @@ Rng2D plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
 Rng2D plotLine(Point start, Point end, Image* img, Pixel color) {
 	Rng2D dirty = {0};
 
-	S64 dx  =  labs(end.x - start.x), sx = start.x < end.x ? 1 : -1;
-	S64 dy  = -labs(end.y - start.y), sy = start.y < end.y ? 1 : -1;
+	S64 dx  =  abs_s64(end.x - start.x), sx = start.x < end.x ? 1 : -1;
+	S64 dy  = -abs_s64(end.y - start.y), sy = start.y < end.y ? 1 : -1;
 	S64 err = dx + dy, e2;
 
 	for (;;) {

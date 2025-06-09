@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "base/math.h"
 #include "base/types.h"
 #include "base/memory.h"
 #include "app/app.h"
@@ -12,6 +13,7 @@
 #include "log/log.h"
 #include "os/gfx.h"
 #include "app/editor.h"
+#include "os/os.h"
 #include "sfd.h"
 
 void _app_open_file(Editor* ed) {
@@ -52,20 +54,17 @@ void _app_save_file(Editor* ed) {
 			}
 			return;
 		} else {
-			int baseName = fs_get_basename(filePath);
-			if (baseName < 0) {
-				log_error("Failed to find basename of '%s'", filePath);
-				return;
-			}
+			Rng1DU64 baseName = os_path_basename(str8_cstr(filePath));
+			if (rng1_is_mag_zero(baseName)) {
+				if (Image_Write(&ed->canvas.image, filePath)) {
+					return;
+				}
 
-			if (Image_Write(&ed->canvas.image, filePath)) {
-				return;
+				U32 len = strlen(filePath) + 1;
+				ed->file.path = (char*)Memory_AllocOrDie(len);
+				strncpy(ed->file.path, filePath, len);
+				ed->file.name = &ed->file.path[baseName.min];
 			}
-
-			U32 len = strlen(filePath) + 1;
-			ed->file.path = (char*)Memory_AllocOrDie(len);
-			strncpy(ed->file.path, filePath, len);
-			ed->file.name = &ed->file.path[baseName];
 		}
 	} else {
 		Image_Write(&ed->canvas.image, ed->file.path);

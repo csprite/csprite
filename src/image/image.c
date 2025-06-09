@@ -1,10 +1,11 @@
 #include <string.h>
+#include "base/math.h"
 #include "base/memory.h"
 #include "image/image.h"
+#include "os/os.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
 #include "log/log.h"
-#include "fs/fs.h"
 
 void Image_Init(Image* img, U32 width, U32 height) {
 	img->width = width;
@@ -41,13 +42,13 @@ S32 Image_InitFrom(Image* img, const char* filePath) {
 }
 
 S32 Image_Write(Image* img, const char* filePath) {
-	S32 extensionIdx = fs_get_extension(filePath);
-	if (extensionIdx < 0) {
+	Rng1DU64 ext = os_path_extension(str8_cstr(filePath));
+	if (rng1_is_mag_zero(ext)) {
 		log_error("Failed to find extension of '%s'", filePath);
 		return 1;
 	}
 
-	const char* extension = filePath + extensionIdx;
+	const char* extension = filePath + ext.min;
 	if (strcmp(extension, ".png") == 0) {
 		stbi_write_png_compression_level = 9;
 		stbi_write_png(filePath, img->width, img->height, 4, img->pixels, img->width * sizeof(Pixel));

@@ -23,4 +23,8 @@ U64  os_now_microseconds(void); // This U64 Can Store Upto powl(2, 64) / 3.154E+
 U64  os_now_milliseconds(void); // This U64 Can Store Upto powl(2, 64) / 3.154E+12 = ~5848682 Centuries.
 void os_sleep_milliseconds(U32 msec);
 
+// Paths
+Rng1DU64 os_path_basename(String8 path);
+Rng1DU64 os_path_extension(String8 path);
+
 #endif // SRC_OS_OS_H
