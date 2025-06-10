@@ -11,6 +11,7 @@ S32 Editor_Init(Editor* ed, U32 width, U32 height) {
 	*ed = (Editor){0};
 
 	Image_Init(&ed->canvas.image, width, height);
+	// TODO(pegvin) - Look into PBOs & See if the overhead of uploading data to GPU can be reduced
 	ed->canvas.texture = Texture_Init(width, height);
 
 	{
