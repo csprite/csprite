@@ -12,6 +12,21 @@ S32 Editor_Init(Editor* ed, U32 width, U32 height) {
 
 	Image_Init(&ed->canvas.image, width, height);
 	ed->canvas.texture = Texture_Init(width, height);
+
+	{
+		const U64 checkerBoardW = width / 2, checkerBoardH = height / 2;
+		ed->canvas.checker = Texture_Init(checkerBoardW, checkerBoardH);
+		const Pixel pCol1 = (Pixel){ 0xB8, 0xB8, 0xB8, 0xFF }, pCol2 = (Pixel){ 0x74, 0x74, 0x74, 0xFF };
+		Pixel* pixels = Memory_Alloc(checkerBoardW * checkerBoardH * sizeof(Pixel));
+		for (U64 y = 0; y < checkerBoardH; y++) {
+			for (U64 x = 0; x < checkerBoardW; x++) {
+				pixels[(y * checkerBoardW) + x] = ((x + y) % 2) ? pCol2 : pCol1;
+			}
+		}
+		Texture_Update(ed->canvas.checker, 0, 0, checkerBoardW, checkerBoardH, checkerBoardW, (unsigned char*)pixels);
+		Memory_Dealloc(pixels);
+	}
+
 	ed->tool.brush.color = (Pixel){ 255, 255, 255, 255 };
 	ed->tool.type.current = TOOL_BRUSH;
 	ed->view.scale = 1.5f;
@@ -31,7 +46,7 @@ S32 Editor_InitFrom(Editor* ed, const char* filePath) {
 	Editor_Init(ed, img.width, img.height);
 	Image_Deinit(&ed->canvas.image);
 	ed->canvas.image = img;
-	Texture_Update(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.height, (unsigned char*)ed->canvas.image.pixels);
+	Texture_Update(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.width, (unsigned char*)ed->canvas.image.pixels);
 
 	S32 len = strlen(filePath) + 1;
 	ed->file.path = Memory_Alloc(len);
@@ -43,6 +58,7 @@ S32 Editor_InitFrom(Editor* ed, const char* filePath) {
 void Editor_Deinit(Editor* ed) {
 	Image_Deinit(&ed->canvas.image);
 	Texture_Deinit(ed->canvas.texture);
+	Texture_Deinit(ed->canvas.checker);
 
 	if (ed->file.path) {
 		Memory_Dealloc(ed->file.path);

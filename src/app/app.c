@@ -194,6 +194,11 @@ void app_main_loop(void) {
 			    igGetColorU32_Col(ImGuiCol_Border, 1), 0, 0, 1
 			);
 			ImDrawList_AddImage(
+			    igGetWindowDrawList(), (ImTextureID)ed.canvas.checker,
+			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
+			    (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, 0xFFFFFFFF
+			);
+			ImDrawList_AddImage(
 			    igGetWindowDrawList(), (ImTextureID)ed.canvas.texture,
 			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
 			    (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, 0xFFFFFFFF

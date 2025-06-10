@@ -35,6 +35,7 @@ typedef struct {
 	struct {
 		Image image;
 		Texture texture;
+		Texture checker;
 	} canvas;
 	struct {
 		char* path;
