@@ -1,10 +1,10 @@
 #include "app/texture.h"
-#include "base/memory.h"
+#include "base/arena.h"
 #include "log/log.h"
 #include <glad/glad.h>
 #include <stdlib.h>
 
-Texture Texture_Init(S32 width, S32 height) {
+Texture Texture_Init(ArenaTemp* a, S32 width, S32 height) {
 	Texture id = 0;
 	glGenTextures(1, &id);
 
@@ -12,18 +12,14 @@ Texture Texture_Init(S32 width, S32 height) {
 		log_fatal("Failed to create texture on GPU");
 	}
 
+	U8* pixels = arena_alloc(a->arena, width * height * 4);
 	glBindTexture(GL_TEXTURE_2D, id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	U8* pixels = Memory_AllocOrDie(width * height * 4);
-	Memory_ZeroAll(pixels, width * height * 4);
-
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	Memory_Dealloc(pixels);
 	return id;
 }
 

@@ -3,10 +3,11 @@
 #pragma once
 
 #include "base/types.h"
+#include "base/arena.h"
 
 typedef U32 Texture;
 
-Texture Texture_Init(S32 width, S32 height);
+Texture Texture_Init(ArenaTemp* a, S32 width, S32 height);
 void Texture_Update(Texture id, S32 subreg_x, S32 subreg_y, S32 subreg_w, S32 subreg_h, S32 tWidth, U8* data);
 void Texture_Deinit(Texture id);
 

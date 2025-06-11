@@ -1,5 +1,4 @@
 #include "app/editor.h"
-#include "base/memory.h"
 #include "gfx/gfx.h"
 #include "imgui.h"
 
@@ -7,63 +6,65 @@
 #include <string.h>
 #include <limits.h>
 
-S32 Editor_Init(Editor* ed, U32 width, U32 height) {
-	*ed = (Editor){0};
-
-	Image_Init(&ed->canvas.image, width, height);
-	// TODO(pegvin) - Look into PBOs & See if the overhead of uploading data to GPU can be reduced
-	ed->canvas.texture = Texture_Init(width, height);
+Editor Editor_Init(U32 width, U32 height) {
+	Editor ed = {0};
+	Arena a = arena_init();
 
 	{
-		const U64 checkerBoardW = width / 2, checkerBoardH = height / 2;
-		ed->canvas.checker = Texture_Init(checkerBoardW, checkerBoardH);
-		const Pixel pCol1 = (Pixel){ 0xB8, 0xB8, 0xB8, 0xFF }, pCol2 = (Pixel){ 0x74, 0x74, 0x74, 0xFF };
-		Pixel* pixels = Memory_Alloc(checkerBoardW * checkerBoardH * sizeof(Pixel));
-		for (U64 y = 0; y < checkerBoardH; y++) {
-			for (U64 x = 0; x < checkerBoardW; x++) {
-				pixels[(y * checkerBoardW) + x] = ((x + y) % 2) ? pCol2 : pCol1;
+		ArenaTemp t = arena_begin_temp(&a);
+		Rect checkerDim = { width / 2, height / 2 };
+
+		// TODO(pegvin) - Look into PBOs & See if the overhead of uploading data to GPU can be reduced
+		ed.canvas.texture = Texture_Init(&t, width, height);
+		ed.canvas.checker = Texture_Init(&t, checkerDim.w, checkerDim.h);
+
+		const Pixel pCol1 = { 0xB8, 0xB8, 0xB8, 0xFF }, pCol2 = { 0x74, 0x74, 0x74, 0xFF };
+		Pixel* pixels = arena_alloc(t.arena, checkerDim.w * checkerDim.h * sizeof(Pixel));
+		for (S64 y = 0; y < checkerDim.h; y++) {
+			for (S64 x = 0; x < checkerDim.w; x++) {
+				pixels[(y * checkerDim.w) + x] = ((x + y) % 2) ? pCol2 : pCol1;
 			}
 		}
-		Texture_Update(ed->canvas.checker, 0, 0, checkerBoardW, checkerBoardH, checkerBoardW, (unsigned char*)pixels);
-		Memory_Dealloc(pixels);
+
+		Texture_Update(ed.canvas.checker, 0, 0, checkerDim.w, checkerDim.h, checkerDim.w, (unsigned char*)pixels);
+		arena_end_temp(t);
 	}
 
-	ed->tool.brush.color = (Pixel){ 255, 255, 255, 255 };
-	ed->tool.type.current = TOOL_BRUSH;
-	ed->view.scale = 1.5f;
-	ed->file.path = NULL;
-	ed->file.name = NULL;
-	Editor_UpdateView(ed);
+	ed.arena = a;
+	ed.file.path = NULL;
+	ed.file.name = NULL;
+	ed.view.scale = 1.5f;
+	ed.tool.type.current = TOOL_BRUSH;
+	ed.canvas.image = bitmap_from_null(&a, width, height);
+	ed.tool.brush.color = (Pixel){ 255, 255, 255, 255 };
+	Editor_UpdateView(&ed);
 
-	return 0;
+	return ed;
 }
 
-S32 Editor_InitFrom(Editor* ed, const char* filePath) {
-	Image img;
-	if (Image_InitFrom(&img, filePath)) {
-		return 1;
-	}
+// Editor Editor_InitFrom(Arena* a, const char* filePath) {
+// 	Editor ed = {0};
+// 	Image img = {0};
+// 	if (Image_InitFrom(&img, filePath)) {
+// 		return ed;
+// 	}
 
-	Editor_Init(ed, img.width, img.height);
-	Image_Deinit(&ed->canvas.image);
-	ed->canvas.image = img;
-	Texture_Update(ed->canvas.texture, 0, 0, ed->canvas.image.width, ed->canvas.image.height, ed->canvas.image.width, (unsigned char*)ed->canvas.image.pixels);
+// 	ed = Editor_Init(a, img.width, img.height);
+// 	Image_Deinit(&ed.canvas.image);
+// 	ed.canvas.image = img;
+// 	Texture_Update(ed.canvas.texture, 0, 0, ed.canvas.image.width, ed.canvas.image.height, ed.canvas.image.width, (unsigned char*)ed.canvas.image.pixels);
 
-	S32 len = strlen(filePath) + 1;
-	ed->file.path = Memory_Alloc(len);
-	strncpy(ed->file.path, filePath, len);
+// 	S32 len = strlen(filePath) + 1;
+// 	ed.file.path = Memory_Alloc(len);
+// 	strncpy(ed.file.path, filePath, len);
 
-	return 0;
-}
+// 	return ed;
+// }
 
 void Editor_Deinit(Editor* ed) {
-	Image_Deinit(&ed->canvas.image);
 	Texture_Deinit(ed->canvas.texture);
 	Texture_Deinit(ed->canvas.checker);
-
-	if (ed->file.path) {
-		Memory_Dealloc(ed->file.path);
-	}
+	arena_release(&ed->arena);
 }
 
 Rng2D Editor_OnMouseDown(Editor* ed, S32 x, S32 y) {

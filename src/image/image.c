@@ -1,11 +1,11 @@
 #include <string.h>
 #include "base/math.h"
-#include "base/memory.h"
-#include "image/image.h"
 #include "os/os.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
 #include "log/log.h"
+
+#if 0
 
 void Image_Init(Image* img, U32 width, U32 height) {
 	img->width = width;
@@ -66,3 +66,5 @@ void Image_Deinit(Image* img) {
 	Memory_Dealloc(img->pixels);
 	Memory_ZeroAll(img, sizeof(*img));
 }
+
+#endif

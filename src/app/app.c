@@ -3,73 +3,71 @@
 
 #include "base/math.h"
 #include "base/types.h"
-#include "base/memory.h"
 #include "app/app.h"
 #include "app/window.h"
 #include "imgui.h"
 #include "assets/assets.h"
 #include "fs/fs.h"
-#include "image/image.h"
 #include "log/log.h"
 #include "os/gfx.h"
 #include "app/editor.h"
 #include "os/os.h"
 #include "sfd.h"
 
-void _app_open_file(Editor* ed) {
-	const char* filePath = sfd_open_dialog(&(sfd_Options){
-		.title        = "Open Image File",
-		.filter_name  = "Image File",
-		.filter       = "*.png|*.jpg",
-		.save         = 0
-	});
+// void _app_open_file(Editor* ed) {
+// 	const char* filePath = sfd_open_dialog(&(sfd_Options){
+// 		.title        = "Open Image File",
+// 		.filter_name  = "Image File",
+// 		.filter       = "*.png|*.jpg",
+// 		.save         = 0
+// 	});
 
-	if (filePath) {
-		Editor new = {0};
-		if (!Editor_InitFrom(&new, filePath)) {
-			Editor_Deinit(ed);
-			*ed = new;
-			Editor_CenterView(ed, (Rect){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
-		}
-	} else {
-		const char* LastError = sfd_get_error();
-		if (LastError != NULL) {
-			log_error("Failed to launch dialog: %s", LastError);
-		}
-	}
-}
+// 	if (filePath) {
+// 		Editor new = {0};
+// 		if (!Editor_InitFrom(&new, filePath)) {
+// 			Editor_Deinit(ed);
+// 			*ed = new;
+// 			Editor_CenterView(ed, (Rect){ igGetIO()->DisplaySize.x, igGetIO()->DisplaySize.y });
+// 		}
+// 	} else {
+// 		const char* LastError = sfd_get_error();
+// 		if (LastError != NULL) {
+// 			log_error("Failed to launch dialog: %s", LastError);
+// 		}
+// 	}
+// }
 
-void _app_save_file(Editor* ed) {
-	if (ed->file.path == NULL) {
-		const char* filePath = sfd_open_dialog(&(sfd_Options){
-			.title       = "Save Image File",
-			.filter_name = "Image File",
-			.filter      = "*.png|*.jpg",
-			.save        = 1
-		});
-		if (filePath == NULL) {
-			const char* LastError = sfd_get_error();
-			if (LastError != NULL) {
-				log_error("Failed to launch dialog: %s", LastError);
-			}
-			return;
-		} else {
-			Rng1DU64 baseName = os_path_basename(str8_cstr(filePath));
-			if (rng1_is_mag_zero(baseName)) {
-				if (Image_Write(&ed->canvas.image, filePath)) {
-					return;
-				}
+// void _app_save_file(Editor* ed) {
+// 	if (ed->file.path == NULL) {
+// 		const char* filePath = sfd_open_dialog(&(sfd_Options){
+// 			.title       = "Save Image File",
+// 			.filter_name = "Image File",
+// 			.filter      = "*.png|*.jpg",
+// 			.save        = 1
+// 		});
+// 		if (filePath == NULL) {
+// 			const char* LastError = sfd_get_error();
+// 			if (LastError != NULL) {
+// 				log_error("Failed to launch dialog: %s", LastError);
+// 			}
+// 			return;
+// 		} else {
+// 			Rng1DU64 baseName = os_path_basename(str8_cstr(filePath));
+// 			if (rng1_is_mag_zero(baseName)) {
+// 				if (Image_Write(&ed->canvas.image, filePath)) {
+// 					return;
+// 				}
 
-				U32 len = strlen(filePath) + 1;
-				ed->file.path = (char*)Memory_AllocOrDie(len);
-				strncpy(ed->file.path, filePath, len);
-				ed->file.name = &ed->file.path[baseName.min];
-			}
-		}
-	} else {
-		Image_Write(&ed->canvas.image, ed->file.path);
-	}
-}
+// 				U32 len = strlen(filePath) + 1;
+// 				ed->file.path = (char*)Memory_AllocOrDie(len);
+// 				strncpy(ed->file.path, filePath, len);
+// 				ed->file.name = &ed->file.path[baseName.min];
+// 			}
+// 		}
+// 	} else {
+// 		Image_Write(&ed->canvas.image, ed->file.path);
+// 	}
+// }
 
 void app_main_loop(void) {
 	window_new_frame();
@@ -77,8 +75,7 @@ void app_main_loop(void) {
 
 	ImGuiIO* io = igGetIO();
 
-	Editor ed = {0};
-	Editor_Init(&ed, 120, 90);
+	Editor ed = Editor_Init(120, 90);
 	ed.view.scale = 5;
 	Editor_UpdateView(&ed);
 	Editor_CenterView(&ed, (Rect){ io->DisplaySize.x, io->DisplaySize.y });
@@ -95,12 +92,12 @@ void app_main_loop(void) {
 				if (igMenuItem_Bool("New", NULL, false, true)) {
 					doOpenNewFileModal = true;
 				}
-				if (igMenuItem_Bool("Open", NULL, false, true)) {
-					_app_open_file(&ed);
-				}
-				if (igMenuItem_Bool("Save", NULL, false, true)) {
-					_app_save_file(&ed);
-				}
+				// if (igMenuItem_Bool("Open", NULL, false, true)) {
+				// 	_app_open_file(&ed);
+				// }
+				// if (igMenuItem_Bool("Save", NULL, false, true)) {
+				// 	_app_save_file(&ed);
+				// }
 				igEndMenu();
 			}
 			if (igBeginMenu("Help", true)) {
@@ -222,15 +219,11 @@ void app_main_loop(void) {
 			if (igInputInt("Height", &height, 1, 5, 0)) height = height < 2 ? 2 : height;
 
 			if (igButton("Create", (ImVec2){0,0})) {
-				Editor new = {0};
-				if (!Editor_Init(&new, width, height)) {
-					Editor_Deinit(&ed);
-					ed = new;
-					ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
-					ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
-					Editor_UpdateView(&ed);
-				}
-
+				Editor_Deinit(&ed);
+				ed = Editor_Init(width, height);
+				ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
+				ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
+				Editor_UpdateView(&ed);
 				igCloseCurrentPopup();
 				width = 20;
 				height = 20;

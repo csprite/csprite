@@ -63,6 +63,24 @@ void os_sleep_milliseconds(U32 msec) {
 	while ((diff = start - os_now_milliseconds()) < msec && diff != start);
 }
 
+#include <sys/mman.h>
+
+void* os_memory_reserve(U64 size) {
+	return mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0);
+}
+
+void os_memory_unreserve(void* memory, U64 size) {
+	munmap(memory, size);
+}
+
+void os_memory_commit(void* memory, U64 size) {
+	mprotect(memory, size, PROT_READ | PROT_WRITE);
+}
+
+void os_memory_uncommit(void* memory, U64 size) {
+	mprotect(memory, size, PROT_NONE);
+}
+
 Rng1DU64 os_path_basename(String8 path) {
 	Rng1DU64 basename = {
 		.min = 0,

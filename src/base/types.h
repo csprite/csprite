@@ -28,6 +28,26 @@ typedef struct {
 #define Min(A,B) (((A)<(B))?(A):(B))
 #define Max(A,B) (((A)>(B))?(A):(B))
 #define ArrayCount(a) (sizeof((a)) / sizeof((a)[0]))
+#define AlignUpPow2(x,b) (((x) + (b) - 1)&(~((b) - 1)))
+
+// Branch Prediction Hints
+#if defined(__clang__) || defined(__GNUC__)
+	#define Expect(expr, val) __builtin_expect((expr), (val))
+#else
+	#define Expect(expr, val) (expr)
+#endif
+
+#define Likely(expr)   Expect(expr, 1)
+#define Unlikely(expr) Expect(expr, 0)
+
+// Units
+#define KB(n) (((U64)(n)) << 10)
+#define MB(n) (((U64)(n)) << 20)
+#define GB(n) (((U64)(n)) << 30)
+
+// Memory Operations
+#define MemoryZero(s,z)     memset((s),0,(z))
+#define MemoryZeroStruct(s) MemoryZero((s),sizeof(*(s)))
 
 // For-Loop Constructs
 #define EachIndex(it, count) (U64 it = 0; it < (count); it += 1)
