@@ -14,6 +14,12 @@ OS_Handle os_handle_zero(void);
 B32       os_handle_match(OS_Handle a, OS_Handle b);
 B32       os_handle_is_zero(OS_Handle a);
 
+// Memory
+void* os_memory_reserve(U64 size);
+void os_memory_unreserve(void* memory, U64 size);
+void os_memory_commit(void* memory, U64 size);
+void os_memory_uncommit(void* memory, U64 size);
+
 // Abortion
 void os_abort(S32 exit_code);
 void os_abort_with_message(S32 exit_code, String8 message);

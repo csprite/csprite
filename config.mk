@@ -26,14 +26,14 @@ else
 endif
 
 ifeq ($(BUILD_TYPE),debug)
-	FLAGS += -O0 -g3 -fsanitize=address,undefined
+	FLAGS += -O0 -g3 -fsanitize=address,undefined -DBUILD_DEBUG=1
 	LDFLAGS += -fsanitize=address,undefined
 else
 	ifeq ($(BUILD_TYPE),release)
 		# TODO(pegvin) - Look into https://stackoverflow.com/q/6687630/14516016
 		# in detail & figure out a way to strip all the unused functions, Since
 		# we won't be used most of the ImGui's functions anyways.
-		FLAGS += -O3 -fdata-sections -ffunction-sections
+		FLAGS += -O3 -fdata-sections -ffunction-sections -DBUILD_RELEASE=1
 		LDFLAGS += -Wl,--gc-sections
 	else
 $(error Unknown build type "$(BUILD_TYPE)", valid values: debug, release)

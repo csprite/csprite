@@ -1,8 +1,9 @@
-#include "base/memory.h"
 #include "os/os.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+#if 0
 
 void* Memory_Alloc(size_t sz) {
 	return malloc(sz);
@@ -23,3 +24,5 @@ void Memory_ZeroAll(void* ptr, size_t sz) {
 void Memory_Dealloc(void* ptr) {
 	free(ptr);
 }
+
+#endif

@@ -1,14 +1,14 @@
 #include "gfx/gfx.h"
 #include <stdlib.h>
 
-void boundCheckDirty(Point start, Point end, const Image* img, Rng2D* dirty) {
+void boundCheckDirty(Point start, Point end, const Bitmap* img, Rng2D* dirty) {
 	dirty->min.x = start.x < 0 ? 0 : start.x;
 	dirty->min.y = start.y < 0 ? 0 : start.y;
-	dirty->max.x = end.x >= img->width ? img->width : end.x;
-	dirty->max.y = end.y >= img->height ? img->height : end.y;
+	dirty->max.x = end.x >= (S64)img->width ? img->width : (U64)end.x;
+	dirty->max.y = end.y >= (S64)img->height ? img->height : (U64)end.y;
 }
 
-void calcDirty(const Rng2D* dirty, Rng2D* final, const Image* img) {
+void calcDirty(const Rng2D* dirty, Rng2D* final, const Bitmap* img) {
 	if (dirty->min.x < final->min.x) final->min.x = dirty->min.x;
 	if (dirty->min.y < final->min.y) final->min.y = dirty->min.y;
 	if (dirty->max.x > final->max.x) final->max.x = dirty->max.x;
@@ -26,13 +26,13 @@ void ensureRectCoords(Point* start, Point* end) {
 	if (end->y < start->y) { t = end->y; end->y = start->y; start->y = t; }
 }
 
-Rng2D plotRect(Point start, Point end, Image* img, Pixel color) {
+Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
 	Rng2D dirty = {0};
 
 	ensureRectCoords(&start, &end);
 	for (S32 y = start.y; y <= end.y; y++) {
 		for (S32 x = start.x; x <= end.x; x++) {
-			if (x > -1 && y > -1 && x < img->width && y < img->height) {
+			if (x > -1 && y > -1 && x < (S64)img->width && y < (S64)img->height) {
 				img->pixels[(y * img->width) + x] = color;
 			}
 		}
@@ -42,7 +42,7 @@ Rng2D plotRect(Point start, Point end, Image* img, Pixel color) {
 	return dirty;
 }
 
-Rng2D plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
+Rng2D plotEllipseRect(Point start, Point end, Bitmap* img, Pixel color) {
 	Rng2D dirty = {0};
 
 	ensureRectCoords(&start, &end);
@@ -58,16 +58,16 @@ Rng2D plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
 	a *= 8 * a; b1 = 8 * b * b;
 
 	do {
-		if (end.x > -1 && start.y > -1 && end.x < img->width && start.y < img->height) {
+		if (end.x > -1 && start.y > -1 && end.x < (S64)img->width && start.y < (S64)img->height) {
 			img->pixels[(start.y * img->width) + end.x] = color;
 		}
-		if (start.x > -1 && start.y > -1 && start.x < img->width && start.y < img->height) {
+		if (start.x > -1 && start.y > -1 && start.x < (S64)img->width && start.y < (S64)img->height) {
 			img->pixels[(start.y * img->width) + start.x] = color;
 		}
-		if (start.x > -1 && end.y > -1 && start.x < img->width && end.y < img->height) {
+		if (start.x > -1 && end.y > -1 && start.x < (S64)img->width && end.y < (S64)img->height) {
 			img->pixels[(end.y * img->width) + start.x] = color;
 		}
-		if (end.x > -1 && end.y > -1 && end.x < img->width && end.y < img->height) {
+		if (end.x > -1 && end.y > -1 && end.x < (S64)img->width && end.y < (S64)img->height) {
 			img->pixels[(end.y * img->width) + end.x] = color;
 		}
 
@@ -77,17 +77,17 @@ Rng2D plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
 	} while (start.x <= end.x);
 
 	while (start.y-end.y < b) {
-		if (start.x-1 > -1 && start.y > -1 && start.x-1 < img->width && start.y < img->height) {
+		if (start.x-1 > -1 && start.y > -1 && start.x-1 < (S64)img->width && start.y < (S64)img->height) {
 			img->pixels[(start.y * img->width) + start.x-1] = color;
 		}
-		if (end.x+1 > -1 && start.y > -1 && end.x+1 < img->width && start.y < img->height) {
+		if (end.x+1 > -1 && start.y > -1 && end.x+1 < (S64)img->width && start.y < (S64)img->height) {
 			img->pixels[(start.y * img->width) + start.x+1] = color;
 		}
 		start.y++;
-		if (start.x-1 > -1 && end.y > -1 && start.x-1 < img->width && end.y < img->height) {
+		if (start.x-1 > -1 && end.y > -1 && start.x-1 < (S64)img->width && end.y < (S64)img->height) {
 			img->pixels[(end.y * img->width) + start.x-1] = color;
 		}
-		if (end.x+1 > -1 && end.y > -1 && end.x+1 < img->width && end.y < img->height) {
+		if (end.x+1 > -1 && end.y > -1 && end.x+1 < (S64)img->width && end.y < (S64)img->height) {
 			img->pixels[(end.y * img->width) + end.x+1] = color;
 		}
 		end.y--;
@@ -96,7 +96,7 @@ Rng2D plotEllipseRect(Point start, Point end, Image* img, Pixel color) {
 	return dirty;
 }
 
-Rng2D plotLine(Point start, Point end, Image* img, Pixel color) {
+Rng2D plotLine(Point start, Point end, Bitmap* img, Pixel color) {
 	Rng2D dirty = {0};
 
 	S64 dx  =  abs_s64(end.x - start.x), sx = start.x < end.x ? 1 : -1;
@@ -104,7 +104,7 @@ Rng2D plotLine(Point start, Point end, Image* img, Pixel color) {
 	S64 err = dx + dy, e2;
 
 	for (;;) {
-		if (start.x > -1 && start.y > -1 && start.x < img->width && start.y < img->height) {
+		if (start.x > -1 && start.y > -1 && start.x < (S64)img->width && start.y < (S64)img->height) {
 			img->pixels[(start.y * img->width) + start.x] = color;
 			if (dirty.min.x > start.x) dirty.min.x = start.x;
 			if (dirty.min.y > start.y) dirty.min.y = start.y;

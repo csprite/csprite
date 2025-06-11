@@ -2,11 +2,11 @@
 #define CSPRITE_SRC_APP_EDITOR_H_INCLUDED_
 #pragma once
 
-#include <stdbool.h>
 #include "base/types.h"
+#include "base/arena.h"
 #include "base/math.h"
 #include "app/texture.h"
-#include "image/image.h"
+#include "bitmap/bitmap.h"
 
 typedef enum {
 	TOOL_BRUSH,
@@ -33,7 +33,7 @@ static inline const char* ToolToString(Tool t) {
 
 typedef struct {
 	struct {
-		Image image;
+		Bitmap  image;
 		Texture texture;
 		Texture checker;
 	} canvas;
@@ -55,10 +55,11 @@ typedef struct {
 	struct {
 		Point down, last;
 	} mouse;
+	Arena arena;
 } Editor;
 
-S32 Editor_Init(Editor* ed, U32 width, U32 height);
-S32 Editor_InitFrom(Editor* ed, const char* filePath);
+Editor Editor_Init(U32 width, U32 height);
+// Editor Editor_InitFrom(Arena* a, const char* filePath);
 void Editor_Deinit(Editor* ed);
 
 void Editor_ProcessInput(Editor* ed);
