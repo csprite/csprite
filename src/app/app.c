@@ -273,6 +273,12 @@ void app_init(void) {
 	// Initialize Colors
 	igStyleColorsDark(igGetStyle());
 	ImGuiStyle_ScaleAllSizes(igGetStyle(), UI_Scale);
+
+	window_new_frame();
+	window_end_frame();
+
+	ImGuiStyle* style = igGetStyle();
+	style->FrameRounding = igGetFontSize() * 0.25f;
 }
 
 void app_deinit(void) {

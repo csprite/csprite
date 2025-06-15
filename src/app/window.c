@@ -41,7 +41,6 @@ void window_init(const char *title, int width, int height, int resizable) {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 130");
 
-	igStyleColorsDark(NULL);
 	ImGuiIO* io = igGetIO();
 	io->IniFilename = NULL;
 
