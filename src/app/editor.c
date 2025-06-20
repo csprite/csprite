@@ -77,7 +77,12 @@ Rng2D Editor_OnMouseDown(Editor* ed, S32 x, S32 y) {
 	S32 MouseRelY = (S32)((y - ed->view.y) / ed->view.scale);
 
 	Rng2D dirty = {0};
-	if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX >= ed->canvas.image.width || MouseRelY >= ed->canvas.image.height) return dirty;
+	if (
+		MouseRelX < 0 || MouseRelY < 0 ||
+		(U64)MouseRelX >= ed->canvas.image.width || (U64)MouseRelY >= ed->canvas.image.height
+	) {
+		return dirty;
+	}
 
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
@@ -203,7 +208,12 @@ Rng2D Editor_OnMouseMove(Editor* ed, S32 x, S32 y) {
 	switch (ed->tool.type.current) {
 		case TOOL_BRUSH:
 		case TOOL_ERASER: {
-			if (MouseRelX < 0 || MouseRelY < 0 || MouseRelX > ed->canvas.image.width || MouseRelY > ed->canvas.image.height) break;
+			if (
+				MouseRelX < 0 || MouseRelY < 0 ||
+				(U64)MouseRelX > ed->canvas.image.width || (U64)MouseRelY > ed->canvas.image.height
+			) {
+				break;
+			}
 
 			Pixel color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (Pixel){0, 0, 0, 0};
 			Rng2D newDirty = plotLine(
