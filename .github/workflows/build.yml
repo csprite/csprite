@@ -27,30 +27,22 @@ jobs:
       run: |
         python3 -m pip install --upgrade Pillow
 
-    - name: Generate Build Files & Build (Linux & GCC)
+    - name: Generate Build Files & Build (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
-        make clean gen-assets
+        make gen-assets
         make all -j4 BUILD_TYPE=release
+        mv build/csprite ./csprite-gcc
+        make clean gen-assets
+        make all -j4 BUILD_TYPE=release CC=clang CXX=clang++
+        mv build/csprite ./csprite-clang
 
     - name: Upload Artifacts (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.os }}-gcc
+        name: ${{ matrix.os }}
         if-no-files-found: error
-        path: ./build/csprite
-
-    - name: Generate Build Files & Build (Linux & Clang)
-      if: ${{ matrix.os == 'ubuntu-22.04' }}
-      run: |
-        make clean gen-assets
-        make all -j4 BUILD_TYPE=release CC=clang CXX=clang++
-
-    - name: Upload Artifacts (Linux & Clang)
-      if: ${{ matrix.os == 'ubuntu-22.04' }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.os }}-clang
-        if-no-files-found: error
-        path: ./build/csprite
+        path: |
+          ./csprite-gcc
+          ./csprite-clang
