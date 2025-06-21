@@ -21,22 +21,36 @@ jobs:
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
         sudo apt-get update -y
-        sudo apt-get install gcc libglfw3-dev make python3 python3-pip -y
+        sudo apt-get install gcc libglfw3-dev make python3 python3-pip clang -y
 
     - name: Install Python Deps
       run: |
         python3 -m pip install --upgrade Pillow
 
-    - name: Generate Build Files & Build (Linux)
+    - name: Generate Build Files & Build (Linux & GCC)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       run: |
-        make gen-assets
+        make clean gen-assets
         make all -j4 BUILD_TYPE=release
 
     - name: Upload Artifacts (Linux)
       if: ${{ matrix.os == 'ubuntu-22.04' }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.os }}
+        name: ${{ matrix.os }}-gcc
+        if-no-files-found: error
+        path: ./build/csprite
+
+    - name: Generate Build Files & Build (Linux & Clang)
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
+      run: |
+        make clean gen-assets
+        make all -j4 BUILD_TYPE=release CC=clang CXX=clang++
+
+    - name: Upload Artifacts (Linux & Clang)
+      if: ${{ matrix.os == 'ubuntu-22.04' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.os }}-clang
         if-no-files-found: error
         path: ./build/csprite
