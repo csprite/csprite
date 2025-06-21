@@ -21,7 +21,7 @@ B32 os_handle_is_zero(OS_Handle a) {
 	#include <windows.h>
 #endif
 
-void os_abort(S32 exit_code) {
+NORETURN void os_abort(S32 exit_code) {
 #ifdef TARGET_WINDOWS
 	ExitProcess(exit_code);
 #else
@@ -29,7 +29,7 @@ void os_abort(S32 exit_code) {
 #endif
 }
 
-void os_abort_with_message(S32 exit_code, String8 message) {
+NORETURN void os_abort_with_message(S32 exit_code, String8 message) {
 	os_show_message_box(OS_MessageBoxIcon_Error, str8_lit("Error Occurred!"), message);
 	os_abort(exit_code);
 }

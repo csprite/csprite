@@ -45,6 +45,15 @@ typedef struct {
 	#define Expect(expr, val) (expr)
 #endif
 
+// Functions That Don't Return Hint
+#if defined(__clang__) || defined(__GNUC__)
+	#define NORETURN __attribute__((noreturn))
+	#define UNREACHABLE() __builtin_unreachable()
+#elif defined(_MSC_VER)
+	#define NORETURN __declspec(noreturn)
+	#define UNREACHABLE() __assume(0)
+#endif
+
 #define Likely(expr)   Expect(expr, 1)
 #define Unlikely(expr) Expect(expr, 0)
 
