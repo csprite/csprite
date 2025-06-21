@@ -2,8 +2,11 @@
 #define CSPRITE_SRC_APP_APP_H_INCLUDED_
 #pragma once
 
-void app_init(void);
-void app_main_loop(void);
-void app_deinit(void);
+#include "os/gfx.h"
+
+OS_Handle app_init(void);
+void app_tick(OS_Handle w);
+void app_main_loop(OS_Handle w);
+void app_release(OS_Handle w);
 
 #endif
