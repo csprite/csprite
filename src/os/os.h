@@ -21,8 +21,8 @@ void os_memory_commit(void* memory, U64 size);
 void os_memory_uncommit(void* memory, U64 size);
 
 // Abortion
-void os_abort(S32 exit_code);
-void os_abort_with_message(S32 exit_code, String8 message);
+NORETURN void os_abort(S32 exit_code);
+NORETURN void os_abort_with_message(S32 exit_code, String8 message);
 
 // Time
 U64  os_now_microseconds(void); // This U64 Can Store Upto powl(2, 64) / 3.154E+15 = ~5848 Centuries.
