@@ -4,7 +4,7 @@
 #include "base/math.h"
 #include "base/types.h"
 #include "app/app.h"
-#include "app/window.h"
+#include "app/gui.h"
 #include "imgui.h"
 #include "assets/assets.h"
 #include "fs/fs.h"
@@ -69,9 +69,9 @@
 // 	}
 // }
 
-void app_main_loop(void) {
-	window_new_frame();
-	window_end_frame();
+void app_main_loop(OS_Handle window) {
+	gui_begin_frame(window);
+	gui_end_frame(window);
 
 	ImGuiIO* io = igGetIO();
 
@@ -82,8 +82,8 @@ void app_main_loop(void) {
 
 	bool doOpenNewFileModal = false;
 
-	while (!window_should_close()) {
-		window_new_frame();
+	while (!os_window_should_close(window)) {
+		gui_begin_frame(window);
 
 		ImVec2 mBarPos;
 		ImVec2 mBarSize;
@@ -238,49 +238,19 @@ void app_main_loop(void) {
 			igEndPopup();
 		}
 
-		window_end_frame();
+		gui_end_frame(window);
 	}
 
 	Editor_Deinit(&ed);
 }
 
-void app_init(void) {
-	// Initialize Window & ImGui
-	window_init("csprite", 320, 240, 1);
-	window_set_max_fps(60);
-
-	const float UI_Scale = 1.0f;
-
-	// Initialize Font
-	S32 fontDataSize = 0;
-	ImVector_ImWchar FontRanges;
-	const ImGuiIO* io = igGetIO();
-	ImVector_ImWchar_Init(&FontRanges);
-	ImFontGlyphRangesBuilder *FontBuilder = ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder();
-	ImFontGlyphRangesBuilder_AddRanges(FontBuilder, ImFontAtlas_GetGlyphRangesDefault(io->Fonts));
-	ImFontGlyphRangesBuilder_BuildRanges(FontBuilder, &FontRanges);
-	ImFontAtlas_AddFontFromMemoryCompressedTTF(
-	    io->Fonts, assets_get("data/fonts/Inter.ttf", &fontDataSize),
-		fontDataSize, 18 * UI_Scale, NULL, FontRanges.Data
-	);
-	ImFontAtlas_Build(io->Fonts);
-	if (!ImFontAtlas_IsBuilt(io->Fonts)) {
-		log_fatal("io.Fonts->Build() - failed to build the font atlas");
-	}
-	ImFontGlyphRangesBuilder_destroy(FontBuilder);
-	ImVector_ImWchar_UnInit(&FontRanges);
-
-	// Initialize Colors
-	igStyleColorsDark(igGetStyle());
-	ImGuiStyle_ScaleAllSizes(igGetStyle(), UI_Scale);
-
-	window_new_frame();
-	window_end_frame();
-
-	ImGuiStyle* style = igGetStyle();
-	style->FrameRounding = igGetFontSize() * 0.25f;
+OS_Handle app_init(void) {
+	OS_Handle window = os_window_init(320, 240, str8_lit("csprite"));
+	gui_init(window);
+	os_window_show(window);
+	return window;
 }
 
-void app_deinit(void) {
-	window_deinit();
+void app_release(OS_Handle window) {
+	gui_release(window);
 }

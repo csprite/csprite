@@ -1,13 +1,9 @@
 #include "app/app.h"
-#include "base/math.h"
-#include "base/string.h"
-#include "os/os.h"
-#include "base/types.h"
-#include <stdio.h>
 
 int main(void) {
-	app_init();
-	app_main_loop();
-	app_deinit();
+	OS_Handle window = app_init();
+	app_main_loop(window);
+	app_release(window);
+
 	return 0;
 }

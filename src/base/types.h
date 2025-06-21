@@ -25,6 +25,14 @@ typedef struct {
 	U8 r, g, b, a;
 } Pixel;
 
+typedef struct {
+	F32 r, g, b;
+} RGBF32;
+
+typedef struct {
+	F32 r, g, b, a;
+} RGBAF32;
+
 #define Min(A,B) (((A)<(B))?(A):(B))
 #define Max(A,B) (((A)>(B))?(A):(B))
 #define ArrayCount(a) (sizeof((a)) / sizeof((a)[0]))
