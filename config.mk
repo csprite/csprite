@@ -10,7 +10,7 @@ SFD_BACKEND =
 ifeq ($(OS),Windows_NT)
 	FLAGS += -DTARGET_WINDOWS
 	SFD_BACKEND = win32
-	LDFLAGS += -lcomdlg32 -Wl,-Bstatic -lglfw3 -Wl,-Bdynamic
+	LDFLAGS += -Wl,-Bstatic -lglfw3 -Wl,-Bdynamic -lgdi32 -lopengl32 -lcomdlg32
 	BIN += .exe
 else
 	LDFLAGS += -lglfw
@@ -18,7 +18,7 @@ else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		FLAGS += -DTARGET_LINUX
-		LDFLAGS = -lX11
+		LDFLAGS += -lX11
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		FLAGS += -DTARGET_APPLE
