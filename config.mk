@@ -12,7 +12,7 @@ SFD_BACKEND =
 ifeq ($(OS),Windows_NT)
 	FLAGS += -DTARGET_WINDOWS
 	SFD_BACKEND = win32
-	LFLAGS += -lcomdlg32
+	LFLAGS += -lcomdlg32 -L/mingw64/lib/
 	BIN += .exe
 	GLFW_STATIC = true
 else
