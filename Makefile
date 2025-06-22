@@ -9,7 +9,6 @@ INCLUDES = src/ vendor/glad/ vendor/log.c/include/ vendor/cimgui vendor/stb/incl
 CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -fvisibility=hidden -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1
 CXXFLAGS = $(addprefix -I,$(INCLUDES)) -fvisibility=hidden
 LDFLAGS  = -fvisibility=hidden
-LIBS     = vendor/sfd/build/sfd.a
 SOURCES  = $(addprefix src/,app/main.c app/gui.c app/render.c app/editor.c os/os.c os/gfx.c base/arena.c base/string.c bitmap/bitmap.c cimgui/impl.cpp assets/assets.c gfx/gfx.c) $(addprefix vendor/,glad/impl.c log.c/src/log.c stb/impl.c)
 OBJECTS  = $(patsubst %.c,%.c.o,$(patsubst %.cpp,%.cpp.o,$(SOURCES)))
 OBJECTS := $(patsubst %,$(BUILD)/%,$(OBJECTS))
@@ -32,9 +31,6 @@ endif
 
 all: $(BIN)
 
-vendor/sfd/build/sfd.a:
-	@$(MAKE) --no-print-directory -C vendor/sfd/ all BUILD=build AR=$(AR) CC=$(CC) CXX=$(CXX) FLAGS='-O3' BACKEND=$(SFD_BACKEND)
-
 $(BUILD)/%.c.o: %.c
 	@echo "Compile $<"
 	@mkdir -p "$$(dirname "$@")"
@@ -45,9 +41,9 @@ $(BUILD)/%.cpp.o: %.cpp
 	@mkdir -p "$$(dirname "$@")"
 	@$(BEAR) $(CXX) $(FLAGS) $(CXXFLAGS) -c $< -o $@
 
-$(BIN): $(OBJECTS) $(LIBS)
+$(BIN): $(OBJECTS)
 	@echo "   Link $@"
-	@$(CXX) $(OBJECTS) $(LIBS) $(LDFLAGS) -o $@
+	@$(CXX) $(OBJECTS) $(LDFLAGS) -o $@
 
 $(eval PYTHON := $(if $(PYTHON),$(PYTHON),python3))
 
