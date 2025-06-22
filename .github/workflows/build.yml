@@ -8,8 +8,7 @@ jobs:
   build-linux:
     strategy:
       matrix:
-        include:
-          - cc: [gcc, clang]
+        cc: [gcc, clang]
 
     runs-on: ubuntu-22.04
     steps:
