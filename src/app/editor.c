@@ -2,10 +2,6 @@
 #include "gfx/gfx.h"
 #include "imgui.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>
-
 Editor Editor_Init(U32 width, U32 height) {
 	Editor ed = {0};
 	Arena a = arena_init();
@@ -368,12 +364,12 @@ void Editor_ProcessInput(Editor* ed) {
 		dirty = Editor_OnMouseUp(ed, io->MousePos.x, io->MousePos.y);
 	}
 
-	if (Rng2D_IsValid(dirty)) {
+	if (rng2d_is_nil(dirty)) {
 		r_tex_update(
 			ed->canvas.texture, dirty.min.x, dirty.min.y,
 			dirty.max.x - dirty.min.x, dirty.max.y - dirty.min.y,
 			ed->canvas.image.width, (U8*)ed->canvas.image.pixels
 		);
-		Rng2D_Invalidate(dirty);
+		dirty = rng2d_nil();
 	}
 }

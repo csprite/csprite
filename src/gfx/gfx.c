@@ -1,5 +1,4 @@
 #include "gfx/gfx.h"
-#include <stdlib.h>
 
 void boundCheckDirty(Point start, Point end, const Bitmap* img, Rng2D* dirty) {
 	dirty->min.x = start.x < 0 ? 0 : start.x;
@@ -27,7 +26,7 @@ void ensureRectCoords(Point* start, Point* end) {
 }
 
 Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
-	Rng2D dirty = {0};
+	Rng2D dirty = rng2d_nil();
 
 	ensureRectCoords(&start, &end);
 	for (S32 y = start.y; y <= end.y; y++) {
@@ -43,7 +42,7 @@ Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
 }
 
 Rng2D plotEllipseRect(Point start, Point end, Bitmap* img, Pixel color) {
-	Rng2D dirty = {0};
+	Rng2D dirty = rng2d_nil();
 
 	ensureRectCoords(&start, &end);
 	boundCheckDirty(start, (Point){ end.x + 1, end.y + 1 }, img, &dirty);
@@ -97,7 +96,7 @@ Rng2D plotEllipseRect(Point start, Point end, Bitmap* img, Pixel color) {
 }
 
 Rng2D plotLine(Point start, Point end, Bitmap* img, Pixel color) {
-	Rng2D dirty = {0};
+	Rng2D dirty = rng2d_nil();
 
 	S64 dx  =  abs_s64(end.x - start.x), sx = start.x < end.x ? 1 : -1;
 	S64 dy  = -abs_s64(end.y - start.y), sy = start.y < end.y ? 1 : -1;

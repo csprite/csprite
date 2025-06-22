@@ -26,8 +26,8 @@ typedef struct {
 
 #define abs_s64(v) ((S64)llabs(v))
 
-#define Rng2D_Invalidate(r) ((r).min.x = (r).max.x = 0)
-#define Rng2D_IsValid(r) ((r).min.x != (r).max.x)
+#define rng2d_nil() ((Rng2D){0})
+#define rng2d_is_nil(r) ((r).min.x == 0 && (r).min.y == 0 && (r).max.x == 0 && (r).max.y == 0)
 
 #define rng1_mag(r) ((r).max - (r).min)
 #define rng1_is_mag_zero(r) (rng1_mag(r) == 0)
