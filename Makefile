@@ -10,7 +10,7 @@ CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -fvisibility=hidden -DCIMGUI_USE
 CXXFLAGS = $(addprefix -I,$(INCLUDES)) -fvisibility=hidden
 LDFLAGS  = -fvisibility=hidden
 LIBS     = vendor/glad/build/glad.a vendor/sfd/build/sfd.a
-SOURCES  = $(addprefix src/,main.c app/gui.c os/os.c os/os_impl.c base/arena.c bitmap/bitmap.c os/gfx.c cimgui/impl.cpp assets/assets.c base/string.c app/texture.c app/editor.c image/image.c gfx/gfx.c) $(addprefix vendor/,log.c/src/log.c stb/impl.c)
+SOURCES  = $(addprefix src/,main.c app/gui.c os/os.c base/arena.c bitmap/bitmap.c os/gfx.c cimgui/impl.cpp assets/assets.c base/string.c app/texture.c app/editor.c image/image.c gfx/gfx.c) $(addprefix vendor/,log.c/src/log.c stb/impl.c)
 OBJECTS  = $(patsubst %.c,%.c.o,$(patsubst %.cpp,%.cpp.o,$(SOURCES)))
 OBJECTS := $(patsubst %,$(BUILD)/%,$(OBJECTS))
 DEPENDS  = $(OBJECTS:.o=.d)
