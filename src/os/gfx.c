@@ -39,6 +39,10 @@ void os_window_set_title(OS_Handle w, String8 title) {
 	glfwSetWindowTitle(window, (char*)title.str);
 }
 
+void os_window_poll_events(OS_Handle window) {
+	glfwPollEvents();
+}
+
 B32 os_window_should_close(OS_Handle w) {
 	GLFWwindow* window = (GLFWwindow*)w.value;
 	return glfwWindowShouldClose(window);

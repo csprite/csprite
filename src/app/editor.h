@@ -5,7 +5,7 @@
 #include "base/types.h"
 #include "base/arena.h"
 #include "base/math.h"
-#include "app/texture.h"
+#include "app/render.h"
 #include "bitmap/bitmap.h"
 
 typedef enum {
@@ -34,8 +34,8 @@ static inline const char* ToolToString(Tool t) {
 typedef struct {
 	struct {
 		Bitmap  image;
-		Texture texture;
-		Texture checker;
+		R_Handle texture;
+		R_Handle checker;
 	} canvas;
 	struct {
 		char* path;
