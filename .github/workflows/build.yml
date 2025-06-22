@@ -56,3 +56,11 @@ jobs:
       run: |
         mingw32-make gen-assets
         mingw32-make all -j4 BUILD_TYPE=release
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-linux
+        if-no-files-found: error
+        path: |
+          ./build/csprite.exe
