@@ -10,7 +10,7 @@ SFD_BACKEND =
 # Append Variables According To Config
 
 ifeq ($(OS),Windows_NT)
-	CFLAGS += -DTARGET_WINDOWS
+	FLAGS += -DTARGET_WINDOWS
 	SFD_BACKEND = win32
 	LFLAGS += -lcomdlg32
 	BIN += .exe
@@ -18,10 +18,10 @@ else
 	SFD_BACKEND = zenity
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
-		CFLAGS += -DTARGET_LINUX
+		FLAGS += -DTARGET_LINUX
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		CFLAGS += -DTARGET_APPLE
+		FLAGS += -DTARGET_APPLE
 	endif
 endif
 
