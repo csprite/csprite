@@ -327,7 +327,7 @@ void Editor_CenterView(Editor* ed, Rect boundingRect) {
 }
 
 void Editor_ProcessInput(Editor* ed) {
-	ImGuiIO* io = igGetIO();
+	ImGuiIO* io = igGetIO_Nil();
 
 	if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
 		if (io->MouseWheel > 0) Editor_ZoomIn(ed);

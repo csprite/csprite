@@ -21,7 +21,7 @@ void gui_init(OS_Handle w) {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 130");
 
-	ImGuiIO* io = igGetIO();
+	ImGuiIO* io = igGetIO_Nil();
 	io->IniFilename = NULL;
 
 	const float UI_Scale = 1.0f;
