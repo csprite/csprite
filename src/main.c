@@ -12,7 +12,7 @@ int main(void) {
 	gui_begin_frame(window);
 	gui_end_frame(window);
 
-	ImGuiIO* io = igGetIO();
+	ImGuiIO* io = igGetIO_Nil();
 
 	Editor ed = Editor_Init(120, 90);
 	ed.view.scale = 5;
