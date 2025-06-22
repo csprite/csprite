@@ -2,6 +2,9 @@
 #include "base/math.h"
 #include "base/types.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #ifdef TARGET_LINUX
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -117,21 +120,29 @@ void os_show_message_box(OS_MessageBoxIcon icon, String8 title, String8 message)
 	XDestroyWindow(dpy, w);
 	XCloseDisplay(dpy);
 }
+#elif defined(TARGET_WINDOWS)
+
+#include <windows.h>
+#include <shellapi.h>
+
+void os_show_message_box(OS_MessageBoxIcon icon, String8 title, String8 message) {
+	long ico = MB_ICONWARNING;
+
+	switch (icon) {
+		case OS_MessageBoxIcon_Info:    ico = MB_ICONINFORMATION; break;
+		case OS_MessageBoxIcon_Warning: ico = MB_ICONWARNING;     break;
+		case OS_MessageBoxIcon_Error:   ico = MB_ICONERROR;       break;
+	}
+
+	MessageBox(NULL, (char*)title.str, (char*)message.str, MB_OK | ico);
+}
 #else
 	#error No Implementation Found!
 #endif
 
-#include <stdlib.h>
-#include <stdio.h>
-
-#ifdef TARGET_WINDOWS
-	#include <windows.h>
-	#include <shellapi.h>
-#endif
-
 void os_open_in_browser(String8 url) {
 #if defined(TARGET_WINDOWS)
-	ShellExecute(0, 0, url.str, 0, 0, SW_SHOW);
+	ShellExecute(0, 0, (char*)url.str, 0, 0, SW_SHOW);
 #elif defined(TARGET_APPLE) || defined(TARGET_LINUX)
 	String8 executable = 
 	#ifdef TARGET_LINUX
