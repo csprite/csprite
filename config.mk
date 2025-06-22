@@ -2,19 +2,15 @@
 LOG_ENABLE_COLOR=true
 # Possible Values: debug, release
 BUILD_TYPE=debug
-# SimpleFileDialog Backend: win32, zenity
-SFD_BACKEND=
 
 # Append Variables According To Config
 
 ifeq ($(OS),Windows_NT)
 	FLAGS+=-DTARGET_WINDOWS
-	SFD_BACKEND=win32
 	LDFLAGS+=-Wl,-Bstatic -lglfw3 -Wl,-Bdynamic -lgdi32 -lopengl32 -lcomdlg32
 	BIN:=$(BIN).exe
 else
 	LDFLAGS+=-lglfw
-	SFD_BACKEND=zenity
 	UNAME_S:=$(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		FLAGS+=-DTARGET_LINUX
