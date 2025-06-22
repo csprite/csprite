@@ -6,6 +6,11 @@ on:
 
 jobs:
   build-linux:
+    strategy:
+      matrix:
+        include:
+          - cc: [gcc, clang]
+
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
@@ -15,29 +20,28 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get update -y
-        sudo apt-get install gcc libglfw3-dev make python3 python3-pip clang -y
+        sudo apt-get install libglfw3-dev make python3 python3-pip gcc clang -y
 
     - name: Install Python Modules
-      run: |
-        python3 -m pip install --upgrade Pillow
+      run: python3 -m pip install --upgrade Pillow
 
-    - name: Generate Build Files & Build
-      run: |
-        make gen-assets
-        make all -j4 BUILD_TYPE=release
-        mv build/csprite ./csprite-gcc
-        make clean gen-assets
-        make all -j4 BUILD_TYPE=release CC=clang CXX=clang++
-        mv build/csprite ./csprite-clang
+    - name: Generate Build Files
+      run: make gen-assets
+
+    - name: Build (gcc)
+      if: ${{ matrix.cc == 'gcc' }}
+      run: make all -j4 BUILD_TYPE=release CC=gcc CXX=g++
+
+    - name: Build (clang)
+      if: ${{ matrix.cc == 'clang' }}
+      run: make all -j4 BUILD_TYPE=release CC=clang CXX=clang++
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: build-linux
+        name: build-linux-${{ matrix.cc }}
         if-no-files-found: error
-        path: |
-          ./csprite-gcc
-          ./csprite-clang
+        path: ./build/csprite
 
   build-windows:
     runs-on: windows-latest
@@ -46,13 +50,14 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: msys2/setup-msys2@v2
+    - name: Setup Msys2
+      uses: msys2/setup-msys2@v2
       with:
         cache: true
         msystem: mingw64
         install: mingw-w64-x86_64-python mingw-w64-x86_64-python-pillow mingw-w64-x86_64-make mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw
 
-    - name:
+    - name: Generate Build Files & Build
       shell: msys2 {0}
       run: |
         mingw32-make gen-assets
@@ -63,5 +68,4 @@ jobs:
       with:
         name: build-windows
         if-no-files-found: error
-        path: |
-          ./build/csprite.exe
+        path: ./build/csprite.exe

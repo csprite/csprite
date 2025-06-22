@@ -1,6 +1,5 @@
 # Requires GNU Make
 CC       = gcc
-AR       = ar
 CXX      = g++
 BUILD    = build
 BIN      = $(BUILD)/csprite
