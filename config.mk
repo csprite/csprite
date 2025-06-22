@@ -11,7 +11,7 @@ ifeq ($(OS),Windows_NT)
 	FLAGS+=-DTARGET_WINDOWS
 	SFD_BACKEND=win32
 	LDFLAGS+=-Wl,-Bstatic -lglfw3 -Wl,-Bdynamic -lgdi32 -lopengl32 -lcomdlg32
-	BIN+=.exe
+	BIN:=$(BIN).exe
 else
 	LDFLAGS+=-lglfw
 	SFD_BACKEND=zenity
