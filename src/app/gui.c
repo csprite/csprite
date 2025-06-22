@@ -1,24 +1,16 @@
 #include "app/gui.h"
+#include "app/imgui.h"
+#include "app/render.h"
 #include "log/log.h"
 #include "assets/assets.h"
-
 #include "glad/glad.h"
-#include <GLFW/glfw3.h>
-#include "imgui.h"
 #include "cimgui/cimgui_impl.h"
-#include "os/os.h"
 
 void gui_init(OS_Handle w) {
-	GLFWwindow* window = (GLFWwindow*)w.value;
-	glfwMakeContextCurrent(window);
-	if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0) {
-		os_abort_with_message(1, str8_lit("Failed to initialize GLAD"));
-	}
-
-	glfwSwapInterval(0);
+	r_init(w);
 
 	igCreateContext(NULL);
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplGlfw_InitForOpenGL((void*)w.value, true);
 	ImGui_ImplOpenGL3_Init("#version 130");
 
 	ImGuiIO* io = igGetIO_Nil();
@@ -59,10 +51,11 @@ void gui_release(OS_Handle window) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	igDestroyContext(NULL);
+	r_release(window);
 }
 
 void gui_begin_frame(OS_Handle window) {
-	glfwPollEvents();
+	os_window_poll_events(window);
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	igNewFrame();
@@ -71,12 +64,8 @@ void gui_begin_frame(OS_Handle window) {
 void gui_end_frame(OS_Handle w) {
 	igEndFrame();
 	igRender();
-
 	glClearColor(0, 0, 0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
-
 	ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-
-	GLFWwindow* window = (GLFWwindow*)w.value;
-	glfwSwapBuffers(window);
+	r_swap(w);
 }

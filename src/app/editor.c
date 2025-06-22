@@ -15,8 +15,8 @@ Editor Editor_Init(U32 width, U32 height) {
 		Rect checkerDim = { width / 2, height / 2 };
 
 		// TODO(pegvin) - Look into PBOs & See if the overhead of uploading data to GPU can be reduced
-		ed.canvas.texture = Texture_Init(&t, width, height);
-		ed.canvas.checker = Texture_Init(&t, checkerDim.w, checkerDim.h);
+		ed.canvas.texture = r_tex_init(&t, width, height);
+		ed.canvas.checker = r_tex_init(&t, checkerDim.w, checkerDim.h);
 
 		const Pixel pCol1 = { 0xB8, 0xB8, 0xB8, 0xFF }, pCol2 = { 0x74, 0x74, 0x74, 0xFF };
 		Pixel* pixels = arena_alloc(t.arena, checkerDim.w * checkerDim.h * sizeof(Pixel));
@@ -26,7 +26,7 @@ Editor Editor_Init(U32 width, U32 height) {
 			}
 		}
 
-		Texture_Update(ed.canvas.checker, 0, 0, checkerDim.w, checkerDim.h, checkerDim.w, (unsigned char*)pixels);
+		r_tex_update(ed.canvas.checker, 0, 0, checkerDim.w, checkerDim.h, checkerDim.w, (unsigned char*)pixels);
 		arena_end_temp(t);
 	}
 
@@ -62,8 +62,8 @@ Editor Editor_Init(U32 width, U32 height) {
 // }
 
 void Editor_Deinit(Editor* ed) {
-	Texture_Deinit(ed->canvas.texture);
-	Texture_Deinit(ed->canvas.checker);
+	r_tex_release(ed->canvas.texture);
+	r_tex_release(ed->canvas.checker);
 	arena_release(&ed->arena);
 }
 
@@ -369,7 +369,7 @@ void Editor_ProcessInput(Editor* ed) {
 	}
 
 	if (Rng2D_IsValid(dirty)) {
-		Texture_Update(
+		r_tex_update(
 			ed->canvas.texture, dirty.min.x, dirty.min.y,
 			dirty.max.x - dirty.min.x, dirty.max.y - dirty.min.y,
 			ed->canvas.image.width, (U8*)ed->canvas.image.pixels

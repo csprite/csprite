@@ -15,6 +15,7 @@ typedef enum {
 OS_Handle os_window_init(U64 width, U64 height, String8 title);
 void      os_window_show(OS_Handle window);
 void      os_window_set_title(OS_Handle window, String8 title);
+void      os_window_poll_events(OS_Handle window);
 B32       os_window_should_close(OS_Handle window);
 void      os_window_release(OS_Handle window);
 
