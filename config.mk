@@ -1,5 +1,3 @@
-# Statically Link with GLFW
-GLFW_STATIC=false
 # Enable Colored Output in logs
 LOG_ENABLE_COLOR=true
 # Possible Values: debug, release
@@ -12,10 +10,10 @@ SFD_BACKEND =
 ifeq ($(OS),Windows_NT)
 	FLAGS += -DTARGET_WINDOWS
 	SFD_BACKEND = win32
-	LFLAGS += -lcomdlg32 -L/mingw64/lib/
+	LDFLAGS += -lcomdlg32 -Wl,-Bstatic -lglfw3 -Wl,-Bdynamic
 	BIN += .exe
-	GLFW_STATIC = true
 else
+	LDFLAGS += -lglfw
 	SFD_BACKEND = zenity
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
@@ -40,12 +38,6 @@ else
 	else
 $(error Unknown build type "$(BUILD_TYPE)", valid values: debug, release)
 	endif
-endif
-
-ifeq ($(GLFW_STATIC),true)
-	LDFLAGS += -Wl,-Bstatic -lglfw -Wl,-Bdynamic
-else
-	LDFLAGS += -lglfw
 endif
 
 ifeq ($(LOG_ENABLE_COLOR),true)
