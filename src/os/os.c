@@ -1,8 +1,8 @@
-#include <stdlib.h>
-#include "base/math.h"
 #include "os/os.h"
 #include "os/gfx.h"
-#include "base/types.h"
+
+#include "os/linux/os.c"
+#include "os/win32/os.c"
 
 OS_Handle os_handle_zero(void) {
 	OS_Handle h = {0};
