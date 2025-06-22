@@ -5,7 +5,7 @@ CXX      = g++
 BUILD    = build
 BIN      = $(BUILD)/csprite
 FLAGS    = -march=native -MMD -MP -Wall -Wextra -Wpadded -pedantic -ffast-math -D_DEFAULT_SOURCE=1 -DCIMGUI_NO_EXPORT=1 -DIMGUI_IMPL_API="extern \"C\""
-INCLUDES = src/ vendor/glad/ vendor/log.c/include/ vendor/cimgui vendor/stb/include vendor/sfd/src
+INCLUDES = src/ vendor/glad/ vendor/log.c/include/ vendor/cimgui vendor/stb/include
 CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -fvisibility=hidden -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1
 CXXFLAGS = $(addprefix -I,$(INCLUDES)) -fvisibility=hidden
 LDFLAGS  = -fvisibility=hidden
@@ -59,5 +59,3 @@ run: all
 
 clean:
 	@$(RM) -rv $(BIN) $(BUILD) src/assets/assets.inl
-	@$(MAKE) --no-print-directory -C vendor/sfd/ clean
-	@$(MAKE) --no-print-directory -C vendor/glad/ clean
