@@ -14,11 +14,13 @@ ifeq ($(OS),Windows_NT)
 	SFD_BACKEND = win32
 	LFLAGS += -lcomdlg32
 	BIN += .exe
+	GLFW_STATIC = true
 else
 	SFD_BACKEND = zenity
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		FLAGS += -DTARGET_LINUX
+		LDFLAGS = -lX11
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		FLAGS += -DTARGET_APPLE

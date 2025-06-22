@@ -8,7 +8,7 @@ FLAGS    = -march=native -MMD -MP -Wall -Wextra -Wpadded -pedantic -ffast-math -
 INCLUDES = src/ vendor/glad/include/ vendor/log.c/include/ vendor/cimgui vendor/stb/include vendor/sfd/src
 CFLAGS   = -std=c99 $(addprefix -I,$(INCLUDES)) -fvisibility=hidden -DCIMGUI_USE_GLFW=1 -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1
 CXXFLAGS = $(addprefix -I,$(INCLUDES)) -fvisibility=hidden
-LDFLAGS  = -lX11 -fvisibility=hidden
+LDFLAGS  = -fvisibility=hidden
 LIBS     = vendor/glad/build/glad.a vendor/sfd/build/sfd.a
 SOURCES  = $(addprefix src/,main.c app/gui.c os/os.c base/arena.c bitmap/bitmap.c os/gfx.c cimgui/impl.cpp assets/assets.c base/string.c app/texture.c app/editor.c image/image.c fs/fs.c gfx/gfx.c) $(addprefix vendor/,log.c/src/log.c stb/impl.c)
 OBJECTS  = $(patsubst %.c,%.c.o,$(patsubst %.cpp,%.cpp.o,$(SOURCES)))
