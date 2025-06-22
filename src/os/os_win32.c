@@ -19,7 +19,7 @@ U64 os_now_microseconds(void) {
 	LARGE_INTEGER large_int_counter;
 
 	if (QueryPerformanceCounter(&large_int_counter)) {
-		result = (large_int_counter.QuadPart * Million(1)) / microsecond_resolution;
+		result = (large_int_counter.QuadPart * 1E+6) / microsecond_resolution;
 	}
 	return result;
 }
