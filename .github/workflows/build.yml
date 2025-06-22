@@ -5,30 +5,23 @@ on:
   pull_request:
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-22.04
-
-    runs-on: ${{ matrix.os }}
+  build-linux:
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
 
-    - name: Install Deps (Linux)
-      if: ${{ matrix.os == 'ubuntu-22.04' }}
+    - name: Install Dependencies
       run: |
         sudo apt-get update -y
         sudo apt-get install gcc libglfw3-dev make python3 python3-pip clang -y
 
-    - name: Install Python Deps
+    - name: Install Python Modules
       run: |
         python3 -m pip install --upgrade Pillow
 
-    - name: Generate Build Files & Build (Linux)
-      if: ${{ matrix.os == 'ubuntu-22.04' }}
+    - name: Generate Build Files & Build
       run: |
         make gen-assets
         make all -j4 BUILD_TYPE=release
@@ -37,12 +30,29 @@ jobs:
         make all -j4 BUILD_TYPE=release CC=clang CXX=clang++
         mv build/csprite ./csprite-clang
 
-    - name: Upload Artifacts (Linux)
-      if: ${{ matrix.os == 'ubuntu-22.04' }}
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.os }}
+        name: build-linux
         if-no-files-found: error
         path: |
           ./csprite-gcc
           ./csprite-clang
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - uses: msys2/setup-msys2@v2
+      with:
+        msystem: mingw64
+        install: mingw-w64-x86_64-python mingw-w64-x86_64-python-pillow mingw-w64-x86_64-make mingw-w64-x86_64-gcc
+
+    - name:
+      shell: msys2 {0}
+      run: |
+        make gen-assets
+        make all -j4 BUILD_TYPE=release
