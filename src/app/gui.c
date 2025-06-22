@@ -69,6 +69,7 @@ void gui_begin_frame(OS_Handle window) {
 }
 
 void gui_end_frame(OS_Handle w) {
+	igEndFrame();
 	igRender();
 
 	glClearColor(0, 0, 0, 1.0);
