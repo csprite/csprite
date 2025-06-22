@@ -54,5 +54,5 @@ jobs:
     - name:
       shell: msys2 {0}
       run: |
-        make gen-assets
-        make all -j4 BUILD_TYPE=release
+        mingw32-make gen-assets
+        mingw32-make all -j4 BUILD_TYPE=release
