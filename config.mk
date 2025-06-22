@@ -1,45 +1,45 @@
 # Enable Colored Output in logs
 LOG_ENABLE_COLOR=true
 # Possible Values: debug, release
-BUILD_TYPE = debug
+BUILD_TYPE=debug
 # SimpleFileDialog Backend: win32, zenity
-SFD_BACKEND =
+SFD_BACKEND=
 
 # Append Variables According To Config
 
 ifeq ($(OS),Windows_NT)
-	FLAGS += -DTARGET_WINDOWS
-	SFD_BACKEND = win32
-	LDFLAGS += -Wl,-Bstatic -lglfw3 -Wl,-Bdynamic -lgdi32 -lopengl32 -lcomdlg32
-	BIN += .exe
+	FLAGS+=-DTARGET_WINDOWS
+	SFD_BACKEND=win32
+	LDFLAGS+=-Wl,-Bstatic -lglfw3 -Wl,-Bdynamic -lgdi32 -lopengl32 -lcomdlg32
+	BIN+=.exe
 else
-	LDFLAGS += -lglfw
-	SFD_BACKEND = zenity
-	UNAME_S := $(shell uname -s)
+	LDFLAGS+=-lglfw
+	SFD_BACKEND=zenity
+	UNAME_S:=$(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
-		FLAGS += -DTARGET_LINUX
-		LDFLAGS += -lX11
+		FLAGS+=-DTARGET_LINUX
+		LDFLAGS+=-lX11
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		FLAGS += -DTARGET_APPLE
+		FLAGS+=-DTARGET_APPLE
 	endif
 endif
 
 ifeq ($(BUILD_TYPE),debug)
-	FLAGS += -O0 -g3 -fsanitize=address,undefined -DBUILD_DEBUG=1
-	LDFLAGS += -fsanitize=address,undefined
+	FLAGS+=-O0 -g3 -fsanitize=address,undefined -DBUILD_DEBUG=1
+	LDFLAGS+=-fsanitize=address,undefined
 else
 	ifeq ($(BUILD_TYPE),release)
 		# TODO(pegvin) - Look into https://stackoverflow.com/q/6687630/14516016
 		# in detail & figure out a way to strip all the unused functions, Since
 		# we won't be used most of the ImGui's functions anyways.
-		FLAGS += -O3 -fdata-sections -ffunction-sections -DBUILD_RELEASE=1
-		LDFLAGS += -Wl,--gc-sections
+		FLAGS+=-O3 -fdata-sections -ffunction-sections -DBUILD_RELEASE=1
+		LDFLAGS+=-Wl,--gc-sections
 	else
 $(error Unknown build type "$(BUILD_TYPE)", valid values: debug, release)
 	endif
 endif
 
 ifeq ($(LOG_ENABLE_COLOR),true)
-	CFLAGS += -DLOG_USE_COLOR=1
+	CFLAGS+=-DLOG_USE_COLOR=1
 endif
