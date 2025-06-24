@@ -1,6 +1,11 @@
 #include "app/render.h"
 #include "os/os.h"
-#include "glad/glad.h"
+
+#ifdef TARGET_WINDOWS
+	#include <GL/GL.h>
+#else
+	#include "glad/glad.h"
+#endif
 
 R_Handle r_tex_init(ArenaTemp* a, U64 width, U64 height) {
 	GLuint id = 0;

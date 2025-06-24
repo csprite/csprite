@@ -3,7 +3,12 @@
 #include "app/render.h"
 #include "log/log.h"
 #include "assets/assets.h"
-#include "glad/glad.h"
+
+#ifdef TARGET_WINDOWS
+	#include <GL/GL.h>
+#else
+	#include "glad/glad.h"
+#endif
 #include "cimgui/cimgui_impl.h"
 
 void gui_init(OS_Handle w) {

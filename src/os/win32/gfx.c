@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <windows.h>
+#include <GL/GL.h>
 #include <shellapi.h>
 #include "cimgui/cimgui_impl.h"
 
