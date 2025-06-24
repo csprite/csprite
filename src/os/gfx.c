@@ -1,6 +1,7 @@
 #include "os/linux/gfx.c"
 #include "os/win32/gfx.c"
 
+#include "log/log.h"
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 
