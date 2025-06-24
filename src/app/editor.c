@@ -364,7 +364,7 @@ void Editor_ProcessInput(Editor* ed) {
 		dirty = Editor_OnMouseUp(ed, io->MousePos.x, io->MousePos.y);
 	}
 
-	if (rng2d_is_nil(dirty)) {
+	if (!rng2d_is_nil(dirty)) {
 		r_tex_update(
 			ed->canvas.texture, dirty.min.x, dirty.min.y,
 			dirty.max.x - dirty.min.x, dirty.max.y - dirty.min.y,
