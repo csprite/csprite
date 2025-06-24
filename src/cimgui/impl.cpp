@@ -15,7 +15,11 @@
 #include "cimgui/imgui/imgui_tables.cpp"
 #include "cimgui/imgui/imgui_widgets.cpp"
 #include "cimgui/imgui/imgui_impl_opengl3.cpp"
-#include "cimgui/imgui/imgui_impl_glfw.cpp"
+#ifdef TARGET_WINDOWS
+	#include "cimgui/imgui/imgui_impl_win32.cpp"
+#else
+	#include "cimgui/imgui/imgui_impl_glfw.cpp"
+#endif
 #include "cimgui/cimgui.cpp"
 
 #if defined(__GNUC__)

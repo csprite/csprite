@@ -8,7 +8,11 @@
 
 void gui_init(OS_Handle w) {
 	igCreateContext(NULL);
-	ImGui_ImplGlfw_InitForOpenGL((void*)w.value, true);
+#ifdef TARGET_WINDOWS
+	ImGui_ImplWin32_InitForOpenGL(os_window_get_native_handle(w));
+#else
+	ImGui_ImplGlfw_InitForOpenGL(os_window_get_native_handle(w), true);
+#endif
 	ImGui_ImplOpenGL3_Init("#version 130");
 
 	ImGuiIO* io = igGetIO_Nil();
@@ -47,14 +51,22 @@ void gui_init(OS_Handle w) {
 
 void gui_release(OS_Handle window) {
 	ImGui_ImplOpenGL3_Shutdown();
+#ifdef TARGET_WINDOWS
+	ImGui_ImplWin32_Shutdown();
+#else
 	ImGui_ImplGlfw_Shutdown();
+#endif
 	igDestroyContext(NULL);
 }
 
 void gui_begin_frame(OS_Handle window) {
 	os_window_poll_events(window);
 	ImGui_ImplOpenGL3_NewFrame();
+#ifdef TARGET_WINDOWS
+	ImGui_ImplWin32_NewFrame();
+#else
 	ImGui_ImplGlfw_NewFrame();
+#endif
 	igNewFrame();
 }
 
