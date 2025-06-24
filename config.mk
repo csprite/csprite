@@ -6,10 +6,12 @@ BUILD_TYPE=debug
 # Append Variables According To Config
 
 ifeq ($(OS),Windows_NT)
-	FLAGS+=-DTARGET_WINDOWS
-	LDFLAGS+=-Wl,-Bstatic -lglfw3 -Wl,-Bdynamic -lgdi32 -lopengl32 -lcomdlg32
+	FLAGS+=-DTARGET_WINDOWS=1 -DWIN32_LEAN_AND_MEAN=1
+	CFLAGS+=-DCIMGUI_USE_WIN32=1
+	LDFLAGS+=-lgdi32 -lopengl32 -lcomdlg32
 	BIN:=$(BIN).exe
 else
+	CFLAGS+=-DCIMGUI_USE_GLFW=1
 	LDFLAGS+=-lglfw
 	UNAME_S:=$(shell uname -s)
 	ifeq ($(UNAME_S),Linux)

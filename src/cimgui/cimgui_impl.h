@@ -26,6 +26,7 @@ CIMGUI_API void ImGui_ImplGlfw_Sleep(int milliseconds);
 
 #endif
 #ifdef CIMGUI_USE_WIN32
+
 CIMGUI_API bool ImGui_ImplWin32_Init(void* hwnd);
 CIMGUI_API bool ImGui_ImplWin32_InitForOpenGL(void* hwnd);
 CIMGUI_API void ImGui_ImplWin32_Shutdown(void);
@@ -34,6 +35,9 @@ CIMGUI_API void ImGui_ImplWin32_EnableDpiAwareness(void);
 CIMGUI_API float ImGui_ImplWin32_GetDpiScaleForHwnd(void* hwnd);
 CIMGUI_API float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor);
 CIMGUI_API void ImGui_ImplWin32_EnableAlphaCompositing(void* hwnd);
+
+#include <windows.h>
+CIMGUI_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #endif
 #ifdef CIMGUI_USE_OPENGL3
