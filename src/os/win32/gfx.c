@@ -30,7 +30,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			}
 			return 0;
 		}
-		case WM_SYSCOMMAND:
+		case WM_SYSCOMMAND: {
 			// Disable ALT application menu
 			if ((wParam & 0xfff0) == SC_KEYMENU) {
 				return 0;
@@ -99,7 +99,7 @@ void os_window_show(OS_Handle w) {
 	UpdateWindow(handle->hwnd);
 }
 
-void os_window_swap(OS_Handle window) {
+void os_window_swap(OS_Handle w) {
 	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
 	SwapBuffers(handle->win_dc);
 }
@@ -108,7 +108,7 @@ void os_window_swap(OS_Handle window) {
 void os_window_set_title(OS_Handle window, String8 title) {
 }
 
-void os_window_poll_events(OS_Handle window) {
+void os_window_poll_events(OS_Handle w) {
 	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
 	MSG msg;
 	while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE)) {
@@ -125,12 +125,12 @@ void* os_window_get_native_handle(OS_Handle w) {
 	return handle->hwnd;
 }
 
-B32 os_window_should_close(OS_Handle window) {
+B32 os_window_should_close(OS_Handle w) {
 	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
 	return handle->should_close;
 }
 
-void os_window_release(OS_Handle window) {
+void os_window_release(OS_Handle w) {
 	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
 	wglMakeCurrent(NULL, NULL);
 	ReleaseDC(handle->hwnd, handle->win_dc);
