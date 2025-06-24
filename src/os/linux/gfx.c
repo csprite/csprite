@@ -1,6 +1,7 @@
 #ifdef TARGET_LINUX
 
 #include "os/gfx.h"
+#include "log/log.h"
 
 #include <stdio.h>
 #include <stdlib.h>
