@@ -1,12 +1,11 @@
 #ifdef CIMGUI_USE_GLFW
-
 #ifdef CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+
 typedef struct GLFWwindow GLFWwindow;
 typedef struct GLFWmonitor GLFWmonitor;
 struct GLFWwindow;
 struct GLFWmonitor;
 #endif //CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-
 CIMGUI_API bool ImGui_ImplGlfw_InitForOpenGL(GLFWwindow* window,bool install_callbacks);
 CIMGUI_API bool ImGui_ImplGlfw_InitForVulkan(GLFWwindow* window,bool install_callbacks);
 CIMGUI_API bool ImGui_ImplGlfw_InitForOther(GLFWwindow* window,bool install_callbacks);
@@ -26,8 +25,18 @@ CIMGUI_API void ImGui_ImplGlfw_MonitorCallback(GLFWmonitor* monitor,int event);
 CIMGUI_API void ImGui_ImplGlfw_Sleep(int milliseconds);
 
 #endif
-#ifdef CIMGUI_USE_OPENGL3
+#ifdef CIMGUI_USE_WIN32
+CIMGUI_API bool ImGui_ImplWin32_Init(void* hwnd);
+CIMGUI_API bool ImGui_ImplWin32_InitForOpenGL(void* hwnd);
+CIMGUI_API void ImGui_ImplWin32_Shutdown(void);
+CIMGUI_API void ImGui_ImplWin32_NewFrame(void);
+CIMGUI_API void ImGui_ImplWin32_EnableDpiAwareness(void);
+CIMGUI_API float ImGui_ImplWin32_GetDpiScaleForHwnd(void* hwnd);
+CIMGUI_API float ImGui_ImplWin32_GetDpiScaleForMonitor(void* monitor);
+CIMGUI_API void ImGui_ImplWin32_EnableAlphaCompositing(void* hwnd);
 
+#endif
+#ifdef CIMGUI_USE_OPENGL3
 CIMGUI_API bool ImGui_ImplOpenGL3_Init(const char* glsl_version);
 CIMGUI_API void ImGui_ImplOpenGL3_Shutdown(void);
 CIMGUI_API void ImGui_ImplOpenGL3_NewFrame(void);

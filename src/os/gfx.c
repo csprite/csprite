@@ -1,11 +1,8 @@
-#include "os/gfx.h"
-#include "base/types.h"
-
 #include "os/linux/gfx.c"
 #include "os/win32/gfx.c"
 
+#include "glad/glad.h"
 #include <GLFW/glfw3.h>
-#include "log/log.h"
 
 void _glfwErrCallback(int error, const char *desc) {
 	log_error("GLFW Error: %d - %s", error, desc);
@@ -28,10 +25,22 @@ OS_Handle os_window_init(U64 width, U64 height, String8 title) {
 		os_abort_with_message(1, str8_lit("Failed to create GLFW window!"));
 	}
 
+	glfwMakeContextCurrent(window);
+	if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0) {
+		os_abort_with_message(1, str8_lit("Failed to initialize GLAD"));
+	}
+
+	glfwSwapInterval(0);
+
 	OS_Handle w = {
 		.value = (U64)window
 	};
 	return w;
+}
+
+void os_window_swap(OS_Handle w) {
+	GLFWwindow* window = (GLFWwindow*)w.value;
+	glfwSwapBuffers(window);
 }
 
 void os_window_set_title(OS_Handle w, String8 title) {

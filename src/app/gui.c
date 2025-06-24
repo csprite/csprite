@@ -7,8 +7,6 @@
 #include "cimgui/cimgui_impl.h"
 
 void gui_init(OS_Handle w) {
-	r_init(w);
-
 	igCreateContext(NULL);
 	ImGui_ImplGlfw_InitForOpenGL((void*)w.value, true);
 	ImGui_ImplOpenGL3_Init("#version 130");
@@ -51,7 +49,6 @@ void gui_release(OS_Handle window) {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	igDestroyContext(NULL);
-	r_release(window);
 }
 
 void gui_begin_frame(OS_Handle window) {
@@ -67,5 +64,5 @@ void gui_end_frame(OS_Handle w) {
 	glClearColor(0, 0, 0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 	ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
-	r_swap(w);
+	os_window_swap(w);
 }

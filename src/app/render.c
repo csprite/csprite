@@ -1,26 +1,6 @@
 #include "app/render.h"
 #include "os/os.h"
-
 #include "glad/glad.h"
-#include <GLFW/glfw3.h>
-
-void r_init(OS_Handle w) {
-	GLFWwindow* window = (GLFWwindow*)w.value;
-	glfwMakeContextCurrent(window);
-	if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0) {
-		os_abort_with_message(1, str8_lit("Failed to initialize GLAD"));
-	}
-
-	glfwSwapInterval(0);
-}
-
-void r_swap(OS_Handle w) {
-	GLFWwindow* window = (GLFWwindow*)w.value;
-	glfwSwapBuffers(window);
-}
-
-void r_release(OS_Handle window) {
-}
 
 R_Handle r_tex_init(ArenaTemp* a, U64 width, U64 height) {
 	GLuint id = 0;
@@ -61,4 +41,3 @@ void r_tex_release(R_Handle texture) {
 	GLuint id = texture.value;
 	glDeleteTextures(1, &id);
 }
-
