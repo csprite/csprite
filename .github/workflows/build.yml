@@ -43,8 +43,7 @@ jobs:
         CXX: "${{ matrix.cc == 'gcc' && 'g++' || 'clang++' }}"
         LD: "${{ matrix.cc == 'gcc' && 'g++' || 'clang++' }}"
       run: |
-        python3 tools/create_icons.py
-        python3 tools/create_assets.py --cxx="$CXX"
+        ./build.sh assets
         ./build.sh release
 
     - name: Upload Artifacts
@@ -72,16 +71,13 @@ jobs:
       run: pip install --upgrade Pillow
 
     - name: Setup BusyBox
-      run: |
-        curl.exe -L "https://frippery.org/files/busybox/busybox.exe" -o ./busybox.exe
+      run: curl.exe -L "https://frippery.org/files/busybox/busybox.exe" -o ./busybox.exe
 
     - name: Generate Build Files & Build
       shell: cmd
       run: |
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
-        python.exe tools/create_icons.py
-        python.exe tools/create_assets.py --cxx=clang++
-        .\busybox.exe sh -c "export CC=clang; export CXX=clang++; export LD=clang++; ./build.sh release"
+        .\busybox.exe sh -c "export CC=clang; export CXX=clang++; export LD=clang++; ./build.sh assets && ./build.sh release"
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
