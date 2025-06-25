@@ -13,14 +13,18 @@ CXXFLAGS='-fvisibility=hidden'
 LFLAGS='-fvisibility=hidden'
 CMD=${1:-}
 KERNEL=$(uname -s)
+MAYBE_WAIT=""
 
 if [ "$KERNEL" = "Linux" ]; then
 	FLAGS="$FLAGS -DTARGET_LINUX=1 -DCIMGUI_USE_GLFW=1"
 	LFLAGS="$LFLAGS -lglfw -lX11"
-elif [ "$KERNEL" = "Windows_NT" ]; then
+elif [ "$KERNEL" = "Windows_NT" ] || [ "$(uname -o)" = "Cygwin" ]; then
 	FLAGS="$FLAGS -DTARGET_WINDOWS=1 -DWIN32_LEAN_AND_MEAN=1 -DCIMGUI_USE_WIN32=1"
 	LFLAGS="$LFLAGS -lgdi32 -lopengl32 -lcomdlg32"
 	BIN="$BIN.exe"
+	# On BusyBox.exe, It seems to run out of memory if too many commands are spawned.
+	# So we just wait it out.
+	MAYBE_WAIT="wait"
 fi
 
 SOURCES="src/app/main.c src/app/gui.c src/app/render.c src/app/editor.c src/os/os.c src/os/gfx.c src/base/arena.c src/base/string.c src/bitmap/bitmap.c src/assets/assets.c src/gfx/gfx.c vendor/glad/impl.c vendor/log.c/src/log.c vendor/stb/impl.c"
@@ -64,7 +68,8 @@ echo "$SOURCES $SOURCES_CPP 0" | tr ' ' '\n' | while read -r source; do
 	else
 		$CCACHE $CXX $FLAGS $CXXFLAGS -c "$source" -o "$BUILD/$source.o" &
 	fi
+	$MAYBE_WAIT
 done
 
-echo "  Linking $BUILD/csprite"
+echo "  Linking $BIN"
 $CCACHE $LD $OBJECTS $LFLAGS -o "$BIN"
