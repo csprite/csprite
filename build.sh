@@ -34,19 +34,34 @@ OBJECTS="$(echo "$SOURCES" | sed "s|\([^ ]*\)\.c|$BUILD/\1.c.o|g") $(echo "$SOUR
 mkdir -p $BUILD "$BUILD/.ccache"
 
 if [ "$CMD" = "clean" ]; then
-	rm -rf $BUILD
+	rm -rf $BIN $BUILD src/assets/assets.inl
 	exit 0
 elif [ "$CMD" = "bear" ]; then
 	bear --append --output "$BUILD/compile_commands.json" -- "$0" # github.com/rizsotto/Bear
 	exit 0
+elif [ "$CMD" = "assets" ]; then
+	if [ -x "$(command -v python3)" ]; then
+		PYTHON=python3
+	elif [ -x "$(command -v python)" ]; then
+		PYTHON=python
+	else
+		echo "Python not found!"
+		exit 1
+	fi
+	echo "Produce src/assets/assets.inl"
+	$PYTHON tools/create_icons.py
+	$PYTHON tools/create_assets.py --cxx="$CXX"
 elif [ "$CMD" = "release" ]; then
+	# TODO(pegvin) - Look into https://stackoverflow.com/q/6687630/14516016
+	# in detail & figure out a way to strip all the unused functions, Since
+	# we won't be used most of the ImGui's functions anyways.
 	FLAGS="$FLAGS -O3 -fdata-sections -ffunction-sections -DBUILD_RELEASE=1"
 	LFLAGS="$LFLAGS -Wl,--gc-sections"
 elif [ "$CMD" = "" ]; then
 	FLAGS="$FLAGS -O0 -g3 -fsanitize=address,undefined -DBUILD_DEBUG=1"
 	LFLAGS="$LFLAGS -fsanitize=address,undefined"
 elif [ "$CMD" ]; then
-	echo "Invalid command '$CMD', Available commands are: clean/bear/release or none to just build."
+	echo "Invalid command '$CMD', Available commands are: clean/bear/assets/release or none to just build in debug mode."
 	exit 1
 fi
 
