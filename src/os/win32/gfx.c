@@ -6,6 +6,8 @@
 #include <windows.h>
 #include <GL/GL.h>
 #include <shellapi.h>
+
+#include "cimgui/cimgui.h"
 #include "cimgui/cimgui_impl.h"
 
 typedef struct {
@@ -88,19 +90,20 @@ OS_Handle os_window_init(U64 width, U64 height, String8 title) {
 	wrapper->hwnd = hWnd;
 	wrapper->gl_ctx = gl_ctx;
 	wrapper->win_dc = win_dc;
+	wrapper->should_close = 0;
 
-	OS_Handle handle = { .value = wrapper };
+	OS_Handle handle = { .value = (U64)wrapper };
 	return handle;
 }
 
 void os_window_show(OS_Handle w) {
-	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
+	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w.value;
 	ShowWindow(handle->hwnd, SW_SHOWDEFAULT);
 	UpdateWindow(handle->hwnd);
 }
 
 void os_window_swap(OS_Handle w) {
-	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
+	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w.value;
 	SwapBuffers(handle->win_dc);
 }
 
@@ -109,7 +112,7 @@ void os_window_set_title(OS_Handle window, String8 title) {
 }
 
 void os_window_poll_events(OS_Handle w) {
-	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
+	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w.value;
 	MSG msg;
 	while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE)) {
 		TranslateMessage(&msg);
@@ -121,17 +124,17 @@ void os_window_poll_events(OS_Handle w) {
 }
 
 void* os_window_get_native_handle(OS_Handle w) {
-	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
+	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w.value;
 	return handle->hwnd;
 }
 
 B32 os_window_should_close(OS_Handle w) {
-	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
+	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w.value;
 	return handle->should_close;
 }
 
 void os_window_release(OS_Handle w) {
-	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w->value;
+	OS_Win_GL_Handle* handle = (OS_Win_GL_Handle*)w.value;
 	wglMakeCurrent(NULL, NULL);
 	ReleaseDC(handle->hwnd, handle->win_dc);
 	wglDeleteContext(handle->gl_ctx);
