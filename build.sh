@@ -31,8 +31,6 @@ SOURCES="src/app/main.c src/app/gui.c src/app/render.c src/app/editor.c src/os/o
 SOURCES_CPP="src/cimgui/impl.cpp"
 OBJECTS="$(echo "$SOURCES" | sed "s|\([^ ]*\)\.c|$BUILD/\1.c.o|g") $(echo "$SOURCES_CPP" | sed "s|\([^ ]*\)\.cpp|$BUILD/\1.cpp.o|g")"
 
-mkdir -p $BUILD "$BUILD/.ccache"
-
 if [ "$CMD" = "clean" ]; then
 	rm -rf $BIN $BUILD src/assets/assets.inl
 	exit 0
@@ -72,6 +70,7 @@ else
 fi
 
 export CCACHE_DIR="$BUILD/.ccache"
+mkdir -p $BUILD $CCACHE_DIR
 
 echo "$SOURCES $SOURCES_CPP 0" | tr ' ' '\n' | while read -r source; do
 	if [ "$source" = "0" ]; then wait; exit 0; fi
