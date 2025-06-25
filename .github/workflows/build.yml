@@ -17,7 +17,7 @@ jobs:
         sudo apt-get install shellcheck -y
 
     - name: Lint
-      run: shellcheck --shell=sh --norc ./build.sh || echo;
+      run: shellcheck --shell=sh --exclude=SC2086 --norc ./build.sh;
 
   build-linux:
     strategy:
