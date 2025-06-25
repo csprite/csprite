@@ -5,6 +5,21 @@ on:
   pull_request:
 
 jobs:
+  lint-build-sh:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install ShellCheck
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install shellcheck -y
+
+    - name: Lint
+      run: |
+        shellcheck --shell=sh ./build.sh
+
   build-linux:
     strategy:
       matrix:
