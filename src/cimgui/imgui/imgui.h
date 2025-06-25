@@ -83,7 +83,7 @@ Index of this file:
 #define IMGUI_API
 #endif
 #ifndef IMGUI_IMPL_API
-#define IMGUI_IMPL_API              IMGUI_API
+#define IMGUI_IMPL_API extern "C"
 #endif
 
 // Helper Macros
