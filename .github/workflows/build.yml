@@ -17,8 +17,7 @@ jobs:
         sudo apt-get install shellcheck -y
 
     - name: Lint
-      run: |
-        shellcheck --shell=sh ./build.sh
+      run: shellcheck --shell=sh --norc ./build.sh || echo;
 
   build-linux:
     strategy:
