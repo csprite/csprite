@@ -25,8 +25,7 @@ fi
 
 SOURCES="src/app/main.c src/app/gui.c src/app/render.c src/app/editor.c src/os/os.c src/os/gfx.c src/base/arena.c src/base/string.c src/bitmap/bitmap.c src/assets/assets.c src/gfx/gfx.c vendor/glad/impl.c vendor/log.c/src/log.c vendor/stb/impl.c"
 SOURCES_CPP="src/cimgui/impl.cpp"
-OBJECTS=$(echo "$SOURCES" | sed "s|\([^ ]*\)\.c|$BUILD/\1.c.o|g")
-OBJECTS="$OBJECTS $(echo "$SOURCES_CPP" | sed "s|\([^ ]*\)\.cpp|$BUILD/\1.cpp.o|g")"
+OBJECTS="$(echo "$SOURCES" | sed "s|\([^ ]*\)\.c|$BUILD/\1.c.o|g") $(echo "$SOURCES_CPP" | sed "s|\([^ ]*\)\.cpp|$BUILD/\1.cpp.o|g")"
 
 mkdir -p $BUILD "$BUILD/.ccache"
 
@@ -34,7 +33,7 @@ if [ "$CMD" = "clean" ]; then
 	rm -rf $BUILD
 	exit 0
 elif [ "$CMD" = "bear" ]; then
-	bear --append --output "$BUILD/compile_commands.json" -- $0 # github.com/rizsotto/Bear
+	bear --append --output "$BUILD/compile_commands.json" -- "$0" # github.com/rizsotto/Bear
 	exit 0
 elif [ "$CMD" = "release" ]; then
 	FLAGS="$FLAGS -O3 -fdata-sections -ffunction-sections -DBUILD_RELEASE=1"
@@ -47,17 +46,25 @@ elif [ "$CMD" ]; then
 	exit 1
 fi
 
+if ! [ -x "$(command -v ccache)" ]; then
+	CCACHE=""
+else
+	CCACHE="ccache"
+fi
+
+export CCACHE_DIR="$BUILD/.ccache"
+
 echo "$SOURCES $SOURCES_CPP 0" | tr ' ' '\n' | while read -r source; do
 	if [ "$source" = "0" ]; then wait; exit 0; fi
 	echo "Compiling $source"
 	mkdir -p "$(dirname "$BUILD/$source.o")"
 
-	if [ "$(echo $source | sed 's/^.*\.//')" = "c" ]; then
-		CCACHE_DIR="$BUILD/.ccache" ccache $CC $FLAGS $CFLAGS -c $source -o "$BUILD/$source.o" &
+	if [ "$(echo "$source" | sed 's/^.*\.//')" = "c" ]; then
+		$CCACHE $CC $FLAGS $CFLAGS -c "$source" -o "$BUILD/$source.o" &
 	else
-		CCACHE_DIR="$BUILD/.ccache" ccache $CXX $FLAGS $CXXFLAGS -c $source -o "$BUILD/$source.o" &
+		$CCACHE $CXX $FLAGS $CXXFLAGS -c "$source" -o "$BUILD/$source.o" &
 	fi
 done
 
 echo "  Linking $BUILD/csprite"
-$LD $OBJECTS $LFLAGS -o $BIN
+$CCACHE $LD $OBJECTS $LFLAGS -o "$BIN"
