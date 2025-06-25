@@ -5,6 +5,7 @@
 #include "assets/assets.h"
 
 #ifdef TARGET_WINDOWS
+	#include <windows.h>
 	#include <GL/GL.h>
 #else
 	#include "glad/glad.h"

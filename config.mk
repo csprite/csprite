@@ -6,8 +6,7 @@ BUILD_TYPE=debug
 # Append Variables According To Config
 
 ifeq ($(OS),Windows_NT)
-	FLAGS+=-DTARGET_WINDOWS=1 -DWIN32_LEAN_AND_MEAN=1
-	CFLAGS+=-DCIMGUI_USE_WIN32=1
+	FLAGS+=-DTARGET_WINDOWS=1 -DWIN32_LEAN_AND_MEAN=1 -DCIMGUI_USE_WIN32=1
 	LDFLAGS+=-lgdi32 -lopengl32 -lcomdlg32
 	BIN:=$(BIN).exe
 else
