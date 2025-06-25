@@ -50,10 +50,13 @@ jobs:
     - name: Change Git Config
       run: git config --global core.autocrlf input
 
-    - name: Install Python & Pip Deps
-      run: |
-        winget install -e --id Python.Python.3.9
-        pip install Pillow
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Python Modules
+      run: pip install --upgrade Pillow
 
     - name: Setup Cygwin
       uses: cygwin/cygwin-install-action@master
