@@ -47,7 +47,7 @@ elif [ "$CMD" ]; then
 	exit 1
 fi
 
-echo "$SOURCES $SOURCES_CPP 0" | tr ' ' '\n' | while read source; do
+echo "$SOURCES $SOURCES_CPP 0" | tr ' ' '\n' | while read -r source; do
 	if [ "$source" = "0" ]; then wait; exit 0; fi
 	echo "Compiling $source"
 	mkdir -p "$(dirname "$BUILD/$source.o")"
