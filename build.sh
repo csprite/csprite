@@ -49,6 +49,7 @@ elif [ "$CMD" = "assets" ]; then
 	echo "Produce src/assets/assets.inl"
 	$PYTHON tools/create_icons.py
 	$PYTHON tools/create_assets.py --cxx="$CXX"
+	exit 0
 elif [ "$CMD" = "release" ]; then
 	# TODO(pegvin) - Look into https://stackoverflow.com/q/6687630/14516016
 	# in detail & figure out a way to strip all the unused functions, Since
