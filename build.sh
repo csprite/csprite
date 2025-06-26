@@ -19,7 +19,7 @@ if [ "$KERNEL" = "Linux" ]; then
 	FLAGS="$FLAGS -DTARGET_LINUX=1 -DCIMGUI_USE_GLFW=1"
 	LFLAGS="$LFLAGS -lglfw -lX11"
 elif [ "$KERNEL" = "Windows_NT" ] || [ "$(uname -o)" = "Cygwin" ]; then
-	FLAGS="$FLAGS -DTARGET_WINDOWS=1 -DWIN32_LEAN_AND_MEAN=1 -DCIMGUI_USE_WIN32=1"
+	FLAGS="$FLAGS -DTARGET_WINDOWS=1 -DWIN32_LEAN_AND_MEAN=1 -DWINVER=0x0601 -D_WIN32_WINNT=0x0601 -DCIMGUI_USE_WIN32=1"
 	LFLAGS="$LFLAGS -lgdi32 -lopengl32 -lcomdlg32"
 	BIN="$BIN.exe"
 	# On BusyBox.exe, It seems to run out of memory if too many commands are spawned.
