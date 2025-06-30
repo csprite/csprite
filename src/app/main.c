@@ -6,6 +6,8 @@
 int main(void) {
 	// Initialization
 	OS_Handle window = os_window_init(320, 240, str8_lit("csprite"));
+	Editor ed = Editor_Init(120, 90);
+
 	gui_init(window);
 	os_window_show(window);
 
@@ -13,8 +15,6 @@ int main(void) {
 	gui_end_frame(window);
 
 	ImGuiIO* io = igGetIO_Nil();
-
-	Editor ed = Editor_Init(120, 90);
 	ed.view.scale = 5;
 	Editor_UpdateView(&ed);
 	Editor_CenterView(&ed, (Rect){ io->DisplaySize.x, io->DisplaySize.y });
