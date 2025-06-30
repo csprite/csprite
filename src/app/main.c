@@ -6,6 +6,8 @@
 int main(void) {
 	// Initialization
 	OS_Handle window = os_window_init(320, 240, str8_lit("csprite"));
+
+	// NOTE(pegvin) - Move Editor GUI Related Functions Into gui_*
 	Editor ed = Editor_Init(120, 90);
 
 	gui_init(window);
