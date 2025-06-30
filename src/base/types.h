@@ -45,6 +45,23 @@ typedef struct {
 	#define Expect(expr, val) (expr)
 #endif
 
+// Asserts
+#if defined(_MSC_VER)
+	#define Trap() __debugbreak()
+#elif defined(__clang__) || defined(__GNUC__)
+	#define Trap() __builtin_trap()
+#else
+	#error Unknown trap intrinsic for this compiler.
+#endif
+
+#define AssertAlways(x) do{if(!(x)) {Trap();}}while(0)
+
+#if BUILD_DEBUG
+	#define Assert(x) AssertAlways(x)
+#else
+	#define Assert(x) (void)(x)
+#endif
+
 // Functions That Don't Return Hint
 #if defined(__clang__) || defined(__GNUC__)
 	#define NORETURN __attribute__((noreturn))
