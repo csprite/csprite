@@ -57,7 +57,7 @@ elif [ "$CMD" = "release" ]; then
 	FLAGS="$FLAGS -O3 -fdata-sections -ffunction-sections -DBUILD_RELEASE=1"
 	LFLAGS="$LFLAGS -Wl,--gc-sections"
 elif [ "$CMD" = "" ]; then
-	FLAGS="$FLAGS -O0 -g3 -fsanitize=address,undefined -DBUILD_DEBUG=1"
+	FLAGS="$FLAGS -O0 -g3 -fsanitize=address,undefined -DBUILD_DEBUG=1 -DBUILD_HAS_ASAN=1"
 	LFLAGS="$LFLAGS -fsanitize=address,undefined"
 elif [ "$CMD" ]; then
 	echo "Invalid command '$CMD', Available commands are: clean/bear/assets/release or none to just build in debug mode."

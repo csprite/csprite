@@ -1,5 +1,6 @@
 #include "base/arena.h"
 #include "base/types.h"
+#include "base/memory.h"
 #include "os/os.h"
 
 #include <string.h>
@@ -22,11 +23,13 @@ Arena arena_init(void) {
 		os_abort_with_message(1, str8_lit("Unexpected memory allocation failure!"));
 	}
 
+	memory_asan_poison(arena.memory, arena.max_size);
+
 	return arena;
 }
 
 void arena_clear(Arena* arena) {
-	arena_dealloc(arena, arena->alloc_position);
+	arena_dealloc_to(arena, 0);
 }
 
 void arena_release(Arena* arena) {
@@ -52,6 +55,9 @@ void* arena_alloc(Arena* arena, U64 size) {
 
 	void* memory = arena->memory + arena->alloc_position;
 	arena->alloc_position += size;
+
+	memory_asan_unpoison(memory, size);
+
 	return memory;
 }
 
@@ -62,16 +68,17 @@ void* arena_alloc_zero(Arena* arena, U64 size) {
 }
 
 void arena_dealloc(Arena* arena, U64 size) {
-	if (size > arena->alloc_position) {
-		size = arena->alloc_position;
+	U64 prev_pos = arena->alloc_position;
+	U64 next_pos = prev_pos;
+	if (size < prev_pos) {
+		next_pos = prev_pos - size;
 	}
-	arena->alloc_position -= size;
+	arena_dealloc_to(arena, next_pos);
 }
 
 void arena_dealloc_to(Arena* arena, U64 pos) {
-	if (pos > arena->max_size) {
-		pos = arena->max_size;
-	}
+	AssertAlways(pos <= arena->alloc_position);
+	memory_asan_poison(arena->memory + pos, arena->alloc_position - pos);
 	arena->alloc_position = pos;
 }
 
