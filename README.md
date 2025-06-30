@@ -20,6 +20,12 @@ will be simpler but the overall foot print of the program
 will be smaller as well & Only required things will be loaded.
 
 ## Todo
+- Live Canvas Preview? The idea is simple. Just have a buffer
+  on which user's action are drawn on every frame & Cleared
+  every frame (By storing the dirty from previous frame) & When
+  finally it's time to commit. You just blit the buffer or maybe
+  blend it?
+- Dithering Tool Like Dither Boy?
 - Unit Testing? More like Block Testing. Instead of testing
   each function, Let's test subsystems or a block.
   - https://youtu.be/21JlBOxgGwY
