@@ -58,6 +58,7 @@ void os_window_set_title(OS_Handle w, String8 title) {
 
 void os_window_poll_events(OS_Handle window) {
 	glfwPollEvents();
+	NoOp(window);
 }
 
 void* os_window_get_native_handle(OS_Handle w) {
