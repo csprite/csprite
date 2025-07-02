@@ -63,6 +63,7 @@ void gui_release(OS_Handle window) {
 	ImGui_ImplGlfw_Shutdown();
 #endif
 	igDestroyContext(NULL);
+	NoOp(window);
 }
 
 void gui_begin_frame(OS_Handle window) {

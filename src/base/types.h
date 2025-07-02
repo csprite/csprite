@@ -88,4 +88,7 @@ typedef struct {
 #define EachElement(it, array) (U64 it = 0; it < ArrayCount(array); it += 1)
 #define EachEnumVal(type, it) (type it = (type)0; it < type##_COUNT; it = (type)(it+1))
 
+// Misc.
+#define NoOp(arg) ((void)arg)
+
 #endif // SRC_BASE_TYPES_H_INCLUDED_
