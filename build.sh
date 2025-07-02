@@ -64,11 +64,8 @@ elif [ "$CMD" ]; then
 	exit 1
 fi
 
-if ! [ -x "$(command -v ccache)" ]; then
-	CCACHE=""
-else
-	CCACHE="ccache"
-fi
+if ! [ -x "$(command -v ccache)" ]; then CCACHE=""; else CCACHE="ccache"; fi
+if [ -x "$(command -v mold)" ]; then LFLAGS="$LFLAGS -fuse-ld=mold"; fi
 
 export CCACHE_DIR="$BUILD/.ccache"
 mkdir -p $BUILD $CCACHE_DIR
