@@ -16,10 +16,12 @@ Editor Editor_Init(U32 width, U32 height) {
 
 		const Pixel pCol1 = { 0xB8, 0xB8, 0xB8, 0xFF }, pCol2 = { 0x74, 0x74, 0x74, 0xFF };
 		Pixel* pixels = arena_alloc(t.arena, checkerDim.w * checkerDim.h * sizeof(Pixel));
-		for (S64 y = 0; y < checkerDim.h; y++) {
-			for (S64 x = 0; x < checkerDim.w; x++) {
-				pixels[(y * checkerDim.w) + x] = ((x + y) % 2) ? pCol2 : pCol1;
-			}
+
+		#pragma omp parallel for
+		for EachIndex(i, (U64)(checkerDim.w * checkerDim.h)) {
+			U64 x = i % checkerDim.w;
+			U64 y = i / checkerDim.w;
+			pixels[i] = (x + y) % 2 ? pCol2 : pCol1;
 		}
 
 		r_tex_update(ed.canvas.checker, 0, 0, checkerDim.w, checkerDim.h, checkerDim.w, (unsigned char*)pixels);
