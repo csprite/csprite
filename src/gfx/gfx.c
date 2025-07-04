@@ -28,10 +28,15 @@ Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
 	Rng2D dirty = rng2d_nil();
 
 	_SwapAxesIfNeeded(&start, &end);
-	for (S32 y = start.y; y <= end.y; y++) {
-		for (S32 x = start.x; x <= end.x; x++) {
-			if (x > -1 && y > -1 && x < (S64)img->width && y < (S64)img->height) {
-				img->pixels[(y * img->width) + x] = color;
+
+	#pragma omp parallel
+	{
+		#pragma omp for
+		for (S32 y = start.y; y <= end.y; y++) {
+			for (S32 x = start.x; x <= end.x; x++) {
+				if (x > -1 && y > -1 && x < (S64)img->width && y < (S64)img->height) {
+					img->pixels[(y * img->width) + x] = color;
+				}
 			}
 		}
 	}
