@@ -11,7 +11,8 @@
 #elif defined(__clang__)
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wpedantic"
-	#pragma GCC diagnostic ignored "-Wpadded"
+	#pragma clang diagnostic ignored "-Wpadded"
+	#pragma clang diagnostic ignored "-Wtypedef-redefinition"
 #endif
 
 #include "cimgui/cimgui.h"
