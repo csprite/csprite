@@ -113,7 +113,7 @@ void Editor_OnMouseDrag(Editor* ed, S32 x, S32 y) {
 	Point TopLeft = { MouseDownRelX, MouseDownRelY };
 	Point BotRight = { MouseRelX, MouseRelY };
 
-	ensureRectCoords(&TopLeft, &BotRight);
+	_SwapAxesIfNeeded(&TopLeft, &BotRight);
 
 	Point BotLeft = { TopLeft.x, BotRight.y };
 	Point TopRight = { BotRight.x, TopLeft.y };
