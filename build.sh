@@ -66,7 +66,7 @@ fi
 
 if ! [ -x "$(command -v ccache)" ]; then CCACHE=""; else CCACHE="ccache"; fi
 if [ -x "$(command -v mold)" ]; then LFLAGS="$LFLAGS -fuse-ld=mold"; fi
-if [ "$CXX" == "clang++" ] && [ "$KERNEL" = "Linux" ]; then FLAGS="$FLAGS -fopenmp=libomp"; LFLAGS="$LFLAGS -fopenmp=libomp"; else FLAGS="$FLAGS -fopenmp"; LFLAGS="$LFLAGS -fopenmp"; fi
+if [ "$CXX" = "clang++" ] && [ "$KERNEL" = "Linux" ]; then FLAGS="$FLAGS -fopenmp=libomp"; LFLAGS="$LFLAGS -fopenmp=libomp"; else FLAGS="$FLAGS -fopenmp"; LFLAGS="$LFLAGS -fopenmp"; fi
 
 export CCACHE_DIR="$BUILD/.ccache"
 mkdir -p $BUILD $CCACHE_DIR
