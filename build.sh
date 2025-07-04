@@ -7,10 +7,10 @@ CXX=${CXX:-g++}
 LD=${LD:-g++}
 BUILD="build"
 BIN="$BUILD/csprite"
-FLAGS='-march=native -fopenmp -Wall -Wextra -pedantic -Isrc/ -Ivendor/glad/ -Ivendor/log.c/include/ -Ivendor/stb/include -ffast-math -D_DEFAULT_SOURCE=1 -DCIMGUI_NO_EXPORT=1'
+FLAGS='-march=native -Wall -Wextra -pedantic -Isrc/ -Ivendor/glad/ -Ivendor/log.c/include/ -Ivendor/stb/include -ffast-math -D_DEFAULT_SOURCE=1 -DCIMGUI_NO_EXPORT=1'
 CFLAGS='-std=c99 -fvisibility=hidden -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1 -DLOG_USE_COLOR=1'
 CXXFLAGS='-fvisibility=hidden'
-LFLAGS='-fvisibility=hidden -fopenmp'
+LFLAGS='-fvisibility=hidden'
 CMD=${1:-}
 KERNEL=$(uname -s)
 MAYBE_WAIT=""
@@ -66,6 +66,7 @@ fi
 
 if ! [ -x "$(command -v ccache)" ]; then CCACHE=""; else CCACHE="ccache"; fi
 if [ -x "$(command -v mold)" ]; then LFLAGS="$LFLAGS -fuse-ld=mold"; fi
+if [ "$CXX" == "clang++" ] && [ "$KERNEL" = "Linux" ]; then FLAGS="$FLAGS -fopenmp=libomp"; LFLAGS="$LFLAGS -fopenmp=libomp"; else FLAGS="$FLAGS -fopenmp"; LFLAGS="$LFLAGS -fopenmp"; fi
 
 export CCACHE_DIR="$BUILD/.ccache"
 mkdir -p $BUILD $CCACHE_DIR
