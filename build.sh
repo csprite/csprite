@@ -7,17 +7,17 @@ CXX=${CXX:-g++}
 LD=${LD:-g++}
 BUILD="build"
 BIN="$BUILD/csprite"
-FLAGS='-march=native -Wall -Wextra -pedantic -Isrc/ -Ivendor/glad/ -Ivendor/log.c/include/ -Ivendor/stb/include -ffast-math -D_DEFAULT_SOURCE=1 -DCIMGUI_NO_EXPORT=1'
+FLAGS='-march=native -fopenmp -Wall -Wextra -pedantic -Isrc/ -Ivendor/glad/ -Ivendor/log.c/include/ -Ivendor/stb/include -ffast-math -D_DEFAULT_SOURCE=1 -DCIMGUI_NO_EXPORT=1'
 CFLAGS='-std=c99 -fvisibility=hidden -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1 -DLOG_USE_COLOR=1'
 CXXFLAGS='-fvisibility=hidden'
-LFLAGS='-fvisibility=hidden'
+LFLAGS='-fvisibility=hidden -fopenmp'
 CMD=${1:-}
 KERNEL=$(uname -s)
 MAYBE_WAIT=""
 
 if [ "$KERNEL" = "Linux" ]; then
 	FLAGS="$FLAGS -DTARGET_LINUX=1 -DCIMGUI_USE_GLFW=1"
-	LFLAGS="$LFLAGS -lglfw -lX11"
+	LFLAGS="$LFLAGS -lglfw -lX11 -lgomp -liomp5"
 elif [ "$KERNEL" = "Windows_NT" ] || [ "$(uname -o)" = "Cygwin" ]; then
 	FLAGS="$FLAGS -DTARGET_WINDOWS=1 -DWIN32_LEAN_AND_MEAN=1 -DWINVER=0x0601 -D_WIN32_WINNT=0x0601 -DCIMGUI_USE_WIN32=1"
 	LFLAGS="$LFLAGS -lgdi32 -lopengl32 -lcomdlg32"
@@ -66,7 +66,6 @@ fi
 
 if ! [ -x "$(command -v ccache)" ]; then CCACHE=""; else CCACHE="ccache"; fi
 if [ -x "$(command -v mold)" ]; then LFLAGS="$LFLAGS -fuse-ld=mold"; fi
-if [ "$CXX" = "clang++" ] && [ "$KERNEL" = "Linux" ]; then FLAGS="$FLAGS -fopenmp=libomp"; LFLAGS="$LFLAGS -fopenmp=libomp"; else FLAGS="$FLAGS -fopenmp"; LFLAGS="$LFLAGS -fopenmp"; fi
 
 export CCACHE_DIR="$BUILD/.ccache"
 mkdir -p $BUILD $CCACHE_DIR
