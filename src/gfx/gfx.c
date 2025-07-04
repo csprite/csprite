@@ -16,10 +16,9 @@ void calcDirty(const Rng2D* dirty, Rng2D* final, const Bitmap* img) {
 	boundCheckDirty((Point){ final->min.x, final->min.y }, (Point){ final->max.x, final->max.y }, img, final);
 }
 
-/*
- Ensure Top Left & Bottom Right are correct coordinates, else swap variables
- */
-void ensureRectCoords(Point* start, Point* end) {
+// Often it's possible the points start bottom right & End at
+// top left. This can be simply fixed by swapping the axes.
+void _SwapAxesIfNeeded(Point* restrict start, Point* restrict end) {
 	S32 t = 0;
 	if (end->x < start->x) { t = end->x; end->x = start->x; start->x = t; }
 	if (end->y < start->y) { t = end->y; end->y = start->y; start->y = t; }
@@ -28,7 +27,7 @@ void ensureRectCoords(Point* start, Point* end) {
 Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
 	Rng2D dirty = rng2d_nil();
 
-	ensureRectCoords(&start, &end);
+	_SwapAxesIfNeeded(&start, &end);
 	for (S32 y = start.y; y <= end.y; y++) {
 		for (S32 x = start.x; x <= end.x; x++) {
 			if (x > -1 && y > -1 && x < (S64)img->width && y < (S64)img->height) {
@@ -44,7 +43,7 @@ Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
 Rng2D plotEllipseRect(Point start, Point end, Bitmap* img, Pixel color) {
 	Rng2D dirty = rng2d_nil();
 
-	ensureRectCoords(&start, &end);
+	_SwapAxesIfNeeded(&start, &end);
 	boundCheckDirty(start, (Point){ end.x + 1, end.y + 1 }, img, &dirty);
 
 	S64 a = abs_s64(end.x - start.x), b = abs_s64(end.y - start.y), b1 = b & 1;

@@ -5,7 +5,7 @@
 #include "base/math.h"
 #include "bitmap/bitmap.h"
 
-void ensureRectCoords(Point* start, Point* end);
+void _SwapAxesIfNeeded(Point* start, Point* end);
 
 Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color);
 Rng2D plotEllipseRect(Point start, Point end, Bitmap* img, Pixel color);
