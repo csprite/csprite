@@ -105,7 +105,7 @@ Rng2D Editor_OnMouseDown(Editor* ed, S32 x, S32 y) {
 	return dirty;
 }
 
-void Editor_OnMouseDrag(Editor* ed, S32 x, S32 y) {
+void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y) {
 	S32 MouseRelX = (S32)((x - ed->view.x) / ed->view.scale);
 	S32 MouseRelY = (S32)((y - ed->view.y) / ed->view.scale);
 
@@ -120,8 +120,17 @@ void Editor_OnMouseDrag(Editor* ed, S32 x, S32 y) {
 	Point BotLeft = { TopLeft.x, BotRight.y };
 	Point TopRight = { BotRight.x, TopLeft.y };
 
+	// Draw mouse position regardless
+	ImDrawList_AddRect(
+	    igGetForegroundDrawList_Nil(),
+		(ImVec2){ (MouseRelX * ed->view.scale) + ed->view.x, (MouseRelY * ed->view.scale) + ed->view.y },
+		(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
+		*(U32*)&ed->tool.brush.color, 0, 0, 1
+	);
+
 	switch (ed->tool.type.current) {
 		case TOOL_LINE: {
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) break;
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (MouseDownRelX * ed->view.scale) + ed->view.x, (MouseDownRelY * ed->view.scale) + ed->view.y },
@@ -144,6 +153,7 @@ void Editor_OnMouseDrag(Editor* ed, S32 x, S32 y) {
 			break;
 		}
 		case TOOL_RECT: {
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) break;
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (TopLeft.x * ed->view.scale) + ed->view.x, (TopLeft.y * ed->view.scale) + ed->view.y },
@@ -153,6 +163,7 @@ void Editor_OnMouseDrag(Editor* ed, S32 x, S32 y) {
 			break;
 		}
 		case TOOL_ELLIPSE: {
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) break;
 			ImDrawList_AddRectFilled( // Top Left
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (TopLeft.x * ed->view.scale) + ed->view.x, (TopLeft.y * ed->view.scale) + ed->view.y },
@@ -343,26 +354,13 @@ void Editor_ProcessInput(Editor* ed) {
 
 	Rng2D dirty = {0};
 
+	Editor_DrawToolPreview(ed, io->MousePos.x, io->MousePos.y);
+
 	if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
 		dirty = Editor_OnMouseDown(ed, io->MousePos.x, io->MousePos.y);
-	} else {
-		S32 MouseRelX = (S32)((io->MousePos.x - ed->view.x) / ed->view.scale);
-		S32 MouseRelY = (S32)((io->MousePos.y - ed->view.y) / ed->view.scale);
-		ImDrawList_AddRect(
-		    igGetForegroundDrawList_Nil(),
-			(ImVec2){ (MouseRelX * ed->view.scale) + ed->view.x, (MouseRelY * ed->view.scale) + ed->view.y },
-			(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
-			*(U32*)&ed->tool.brush.color, 0, 0, 1
-		);
-	}
-
-	if (igIsMouseDown_Nil(ImGuiMouseButton_Left) && (io->MouseDelta.x != 0 || io->MouseDelta.y != 0)) {
+	} else if (igIsMouseDown_Nil(ImGuiMouseButton_Left) && (io->MouseDelta.x != 0 || io->MouseDelta.y != 0)) {
 		dirty = Editor_OnMouseMove(ed, io->MousePos.x, io->MousePos.y);
-	}
-	if (igIsMouseDragging(ImGuiMouseButton_Left, -1)) {
-		Editor_OnMouseDrag(ed, io->MousePos.x, io->MousePos.y);
-	}
-	if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
+	} else if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
 		dirty = Editor_OnMouseUp(ed, io->MousePos.x, io->MousePos.y);
 	}
 
