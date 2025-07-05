@@ -26,6 +26,7 @@ Requirements for Windows:
 - VS Build Tools 2019 or Later With [Clang Support](https://learn.microsoft.com/en-us/cpp/build/clang-support-msbuild)
   ([Direct Download](https://aka.ms/vs/16/release/vs_BuildTools.exe))
 - BusyBox for Windows ([Direct Download](https://frippery.org/files/busybox/busybox.exe))
+- Python v3.0+ ([Direct Download](https://www.python.org/downloads)) (Make sure to select "Add To Path" option)
 
 Requirements for Linux:
 - POSIX Compliant Shell
@@ -35,11 +36,13 @@ Requirements for Linux:
   > On Debian/Ubuntu (And maybe other distros as well), If you're using LLVM-Clang
   > toolchain then `libomp-dev` has to be installed as it doesn't come packaged with
   > the toolchain for some reason.
+- [GLFW3](https://repology.org/project/glfw/versions) v3.1 or Later.
 - [MOLD - Modern Linker](https://github.com/rui314/mold)
   
   > MOLD is used for speeding up the linking process. It is completely optional & Even
   > unnecessary if you're just building for use. It was able to cut my linking time
   > by a second or two which makes things a bit less annoying.
+- [Python v3.0+](https://repology.org/project/python3/versions)
 
 ## Todo
 - Live Canvas Preview? The idea is simple. Just have a buffer
