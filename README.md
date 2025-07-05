@@ -5,11 +5,10 @@
 > the software, Intended for developers. If you're an user, Please
 > visit [csprite.github.io](https://csprite.github.io)_
 
-The software currently only supports Linux, with plans for
-expanding to Windows & Mac, & Possibly various other operating
-systems as well.
+The software currently only supports Linux & Windows with plans for
+expanding to Mac, & Possibly various other operating systems as well.
 
-You can download pre-built binaries of the software [here](https://github.com/csprite/csprite/actions/workflows/build.yml?query=branch%3Ac).
+You can download pre-built binaries of the software [here](https://github.com/csprite/csprite/actions/workflows/build.yml?query=branch%3Ac) (Requires login).
 
 The main aim of this software is to be simple, Not only
 in code but in terms of UX as well. This is why main
@@ -18,6 +17,28 @@ like support for various file formats will be separated into
 plugins.  This ensures that not only compiling the project
 will be simpler but the overall foot print of the program
 will be smaller as well & Only required things will be loaded.
+
+## Compiling
+
+Requirements for Windows:
+- Windows 7 or Later
+- VS Build Tools 2019 or Later With [Clang Support](https://learn.microsoft.com/en-us/cpp/build/clang-support-msbuild)
+  ([Direct Download](https://aka.ms/vs/16/release/vs_BuildTools.exe))
+- BusyBox for Windows ([Direct Download](https://frippery.org/files/busybox/busybox.exe))
+
+Requirements for Linux:
+- POSIX Compliant Shell
+- [GCC](https://repology.org/project/gcc/versions) or [LLVM-Clang](https://repology.org/project/clang/versions)
+  (And [libomp-dev](https://packages.debian.org/search?keywords=libomp-dev) if using LLVM-Clang)
+  
+  > On Debian/Ubuntu (And maybe other distros as well), If you're using LLVM-Clang
+  > toolchain then `libomp-dev` has to be installed as it doesn't come packaged with
+  > the toolchain for some reason.
+- [MOLD - Modern Linker](https://repology.org/project/mold/versions)
+  
+  > MOLD is used for speeding up the linking process. It is completely optional & Even
+  > unnecessary if you're just building for use. It was able to cut my linking time
+  > by a second or two which makes things a bit less annoying.
 
 ## Todo
 - Live Canvas Preview? The idea is simple. Just have a buffer
