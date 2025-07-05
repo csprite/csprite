@@ -5,8 +5,9 @@
 > the software, Intended for developers. If you're an user, Please
 > visit [csprite.github.io](https://csprite.github.io)_
 
-The software currently only supports Linux & Windows with plans for
-expanding to Mac, & Possibly various other operating systems as well.
+The software currently only supports Linux & Windows 7 or Later with
+plans for expanding to Mac, & Possibly various other operating systems
+as well.
 
 You can download pre-built binaries of the software [here](https://github.com/csprite/csprite/actions/workflows/build.yml?query=branch%3Ac) (Requires login).
 
@@ -28,13 +29,13 @@ Requirements for Windows:
 
 Requirements for Linux:
 - POSIX Compliant Shell
-- [GCC](https://repology.org/project/gcc/versions) or [LLVM-Clang](https://repology.org/project/clang/versions)
-  (And [libomp-dev](https://packages.debian.org/search?keywords=libomp-dev) if using LLVM-Clang)
+- [GCC](https://repology.org/project/gcc/versions) or [Clang](https://repology.org/project/clang/versions)
+  (And [libomp-dev](https://packages.debian.org/search?keywords=libomp-dev) if using Clang)
   
   > On Debian/Ubuntu (And maybe other distros as well), If you're using LLVM-Clang
   > toolchain then `libomp-dev` has to be installed as it doesn't come packaged with
   > the toolchain for some reason.
-- [MOLD - Modern Linker](https://repology.org/project/mold/versions)
+- [MOLD - Modern Linker](https://github.com/rui314/mold)
   
   > MOLD is used for speeding up the linking process. It is completely optional & Even
   > unnecessary if you're just building for use. It was able to cut my linking time
