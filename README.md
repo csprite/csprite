@@ -5,19 +5,17 @@
 > the software, Intended for developers. If you're an user, Please
 > visit [csprite.github.io](https://csprite.github.io)_
 
-The software currently only supports Linux & Windows 7 or Later with
-plans for expanding to Mac, & Possibly various other operating systems
-as well.
+Minimum System Requirements:
+- Linux, Windows 7 or Later (Future plans to support Mac & Mobile)
+- Atleast 512MB of Usable RAM
+- 64-bit Processor (Future plans to support 32-bit processors in future)
+- OpenGL v3.0 or Later
 
 You can download pre-built binaries of the software [here](https://github.com/csprite/csprite/actions/workflows/build.yml?query=branch%3Ac) (Requires login).
 
-The main aim of this software is to be simple, Not only
-in code but in terms of UX as well. This is why main
-application code resides here, But various functionalities
-like support for various file formats will be separated into
-plugins.  This ensures that not only compiling the project
-will be simpler but the overall foot print of the program
-will be smaller as well & Only required things will be loaded.
+The main aim of this software is to be simple on it's own
+in terms of code & UX. With functionality to write plugins
+to add support for various things like File Formats, etc.
 
 ## Compiling
 
