@@ -1,4 +1,7 @@
 # csprite
+A simple pixel art editor.
+
+![csprite ui preview](https://csprite.github.io/media/csprite-preview.png)
 
 > [!NOTE]
 > _This README is intended as a technical overview of
@@ -42,34 +45,42 @@ Requirements for Linux:
   > by a second or two which makes things a bit less annoying.
 - [Python v3.0+](https://repology.org/project/python3/versions)
 
-## Todo
-- Live Canvas Preview? The idea is simple. Just have a buffer
-  on which user's action are drawn on every frame & Cleared
-  every frame (By storing the dirty from previous frame) & When
-  finally it's time to commit. You just blit the buffer or maybe
-  blend it?
-- Dithering Tool Like Dither Boy?
-- Unit Testing? More like Block Testing. Instead of testing
-  each function, Let's test subsystems or a block.
-  - https://youtu.be/21JlBOxgGwY
-- UTF-8 Support?
-- Docking? The main idea is to have 3 panels, Left, Right & Bottom.
-  These panels will allow windows to be docked in them.
-  Moreover a new "View" menu item should exist, To allow toggling
-  various windows.
-- Give user color pickers for Normal, Specular, Roughness & Height Map
-  so that they can manually paint those features & Allow preview in the
-  editor?
-  - https://youtu.be/gUkY8ZoRfuQ
-- Allow user to generate a normal map?
-  - https://youtu.be/-rJdOc9WZS4
-- Give Plugins The Ability To Draw Text & Basic Shapes Instead Of Passing Them GUI?
-  - A plugin that allows stop motion animation to be created using
-    external connected camera.
-- Convolutional Filters?
-- Procedural Art? Like Math Based Art?
-- Android Port (Meant for mainly tablets/big screen devices) Using
-  [Rawdrawandroid](https://github.com/cnlohr/rawdrawandroid)
+## Roadmap
+- [ ] Tool Preview - Just have a buffer on which user's action
+      are cleared (by storing dirty from previous user input) &
+      drawn on every user input. When it's time to commit just
+      blit the buffer or blend it?
+- [ ] Variable Brush/Eraser Sizes
+- [ ] Undo Redo
+- [ ] Layers with Blending Modes
+  - [ ] Alpha
+  - [ ] Addition
+  - [ ] Subtraction
+  - [ ] Difference
+  - [ ] Multiply
+  - [ ] Screen
+  - [ ] Overlay
+  - [ ] Darken
+  - [ ] Lighten
+  - [ ] Color Dodge/Burn
+  - [ ] Hard/Soft Light
+- [ ] Plugin System
+- [ ] Node Based Post Processing Effects
+  - [ ] Basic Effects like Lightness, Saturation, etc.
+  - [ ] Dithering Effects (Like DitherBoy)
+  - [ ] Convolutional Filters
+- [ ] Unit Testing (<https://youtu.be/21JlBOxgGwY>)
+- [ ] UTF-8 Support (Maybe)
+- [ ] Docking (Maybe)
+- [ ] Color Pickers for Normal, Specular, Roughness & Height Maps (<https://youtu.be/gUkY8ZoRfuQ>)
+- [ ] Generate Normal Map Functionality (<https://youtu.be/-rJdOc9WZS4>)
+- [ ] Procedural Math Based Art (Maybe)
+- [ ] MacOS Port
+- [ ] Mobile Port
+- [ ] Misc
+  - [ ] [Porter Duff's Alpha Functions](https://www.pismin.com/10.1145/800031.808606)
+  - [ ] <https://lodev.org/cgtutor/painting.html>
+  - [ ] <https://lodev.org/cgtutor/floodfill.html#Scanline_Floodfill_Algorithm_With_Stack>
 
 ## References
 
