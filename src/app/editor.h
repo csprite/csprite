@@ -66,7 +66,7 @@ void Editor_ProcessInput(Editor* ed);
 
 Rng2D Editor_OnMouseDown(Editor* ed, S32 x, S32 y); // When Left Mouse Goes Down
 Rng2D Editor_OnMouseMove(Editor* ed, S32 x, S32 y); // When Left Mouse Moves
-void Editor_OnMouseDrag(Editor* ed, S32 x, S32 y); // From When Left Mouse Moves Until Mouse Is Released
+void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y);
 Rng2D Editor_OnMouseUp(Editor* ed, S32 x, S32 y);   // When Mouse Is Released
 
 void Editor_ZoomOut(Editor* ed);
