@@ -8,7 +8,6 @@
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpedantic"
 	#pragma GCC diagnostic ignored "-Wpadded"
-	#pragma GCC diagnostic ignored "-Wtypedef-redefinition"
 #elif defined(__clang__)
 	#pragma clang diagnostic push
 	#pragma clang diagnostic ignored "-Wpedantic"
