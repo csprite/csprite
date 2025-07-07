@@ -10,14 +10,14 @@ BIN="$BUILD/csprite"
 FLAGS='-march=native -fopenmp -Wall -Wextra -pedantic -Isrc/ -Ivendor/glad/ -Ivendor/log.c/include/ -Ivendor/stb/include -ffast-math -D_DEFAULT_SOURCE=1 -DCIMGUI_NO_EXPORT=1'
 CFLAGS='-std=c99 -fvisibility=hidden -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1 -DLOG_USE_COLOR=1'
 CXXFLAGS='-fvisibility=hidden -nostdinc++ -fno-exceptions -fno-rtti'
-LFLAGS='-fvisibility=hidden -nodefaultlibs -fopenmp -lc -lm'
+LFLAGS='-fvisibility=hidden -nodefaultlibs -fopenmp'
 CMD=${1:-}
 KERNEL=$(uname -s)
 MAYBE_WAIT=""
 
 if [ "$KERNEL" = "Linux" ]; then
 	FLAGS="$FLAGS -DTARGET_LINUX=1 -DCIMGUI_USE_GLFW=1"
-	LFLAGS="$LFLAGS -lglfw -lX11"
+	LFLAGS="$LFLAGS -lglfw -lX11 -lc -lm"
 	if [ "$CXX" = "clang++" ]; then
 		LFLAGS="$LFLAGS -liomp5"
 	fi
@@ -60,8 +60,11 @@ elif [ "$CMD" = "release" ]; then
 	FLAGS="$FLAGS -O3 -fdata-sections -ffunction-sections -DBUILD_RELEASE=1"
 	LFLAGS="$LFLAGS -Wl,--gc-sections"
 elif [ "$CMD" = "" ]; then
-	FLAGS="$FLAGS -O0 -g3 -fsanitize=address,undefined -DBUILD_DEBUG=1 -DBUILD_HAS_ASAN=1"
-	LFLAGS="$LFLAGS -fsanitize=address,undefined -Wl,-Bstatic -lasan -lubsan -Wl,-Bdynamic -lgcc_s"
+	FLAGS="$FLAGS -O0 -g3 -fsanitize=address,undefined -DBUILD_DEBUG=1 -DBUILD_HAS_ASAN=1 -fno-omit-frame-pointer"
+	LFLAGS="$LFLAGS -fsanitize=address,undefined"
+	if [ "$KERNEL" = "Linux" ]; then
+		LFLAGS="$LFLAGS -Wl,-Bstatic -lasan -lubsan -Wl,-Bdynamic -lgcc_s"
+	fi
 elif [ "$CMD" ]; then
 	echo "Invalid command '$CMD', Available commands are: clean/bear/assets/release or none to just build in debug mode."
 	exit 1
