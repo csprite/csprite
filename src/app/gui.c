@@ -51,8 +51,39 @@ void gui_init(OS_Handle w) {
 	gui_begin_frame(w);
 	gui_end_frame(w);
 
+	// https://github.com/Patitotective/ImThemes
 	ImGuiStyle* style = igGetStyle();
-	style->FrameRounding = igGetFontSize() * 0.25f;
+	style->Alpha = 1.0f;
+	style->DisabledAlpha = 0.5f;
+	style->WindowPadding = (ImVec2){ 10.0f, 10.0f };
+	style->WindowRounding = 0;
+	style->WindowBorderSize = 1.0f;
+	style->WindowMinSize = (ImVec2){ 20.0f, 20.0f };
+	style->WindowTitleAlign = (ImVec2){ 0.0f, 0.5f };
+	style->WindowMenuButtonPosition = ImGuiDir_Left;
+	style->ChildRounding = 5.0f;
+	style->ChildBorderSize = 1.0f;
+	style->PopupRounding = 5.0f;
+	style->PopupBorderSize = 1.0f;
+	style->FramePadding = (ImVec2){ 5.0f, 5.0f };
+	style->FrameRounding = 5.0f;
+	style->FrameBorderSize = 0.0f;
+	style->ItemSpacing = (ImVec2){ 8.0f, 5.0f };
+	style->ItemInnerSpacing = (ImVec2){ 5.0f, 5.0f };
+	style->CellPadding = (ImVec2){ 5.0f, 5.0f };
+	style->IndentSpacing = 10.0f;
+	style->ColumnsMinSpacing = 5.0f;
+	style->ScrollbarSize = 10.0f;
+	style->ScrollbarRounding = 5.0f;
+	style->GrabMinSize = 10.0f;
+	style->GrabRounding = 0.0f;
+	style->TabRounding = 10.0f;
+	style->TabBorderSize = 0.0f;
+	style->ColorButtonPosition = ImGuiDir_Right;
+	style->ButtonTextAlign = (ImVec2){ 0.5f, 0.5f };
+	style->SelectableTextAlign = (ImVec2){ 0.0f, 0.0f };
+
+	ImGuiStyle_ScaleAllSizes(style, 1);
 }
 
 void gui_release(OS_Handle window) {
