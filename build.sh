@@ -9,8 +9,8 @@ BUILD="build"
 BIN="$BUILD/csprite"
 FLAGS='-march=native -fopenmp -Wall -Wextra -pedantic -Isrc/ -Ivendor/glad/ -Ivendor/log.c/include/ -Ivendor/stb/include -ffast-math -D_DEFAULT_SOURCE=1 -DCIMGUI_NO_EXPORT=1'
 CFLAGS='-std=c99 -fvisibility=hidden -DCIMGUI_USE_OPENGL3=1 -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS=1 -DLOG_USE_COLOR=1'
-CXXFLAGS='-fvisibility=hidden'
-LFLAGS='-fvisibility=hidden -fopenmp'
+CXXFLAGS='-fvisibility=hidden -nostdinc++ -fno-exceptions -fno-rtti'
+LFLAGS='-fvisibility=hidden -nodefaultlibs -fopenmp -lc -lm'
 CMD=${1:-}
 KERNEL=$(uname -s)
 MAYBE_WAIT=""
@@ -61,7 +61,7 @@ elif [ "$CMD" = "release" ]; then
 	LFLAGS="$LFLAGS -Wl,--gc-sections"
 elif [ "$CMD" = "" ]; then
 	FLAGS="$FLAGS -O0 -g3 -fsanitize=address,undefined -DBUILD_DEBUG=1 -DBUILD_HAS_ASAN=1"
-	LFLAGS="$LFLAGS -fsanitize=address,undefined"
+	LFLAGS="$LFLAGS -fsanitize=address,undefined -Wl,-Bstatic -lasan -lubsan -Wl,-Bdynamic -lgcc_s"
 elif [ "$CMD" ]; then
 	echo "Invalid command '$CMD', Available commands are: clean/bear/assets/release or none to just build in debug mode."
 	exit 1
