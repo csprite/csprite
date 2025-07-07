@@ -130,7 +130,8 @@ void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y) {
 
 	switch (ed->tool.type.current) {
 		case TOOL_LINE: {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) break;
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || ed->mouse.down.x == -1 || ed->mouse.last.x == -1)
+				break;
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (MouseDownRelX * ed->view.scale) + ed->view.x, (MouseDownRelY * ed->view.scale) + ed->view.y },
@@ -153,7 +154,8 @@ void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y) {
 			break;
 		}
 		case TOOL_RECT: {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) break;
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || ed->mouse.down.x == -1 || ed->mouse.last.x == -1)
+				break;
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (TopLeft.x * ed->view.scale) + ed->view.x, (TopLeft.y * ed->view.scale) + ed->view.y },
@@ -163,7 +165,8 @@ void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y) {
 			break;
 		}
 		case TOOL_ELLIPSE: {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left)) break;
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || ed->mouse.down.x == -1 || ed->mouse.last.x == -1)
+				break;
 			ImDrawList_AddRectFilled( // Top Left
 			    igGetForegroundDrawList_Nil(),
 				(ImVec2){ (TopLeft.x * ed->view.scale) + ed->view.x, (TopLeft.y * ed->view.scale) + ed->view.y },
@@ -284,7 +287,7 @@ Rng2D Editor_OnMouseUp(Editor* ed, S32 x, S32 y) {
 		}
 	}
 
-	ed->mouse.down.x = ed->mouse.down.y = ed->mouse.last.x = ed->mouse.last.y = 0;
+	ed->mouse.down.x = ed->mouse.down.y = ed->mouse.last.x = ed->mouse.last.y = -1;
 
 	return dirty;
 }
@@ -350,6 +353,15 @@ void Editor_ProcessInput(Editor* ed) {
 		else if (igIsKeyChordPressed_Nil(ImGuiKey_C)) ed->tool.type.current = TOOL_ELLIPSE;
 		else if (igIsKeyPressed_Bool(ImGuiKey_Space, false)) { ed->tool.type.previous = ed->tool.type.current;ed->tool.type.current = TOOL_PAN; }
 		else if (igIsKeyReleased_Nil(ImGuiKey_Space)) { ed->tool.type.current = ed->tool.type.previous; }
+	}
+
+	// Don't Process Mouse Input If Mouse Position Is Invalid
+	if (
+		!igIsMousePosValid(NULL) ||
+		!igIsMousePosValid(&(ImVec2){ .x = ed->mouse.down.x, .y = ed->mouse.down.y }) ||
+		!igIsMousePosValid(&(ImVec2){ .x = ed->mouse.last.x, .y = ed->mouse.last.y })
+	) {
+		return;
 	}
 
 	Rng2D dirty = {0};
