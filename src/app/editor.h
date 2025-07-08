@@ -18,6 +18,20 @@ typedef enum {
 	TOOL_NONE
 } Tool;
 
+typedef enum {
+	EdMouseBtn_Left,
+	EdMouseBtn_Middle,
+	EdMouseBtn_Right,
+	EdMouseBtn_COUNT
+} EdMouseBtn;
+
+typedef enum {
+	EdMouseEvt_Press,
+	EdMouseEvt_Move,
+	EdMouseEvt_Release,
+	EdMouseEvt_COUNT,
+} EdMouseEvt;
+
 static inline const char* ToolToString(Tool t) {
 	switch (t) {
 		case TOOL_BRUSH:   return "Brush"; break;
@@ -63,11 +77,6 @@ Editor Editor_Init(U32 width, U32 height);
 void Editor_Deinit(Editor* ed);
 
 void Editor_ProcessInput(Editor* ed);
-
-Rng2D Editor_OnMouseDown(Editor* ed, S32 x, S32 y); // When Left Mouse Goes Down
-Rng2D Editor_OnMouseMove(Editor* ed, S32 x, S32 y); // When Left Mouse Moves
-void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y);
-Rng2D Editor_OnMouseUp(Editor* ed, S32 x, S32 y);   // When Mouse Is Released
 
 void Editor_ZoomOut(Editor* ed);
 void Editor_ZoomIn(Editor* ed);
