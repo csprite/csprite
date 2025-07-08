@@ -65,49 +65,79 @@ void Editor_Deinit(Editor* ed) {
 	arena_release(&ed->arena);
 }
 
-Rng2D Editor_OnMouseDown(Editor* ed, S32 x, S32 y) {
-    ed->mouse.down.x = x;
-    ed->mouse.down.y = y;
-	ed->mouse.last.x = x;
-	ed->mouse.last.y = y;
+Rng2D ed_mouse(Editor* ed, EdMouseBtn btn, EdMouseEvt evt, Point m_pos) {
+	Assert(evt != EdMouseEvt_COUNT);
+	Assert(btn != EdMouseBtn_COUNT);
 
-	S32 MouseRelX = (S32)((x - ed->view.x) / ed->view.scale);
-	S32 MouseRelY = (S32)((y - ed->view.y) / ed->view.scale);
+	Rng2D dirty = rng2d_nil();
 
-	Rng2D dirty = {0};
-	if (
-		MouseRelX < 0 || MouseRelY < 0 ||
-		(U64)MouseRelX >= ed->canvas.image.width || (U64)MouseRelY >= ed->canvas.image.height
-	) {
+	// Only consume press/release events of left mouse btn.
+	if (btn != EdMouseBtn_Left && evt != EdMouseEvt_Move) {
 		return dirty;
 	}
 
-	switch (ed->tool.type.current) {
-		case TOOL_BRUSH:
-		case TOOL_ERASER: {
-			Pixel color = ed->tool.type.current == TOOL_BRUSH ? ed->tool.brush.color : (Pixel){0, 0, 0, 0};
-			ed->canvas.image.pixels[(MouseRelY * ed->canvas.image.width) + MouseRelX] = color;
-			dirty.min.x = MouseRelX;
-			dirty.min.y = MouseRelY;
-			dirty.max.x = MouseRelX + 1;
-			dirty.max.y = MouseRelY + 1;
-			break;
+	Point rel = point(
+		(S32)((m_pos.x - ed->view.x) / ed->view.scale),
+		(S32)((m_pos.y - ed->view.y) / ed->view.scale)
+	);
+	Point rel_last = point(
+		(S32)((ed->mouse.last.x - ed->view.x) / ed->view.scale),
+		(S32)((ed->mouse.last.y - ed->view.y) / ed->view.scale)
+	);
+	Point rel_down = point(
+		(S32)((ed->mouse.down.x - ed->view.x) / ed->view.scale),
+		(S32)((ed->mouse.down.y - ed->view.y) / ed->view.scale)
+	);
+	Pixel color = ed->tool.type.current == TOOL_ERASER ? (Pixel){0, 0, 0, 0} : ed->tool.brush.color;
+
+	if (evt == EdMouseEvt_Press) {
+		ed->mouse.down = m_pos;
+		ed->mouse.last = m_pos;
+
+		if (ed->tool.type.current == TOOL_BRUSH || ed->tool.type.current == TOOL_ERASER) {
+			ed->canvas.image.pixels[(rel.y * ed->canvas.image.width) + rel.x] = color;
+			dirty = rng2d_xy_wh(rel.x, rel.y, 1, 1);
 		}
-		case TOOL_LINE:
-		case TOOL_RECT:
-		case TOOL_ELLIPSE:
-		case TOOL_NONE:
-		case TOOL_PAN: {
-			break;
+	} else if (evt == EdMouseEvt_Move) {
+		if (ed->tool.type.current == TOOL_BRUSH || ed->tool.type.current == TOOL_ERASER) {
+			dirty = plotLine(rel_last, rel, &ed->canvas.image, color);
+		} else if (ed->tool.type.current == TOOL_PAN) {
+			ed->view.x += m_pos.x - ed->mouse.last.x;
+			ed->view.y += m_pos.y - ed->mouse.last.y;
 		}
+	} else if (evt == EdMouseEvt_Release) {
+		switch (ed->tool.type.current) {
+			case TOOL_LINE: {
+				dirty = plotLine(rel_down, rel, &ed->canvas.image, ed->tool.brush.color);
+				break;
+			}
+			case TOOL_RECT: {
+				dirty = plotRect(rel_down, rel, &ed->canvas.image, ed->tool.brush.color);
+				break;
+			}
+			case TOOL_ELLIPSE: {
+				dirty = plotEllipseRect(rel_down, rel, &ed->canvas.image, ed->tool.brush.color);
+				break;
+			}
+			case TOOL_BRUSH:
+			case TOOL_ERASER:
+			case TOOL_PAN:
+			case TOOL_NONE: break;
+		}
+
+		ed->mouse.down = point(-1, -1);
+		ed->mouse.last = point(-1, -1);
 	}
 
+	if (evt == EdMouseEvt_Move) {
+		ed->mouse.last = m_pos;
+	}
 	return dirty;
 }
 
-void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y) {
-	S32 MouseRelX = (S32)((x - ed->view.x) / ed->view.scale);
-	S32 MouseRelY = (S32)((y - ed->view.y) / ed->view.scale);
+void ed_draw_tool_preview(Editor* ed, Point m_pos) {
+	S32 MouseRelX = (S32)((m_pos.x - ed->view.x) / ed->view.scale);
+	S32 MouseRelY = (S32)((m_pos.y - ed->view.y) / ed->view.scale);
 
 	S32 MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 	S32 MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
@@ -130,7 +160,7 @@ void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y) {
 
 	switch (ed->tool.type.current) {
 		case TOOL_LINE: {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || ed->mouse.down.x == -1 || ed->mouse.last.x == -1)
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || point_match(ed->mouse.down, point(-1, -1)))
 				break;
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
@@ -154,7 +184,7 @@ void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y) {
 			break;
 		}
 		case TOOL_RECT: {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || ed->mouse.down.x == -1 || ed->mouse.last.x == -1)
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || point_match(ed->mouse.down, point(-1, -1)))
 				break;
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
@@ -165,7 +195,7 @@ void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y) {
 			break;
 		}
 		case TOOL_ELLIPSE: {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || ed->mouse.down.x == -1 || ed->mouse.last.x == -1)
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || point_match(ed->mouse.down, point(-1, -1)))
 				break;
 			ImDrawList_AddRectFilled( // Top Left
 			    igGetForegroundDrawList_Nil(),
@@ -209,87 +239,6 @@ void Editor_DrawToolPreview(Editor* ed, S32 x, S32 y) {
 			break;
 		}
 	}
-}
-
-Rng2D Editor_OnMouseMove(Editor* ed, S32 x, S32 y) {
-	Rng2D dirty = {0};
-
-	S32 MouseRelX = (S32)((x - ed->view.x) / ed->view.scale);
-	S32 MouseRelY = (S32)((y - ed->view.y) / ed->view.scale);
-
-	switch (ed->tool.type.current) {
-		case TOOL_BRUSH:
-		case TOOL_ERASER: {
-			if (
-				MouseRelX < 0 || MouseRelY < 0 ||
-				(U64)MouseRelX > ed->canvas.image.width || (U64)MouseRelY > ed->canvas.image.height
-			) {
-				break;
-			}
-
-			Pixel color = ed->tool.type.current != TOOL_ERASER ? ed->tool.brush.color : (Pixel){0, 0, 0, 0};
-			Rng2D newDirty = plotLine(
-				(Point){ (S32)((ed->mouse.last.x - ed->view.x)/ed->view.scale), (S32)((ed->mouse.last.y - ed->view.y)/ed->view.scale) },
-				(Point){ MouseRelX, MouseRelY },
-				&ed->canvas.image, color
-			);
-
-			if (newDirty.min.x < dirty.min.x) dirty.min.x = newDirty.min.x;
-			if (newDirty.min.y < dirty.min.y) dirty.min.y = newDirty.min.y;
-			if (newDirty.max.x > dirty.max.x) dirty.max.x = newDirty.max.x;
-			if (newDirty.max.y > dirty.max.y) dirty.max.y = newDirty.max.y;
-			break;
-		}
-		case TOOL_PAN: {
-			ed->view.x += x - ed->mouse.last.x;
-			ed->view.y += y - ed->mouse.last.y;
-			break;
-		}
-		case TOOL_LINE:
-		case TOOL_RECT:
-		case TOOL_ELLIPSE:
-		case TOOL_NONE: {
-			break;
-		}
-	}
-
-	ed->mouse.last.x = x;
-	ed->mouse.last.y = y;
-	return dirty;
-}
-
-Rng2D Editor_OnMouseUp(Editor* ed, S32 x, S32 y) {
-	Rng2D dirty = {0};
-
-	switch (ed->tool.type.current) {
-		case TOOL_BRUSH:
-		case TOOL_ERASER:
-		case TOOL_PAN:
-		case TOOL_NONE: {
-			break;
-		}
-		case TOOL_LINE:
-		case TOOL_RECT:
-		case TOOL_ELLIPSE: {
-			S32 MouseRelX = ((x - ed->view.x) / ed->view.scale);
-			S32 MouseRelY = ((y - ed->view.y) / ed->view.scale);
-			S32 MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
-			S32 MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
-
-			if (ed->tool.type.current == TOOL_LINE) {
-				dirty = plotLine((Point){ MouseDownRelX, MouseDownRelY }, (Point){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
-			} else if (ed->tool.type.current == TOOL_RECT) {
-				dirty = plotRect((Point){ MouseDownRelX, MouseDownRelY }, (Point){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
-			} else {
-				dirty = plotEllipseRect((Point){ MouseDownRelX, MouseDownRelY }, (Point){ MouseRelX, MouseRelY }, &ed->canvas.image, ed->tool.brush.color);
-			}
-			break;
-		}
-	}
-
-	ed->mouse.down.x = ed->mouse.down.y = ed->mouse.last.x = ed->mouse.last.y = -1;
-
-	return dirty;
 }
 
 void Editor_UpdateView(Editor* ed) {
@@ -365,15 +314,15 @@ void Editor_ProcessInput(Editor* ed) {
 	}
 
 	Rng2D dirty = {0};
-
-	Editor_DrawToolPreview(ed, io->MousePos.x, io->MousePos.y);
+	Point m_pos = point(io->MousePos.x, io->MousePos.y);
+	ed_draw_tool_preview(ed, m_pos);
 
 	if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
-		dirty = Editor_OnMouseDown(ed, io->MousePos.x, io->MousePos.y);
+		dirty = ed_mouse(ed, EdMouseBtn_Left, EdMouseEvt_Press, m_pos);
 	} else if (igIsMouseDown_Nil(ImGuiMouseButton_Left) && (io->MouseDelta.x != 0 || io->MouseDelta.y != 0)) {
-		dirty = Editor_OnMouseMove(ed, io->MousePos.x, io->MousePos.y);
+		dirty = ed_mouse(ed, EdMouseBtn_Left, EdMouseEvt_Move, m_pos);
 	} else if (igIsMouseReleased_Nil(ImGuiMouseButton_Left)) {
-		dirty = Editor_OnMouseUp(ed, io->MousePos.x, io->MousePos.y);
+		dirty = ed_mouse(ed, EdMouseBtn_Left, EdMouseEvt_Release, m_pos);
 	}
 
 	if (!rng2d_is_nil(dirty)) {

@@ -1,9 +1,5 @@
 #include "base/math.h"
 
-B32 point_match(Point a, Point b) {
-	return a.x == b.x && a.y == b.y;
-}
-
 B32 rect_match(Rect a, Rect b) {
 	return a.w == b.w && a.h == b.h;
 }
