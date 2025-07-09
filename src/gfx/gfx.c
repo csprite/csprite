@@ -1,4 +1,5 @@
 #include "gfx/gfx.h"
+#include <math.h>
 
 void boundCheckDirty(Point start, Point end, const Bitmap* img, Rng2D* dirty) {
 	dirty->min.x = start.x < 0 ? 0 : start.x;
@@ -16,6 +17,19 @@ void calcDirty(const Rng2D* dirty, Rng2D* final, const Bitmap* img) {
 	boundCheckDirty((Point){ final->min.x, final->min.y }, (Point){ final->max.x, final->max.y }, img, final);
 }
 
+void putPixel(Bitmap* img, Point p, Pixel color) {
+	if (p.x >= 0 && p.y >= 0 && p.x < (S64)img->width && p.y < (S64)img->height) {
+		img->pixels[(p.y * img->width) + p.x] = color;
+	}
+}
+
+void clip_rng2d_to_image_bounds(Rng2D* dirty, Rect bounds) {
+	if (dirty->min.x < 0) dirty->min.x = 0;
+	if (dirty->min.y < 0) dirty->min.y = 0;
+	if (dirty->max.x >= bounds.w) dirty->max.x = bounds.w - 1;
+	if (dirty->max.y >= bounds.h) dirty->max.y = bounds.h - 1;
+}
+
 // Often it's possible the points start bottom right & End at
 // top left. This can be simply fixed by swapping the axes.
 void _SwapAxesIfNeeded(Point* restrict start, Point* restrict end) {
@@ -25,8 +39,6 @@ void _SwapAxesIfNeeded(Point* restrict start, Point* restrict end) {
 }
 
 Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
-	Rng2D dirty = rng2d_nil();
-
 	_SwapAxesIfNeeded(&start, &end);
 
 	#pragma omp parallel
@@ -35,13 +47,82 @@ Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
 		for (S32 y = start.y; y <= end.y; y++) {
 			for (S32 x = start.x; x <= end.x; x++) {
 				if (x > -1 && y > -1 && x < (S64)img->width && y < (S64)img->height) {
-					img->pixels[(y * img->width) + x] = color;
+					putPixel(img, point(x, y), color);
 				}
 			}
 		}
 	}
 
-	boundCheckDirty(start, (Point){ end.x + 1, end.y + 1 }, img, &dirty);
+	Rng2D dirty = { start, end };
+	clip_rng2d_to_image_bounds(&dirty, rect(img->width, img->height));
+	// NOTE(pegvin) - Update Dirty Handling Logic To
+	// Be Inclusive So That There's No Need For +1
+	dirty.max.x++;
+	dirty.max.y++;
+	return dirty;
+}
+
+Rng2D plotCircle(Point c, U32 r, B32 filled, Bitmap* img, Pixel color) {
+	// Midpoint circle extends to r + 1, Hence
+	// drawing a circle of radius 1 would not
+	// be 1x1 in dimension, but 2x2. So we just
+	// decrement the radius internally.
+	if (--r < 1) {
+		img->pixels[(c.y * img->width) + c.x] = color;
+		return rng2d_xy_wh(c.x, c.y, 1, 1);
+	}
+
+	S32 x = 0, y = -r;
+	while (x < -y) {
+		// Simplifying this:
+		// > F64 yMid = y + 0.5;
+		// > if ((x * x) + (yMid * yMid) > (r * r)) {
+		// >    y++;
+		// > }
+		// You can get rid of flops, Although it won't
+		// make a huge difference on modern hardware
+		// running at breakneck speeds, But we will
+		// stick to it nonetheless.
+		// <https://godbolt.org/z/r3z6a6je8>
+		if ((4 * x * x) + (4 * y * y) + (4 * y) + 1 > (S32)(4 * r * r)) {
+			y++;
+		}
+
+		// Octants 1-8 Starting From Top Right Quadrant (I), Going Clockwise
+		Point oct1 = point(c.x + x, c.y + y);
+		Point oct2 = point(c.x - y, c.y - x);
+		Point oct3 = point(c.x - y, c.y + x);
+		Point oct4 = point(c.x + x, c.y - y);
+		Point oct5 = point(c.x - x, c.y - y);
+		Point oct6 = point(c.x + y, c.y + x);
+		Point oct7 = point(c.x + y, c.y - x);
+		Point oct8 = point(c.x - x, c.y + y);
+
+		// NOTE(pegvin) - I am not sure if there's a better way to do
+		// this than to bound check on each pixel (as done by `putPixel`)
+		if (filled) {
+			for (S64 i = oct8.x; i <= oct1.x; i++) putPixel(img, point(i, oct8.y), color);
+			for (S64 i = oct7.x; i <= oct2.x; i++) putPixel(img, point(i, oct7.y), color);
+			for (S64 i = oct6.x; i <= oct3.x; i++) putPixel(img, point(i, oct6.y), color);
+			for (S64 i = oct5.x; i <= oct4.x; i++) putPixel(img, point(i, oct5.y), color);
+		} else {
+			putPixel(img, oct1, color);
+			putPixel(img, oct2, color);
+			putPixel(img, oct3, color);
+			putPixel(img, oct4, color);
+			putPixel(img, oct5, color);
+			putPixel(img, oct6, color);
+			putPixel(img, oct7, color);
+			putPixel(img, oct8, color);
+			putPixel(img, oct8, color);
+		}
+
+		x++;
+	}
+
+	return rng2d_xy_wh(0, 0, img->width, img->height);
+	Rng2D dirty = rng2d_xy_wh(c.x - r, c.y - r, (r * 2) + 1, (r * 2) + 1);
+	clip_rng2d_to_image_bounds(&dirty, rect(img->width, img->height));
 	return dirty;
 }
 

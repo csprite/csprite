@@ -34,6 +34,7 @@ Editor Editor_Init(U32 width, U32 height) {
 	ed.view.scale = 1.5f;
 	ed.tool.type.current = TOOL_BRUSH;
 	ed.canvas.image = bitmap_from_null(&a, width, height);
+	ed.tool.brush.size = 1;
 	ed.tool.brush.color = (Pixel){ 255, 255, 255, 255 };
 	Editor_UpdateView(&ed);
 
@@ -95,12 +96,15 @@ Rng2D ed_mouse(Editor* ed, EdMouseBtn btn, EdMouseEvt evt, Point m_pos) {
 		ed->mouse.last = m_pos;
 
 		if (ed->tool.type.current == TOOL_BRUSH || ed->tool.type.current == TOOL_ERASER) {
-			ed->canvas.image.pixels[(rel.y * ed->canvas.image.width) + rel.x] = color;
-			dirty = rng2d_xy_wh(rel.x, rel.y, 1, 1);
+			dirty = plotCircle(rel, ed->tool.brush.size, ed->tool.brush.filled, &ed->canvas.image, color);
 		}
 	} else if (evt == EdMouseEvt_Move) {
 		if (ed->tool.type.current == TOOL_BRUSH || ed->tool.type.current == TOOL_ERASER) {
-			dirty = plotLine(rel_last, rel, &ed->canvas.image, color);
+			if (ed->tool.brush.size < 2) {
+				dirty = plotLine(rel_last, rel, &ed->canvas.image, color);
+			} else {
+				dirty = plotCircle(rel, ed->tool.brush.size, ed->tool.brush.filled, &ed->canvas.image, color);
+			}
 		} else if (ed->tool.type.current == TOOL_PAN) {
 			ed->view.x += m_pos.x - ed->mouse.last.x;
 			ed->view.y += m_pos.y - ed->mouse.last.y;
