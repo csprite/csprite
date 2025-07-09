@@ -27,6 +27,8 @@ typedef struct {
 #define point(_x, _y) (Point){ .x = (_x), .y = (_y) }
 #define point_match(a, b) ((a).x == (b).x && (a).y == (b).y)
 
+#define rect(_w, _h) (Rect){ .w = (_w), .h = (_h) }
+
 #define abs_s64(v) ((S64)llabs(v))
 
 #define rng2d_nil() ((Rng2D){0})

@@ -106,6 +106,19 @@ int main(void) {
 				igEndCombo();
 			}
 
+			igSameLine(0, -1);
+			if (igInputInt("##BrushSize", (S32*)&ed.tool.brush.size, 1, 1, 0)) {
+				if (ed.tool.brush.size < 1) {
+					ed.tool.brush.size = 1;
+				}
+			}
+
+			igSameLine(0, -1);
+			static bool checked = 0;
+			if (igCheckbox("Filled", &checked)) {
+				ed.tool.brush.filled = checked;
+			}
+
 			float step = ed.view.scale > 1 ? 0.15 : 0.05;
 			igCalcTextSize(&tWidth, "ZOOM_XXXXXXX", NULL, false, -1);
 			igSetNextItemWidth(tWidth.x);

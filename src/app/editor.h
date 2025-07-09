@@ -58,6 +58,8 @@ typedef struct {
 	struct {
 		struct {
 			Pixel color;
+			B32 filled;
+			U32 size;
 		} brush;
 		struct {
 			Tool previous, current;

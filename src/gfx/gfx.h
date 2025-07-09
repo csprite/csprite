@@ -9,6 +9,7 @@ void _SwapAxesIfNeeded(Point* start, Point* end);
 
 Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color);
 Rng2D plotEllipseRect(Point start, Point end, Bitmap* img, Pixel color);
+Rng2D plotCircle(Point middle, U32 radius, B32 filled, Bitmap* img, Pixel color);
 Rng2D plotLine(Point start, Point end, Bitmap* img, Pixel color);
 
 #endif
