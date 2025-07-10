@@ -63,9 +63,8 @@ Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
 }
 
 Rng2D plotCircle(Point c, U32 r, B32 filled, Bitmap* img, Pixel color) {
-	// Midpoint circle extends to r + 1, Hence
-	// drawing a circle of radius 1 would not
-	// be 1x1 in dimension, but 2x2. So we just
+	// Midpoint circle extends to r + 1, Hence drawing a circle of
+	// radius 1 would not be 1x1 in dimension, but 2x2. So we just
 	// decrement the radius internally.
 	if (--r < 1) {
 		img->pixels[(c.y * img->width) + c.x] = color;
@@ -79,48 +78,39 @@ Rng2D plotCircle(Point c, U32 r, B32 filled, Bitmap* img, Pixel color) {
 		// > if ((x * x) + (yMid * yMid) > (r * r)) {
 		// >    y++;
 		// > }
-		// You can get rid of flops, Although it won't
-		// make a huge difference on modern hardware
-		// running at breakneck speeds, But we will
-		// stick to it nonetheless.
+		// You can get rid of flops, Although it won't make a huge
+		// difference on modern hardware running at breakneck speeds,
+		// But we will stick to it nonetheless.
 		// <https://godbolt.org/z/r3z6a6je8>
 		if ((4 * x * x) + (4 * y * y) + (4 * y) + 1 > (S32)(4 * r * r)) {
 			y++;
 		}
 
 		// Octants 1-8 Starting From Top Right Quadrant (I), Going Clockwise
-		Point oct1 = point(c.x + x, c.y + y);
-		Point oct2 = point(c.x - y, c.y - x);
-		Point oct3 = point(c.x - y, c.y + x);
-		Point oct4 = point(c.x + x, c.y - y);
-		Point oct5 = point(c.x - x, c.y - y);
-		Point oct6 = point(c.x + y, c.y + x);
-		Point oct7 = point(c.x + y, c.y - x);
-		Point oct8 = point(c.x - x, c.y + y);
+		Point oct[8] = {
+			{ c.x + x, c.y + y }, { c.x - y, c.y - x },
+			{ c.x - y, c.y + x }, { c.x + x, c.y - y },
+			{ c.x - x, c.y - y }, { c.x + y, c.y + x },
+			{ c.x + y, c.y - x }, { c.x - x, c.y + y },
+		};
 
 		// NOTE(pegvin) - I am not sure if there's a better way to do
 		// this than to bound check on each pixel (as done by `putPixel`)
 		if (filled) {
-			for (S64 i = oct8.x; i <= oct1.x; i++) putPixel(img, point(i, oct8.y), color);
-			for (S64 i = oct7.x; i <= oct2.x; i++) putPixel(img, point(i, oct7.y), color);
-			for (S64 i = oct6.x; i <= oct3.x; i++) putPixel(img, point(i, oct6.y), color);
-			for (S64 i = oct5.x; i <= oct4.x; i++) putPixel(img, point(i, oct5.y), color);
+			// Draw Lines From Boundary Of Left Octant To Boundary Of Right Octant
+			for (S64 i = oct[7].x; i <= oct[0].x; i++) putPixel(img, point(i, oct[7].y), color);
+			for (S64 i = oct[6].x; i <= oct[1].x; i++) putPixel(img, point(i, oct[6].y), color);
+			for (S64 i = oct[5].x; i <= oct[2].x; i++) putPixel(img, point(i, oct[5].y), color);
+			for (S64 i = oct[4].x; i <= oct[3].x; i++) putPixel(img, point(i, oct[4].y), color);
 		} else {
-			putPixel(img, oct1, color);
-			putPixel(img, oct2, color);
-			putPixel(img, oct3, color);
-			putPixel(img, oct4, color);
-			putPixel(img, oct5, color);
-			putPixel(img, oct6, color);
-			putPixel(img, oct7, color);
-			putPixel(img, oct8, color);
-			putPixel(img, oct8, color);
+			for EachIndex(i, 8) {
+				putPixel(img, oct[i], color);
+			}
 		}
 
 		x++;
 	}
 
-	return rng2d_xy_wh(0, 0, img->width, img->height);
 	Rng2D dirty = rng2d_xy_wh(c.x - r, c.y - r, (r * 2) + 1, (r * 2) + 1);
 	clip_rng2d_to_image_bounds(&dirty, rect(img->width, img->height));
 	return dirty;
