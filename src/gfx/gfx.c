@@ -113,6 +113,13 @@ Rng2D plotCircle(Point c, U32 r, B32 filled, Bitmap* img, Pixel color) {
 
 	Rng2D dirty = rng2d_xy_wh(c.x - r, c.y - r, (r * 2) + 1, (r * 2) + 1);
 	clip_rng2d_to_image_bounds(&dirty, rect(img->width, img->height));
+
+	// TODO(pegvin) - Currently due to how the texture function is written
+	// It is not inclusive, i.e. It only updates till max.x - 1 & max.y - 1
+	// Hence the need for incrementing by 1. This should be fixed, As Rng2D
+	// represents a region, hence max.x & max.y values should be inclusive.
+	dirty.max.x++;
+	dirty.max.y++;
 	return dirty;
 }
 
