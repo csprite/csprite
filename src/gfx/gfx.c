@@ -71,17 +71,11 @@ Rng2D plotCircle(Point c, U32 r, B32 filled, Bitmap* img, Pixel color) {
 		return rng2d_xy_wh(c.x, c.y, 1, 1);
 	}
 
-	S32 x = 0, y = -r;
-	while (x < -y) {
-		// Simplifying this:
+	for (S32 x = 0, y = -r; x < -y; x++) {
+		// Simplifying:
 		// > F64 yMid = y + 0.5;
-		// > if ((x * x) + (yMid * yMid) > (r * r)) {
-		// >    y++;
-		// > }
-		// You can get rid of flops, Although it won't make a huge
-		// difference on modern hardware running at breakneck speeds,
-		// But we will stick to it nonetheless.
-		// <https://godbolt.org/z/r3z6a6je8>
+		// > if ((x * x) + (yMid * yMid) > (r * r))
+		// You can get rid of flops <https://godbolt.org/z/r3z6a6je8>
 		if ((4 * x * x) + (4 * y * y) + (4 * y) + 1 > (S32)(4 * r * r)) {
 			y++;
 		}
@@ -98,17 +92,15 @@ Rng2D plotCircle(Point c, U32 r, B32 filled, Bitmap* img, Pixel color) {
 		// this than to bound check on each pixel (as done by `putPixel`)
 		if (filled) {
 			// Draw Lines From Boundary Of Left Octant To Boundary Of Right Octant
-			for (S64 i = oct[7].x; i <= oct[0].x; i++) putPixel(img, point(i, oct[7].y), color);
-			for (S64 i = oct[6].x; i <= oct[1].x; i++) putPixel(img, point(i, oct[6].y), color);
-			for (S64 i = oct[5].x; i <= oct[2].x; i++) putPixel(img, point(i, oct[5].y), color);
-			for (S64 i = oct[4].x; i <= oct[3].x; i++) putPixel(img, point(i, oct[4].y), color);
+			for (U32 i = oct[7].x; i <= oct[0].x; i++) putPixel(img, point(i, oct[7].y), color);
+			for (U32 i = oct[6].x; i <= oct[1].x; i++) putPixel(img, point(i, oct[6].y), color);
+			for (U32 i = oct[5].x; i <= oct[2].x; i++) putPixel(img, point(i, oct[5].y), color);
+			for (U32 i = oct[4].x; i <= oct[3].x; i++) putPixel(img, point(i, oct[4].y), color);
 		} else {
 			for EachIndex(i, 8) {
 				putPixel(img, oct[i], color);
 			}
 		}
-
-		x++;
 	}
 
 	Rng2D dirty = rng2d_xy_wh(c.x - r, c.y - r, (r * 2) + 1, (r * 2) + 1);
