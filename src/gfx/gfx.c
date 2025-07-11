@@ -131,39 +131,21 @@ Rng2D plotEllipseRect(Point start, Point end, Bitmap* img, Pixel color) {
 	a *= 8 * a; b1 = 8 * b * b;
 
 	do {
-		if (end.x > -1 && start.y > -1 && end.x < (S64)img->width && start.y < (S64)img->height) {
-			img->pixels[(start.y * img->width) + end.x] = color;
-		}
-		if (start.x > -1 && start.y > -1 && start.x < (S64)img->width && start.y < (S64)img->height) {
-			img->pixels[(start.y * img->width) + start.x] = color;
-		}
-		if (start.x > -1 && end.y > -1 && start.x < (S64)img->width && end.y < (S64)img->height) {
-			img->pixels[(end.y * img->width) + start.x] = color;
-		}
-		if (end.x > -1 && end.y > -1 && end.x < (S64)img->width && end.y < (S64)img->height) {
-			img->pixels[(end.y * img->width) + end.x] = color;
-		}
+		putPixel(img, point(end.x, start.y), color);
+		putPixel(img, point(start.x, start.y), color);
+		putPixel(img, point(start.x, end.y), color);
+		putPixel(img, point(end.x, end.y), color);
 
 		e2 = 2 * err;
 		if (e2 <= dy) { start.y++; end.y--; err += dy += a; }
 		if (e2 >= dx || 2 * err > dy) { start.x++; end.x--; err += dx += b1; }
 	} while (start.x <= end.x);
 
-	while (start.y-end.y < b) {
-		if (start.x-1 > -1 && start.y > -1 && start.x-1 < (S64)img->width && start.y < (S64)img->height) {
-			img->pixels[(start.y * img->width) + start.x-1] = color;
-		}
-		if (end.x+1 > -1 && start.y > -1 && end.x+1 < (S64)img->width && start.y < (S64)img->height) {
-			img->pixels[(start.y * img->width) + start.x+1] = color;
-		}
-		start.y++;
-		if (start.x-1 > -1 && end.y > -1 && start.x-1 < (S64)img->width && end.y < (S64)img->height) {
-			img->pixels[(end.y * img->width) + start.x-1] = color;
-		}
-		if (end.x+1 > -1 && end.y > -1 && end.x+1 < (S64)img->width && end.y < (S64)img->height) {
-			img->pixels[(end.y * img->width) + end.x+1] = color;
-		}
-		end.y--;
+	for (; start.y - end.y < b; start.y++, end.y--) {
+		putPixel(img, point(start.x - 1, start.y), color);
+		putPixel(img, point(start.x + 1, start.y), color);
+		putPixel(img, point(start.x - 1, end.y), color);
+		putPixel(img, point(end.x + 1, end.y), color);
 	}
 
 	return dirty;
