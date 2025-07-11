@@ -1,6 +1,16 @@
 #include "gfx/gfx.h"
 #include <math.h>
 
+void set_pixel_unsafe(Bitmap* img, Point p, Pixel color) {
+	img->pixels[(p.y * img->width) + p.x] = color;
+}
+
+void set_pixel(Bitmap* img, Point p, Pixel color) {
+	if (p.x >= 0 && p.y >= 0 && p.x < (S64)img->width && p.y < (S64)img->height) {
+		set_pixel_unsafe(img, p, color);
+	}
+}
+
 void boundCheckDirty(Point start, Point end, const Bitmap* img, Rng2D* dirty) {
 	dirty->min.x = start.x < 0 ? 0 : start.x;
 	dirty->min.y = start.y < 0 ? 0 : start.y;
@@ -15,12 +25,6 @@ void calcDirty(const Rng2D* dirty, Rng2D* final, const Bitmap* img) {
 	if (dirty->max.y > final->max.y) final->max.y = dirty->max.y;
 
 	boundCheckDirty((Point){ final->min.x, final->min.y }, (Point){ final->max.x, final->max.y }, img, final);
-}
-
-void putPixel(Bitmap* img, Point p, Pixel color) {
-	if (p.x >= 0 && p.y >= 0 && p.x < (S64)img->width && p.y < (S64)img->height) {
-		img->pixels[(p.y * img->width) + p.x] = color;
-	}
 }
 
 void clip_rng2d_to_image_bounds(Rng2D* dirty, Rect bounds) {
@@ -46,9 +50,7 @@ Rng2D plotRect(Point start, Point end, Bitmap* img, Pixel color) {
 		#pragma omp for
 		for (S32 y = start.y; y <= end.y; y++) {
 			for (S32 x = start.x; x <= end.x; x++) {
-				if (x > -1 && y > -1 && x < (S64)img->width && y < (S64)img->height) {
-					putPixel(img, point(x, y), color);
-				}
+				set_pixel(img, point(x, y), color);
 			}
 		}
 	}
@@ -92,13 +94,13 @@ Rng2D plotCircle(Point c, U32 r, B32 filled, Bitmap* img, Pixel color) {
 		// this than to bound check on each pixel (as done by `putPixel`)
 		if (filled) {
 			// Draw Lines From Boundary Of Left Octant To Boundary Of Right Octant
-			for (U32 i = oct[7].x; i <= oct[0].x; i++) putPixel(img, point(i, oct[7].y), color);
-			for (U32 i = oct[6].x; i <= oct[1].x; i++) putPixel(img, point(i, oct[6].y), color);
-			for (U32 i = oct[5].x; i <= oct[2].x; i++) putPixel(img, point(i, oct[5].y), color);
-			for (U32 i = oct[4].x; i <= oct[3].x; i++) putPixel(img, point(i, oct[4].y), color);
+			for (U32 i = oct[7].x; i <= oct[0].x; i++) set_pixel(img, point(i, oct[7].y), color);
+			for (U32 i = oct[6].x; i <= oct[1].x; i++) set_pixel(img, point(i, oct[6].y), color);
+			for (U32 i = oct[5].x; i <= oct[2].x; i++) set_pixel(img, point(i, oct[5].y), color);
+			for (U32 i = oct[4].x; i <= oct[3].x; i++) set_pixel(img, point(i, oct[4].y), color);
 		} else {
 			for EachIndex(i, 8) {
-				putPixel(img, oct[i], color);
+				set_pixel(img, oct[i], color);
 			}
 		}
 	}
@@ -131,10 +133,10 @@ Rng2D plotEllipseRect(Point start, Point end, Bitmap* img, Pixel color) {
 	a *= 8 * a; b1 = 8 * b * b;
 
 	do {
-		putPixel(img, point(end.x, start.y), color);
-		putPixel(img, point(start.x, start.y), color);
-		putPixel(img, point(start.x, end.y), color);
-		putPixel(img, point(end.x, end.y), color);
+		set_pixel(img, point(end.x, start.y), color);
+		set_pixel(img, point(start.x, start.y), color);
+		set_pixel(img, point(start.x, end.y), color);
+		set_pixel(img, point(end.x, end.y), color);
 
 		e2 = 2 * err;
 		if (e2 <= dy) { start.y++; end.y--; err += dy += a; }
@@ -142,10 +144,10 @@ Rng2D plotEllipseRect(Point start, Point end, Bitmap* img, Pixel color) {
 	} while (start.x <= end.x);
 
 	for (; start.y - end.y < b; start.y++, end.y--) {
-		putPixel(img, point(start.x - 1, start.y), color);
-		putPixel(img, point(start.x + 1, start.y), color);
-		putPixel(img, point(start.x - 1, end.y), color);
-		putPixel(img, point(end.x + 1, end.y), color);
+		set_pixel(img, point(start.x - 1, start.y), color);
+		set_pixel(img, point(start.x + 1, start.y), color);
+		set_pixel(img, point(start.x - 1, end.y), color);
+		set_pixel(img, point(end.x + 1, end.y), color);
 	}
 
 	return dirty;
@@ -158,17 +160,13 @@ Rng2D plotLine(Point start, Point end, Bitmap* img, Pixel color) {
 	S64 dy  = -abs_s64(end.y - start.y), sy = start.y < end.y ? 1 : -1;
 	S64 err = dx + dy, e2;
 
-	for (;;) {
-		if (start.x > -1 && start.y > -1 && start.x < (S64)img->width && start.y < (S64)img->height) {
-			img->pixels[(start.y * img->width) + start.x] = color;
-			if (dirty.min.x > start.x) dirty.min.x = start.x;
-			if (dirty.min.y > start.y) dirty.min.y = start.y;
-			if (dirty.max.x < start.x) dirty.max.x = start.x;
-			if (dirty.max.y < start.y) dirty.max.y = start.y;
-		}
-		if (start.x == end.x && start.y == end.y) {
-			break;
-		}
+	for (;start.x != end.x || start.y != end.y;) {
+		set_pixel(img, start, color);
+
+		if (dirty.min.x > start.x) dirty.min.x = start.x;
+		else if (dirty.max.x < start.x) dirty.max.x = start.x;
+		if (dirty.min.y > start.y) dirty.min.y = start.y;
+		else if (dirty.max.y < start.y) dirty.max.y = start.y;
 
 		e2 = 2 * err;
 		if (e2 >= dy) {
