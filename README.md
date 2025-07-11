@@ -79,7 +79,6 @@ Requirements for Linux:
 - [ ] Mobile Port
 - [ ] Misc
   - [ ] [Porter Duff's Alpha Functions](https://www.pismin.com/10.1145/800031.808606)
-  - [ ] <https://lodev.org/cgtutor/painting.html>
   - [ ] <https://lodev.org/cgtutor/floodfill.html#Scanline_Floodfill_Algorithm_With_Stack>
 
 ## References
@@ -90,3 +89,6 @@ this software.
 - [It's probably time to stop recommending Clean Code](https://qntm.org/clean)
 - [Enter The Arena: Simplifying Memory Management (2023)](https://youtu.be/TZ5a3gCCZYo)
 - [Compositing and Blending Level 1](https://www.w3.org/TR/compositing-1/)
+- [The Beauty of Bresenham's Algorithm](https://zingl.github.io/bresenham.html)
+- [CS-3388 Computer Graphics Winter 2020](https://www.csd.uwo.ca/~sbeauche/CS3388/CS3388-Bresenham.pdf)
+- [Introduction to Computer Graphics, Fall 2021](https://github.com/cs123tas/projects/tree/master/brush)
