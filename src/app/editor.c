@@ -1,5 +1,5 @@
 #include "app/editor.h"
-#include "gfx/gfx.h"
+#include "raster/gfx.h"
 #include "imgui.h"
 
 Editor Editor_Init(U32 width, U32 height) {
@@ -14,8 +14,8 @@ Editor Editor_Init(U32 width, U32 height) {
 		ed.canvas.texture = r_tex_init(&t, width, height);
 		ed.canvas.checker = r_tex_init(&t, checkerDim.w, checkerDim.h);
 
-		const Pixel pCol1 = { 0xB8, 0xB8, 0xB8, 0xFF }, pCol2 = { 0x74, 0x74, 0x74, 0xFF };
-		Pixel* pixels = arena_alloc(t.arena, checkerDim.w * checkerDim.h * sizeof(Pixel));
+		const RGBAU8 pCol1 = { 0xB8, 0xB8, 0xB8, 0xFF }, pCol2 = { 0x74, 0x74, 0x74, 0xFF };
+		RGBAU8* pixels = arena_alloc(t.arena, checkerDim.w * checkerDim.h * sizeof(RGBAU8));
 
 		#pragma omp parallel for
 		for EachIndex(i, (U64)(checkerDim.w * checkerDim.h)) {
@@ -33,9 +33,9 @@ Editor Editor_Init(U32 width, U32 height) {
 	ed.file.name = NULL;
 	ed.view.scale = 1.5f;
 	ed.tool.type.current = TOOL_BRUSH;
-	ed.canvas.image = bitmap_from_null(&a, width, height);
+	ed.canvas.image = rs_init(&a, rect(width, height));
 	ed.tool.brush.size = 1;
-	ed.tool.brush.color = (Pixel){ 255, 255, 255, 255 };
+	ed.tool.brush.color = (RGBAU8){ 255, 255, 255, 255 };
 	Editor_UpdateView(&ed);
 
 	return ed;
@@ -66,44 +66,44 @@ void Editor_Deinit(Editor* ed) {
 	arena_release(&ed->arena);
 }
 
-Rng2D ed_mouse(Editor* ed, EdMouseBtn btn, EdMouseEvt evt, Point m_pos) {
+Region ed_mouse(Editor* ed, EdMouseBtn btn, EdMouseEvt evt, Vec2S32 m_pos) {
 	Assert(evt != EdMouseEvt_COUNT);
 	Assert(btn != EdMouseBtn_COUNT);
 
-	Rng2D dirty = rng2d_nil();
+	Region dirty = region_nil();
 
 	// Only consume press/release events of left mouse btn.
 	if (btn != EdMouseBtn_Left && evt != EdMouseEvt_Move) {
 		return dirty;
 	}
 
-	Point rel = point(
+	Vec2S32 rel = v2s32(
 		(S32)((m_pos.x - ed->view.x) / ed->view.scale),
 		(S32)((m_pos.y - ed->view.y) / ed->view.scale)
 	);
-	Point rel_last = point(
+	Vec2S32 rel_last = v2s32(
 		(S32)((ed->mouse.last.x - ed->view.x) / ed->view.scale),
 		(S32)((ed->mouse.last.y - ed->view.y) / ed->view.scale)
 	);
-	Point rel_down = point(
+	Vec2S32 rel_down = v2s32(
 		(S32)((ed->mouse.down.x - ed->view.x) / ed->view.scale),
 		(S32)((ed->mouse.down.y - ed->view.y) / ed->view.scale)
 	);
-	Pixel color = ed->tool.type.current == TOOL_ERASER ? (Pixel){0, 0, 0, 0} : ed->tool.brush.color;
+	RGBAU8 color = ed->tool.type.current == TOOL_ERASER ? (RGBAU8){0, 0, 0, 0} : ed->tool.brush.color;
 
 	if (evt == EdMouseEvt_Press) {
 		ed->mouse.down = m_pos;
 		ed->mouse.last = m_pos;
 
 		if (ed->tool.type.current == TOOL_BRUSH || ed->tool.type.current == TOOL_ERASER) {
-			dirty = plotCircle(rel, ed->tool.brush.size, ed->tool.brush.filled, &ed->canvas.image, color);
+			dirty = rs_gfx_draw_circle(&ed->canvas.image, color, rel, ed->tool.brush.size, ed->tool.brush.filled);
 		}
 	} else if (evt == EdMouseEvt_Move) {
 		if (ed->tool.type.current == TOOL_BRUSH || ed->tool.type.current == TOOL_ERASER) {
 			if (ed->tool.brush.size < 2) {
-				dirty = plotLine(rel_last, rel, &ed->canvas.image, color);
+				dirty = rs_gfx_draw_line(&ed->canvas.image, color, rel_last, rel);
 			} else {
-				dirty = plotCircle(rel, ed->tool.brush.size, ed->tool.brush.filled, &ed->canvas.image, color);
+				dirty = rs_gfx_draw_circle(&ed->canvas.image, color, rel, ed->tool.brush.size, ed->tool.brush.filled);
 			}
 		} else if (ed->tool.type.current == TOOL_PAN) {
 			ed->view.x += m_pos.x - ed->mouse.last.x;
@@ -112,15 +112,15 @@ Rng2D ed_mouse(Editor* ed, EdMouseBtn btn, EdMouseEvt evt, Point m_pos) {
 	} else if (evt == EdMouseEvt_Release) {
 		switch (ed->tool.type.current) {
 			case TOOL_LINE: {
-				dirty = plotLine(rel_down, rel, &ed->canvas.image, ed->tool.brush.color);
+				dirty = rs_gfx_draw_line(&ed->canvas.image, color, rel_down, rel);
 				break;
 			}
 			case TOOL_RECT: {
-				dirty = plotRect(rel_down, rel, &ed->canvas.image, ed->tool.brush.color);
+				dirty = rs_gfx_draw_rect(&ed->canvas.image, color, rel_down, rel);
 				break;
 			}
 			case TOOL_ELLIPSE: {
-				dirty = plotEllipseRect(rel_down, rel, &ed->canvas.image, ed->tool.brush.color);
+				dirty = rs_gfx_draw_ellipse(&ed->canvas.image, color, rel_down, rel);
 				break;
 			}
 			case TOOL_BRUSH:
@@ -129,30 +129,31 @@ Rng2D ed_mouse(Editor* ed, EdMouseBtn btn, EdMouseEvt evt, Point m_pos) {
 			case TOOL_NONE: break;
 		}
 
-		ed->mouse.down = point(-1, -1);
-		ed->mouse.last = point(-1, -1);
+		ed->mouse.down = v2s32(-1, -1);
+		ed->mouse.last = v2s32(-1, -1);
 	}
 
 	if (evt == EdMouseEvt_Move) {
 		ed->mouse.last = m_pos;
 	}
+
 	return dirty;
 }
 
-void ed_draw_tool_preview(Editor* ed, Point m_pos) {
+void ed_draw_tool_preview(Editor* ed, Vec2S32 m_pos) {
 	S32 MouseRelX = (S32)((m_pos.x - ed->view.x) / ed->view.scale);
 	S32 MouseRelY = (S32)((m_pos.y - ed->view.y) / ed->view.scale);
 
 	S32 MouseDownRelX = (ed->mouse.down.x - ed->view.x) / ed->view.scale;
 	S32 MouseDownRelY = (ed->mouse.down.y - ed->view.y) / ed->view.scale;
 
-	Point TopLeft = { MouseDownRelX, MouseDownRelY };
-	Point BotRight = { MouseRelX, MouseRelY };
+	Vec2S32 TopLeft = { MouseDownRelX, MouseDownRelY };
+	Vec2S32 BotRight = { MouseRelX, MouseRelY };
 
-	_SwapAxesIfNeeded(&TopLeft, &BotRight);
+	v2s32_ensure_tl_br(&TopLeft, &BotRight);
 
-	Point BotLeft = { TopLeft.x, BotRight.y };
-	Point TopRight = { BotRight.x, TopLeft.y };
+	Vec2S32 BotLeft = { TopLeft.x, BotRight.y };
+	Vec2S32 TopRight = { BotRight.x, TopLeft.y };
 
 	// Draw mouse position regardless
 	ImDrawList_AddRect(
@@ -164,7 +165,7 @@ void ed_draw_tool_preview(Editor* ed, Point m_pos) {
 
 	switch (ed->tool.type.current) {
 		case TOOL_LINE: {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || point_match(ed->mouse.down, point(-1, -1)))
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || v2_match(ed->mouse.down, v2s32(-1, -1)))
 				break;
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
@@ -188,7 +189,7 @@ void ed_draw_tool_preview(Editor* ed, Point m_pos) {
 			break;
 		}
 		case TOOL_RECT: {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || point_match(ed->mouse.down, point(-1, -1)))
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || v2_match(ed->mouse.down, v2s32(-1, -1)))
 				break;
 			ImDrawList_AddRectFilled(
 			    igGetForegroundDrawList_Nil(),
@@ -199,7 +200,7 @@ void ed_draw_tool_preview(Editor* ed, Point m_pos) {
 			break;
 		}
 		case TOOL_ELLIPSE: {
-			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || point_match(ed->mouse.down, point(-1, -1)))
+			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || v2_match(ed->mouse.down, v2s32(-1, -1)))
 				break;
 			ImDrawList_AddRectFilled( // Top Left
 			    igGetForegroundDrawList_Nil(),
@@ -252,15 +253,15 @@ void Editor_UpdateView(Editor* ed) {
 	F32 currX = (ed->view.w / 2) + ed->view.x;
 	F32 currY = (ed->view.h / 2) + ed->view.y;
 
-	F32 newX = (ed->canvas.image.width * ed->view.scale / 2) + ed->view.x;
-	F32 newY = (ed->canvas.image.height * ed->view.scale / 2) + ed->view.y;
+	F32 newX = (ed->canvas.image.dim.w * ed->view.scale / 2) + ed->view.x;
+	F32 newY = (ed->canvas.image.dim.h * ed->view.scale / 2) + ed->view.y;
 
 	ed->view.x -= newX - currX;
 	ed->view.y -= newY - currY;
 
 	// Update The Size Of The viewRect
-	ed->view.w = ed->canvas.image.width * ed->view.scale;
-	ed->view.h = ed->canvas.image.height * ed->view.scale;
+	ed->view.w = ed->canvas.image.dim.w * ed->view.scale;
+	ed->view.h = ed->canvas.image.dim.h * ed->view.scale;
 }
 
 S32 Editor_SetFilepath(Editor* ed, const char* filePath);
@@ -317,8 +318,8 @@ void Editor_ProcessInput(Editor* ed) {
 		return;
 	}
 
-	Rng2D dirty = {0};
-	Point m_pos = point(io->MousePos.x, io->MousePos.y);
+	Region dirty = {0};
+	Vec2S32 m_pos = v2s32(io->MousePos.x, io->MousePos.y);
 	ed_draw_tool_preview(ed, m_pos);
 
 	if (igIsMouseClicked_Bool(ImGuiMouseButton_Left, false)) {
@@ -329,12 +330,12 @@ void Editor_ProcessInput(Editor* ed) {
 		dirty = ed_mouse(ed, EdMouseBtn_Left, EdMouseEvt_Release, m_pos);
 	}
 
-	if (!rng2d_is_nil(dirty)) {
+	if (!region_is_nil(dirty)) {
+		Rect rect = region_to_rect(dirty);
 		r_tex_update(
-			ed->canvas.texture, dirty.min.x, dirty.min.y,
-			dirty.max.x - dirty.min.x, dirty.max.y - dirty.min.y,
-			ed->canvas.image.width, (U8*)ed->canvas.image.pixels
+			ed->canvas.texture, dirty.min.x, dirty.min.y, rect.w, rect.h,
+			ed->canvas.image.dim.w, (U8*)ed->canvas.image.data
 		);
-		dirty = rng2d_nil();
+		dirty = region_nil();
 	}
 }

@@ -6,7 +6,8 @@
 #include "base/arena.h"
 #include "base/math.h"
 #include "app/render.h"
-#include "bitmap/bitmap.h"
+#include "raster/raster.h"
+#include "raster/math.h"
 
 typedef enum {
 	TOOL_BRUSH,
@@ -47,7 +48,7 @@ static inline const char* ToolToString(Tool t) {
 
 typedef struct {
 	struct {
-		Bitmap  image;
+		Raster   image;
 		R_Handle texture;
 		R_Handle checker;
 	} canvas;
@@ -57,7 +58,7 @@ typedef struct {
 	} file;
 	struct {
 		struct {
-			Pixel color;
+			RGBAU8 color;
 			B32 filled;
 			U32 size;
 		} brush;
@@ -69,7 +70,7 @@ typedef struct {
 		float x, y, w, h, scale;
 	} view;
 	struct {
-		Point down, last;
+		Vec2S32 down, last;
 	} mouse;
 	Arena arena;
 } Editor;

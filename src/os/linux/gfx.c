@@ -12,6 +12,10 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 
+typedef struct {
+	S64 x, y;
+} Point;
+
 void _glfwErrCallback(int error, const char *desc) {
 	log_error("GLFW Error: %d - %s", error, desc);
 }
