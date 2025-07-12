@@ -155,14 +155,6 @@ void ed_draw_tool_preview(Editor* ed, Vec2S32 m_pos) {
 	Vec2S32 BotLeft = { TopLeft.x, BotRight.y };
 	Vec2S32 TopRight = { BotRight.x, TopLeft.y };
 
-	// Draw mouse position regardless
-	ImDrawList_AddRect(
-	    igGetForegroundDrawList_Nil(),
-		(ImVec2){ (MouseRelX * ed->view.scale) + ed->view.x, (MouseRelY * ed->view.scale) + ed->view.y },
-		(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
-		*(U32*)&ed->tool.brush.color, 0, 0, 1
-	);
-
 	switch (ed->tool.type.current) {
 		case TOOL_LINE: {
 			if (!igIsMouseDown_Nil(ImGuiMouseButton_Left) || v2_match(ed->mouse.down, v2s32(-1, -1)))
@@ -237,10 +229,38 @@ void ed_draw_tool_preview(Editor* ed, Vec2S32 m_pos) {
 			);
 			break;
 		}
-		case TOOL_BRUSH:
-		case TOOL_ERASER:
-		case TOOL_PAN:
 		case TOOL_NONE: {
+			igSetMouseCursor(ImGuiMouseCursor_Arrow);
+			break;
+		}
+		case TOOL_PAN: {
+			igSetMouseCursor(ImGuiMouseCursor_Hand);
+			break;
+		}
+		case TOOL_BRUSH:
+		case TOOL_ERASER: {
+			if (igIsMouseDown_Nil(ImGuiMouseButton_Left)) {
+				break;
+			} else if (ed->tool.brush.size < 2) {
+				ImDrawList_AddRectFilled(
+				    igGetForegroundDrawList_Nil(),
+					(ImVec2){ (MouseRelX * ed->view.scale) + ed->view.x, (MouseRelY * ed->view.scale) + ed->view.y },
+					(ImVec2){ ((MouseRelX + 1) * ed->view.scale) + ed->view.x, ((MouseRelY + 1) * ed->view.scale) + ed->view.y },
+					*(U32*)&ed->tool.brush.color, 0, 0
+				);
+			} else {
+				ImVec2 pos = {
+					((MouseRelX + 0.5) * ed->view.scale) + ed->view.x,
+					((MouseRelY + 0.5) * ed->view.scale) + ed->view.y
+				};
+				F32 radius = ed->view.scale * ed->tool.brush.size;
+				ImU32 color = *(U32*)&ed->tool.brush.color;
+				if (ed->tool.brush.filled) {
+					ImDrawList_AddCircleFilled(igGetForegroundDrawList_Nil(), pos, radius, color, 0);
+				} else {
+					ImDrawList_AddCircle(igGetForegroundDrawList_Nil(), pos, radius, color, 0, 1.0);
+				}
+			}
 			break;
 		}
 	}
