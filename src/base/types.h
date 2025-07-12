@@ -21,18 +21,6 @@ typedef S32 B32;
 typedef float F32;
 typedef double F64;
 
-typedef struct {
-	U8 r, g, b, a;
-} Pixel;
-
-typedef struct {
-	F32 r, g, b;
-} RGBF32;
-
-typedef struct {
-	F32 r, g, b, a;
-} RGBAF32;
-
 #define Min(A,B) (((A)<(B))?(A):(B))
 #define Max(A,B) (((A)>(B))?(A):(B))
 #define ArrayCount(a) (sizeof((a)) / sizeof((a)[0]))
@@ -90,5 +78,6 @@ typedef struct {
 
 // Misc.
 #define NoOp(arg) ((void)arg)
+#define Swap(T, a, b) do {T t_____ = a; a = b; b = t_____;} while(0)
 
 #endif // SRC_BASE_TYPES_H_INCLUDED_

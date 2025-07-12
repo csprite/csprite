@@ -30,7 +30,7 @@ elif [ "$KERNEL" = "Windows_NT" ] || [ "$(uname -o)" = "Cygwin" ]; then
 	MAYBE_WAIT="wait"
 fi
 
-SOURCES="src/app/main.c src/app/gui.c src/app/render.c src/app/editor.c src/os/os.c src/os/gfx.c src/base/arena.c src/base/string.c src/bitmap/bitmap.c src/assets/assets.c src/gfx/gfx.c vendor/glad/impl.c vendor/log.c/src/log.c vendor/stb/impl.c"
+SOURCES="src/app/main.c src/app/gui.c src/app/render.c src/app/editor.c src/os/os.c src/os/gfx.c src/base/arena.c src/base/string.c src/raster/raster.c src/raster/gfx.c src/raster/math.c src/assets/assets.c vendor/glad/impl.c vendor/log.c/src/log.c vendor/stb/impl.c"
 SOURCES_CPP="src/cimgui/impl.cpp"
 OBJECTS="$(echo "$SOURCES" | sed "s|\([^ ]*\)\.c|$BUILD/\1.c.o|g") $(echo "$SOURCES_CPP" | sed "s|\([^ ]*\)\.cpp|$BUILD/\1.cpp.o|g")"
 
