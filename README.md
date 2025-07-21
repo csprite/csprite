@@ -68,6 +68,8 @@ Requirements for Linux:
 - [ ] Node Based Post Processing Effects
   - [ ] Basic Effects like Lightness, Saturation, etc.
   - [ ] Dithering Effects (Like DitherBoy)
+    - <https://www.visgraf.impa.br/Courses/ip00/proj/Dithering1/random_dithering.html>
+    - <https://en.wikipedia.org/wiki/Ordered_dithering>
   - [ ] Convolutional Filters
 - [ ] Unit Testing (<https://youtu.be/21JlBOxgGwY>)
 - [ ] UTF-8 Support (Maybe)
@@ -80,6 +82,10 @@ Requirements for Linux:
 - [ ] Misc
   - [ ] [Porter Duff's Alpha Functions](https://www.pismin.com/10.1145/800031.808606)
   - [ ] <https://lodev.org/cgtutor/floodfill.html#Scanline_Floodfill_Algorithm_With_Stack>
+  - [ ] Use SIMD To Accelerate Various Drawing Tasks. Related:
+    - <https://github.com/ermig1979/Simd>
+    - <https://youtu.be/x9Scb5Mku1g>
+    - <https://youtu.be/ulmjqD6Y4do>
 
 ## References
 
@@ -92,3 +98,12 @@ this software.
 - [The Beauty of Bresenham's Algorithm](https://zingl.github.io/bresenham.html)
 - [CS-3388 Computer Graphics Winter 2020](https://www.csd.uwo.ca/~sbeauche/CS3388/CS3388-Bresenham.pdf)
 - [Introduction to Computer Graphics, Fall 2021](https://github.com/cs123tas/projects/tree/master/brush)
+- [Wu's Algorithm for anti-aliased line drawing](https://leetarxiv.substack.com/p/an-efficient-anti-aliasing-technique)
+
+## Controls
+
+- LMB To Select Primary Color In Palette.
+- RMB To Select Secondary Color In Palette.
+- Hover At Primary Color's Edge In Palette & LMB + Drag To Reorder It.
+- (Ctrl + Plus/Minus) or (Regular Scroll) To Zoom In/Out.
+- Plus/Minus To Increase/Decrease Brush Size.
