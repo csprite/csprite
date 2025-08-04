@@ -50,7 +50,7 @@ Requirements for Linux:
       are cleared (by storing dirty from previous user input) &
       drawn on every user input. When it's time to commit just
       blit the buffer or blend it?
-- [ ] Variable Brush/Eraser Sizes
+- [x] Variable Brush/Eraser Sizes
 - [ ] Undo Redo
 - [ ] File IO
   - [ ] BMP (<https://entropymine.com/jason/bmpsuite/bmpsuite/html/bmpsuite.html>)
