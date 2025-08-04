@@ -52,6 +52,9 @@ Requirements for Linux:
       blit the buffer or blend it?
 - [ ] Variable Brush/Eraser Sizes
 - [ ] Undo Redo
+- [ ] File IO
+  - [ ] BMP (<https://entropymine.com/jason/bmpsuite/bmpsuite/html/bmpsuite.html>)
+  - [ ] QOI (<https://github.com/phoboslab/qoi/issues/69>)
 - [ ] Layers with Blending Modes
   - [ ] Alpha
   - [ ] Addition
