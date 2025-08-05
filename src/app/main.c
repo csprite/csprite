@@ -17,7 +17,7 @@ int main(void) {
 	gui_end_frame(window);
 
 	ImGuiIO* io = igGetIO_Nil();
-	ed.view.scale = 5;
+	ed.view_scale = 5;
 	Editor_UpdateView(&ed);
 	Editor_CenterView(&ed, (Rect){ io->DisplaySize.x, io->DisplaySize.y });
 
@@ -48,11 +48,11 @@ int main(void) {
 				igEndMenu();
 			}
 
-			ImVec2 winSize, textSize;
+			ImVec2 winSize = {0}, textSize = {0};
 			igGetWindowSize(&winSize);
-			igCalcTextSize(&textSize, ed.file.name, NULL, false, -1);
+			// igCalcTextSize(&textSize, ed.file.name, NULL, false, -1);
 			igSetCursorPosX((winSize.x - textSize.x) * 0.5);
-			igTextUnformatted(ed.file.name ? ed.file.name : "untitled", NULL);
+			igTextUnformatted("untitled", NULL);
 
 			igGetWindowPos(&mBarPos);
 			igGetWindowSize(&mBarSize);
@@ -66,19 +66,19 @@ int main(void) {
 		igPushStyleVar_Float(ImGuiStyleVar_WindowBorderSize, 0);
 		if (igBegin("##Sidebar", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoTitleBar)) {
 			float color_float[4] = {
-				ed.tool.brush.color.r / 255.0f,
-				ed.tool.brush.color.g / 255.0f,
-				ed.tool.brush.color.b / 255.0f,
-				ed.tool.brush.color.a / 255.0f
+				ed.tool_color.r / 255.0f,
+				ed.tool_color.g / 255.0f,
+				ed.tool_color.b / 255.0f,
+				ed.tool_color.a / 255.0f
 			};
 			ImVec2 availReg;
 			igGetContentRegionAvail(&availReg);
 			igSetNextItemWidth(availReg.x);
 			if (igColorPicker4("##ColorPicker", (float*)&color_float, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview, NULL)) {
-				ed.tool.brush.color.r = color_float[0] * 255;
-				ed.tool.brush.color.g = color_float[1] * 255;
-				ed.tool.brush.color.b = color_float[2] * 255;
-				ed.tool.brush.color.a = color_float[3] * 255;
+				ed.tool_color.r = color_float[0] * 255;
+				ed.tool_color.g = color_float[1] * 255;
+				ed.tool_color.b = color_float[2] * 255;
+				ed.tool_color.a = color_float[3] * 255;
 			}
 			if (igIsItemHovered(0)) {
 				igSetMouseCursor(ImGuiMouseCursor_Hand);
@@ -97,43 +97,43 @@ int main(void) {
 			ImVec2 tWidth;
 			igCalcTextSize(&tWidth, "BRUSH_XXX", NULL, false, -1);
 			igSetNextItemWidth(tWidth.x);
-			if (igBeginCombo("##ToolSelector", ToolToString(ed.tool.type.current), 0)) {
+			if (igBeginCombo("##ToolSelector", Editor_ToolGetHumanReadable(ed.tool_curr), 0)) {
 				for (S32 i = 0; i < TOOL_NONE; i++) {
-					if (igSelectable_Bool(ToolToString(i), (Tool)i == ed.tool.type.current, 0, (ImVec2){0,0})) {
-						ed.tool.type.current = i;
+					if (igSelectable_Bool(Editor_ToolGetHumanReadable(i), (EdTool)i == ed.tool_curr, 0, (ImVec2){0,0})) {
+						ed.tool_curr = i;
 					}
 				}
 				igEndCombo();
 			}
 
-			if (ed.tool.type.current == TOOL_BRUSH || ed.tool.type.current == TOOL_ERASER) {
+			if (ed.tool_curr == TOOL_BRUSH || ed.tool_curr == TOOL_ERASER) {
 				igSameLine(0, -1);
 				igCalcTextSize(&tWidth, "WWWWWWWWW", NULL, false, -1);
 				igSetNextItemWidth(tWidth.x);
-				if (igInputInt("##BrushSize", (S32*)&ed.tool.brush.size, 1, 1, 0)) {
-					if (ed.tool.brush.size < 1) {
-						ed.tool.brush.size = 1;
+				if (igInputInt("##BrushSize", (S32*)&ed.tool_size, 1, 1, 0)) {
+					if (ed.tool_size < 1) {
+						ed.tool_size = 1;
 					}
 				}
 
 				igSameLine(0, -1);
 				static bool checked = 0;
 				if (igCheckbox("Filled", &checked)) {
-					ed.tool.brush.filled = checked;
+					ed.tool_fill = checked;
 				}
 			}
 
-			float step = ed.view.scale > 1 ? 0.15 : 0.05;
+			float step = ed.view_scale > 1 ? 0.15 : 0.05;
 			igCalcTextSize(&tWidth, "ZOOM_XXXXXXX", NULL, false, -1);
 			igSetNextItemWidth(tWidth.x);
 			igSameLine(0, -1);
-			if (igInputFloat("##ZoomControl", &ed.view.scale, step, step, "x%.2f", 0)) {
-				ed.view.scale = ed.view.scale < 0.05 ? 0.05 : ed.view.scale;
+			if (igInputFloat("##ZoomControl", &ed.view_scale, step, step, "x%.2f", 0)) {
+				ed.view_scale = ed.view_scale < 0.05 ? 0.05 : ed.view_scale;
 				Editor_UpdateView(&ed);
 			}
 
 			igSameLine(0, -1);
-			igText("x: %d, y: %d", (S32)((io->MousePos.x - ed.view.x)/ed.view.scale), (S32)((io->MousePos.y - ed.view.y)/ed.view.scale));
+			igText("x: %d, y: %d", (S32)((io->MousePos.x - ed.view_pos.x)/ed.view_scale), (S32)((io->MousePos.y - ed.view_pos.y)/ed.view_scale));
 
 			igGetWindowPos(&statusBarPos);
 			igGetWindowSize(&statusBarSize);
@@ -145,17 +145,17 @@ int main(void) {
 		if (igBegin("Main", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
 			ImDrawList_AddRect(
 			    igGetWindowDrawList(),
-			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
+			    (ImVec2){ ed.view_pos.x, ed.view_pos.y }, (ImVec2){ ed.view_pos.x + ed.view_size.w, ed.view_pos.y + ed.view_size.h },
 			    igGetColorU32_Col(ImGuiCol_Border, 1), 0, 0, 1
 			);
 			ImDrawList_AddImage(
-			    igGetWindowDrawList(), r_tex_to_ImTextureID(ed.canvas.checker),
-			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
+			    igGetWindowDrawList(), r_tex_to_ImTextureID(ed.checker_tex),
+			    (ImVec2){ ed.view_pos.x, ed.view_pos.y }, (ImVec2){ ed.view_pos.x + ed.view_size.w, ed.view_pos.y + ed.view_size.h },
 			    (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, 0xFFFFFFFF
 			);
 			ImDrawList_AddImage(
-			    igGetWindowDrawList(), r_tex_to_ImTextureID(ed.canvas.texture),
-			    (ImVec2){ ed.view.x, ed.view.y }, (ImVec2){ ed.view.x + ed.view.w, ed.view.y + ed.view.h },
+			    igGetWindowDrawList(), r_tex_to_ImTextureID(ed.image_tex),
+			    (ImVec2){ ed.view_pos.x, ed.view_pos.y }, (ImVec2){ ed.view_pos.x + ed.view_size.w, ed.view_pos.y + ed.view_size.h },
 			    (ImVec2){ 0, 0 }, (ImVec2){ 1, 1 }, 0xFFFFFFFF
 			);
 
@@ -179,8 +179,7 @@ int main(void) {
 			if (igButton("Create", (ImVec2){0,0})) {
 				Editor_Deinit(&ed);
 				ed = Editor_Init(width, height);
-				ed.view.x = (io->DisplaySize.x / 2) - (ed.view.w / 2);
-				ed.view.y = (io->DisplaySize.y / 2) - (ed.view.h / 2);
+				Editor_CenterView(&ed, (Rect){ io->DisplaySize.x, io->DisplaySize.y });
 				Editor_UpdateView(&ed);
 				igCloseCurrentPopup();
 				width = 20;

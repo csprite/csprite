@@ -17,7 +17,7 @@ typedef enum {
 	TOOL_ELLIPSE,
 	TOOL_PAN,
 	TOOL_NONE
-} Tool;
+} EdTool;
 
 typedef enum {
 	EdMouseBtn_Left,
@@ -33,46 +33,25 @@ typedef enum {
 	EdMouseEvt_COUNT,
 } EdMouseEvt;
 
-static inline const char* ToolToString(Tool t) {
-	switch (t) {
-		case TOOL_BRUSH:   return "Brush"; break;
-		case TOOL_ERASER:  return "Eraser"; break;
-		case TOOL_LINE:    return "Line"; break;
-		case TOOL_RECT:    return "Rect"; break;
-		case TOOL_ELLIPSE: return "Ellipse"; break;
-		case TOOL_PAN:     return "Pan"; break;
-		case TOOL_NONE:    return "None"; break;
-	}
-	return "<unknown>";
-}
-
 typedef struct {
-	struct {
-		Raster   image;
-		R_Handle texture;
-		R_Handle checker;
-	} canvas;
-	struct {
-		char* path;
-		char* name; // Points to start of basename in `path`
-	} file;
-	struct {
-		struct {
-			RGBAU8 color;
-			B32 filled;
-			U32 size;
-		} brush;
-		struct {
-			Tool previous, current;
-		} type;
-	} tool;
-	struct {
-		float x, y, w, h, scale;
-	} view;
-	struct {
-		Vec2S32 down, last;
-	} mouse;
 	Arena arena;
+
+	EdTool tool_curr;
+	EdTool tool_prev;
+	RGBAU8 tool_color;
+	B32    tool_fill;
+	U32    tool_size;
+
+	Vec2S32  view_pos;
+	Rect     view_size;
+	F32      view_scale;
+
+	Vec2S32  mouse_down;
+	Vec2S32  mouse_last;
+
+	Raster   image;
+	R_Handle image_tex;
+	R_Handle checker_tex;
 } Editor;
 
 Editor Editor_Init(U32 width, U32 height);
@@ -84,8 +63,9 @@ void Editor_ProcessInput(Editor* ed);
 void Editor_ZoomOut(Editor* ed);
 void Editor_ZoomIn(Editor* ed);
 void Editor_CenterView(Editor* ed, Rect boundingRect);
-
 void Editor_UpdateView(Editor* ed); // When ed.view.scale changes
+
+const char* Editor_ToolGetHumanReadable(EdTool t);
 S32 Editor_SetFilepath(Editor* ed, const char* filePath);
 
 #endif
