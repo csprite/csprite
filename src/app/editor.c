@@ -14,17 +14,18 @@ Editor Editor_Init(U32 width, U32 height) {
 		ed.image_tex = r_tex_init(&t, width, height);
 		ed.checker_tex = r_tex_init(&t, checkerDim.w, checkerDim.h);
 
-		const RGBAU8 pCol1 = { 0xB8, 0xB8, 0xB8, 0xFF }, pCol2 = { 0x74, 0x74, 0x74, 0xFF };
+		const RGBAU8 checker_dark = rgbau8(0x74, 0x74, 0x74, 0xFF);
+		const RGBAU8 checker_light = rgbau8(0xB8, 0xB8, 0xB8, 0xFF);
 		RGBAU8* pixels = arena_alloc(t.arena, checkerDim.w * checkerDim.h * sizeof(RGBAU8));
 
 		#pragma omp parallel for
 		for EachIndex(i, (U64)(checkerDim.w * checkerDim.h)) {
 			U64 x = i % checkerDim.w;
 			U64 y = i / checkerDim.w;
-			pixels[i] = (x + y) % 2 ? pCol2 : pCol1;
+			pixels[i] = (x + y) % 2 ? checker_dark : checker_light;
 		}
 
-		r_tex_update(ed.checker_tex, 0, 0, checkerDim.w, checkerDim.h, checkerDim.w, (unsigned char*)pixels);
+		r_tex_update(ed.checker_tex, 0, 0, checkerDim.w, checkerDim.h, checkerDim.w, (U8*)pixels);
 		arena_end_temp(t);
 	}
 
@@ -33,7 +34,7 @@ Editor Editor_Init(U32 width, U32 height) {
 	ed.tool_curr = TOOL_BRUSH;
 	ed.image = rs_init(&a, rect(width, height));
 	ed.tool_size = 1;
-	ed.tool_color = (RGBAU8){ 255, 255, 255, 255 };
+	ed.tool_color = rgbau8(255, 255, 255, 255);
 	Editor_UpdateView(&ed);
 
 	return ed;
@@ -87,7 +88,7 @@ Region ed_mouse(Editor* ed, EdMouseBtn btn, EdMouseEvt evt, Vec2S32 m_pos) {
 		(S32)((ed->mouse_down.x - ed->view_pos.x) / ed->view_scale),
 		(S32)((ed->mouse_down.y - ed->view_pos.y) / ed->view_scale)
 	);
-	RGBAU8 color = ed->tool_curr == TOOL_ERASER ? (RGBAU8){0, 0, 0, 0} : ed->tool_color;
+	RGBAU8 color = ed->tool_curr == TOOL_ERASER ? rgbau8(0, 0, 0, 0) : ed->tool_color;
 
 	if (evt == EdMouseEvt_Press) {
 		ed->mouse_down = m_pos;

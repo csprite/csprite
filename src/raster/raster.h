@@ -20,5 +20,6 @@ Raster rs_init(Arena* a, Rect dim);
 Raster rs_init_from_file(Arena* a, String8 filepath);
 
 #define rs_is_invalid(r) (rect_area(r.dim) == 0)
+#define rgbau8(_r, _g, _b, _a) ((RGBAU8){ .r = (_r), .g = (_g), .b = (_b), .a = (_a) })
 
 #endif // SRC_RASTER_RASTER_H
