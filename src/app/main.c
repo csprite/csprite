@@ -8,7 +8,7 @@ int main(void) {
 	OS_Handle window = os_window_init(320, 240, str8_lit("csprite"));
 
 	// NOTE(pegvin) - Move Editor GUI Related Functions Into gui_*
-	Editor ed = Editor_Init(120, 90);
+	Editor ed = ed_init(120, 90);
 
 	gui_init(window);
 	os_window_show(window);
@@ -161,7 +161,7 @@ int main(void) {
 
 			if (igIsWindowHovered(0)) {
 				igSetMouseCursor(ImGuiMouseCursor_None);
-				Editor_ProcessInput(&ed);
+				ed_process_input(&ed);
 			}
 
 			igEnd();
@@ -177,8 +177,8 @@ int main(void) {
 			if (igInputInt("Height", &height, 1, 5, 0)) height = height < 2 ? 2 : height;
 
 			if (igButton("Create", (ImVec2){0,0})) {
-				Editor_Deinit(&ed);
-				ed = Editor_Init(width, height);
+				ed_release(&ed);
+				ed = ed_init(width, height);
 				Editor_CenterView(&ed, (Rect){ io->DisplaySize.x, io->DisplaySize.y });
 				Editor_UpdateView(&ed);
 				igCloseCurrentPopup();
@@ -198,7 +198,7 @@ int main(void) {
 		gui_end_frame(window);
 	}
 
-	Editor_Deinit(&ed);
+	ed_release(&ed);
 
 	// Clean Up
 	gui_release(window);

@@ -2,7 +2,7 @@
 #include "raster/gfx.h"
 #include "imgui.h"
 
-Editor Editor_Init(U32 width, U32 height) {
+Editor ed_init(U32 width, U32 height) {
 	Editor ed = {0};
 	Arena a = arena_init();
 
@@ -59,7 +59,7 @@ Editor Editor_Init(U32 width, U32 height) {
 // 	return ed;
 // }
 
-void Editor_Deinit(Editor* ed) {
+void ed_release(Editor* ed) {
 	r_tex_release(ed->image_tex);
 	r_tex_release(ed->checker_tex);
 	arena_release(&ed->arena);
@@ -324,7 +324,7 @@ const char* Editor_ToolGetHumanReadable(EdTool t) {
 	return "<unknown>";
 }
 
-void Editor_ProcessInput(Editor* ed) {
+void ed_process_input(Editor* ed) {
 	ImGuiIO* io = igGetIO_Nil();
 
 	// Mouse Has The Precedence Over Other Inputs

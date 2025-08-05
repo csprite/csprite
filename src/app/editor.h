@@ -54,11 +54,10 @@ typedef struct {
 	R_Handle checker_tex;
 } Editor;
 
-Editor Editor_Init(U32 width, U32 height);
+Editor ed_init(U32 width, U32 height);
 // Editor Editor_InitFrom(Arena* a, const char* filePath);
-void Editor_Deinit(Editor* ed);
-
-void Editor_ProcessInput(Editor* ed);
+void ed_release(Editor* ed);
+void ed_process_input(Editor* ed);
 
 void Editor_ZoomOut(Editor* ed);
 void Editor_ZoomIn(Editor* ed);
